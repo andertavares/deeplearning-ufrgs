@@ -3,65 +3,45 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Slide 05 – Por que MLP Não Resolve?</title>
+  <title>Slide 05 – Exemplo: Detecção de Bots em Redes Sociais</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
   <style>
-    .compare-wrap {
+    .main-layout {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1.6fr 1fr;
       gap: 1.2rem;
       flex: 1;
     }
-    .mode-panel {
-      background: var(--bg2);
-      border: 2px solid var(--border2);
-      border-radius: var(--radius);
-      padding: 1rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.6rem;
-      box-shadow: var(--shadow);
-      transition: border-color 0.3s;
-    }
-    .mode-panel.active-mlp { border-color: #f97316; }
-    .mode-panel.active-gnn { border-color: var(--teal); }
-    .mode-title {
-      font-size: 1.1rem;
-      font-weight: 800;
-      letter-spacing: 0.05em;
-    }
-    .mode-title.mlp { color: #f97316; }
-    .mode-title.gnn { color: var(--teal); }
-    .mode-svg { width: 100%; }
-    .mode-desc {
-      font-size: 0.88rem;
-      color: var(--text-muted);
-      text-align: center;
-      line-height: 1.55;
-    }
-    /* MLP: independent arrows, pulsing nodes */
-    .mlp-node { fill: var(--bg3); stroke: #f97316; stroke-width: 2; }
-    .mlp-node.flash { animation: flashAnim 0.7s ease-in-out infinite; }
-    @keyframes flashAnim {
-      0%, 100% { fill: #fff7ed; }
-      50%       { fill: #fed7aa; }
-    }
-    .mlp-box { fill: #fff7ed; stroke: #f97316; stroke-width: 2; rx: 6; }
-    .mlp-arrow { stroke: #f97316; stroke-width: 1.8; marker-end: url(#arrOrange); }
-
-    /* GNN: flowing edge arrows */
-    .gnn-node { fill: #ccfbf1; stroke: #0d6e6e; stroke-width: 2; }
-    .gnn-edge { stroke: #0d6e6e; stroke-width: 2; marker-end: url(#arrTeal); }
-    .gnn-edge-flow {
-      stroke: #0d6e6e; stroke-width: 2.5;
-      stroke-dasharray: 8 4;
-      animation: flowAnim 1.2s linear infinite;
-    }
-    @keyframes flowAnim { to { stroke-dashoffset: -24; } }
-
-    .toggle-wrap { display: flex; justify-content: center; gap: 0.6rem; }
+    .graph-wrap { position: relative; }
+    svg.bot-graph { width: 100%; height: 100%; min-height: 260px; }
+    .sn-user   { fill: #ccfbf1; stroke: #0d6e6e; stroke-width: 2.5; cursor: pointer; transition: all 0.2s; }
+    .sn-bot    { fill: #fee2e2; stroke: #b91c1c; stroke-width: 2.5; cursor: pointer; transition: all 0.2s; }
+    .sn-unknown{ fill: #e5e7eb; stroke: #9ca3af; stroke-width: 2.5; cursor: pointer; transition: all 0.2s; }
+    .sn-user:hover, .sn-bot:hover, .sn-unknown:hover { stroke-width: 3.5; filter: drop-shadow(0 0 6px rgba(0,0,0,0.18)); }
+    .sn-label  { font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 700; pointer-events: none; }
+    .sn-edge   { stroke: #cbd5e1; stroke-width: 1.8; }
+    .info-panel { display: flex; flex-direction: column; gap: 0.8rem; }
+    .node-detail { background: var(--bg3); border: 2px solid var(--border2); border-radius: var(--radius); padding: 0.9rem 1.1rem; transition: border-color 0.2s; }
+    .node-detail.user  { border-color: #0d6e6e; background: #f0fdf9; }
+    .node-detail.bot   { border-color: #b91c1c; background: #fff5f5; }
+    .node-detail-title { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 0.5rem; }
+    .node-detail-title.user { color: #0d6e6e; }
+    .node-detail-title.bot  { color: #b91c1c; }
+    .attr-row { display: flex; justify-content: space-between; font-family: 'Fira Code', monospace; font-size: 0.9rem; padding: 0.2rem 0; border-bottom: 1px solid var(--border2); }
+    .attr-row:last-child { border-bottom: none; }
+    .attr-key  { color: var(--text-muted); }
+    .attr-val  { font-weight: 700; color: var(--text); }
+    .attr-val.user { color: #0d6e6e; }
+    .attr-val.bot  { color: #b91c1c; }
+    .legend { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.88rem; font-weight: 600; }
+    .legend-dot  { width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0; }
+    .legend-dot.user    { background: #ccfbf1; border: 2px solid #0d6e6e; }
+    .legend-dot.bot     { background: #fee2e2; border: 2px solid #b91c1c; }
+    .legend-dot.unknown { background: #e5e7eb; border: 2px solid #9ca3af; }
+    .placeholder-text { font-size: 0.9rem; color: var(--text-muted); text-align: center; padding: 1rem; font-style: italic; }
+    @media (max-width: 800px) { .main-layout { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -69,104 +49,103 @@
     <header class="slide-header">
       <span class="course-tag">GNNs</span>
       <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
-      <span class="slide-counter">Slide 05 / 20</span>
+      <span class="slide-counter">Slide 05 / 22</span>
     </header>
 
     <main class="slide-main">
       <div class="title-block">
-        <h1 class="slide-title">Por que MLP Não Resolve?</h1>
-        <p class="slide-subtitle">Bloco 2 — Motivação para GNNs</p>
+        <h1 class="slide-title">Detecção de Bots em Redes Sociais</h1>
+        <p class="slide-subtitle">Bloco 1 — Exemplo de Node Classification</p>
       </div>
 
-      <div class="toggle-wrap">
-        <button class="btn-toggle active" id="btnMLP" onclick="setMode('mlp')">Ver com MLP</button>
-        <button class="btn-toggle" id="btnGNN" onclick="setMode('gnn')">Ver com GNN</button>
-      </div>
-
-      <div class="compare-wrap">
-        <!-- MLP Panel -->
-        <div class="mode-panel active-mlp" id="mlpPanel">
-          <div class="mode-title mlp">MLP</div>
-          <svg class="mode-svg" viewBox="0 0 300 210" id="mlpSvg">
-            <defs>
-              <marker id="arrOrange" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-                <path d="M0,0 L6,3 L0,6 Z" fill="#f97316"/>
-              </marker>
-            </defs>
-            <!-- 5 nodes in a rough graph layout but no connecting edges shown (MLP ignores them) -->
-            <circle class="mlp-node flash" cx="50" cy="60" r="18" style="animation-delay:0s"/>
-            <text x="50" y="65" text-anchor="middle" font-size="12" font-weight="700" fill="#c2410c">A</text>
-            <circle class="mlp-node flash" cx="120" cy="35" r="18" style="animation-delay:0.15s"/>
-            <text x="120" y="40" text-anchor="middle" font-size="12" font-weight="700" fill="#c2410c">B</text>
-            <circle class="mlp-node flash" cx="190" cy="60" r="18" style="animation-delay:0.30s"/>
-            <text x="190" y="65" text-anchor="middle" font-size="12" font-weight="700" fill="#c2410c">C</text>
-            <circle class="mlp-node flash" cx="80" cy="130" r="18" style="animation-delay:0.45s"/>
-            <text x="80" y="135" text-anchor="middle" font-size="12" font-weight="700" fill="#c2410c">D</text>
-            <circle class="mlp-node flash" cx="160" cy="140" r="18" style="animation-delay:0.60s"/>
-            <text x="160" y="145" text-anchor="middle" font-size="12" font-weight="700" fill="#c2410c">E</text>
-            <!-- Individual MLP arrows -->
-            <line class="mlp-arrow" x1="50" y1="78" x2="50" y2="175"/>
-            <line class="mlp-arrow" x1="120" y1="53" x2="120" y2="175"/>
-            <line class="mlp-arrow" x1="190" y1="78" x2="190" y2="175"/>
-            <line class="mlp-arrow" x1="80" y1="148" x2="80" y2="175"/>
-            <line class="mlp-arrow" x1="160" y1="158" x2="160" y2="175"/>
-            <!-- MLP boxes at bottom -->
-            <rect x="20" y="176" width="60" height="22" rx="5" class="mlp-box"/>
-            <text x="50" y="191" text-anchor="middle" font-size="10" fill="#c2410c" font-weight="700">MLP</text>
-            <rect x="90" y="176" width="60" height="22" rx="5" class="mlp-box"/>
-            <text x="120" y="191" text-anchor="middle" font-size="10" fill="#c2410c" font-weight="700">MLP</text>
-            <rect x="160" y="176" width="60" height="22" rx="5" class="mlp-box"/>
-            <text x="190" y="191" text-anchor="middle" font-size="10" fill="#c2410c" font-weight="700">MLP</text>
-            <!-- Cross out edges (show they're ignored) -->
-            <line x1="68" y1="60" x2="102" y2="37" stroke="#e5e7eb" stroke-width="1.5" stroke-dasharray="4 3"/>
-            <line x1="138" y1="40" x2="172" y2="56" stroke="#e5e7eb" stroke-width="1.5" stroke-dasharray="4 3"/>
-            <line x1="62" y1="75" x2="65" y2="112" stroke="#e5e7eb" stroke-width="1.5" stroke-dasharray="4 3"/>
-            <text x="150" y="115" font-size="9" fill="#9ca3af" font-style="italic" text-anchor="middle">sem conexões</text>
-            <text x="150" y="127" font-size="9" fill="#9ca3af" font-style="italic" text-anchor="middle">consideradas</text>
+      <div class="main-layout">
+        <!-- Graph -->
+        <div class="panel graph-wrap">
+          <div class="panel-title">Grafo da rede social — clique em um nó para ver seus atributos</div>
+          <svg class="bot-graph" viewBox="0 0 420 300" id="botSvg">
+            <!-- Edges -->
+            <line class="sn-edge" x1="80"  y1="80"  x2="200" y2="60"/>
+            <line class="sn-edge" x1="80"  y1="80"  x2="150" y2="180"/>
+            <line class="sn-edge" x1="200" y1="60"  x2="310" y2="90"/>
+            <line class="sn-edge" x1="200" y1="60"  x2="150" y2="180"/>
+            <line class="sn-edge" x1="310" y1="90"  x2="360" y2="200"/>
+            <line class="sn-edge" x1="310" y1="90"  x2="230" y2="200"/>
+            <line class="sn-edge" x1="150" y1="180" x2="230" y2="200"/>
+            <line class="sn-edge" x1="230" y1="200" x2="360" y2="200"/>
+            <line class="sn-edge" x1="80"  y1="80"  x2="60"  y2="210"/>
+            <line class="sn-edge" x1="60"  y1="210" x2="150" y2="180"/>
+            <!-- U1: usuário legítimo, idade=28, posts_7d=4 -->
+            <circle id="node-U1" class="sn-user" cx="80" cy="80" r="26" onclick="showNode('U1')"/>
+            <text class="sn-label" x="80" y="76" text-anchor="middle" fill="#0d6e6e">U1</text>
+            <text class="sn-label" x="80" y="90" text-anchor="middle" font-size="10" fill="#0d6e6e">✓</text>
+            <!-- U2: usuário legítimo, idade=35, posts_7d=2 -->
+            <circle id="node-U2" class="sn-user" cx="200" cy="60" r="26" onclick="showNode('U2')"/>
+            <text class="sn-label" x="200" y="56" text-anchor="middle" fill="#0d6e6e">U2</text>
+            <text class="sn-label" x="200" y="70" text-anchor="middle" font-size="10" fill="#0d6e6e">✓</text>
+            <!-- B1: bot, idade=1, posts_7d=312 -->
+            <circle id="node-B1" class="sn-bot" cx="310" cy="90" r="26" onclick="showNode('B1')"/>
+            <text class="sn-label" x="310" y="86" text-anchor="middle" fill="#b91c1c">B1</text>
+            <text class="sn-label" x="310" y="100" text-anchor="middle" font-size="10" fill="#b91c1c">✗</text>
+            <!-- U3: usuário legítimo, idade=22, posts_7d=7 -->
+            <circle id="node-U3" class="sn-user" cx="150" cy="180" r="26" onclick="showNode('U3')"/>
+            <text class="sn-label" x="150" y="176" text-anchor="middle" fill="#0d6e6e">U3</text>
+            <text class="sn-label" x="150" y="190" text-anchor="middle" font-size="10" fill="#0d6e6e">✓</text>
+            <!-- B2: bot, idade=0, posts_7d=498 -->
+            <circle id="node-B2" class="sn-bot" cx="360" cy="200" r="26" onclick="showNode('B2')"/>
+            <text class="sn-label" x="360" y="196" text-anchor="middle" fill="#b91c1c">B2</text>
+            <text class="sn-label" x="360" y="210" text-anchor="middle" font-size="10" fill="#b91c1c">✗</text>
+            <!-- X: desconhecido, a classificar, idade=2, posts_7d=187 -->
+            <circle id="node-X" class="sn-unknown" cx="230" cy="200" r="26" onclick="showNode('X')"/>
+            <text class="sn-label" x="230" y="196" text-anchor="middle" fill="#6b7fa3">X</text>
+            <text class="sn-label" x="230" y="210" text-anchor="middle" font-size="10" fill="#6b7fa3">?</text>
+            <!-- U4: usuário legítimo, idade=41, posts_7d=3 -->
+            <circle id="node-U4" class="sn-user" cx="60" cy="210" r="26" onclick="showNode('U4')"/>
+            <text class="sn-label" x="60" y="206" text-anchor="middle" fill="#0d6e6e">U4</text>
+            <text class="sn-label" x="60" y="220" text-anchor="middle" font-size="10" fill="#0d6e6e">✓</text>
           </svg>
-          <div class="mode-desc">Cada nó processado <strong>isoladamente</strong> — sem troca de informação entre vizinhos.</div>
+          <div class="legend">
+            <div class="legend-item"><div class="legend-dot user"></div> Usuário legítimo (✓)</div>
+            <div class="legend-item"><div class="legend-dot bot"></div> Bot (✗)</div>
+            <div class="legend-item"><div class="legend-dot unknown"></div> Desconhecido (?)</div>
+          </div>
         </div>
 
-        <!-- GNN Panel -->
-        <div class="mode-panel" id="gnnPanel">
-          <div class="mode-title gnn">GNN</div>
-          <svg class="mode-svg" viewBox="0 0 300 210" id="gnnSvg">
-            <defs>
-              <marker id="arrTeal" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-                <path d="M0,0 L6,3 L0,6 Z" fill="#0d6e6e"/>
-              </marker>
-            </defs>
-            <!-- Edges with flow animation -->
-            <line class="gnn-edge-flow" x1="68" y1="60" x2="102" y2="37" stroke-dashoffset="0"/>
-            <line class="gnn-edge-flow" x1="102" y1="37" x2="68" y2="60" stroke-dashoffset="0" style="animation-delay:0.3s"/>
-            <line class="gnn-edge-flow" x1="138" y1="40" x2="172" y2="56" stroke-dashoffset="0" style="animation-delay:0.6s"/>
-            <line class="gnn-edge-flow" x1="172" y1="56" x2="138" y2="40" stroke-dashoffset="0" style="animation-delay:0.9s"/>
-            <line class="gnn-edge-flow" x1="62" y1="75" x2="65" y2="112" stroke-dashoffset="0" style="animation-delay:0.2s"/>
-            <line class="gnn-edge-flow" x1="65" y1="112" x2="62" y2="75" stroke-dashoffset="0" style="animation-delay:0.5s"/>
-            <line class="gnn-edge-flow" x1="98" y1="130" x2="142" y2="135" stroke-dashoffset="0" style="animation-delay:0.4s"/>
-            <line class="gnn-edge-flow" x1="142" y1="135" x2="98" y2="130" stroke-dashoffset="0" style="animation-delay:0.7s"/>
-            <!-- Nodes -->
-            <circle class="gnn-node" cx="50" cy="60" r="18"/>
-            <text x="50" y="65" text-anchor="middle" font-size="12" font-weight="700" fill="#0d6e6e">A</text>
-            <circle class="gnn-node" cx="120" cy="35" r="18"/>
-            <text x="120" y="40" text-anchor="middle" font-size="12" font-weight="700" fill="#0d6e6e">B</text>
-            <circle class="gnn-node" cx="190" cy="60" r="18"/>
-            <text x="190" y="65" text-anchor="middle" font-size="12" font-weight="700" fill="#0d6e6e">C</text>
-            <circle class="gnn-node" cx="80" cy="130" r="18"/>
-            <text x="80" y="135" text-anchor="middle" font-size="12" font-weight="700" fill="#0d6e6e">D</text>
-            <circle class="gnn-node" cx="160" cy="140" r="18"/>
-            <text x="160" y="145" text-anchor="middle" font-size="12" font-weight="700" fill="#0d6e6e">E</text>
-            <text x="150" y="190" font-size="10" fill="#0d6e6e" text-anchor="middle" font-weight="600">mensagens fluem pelas arestas</text>
-          </svg>
-          <div class="mode-desc">GNN <strong>propaga informação</strong> pela estrutura do grafo — vizinhos influenciam uns aos outros.</div>
-        </div>
-      </div>
+        <!-- Info panel -->
+        <div class="info-panel">
+          <div class="highlight-box blue">
+            <span class="icon">🎯</span>
+            <span><strong>Tarefa:</strong> classificar cada nó como <em>usuário legítimo</em> (✓) ou <em>bot</em> (✗) usando atributos e estrutura do grafo.</span>
+          </div>
 
-      <div class="insight-box">
-        <span class="i-icon">⚡</span>
-        <span class="i-text">
-          O MLP <strong>ignora a estrutura do grafo</strong>. GNNs incorporam a topologia da rede no processo de aprendizado.
-        </span>
+          <div class="panel" id="nodeCard" style="min-height:160px;">
+            <div class="panel-title">Atributos do Nó</div>
+            <p class="placeholder-text" id="placeholderText">← Clique em um nó para ver seus atributos</p>
+            <div id="nodeDetail" style="display:none;"></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-title">🏷️ Features por Nó</div>
+            <div class="attr-row">
+              <span class="attr-key">x_v[0] &nbsp;idade</span>
+              <span class="attr-val">inteiro (anos)</span>
+            </div>
+            <div class="attr-row">
+              <span class="attr-key">x_v[1] &nbsp;posts_7d</span>
+              <span class="attr-val">nº posts (7 dias)</span>
+            </div>
+            <div style="margin-top:0.6rem; font-size:0.85rem; color:var(--text-muted); line-height:1.6;">
+              Vetor do nó v: &nbsp;<code style="font-family:'Fira Code',monospace;color:var(--teal);font-size:0.9rem;">x_v = [idade, posts_7d]</code>
+            </div>
+          </div>
+
+          <div class="insight-box">
+            <span class="i-icon">💡</span>
+            <span class="i-text">
+              Bots: <strong>conta nova</strong> (idade ≈ 0–1) e <strong>muitos posts</strong> (centenas por semana).<br>
+              A GNN combina os atributos do nó <em>e</em> dos seus vizinhos para classificar.
+            </span>
+          </div>
+        </div>
       </div>
     </main>
 
@@ -178,28 +157,45 @@
   </div>
 
   <script>
-    function setMode(mode) {
-      const mlpPanel = document.getElementById('mlpPanel');
-      const gnnPanel = document.getElementById('gnnPanel');
-      const btnMLP = document.getElementById('btnMLP');
-      const btnGNN = document.getElementById('btnGNN');
-      if (mode === 'mlp') {
-        mlpPanel.classList.add('active-mlp');
-        gnnPanel.classList.remove('active-gnn');
-        btnMLP.classList.add('active');
-        btnGNN.classList.remove('active');
-      } else {
-        gnnPanel.classList.add('active-gnn');
-        mlpPanel.classList.remove('active-mlp');
-        btnGNN.classList.add('active');
-        btnMLP.classList.remove('active');
-      }
+    const nodeData = {
+      'U1': { type: 'user',    title: 'Usuário Legítimo',  idade: 28,  posts_7d: 4   },
+      'U2': { type: 'user',    title: 'Usuário Legítimo',  idade: 35,  posts_7d: 2   },
+      'U3': { type: 'user',    title: 'Usuário Legítimo',  idade: 22,  posts_7d: 7   },
+      'U4': { type: 'user',    title: 'Usuário Legítimo',  idade: 41,  posts_7d: 3   },
+      'B1': { type: 'bot',     title: 'Bot',               idade: 1,   posts_7d: 312 },
+      'B2': { type: 'bot',     title: 'Bot',               idade: 0,   posts_7d: 498 },
+      'X':  { type: 'unknown', title: 'Nó desconhecido',   idade: 2,   posts_7d: 187 }
+    };
+
+    function showNode(id) {
+      const d = nodeData[id];
+      document.getElementById('placeholderText').style.display = 'none';
+      const detail = document.getElementById('nodeDetail');
+      detail.style.display = 'block';
+      const tc = d.type === 'user' ? 'user' : (d.type === 'bot' ? 'bot' : '');
+      const icon = d.type === 'user' ? '✓ ' : (d.type === 'bot' ? '✗ ' : '? ');
+      detail.innerHTML = `
+        <div class="node-detail ${tc}">
+          <div class="node-detail-title ${tc}">${icon}${d.title} — Nó ${id}</div>
+          <div class="attr-row">
+            <span class="attr-key">x_v[0] &nbsp;idade</span>
+            <span class="attr-val ${tc}">${d.idade} anos</span>
+          </div>
+          <div class="attr-row">
+            <span class="attr-key">x_v[1] &nbsp;posts_7d</span>
+            <span class="attr-val ${tc}">${d.posts_7d} posts</span>
+          </div>
+          <div class="attr-row" style="border:none;margin-top:0.3rem;">
+            <span class="attr-key">vetor x_v</span>
+            <span style="font-family:'Fira Code',monospace;font-weight:700;color:var(--teal);">[${d.idade}, ${d.posts_7d}]</span>
+          </div>
+        </div>`;
     }
 
     (function(){
       const container = document.getElementById('navDots');
       const CURRENT = 5;
-      const TOTAL = 20;
+      const TOTAL = 22;
       for (let i = 1; i <= TOTAL; i++) {
         const dot = document.createElement('div');
         dot.className = 'dot' + (i === CURRENT ? ' active' : '');

@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Slide 09 – Etapa 3: Update</title>
+  <title>Slide 09 – Etapa 2: Aggregate</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
   <style>
-    .update-layout {
+    .agg-layout {
       display: grid;
-      grid-template-columns: 1.1fr 1fr;
+      grid-template-columns: 1fr 1fr;
       gap: 1.2rem;
       flex: 1;
     }
-    .step-panel {
+    .agg-left, .agg-right {
       background: var(--bg2);
       border: 1.5px solid var(--border2);
       border-radius: var(--radius);
@@ -23,109 +23,71 @@
       gap: 0.7rem;
       box-shadow: var(--shadow);
     }
+    /* Neighbor nodes in SVG */
+    .nb-node { fill: #fff7ed; stroke: #f97316; stroke-width: 2.5; }
+    .nb-text-label { font-family:'Inter',sans-serif; font-weight:700; font-size:11px; fill:#c2410c; }
+    .nb-text-feat  { font-family:'Fira Code',monospace; font-size:10px; fill:#7c3aed; }
 
-    /* Step list */
-    .step-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 0.8rem;
-      padding: 0.7rem 0.9rem;
+    .central-node { fill: #ccfbf1; stroke: #0d6e6e; stroke-width: 2.5; }
+    .edge-agg { stroke: #0d6e6e; stroke-width: 2; stroke-dasharray:6 3; animation: aggEdge 0.9s linear infinite; }
+    @keyframes aggEdge { to { stroke-dashoffset: -18; } }
+
+    /* Formula and result */
+    .method-formula {
+      background: var(--bg3);
       border: 1.5px solid var(--border2);
       border-radius: var(--radius-sm);
-      background: var(--bg3);
-      opacity: 0.35;
-      transition: opacity 0.4s, border-color 0.3s, background 0.3s, transform 0.3s;
-      transform: scale(0.97);
-    }
-    .step-item.active {
-      opacity: 1;
-      border-color: var(--teal);
-      background: var(--teal-lt);
-      transform: scale(1);
-    }
-    .step-item.done {
-      opacity: 0.75;
-      border-color: #86efac;
-      background: #f0fdf4;
-    }
-    .step-num {
-      width: 26px; height: 26px;
-      border-radius: 50%;
-      background: var(--border2);
-      color: var(--text-dim);
-      font-weight: 800;
-      font-size: 0.85rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      transition: background 0.3s, color 0.3s;
-    }
-    .step-item.active .step-num { background: var(--teal); color:#fff; }
-    .step-item.done  .step-num { background: #22c55e; color:#fff; }
-    .step-title { font-weight: 700; font-size: 0.92rem; color: var(--text); }
-    .step-formula {
+      padding: 0.6rem 0.9rem;
       font-family: 'Fira Code', monospace;
-      font-size: 0.85rem;
-      color: var(--teal);
-      margin-top: 0.2rem;
+      font-size: 0.88rem;
+      transition: background 0.3s, border-color 0.3s;
     }
-    .step-desc { font-size: 0.82rem; color: var(--text-muted); margin-top: 0.2rem; }
+    .method-formula.sum   { background: #fff7ed; border-color: #f97316; }
+    .method-formula.mean  { background: #dbeafe; border-color: #3b82f6; }
+    .method-formula.max   { background: #dcfce7; border-color: #22c55e; }
 
-    /* Visualization SVG panel */
-    .vis-panel {
-      background: var(--bg2);
-      border: 1.5px solid var(--border2);
-      border-radius: var(--radius);
-      padding: 1rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.7rem;
-      align-items: center;
-      box-shadow: var(--shadow);
-    }
-    .vis-svg { width: 100%; max-width: 340px; }
-
-    /* Node glow states */
-    .node-dim  { fill: #e5e7eb; stroke:#9ca3af; stroke-width:2.5; transition:fill 0.5s, stroke 0.5s; }
-    .node-old  { fill: #dbeafe; stroke:#3b82f6; stroke-width:2.5; transition:fill 0.5s, stroke 0.5s; }
-    .node-agg  { fill: #fff7ed; stroke:#f97316; stroke-width:2.5; transition:fill 0.5s, stroke 0.5s; }
-    .node-concat { fill: #ede9fe; stroke:#7c3aed; stroke-width:2.5; transition:fill 0.5s, stroke 0.5s; }
-    .node-linear { fill: #fef9c3; stroke:#ca8a04; stroke-width:2.5; transition:fill 0.5s, stroke 0.5s; }
-    .node-new  { fill: #ccfbf1; stroke:#0d6e6e; stroke-width:3; transition:fill 0.5s, stroke 0.5s; animation: newNodeGlow 1.5s ease-in-out infinite; }
-    @keyframes newNodeGlow { 0%,100%{fill:#ccfbf1;} 50%{fill:#5eead4;} }
-
-    .flow-arrow-svg { stroke:#0d6e6e; stroke-width:2; transition:opacity 0.4s; }
-
-    .vec-display {
+    .result-box {
+      border-radius: var(--radius-sm);
+      padding: 0.8rem 1rem;
       font-family: 'Fira Code', monospace;
-      font-size: 0.82rem;
+      font-size: 1rem;
+      font-weight: 700;
       text-align: center;
-      padding: 0.4rem 0.8rem;
-      border-radius: var(--radius-sm);
-      border: 1.5px solid var(--border2);
-      background: var(--bg3);
       transition: background 0.4s, border-color 0.4s, color 0.4s;
     }
-    .vec-display.old    { background:#dbeafe; border-color:#3b82f6; color:#1d4ed8; }
-    .vec-display.agg    { background:#fff7ed; border-color:#f97316; color:#c2410c; }
-    .vec-display.concat { background:#ede9fe; border-color:#7c3aed; color:#7c3aed; }
-    .vec-display.linear { background:#fef9c3; border-color:#ca8a04; color:#854d0e; }
-    .vec-display.new    { background:#ccfbf1; border-color:#0d6e6e; color:#0d6e6e; font-weight:700; }
+    .result-box.sum   { background: #fff7ed; border: 2px solid #f97316; color: #c2410c; }
+    .result-box.mean  { background: #dbeafe; border: 2px solid #3b82f6; color: #1d4ed8; }
+    .result-box.max   { background: #dcfce7; border: 2px solid #22c55e; color: #166534; }
 
-    .big-formula {
-      font-family:'Fira Code',monospace;
-      font-size:0.9rem;
-      background:var(--bg3);
-      border:1.5px solid var(--border2);
-      border-radius:var(--radius-sm);
-      padding:0.6rem 0.9rem;
-      text-align:center;
-      color:var(--text);
+    /* Bar chart */
+    .bar-chart { display: flex; gap: 1.2rem; align-items: flex-end; justify-content: center; height: 100px; }
+    .bar-wrap { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
+    .bar {
+      width: 44px;
+      border-radius: 4px 4px 0 0;
+      transition: height 0.4s cubic-bezier(0.34,1.2,0.64,1), background 0.3s;
+      min-height: 4px;
     }
-    .big-formula .f-teal { color:var(--teal); font-weight:700; }
-    .big-formula .f-blue { color:var(--blue); }
-    .big-formula .f-orange { color:#c2410c; }
+    .bar.sum  { background: #fb923c; }
+    .bar.mean { background: #60a5fa; }
+    .bar.max  { background: #4ade80; }
+    .bar-val  { font-family:'Fira Code',monospace; font-size:0.82rem; font-weight:700; }
+    .bar-lbl  { font-size:0.75rem; color:var(--text-dim); }
+    .bar-dim-label { font-size:0.7rem; color:var(--text-muted); }
+
+    .step-calc {
+      font-family:'Fira Code',monospace;
+      font-size:0.85rem;
+      color:var(--text-muted);
+      line-height:2;
+      padding: 0.4rem 0.8rem;
+      background:var(--bg3);
+      border-radius:var(--radius-sm);
+    }
+    .step-calc span { font-weight:700; }
+    .step-calc .sum-color  { color:#c2410c; }
+    .step-calc .mean-color { color:#1d4ed8; }
+    .step-calc .max-color  { color:#166534; }
   </style>
 </head>
 <body>
@@ -133,132 +95,101 @@
     <header class="slide-header">
       <span class="course-tag">GNNs</span>
       <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
-      <span class="slide-counter">Slide 09 / 20</span>
+      <span class="slide-counter">Slide 09 / 22</span>
     </header>
 
     <main class="slide-main">
       <div class="title-block">
-        <h1 class="slide-title">Etapa 3: Update (Atualização)</h1>
+        <h1 class="slide-title">Etapa 2: Aggregate (Agregação)</h1>
         <p class="slide-subtitle">Bloco 2 — Message Passing</p>
       </div>
 
-      <div class="big-formula">
-        <span class="f-teal">h_v^(l+1)</span> = σ( <span class="f-blue">W</span> · CONCAT(<span class="f-teal">h_v^(l)</span>, <span class="f-orange">m_v^(l)</span>) )
-        &nbsp;—&nbsp; onde σ é uma não-linearidade (ReLU, Tanh…)
+      <!-- Toggle -->
+      <div style="display:flex;justify-content:center;">
+        <div class="toggle-group">
+          <button class="btn-toggle active" id="btnSum"  onclick="setAgg('sum')">Σ Sum</button>
+          <button class="btn-toggle" id="btnMean" onclick="setAgg('mean')">μ Mean</button>
+          <button class="btn-toggle" id="btnMax"  onclick="setAgg('max')">↑ Max</button>
+        </div>
       </div>
 
-      <div class="update-layout">
-        <!-- LEFT: step-by-step -->
-        <div class="step-panel">
-          <div class="panel-title">Passo a Passo</div>
-          <div class="step-item done" id="step0">
-            <div class="step-num">✓</div>
-            <div>
-              <div class="step-title">Entrada: h_v e m_agg</div>
-              <div class="step-formula">h_v = [0.8, 0.3] &nbsp;|&nbsp; m_agg = [6, 7]</div>
-              <div class="step-desc">Representação atual do nó e mensagem agregada dos vizinhos.</div>
-            </div>
-          </div>
-          <div class="step-item" id="step1">
-            <div class="step-num">2</div>
-            <div>
-              <div class="step-title">Concatenação</div>
-              <div class="step-formula">[h_v ‖ m_agg] = [0.8, 0.3, 6, 7]</div>
-              <div class="step-desc">Juntamos os dois vetores em um único vetor de entrada.</div>
-            </div>
-          </div>
-          <div class="step-item" id="step2">
-            <div class="step-num">3</div>
-            <div>
-              <div class="step-title">Transformação Linear</div>
-              <div class="step-formula">z = W · [h_v ‖ m_agg]</div>
-              <div class="step-desc">Matriz de pesos W aprendível projeta o vetor concatenado.</div>
-            </div>
-          </div>
-          <div class="step-item" id="step3">
-            <div class="step-num">4</div>
-            <div>
-              <div class="step-title">Ativação Não-linear</div>
-              <div class="step-formula">σ(z) = ReLU(z)</div>
-              <div class="step-desc">Não-linearidade é essencial para a expressividade do modelo.</div>
-            </div>
-          </div>
-          <div class="step-item" id="step4">
-            <div class="step-num">5</div>
-            <div>
-              <div class="step-title">Novo Embedding h_v'</div>
-              <div class="step-formula">h_v^(l+1) = [1.4, 0.9]</div>
-              <div class="step-desc">Embedding atualizado — incorpora informação da vizinhança!</div>
-            </div>
-          </div>
-          <div style="display:flex;gap:0.6rem;align-items:center;margin-top:0.3rem;">
-            <button class="btn-step" id="nextStepBtn" onclick="nextStep()">▶ Próximo passo</button>
-            <button class="btn-toggle" onclick="resetSteps()">↩ Reiniciar</button>
-          </div>
-        </div>
-
-        <!-- RIGHT: visual -->
-        <div class="vis-panel">
-          <div class="panel-title">Visualização</div>
-          <svg class="vis-svg" viewBox="0 0 320 260" id="updateSvg">
+      <div class="agg-layout">
+        <!-- LEFT: neighbors SVG + formula -->
+        <div class="agg-left">
+          <div class="panel-title">Vizinhos do nó v</div>
+          <svg viewBox="0 0 320 220" style="width:100%;" id="aggSvg">
             <defs>
-              <marker id="upArr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+              <marker id="aggArr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
                 <path d="M0,0 L6,3 L0,6 Z" fill="#0d6e6e"/>
               </marker>
             </defs>
-
-            <!-- h_v (old) -->
-            <circle id="vis_hv" cx="65" cy="80" r="32" class="node-old"/>
-            <text x="65" y="74" text-anchor="middle" font-family="Inter" font-weight="700" font-size="11" fill="#1d4ed8">h_v^(l)</text>
-            <text x="65" y="88" text-anchor="middle" font-family="Fira Code" font-size="10" fill="#1d4ed8">[0.8, 0.3]</text>
-
-            <!-- m_agg -->
-            <circle id="vis_magg" cx="65" cy="180" r="32" class="node-agg"/>
-            <text x="65" y="174" text-anchor="middle" font-family="Inter" font-weight="700" font-size="11" fill="#c2410c">m_v^(l)</text>
-            <text x="65" y="188" text-anchor="middle" font-family="Fira Code" font-size="10" fill="#c2410c">[6, 7]</text>
-
-            <!-- Arrow to concat -->
-            <line class="flow-arrow-svg" id="arr1" x1="97" y1="88" x2="148" y2="123" opacity="0" marker-end="url(#upArr)"/>
-            <line class="flow-arrow-svg" id="arr2" x1="97" y1="172" x2="148" y2="137" opacity="0" marker-end="url(#upArr)"/>
-
-            <!-- CONCAT box -->
-            <rect id="vis_concat" x="150" y="108" width="60" height="44" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="2" opacity="0.3"/>
-            <text x="180" y="127" text-anchor="middle" font-family="Inter" font-weight="700" font-size="10" fill="#7c3aed">CONCAT</text>
-            <text x="180" y="141" text-anchor="middle" font-family="Fira Code" font-size="9" fill="#7c3aed">[0.8,0.3,6,7]</text>
-
-            <!-- Arrow to W box -->
-            <line class="flow-arrow-svg" id="arr3" x1="210" y1="130" x2="235" y2="130" opacity="0" marker-end="url(#upArr)"/>
-
-            <!-- W · linear box -->
-            <rect id="vis_W" x="237" y="108" width="44" height="44" rx="8" fill="#fef9c3" stroke="#ca8a04" stroke-width="2" opacity="0.3"/>
-            <text x="259" y="126" text-anchor="middle" font-family="Inter" font-weight="700" font-size="11" fill="#854d0e">W ·</text>
-            <text x="259" y="140" text-anchor="middle" font-family="Fira Code" font-size="9" fill="#854d0e">linear</text>
-
-            <!-- Arrow down to sigma -->
-            <line class="flow-arrow-svg" id="arr4" x1="259" y1="153" x2="259" y2="175" opacity="0" marker-end="url(#upArr)"/>
-
-            <!-- Activation box -->
-            <rect id="vis_sigma" x="235" y="177" width="48" height="36" rx="8" fill="#fef9c3" stroke="#ca8a04" stroke-width="2" opacity="0.3"/>
-            <text x="259" y="193" text-anchor="middle" font-family="Inter" font-weight="700" font-size="12" fill="#854d0e">σ(z)</text>
-            <text x="259" y="206" text-anchor="middle" font-family="Fira Code" font-size="8" fill="#854d0e">ReLU</text>
-
-            <!-- Arrow to new node -->
-            <line class="flow-arrow-svg" id="arr5" x1="235" y1="197" x2="155" y2="222" opacity="0" marker-end="url(#upArr)"/>
-
-            <!-- New node h_v' -->
-            <circle id="vis_new" cx="90" cy="235" r="26" class="node-dim"/>
-            <text x="90" y="229" text-anchor="middle" font-family="Inter" font-weight="700" font-size="10" fill="#9ca3af">h_v^(l+1)</text>
-            <text x="90" y="243" text-anchor="middle" font-family="Fira Code" font-size="9" fill="#9ca3af">???</text>
+            <!-- edges -->
+            <line class="edge-agg" x1="80" y1="50" x2="200" y2="110"/>
+            <line class="edge-agg" x1="80" y1="130" x2="200" y2="115" style="animation-delay:0.3s"/>
+            <line class="edge-agg" x1="80" y1="190" x2="200" y2="120" style="animation-delay:0.6s"/>
+            <!-- neighbor 1 -->
+            <circle cx="80" cy="50" r="28" class="nb-node"/>
+            <text x="80" y="44" text-anchor="middle" class="nb-text-label">h₁</text>
+            <text x="80" y="57" text-anchor="middle" class="nb-text-feat">[1, 2]</text>
+            <!-- neighbor 2 -->
+            <circle cx="80" cy="130" r="28" class="nb-node"/>
+            <text x="80" y="124" text-anchor="middle" class="nb-text-label">h₂</text>
+            <text x="80" y="137" text-anchor="middle" class="nb-text-feat">[3, 1]</text>
+            <!-- neighbor 3 -->
+            <circle cx="80" cy="200" r="28" class="nb-node"/>
+            <text x="80" y="194" text-anchor="middle" class="nb-text-label">h₃</text>
+            <text x="80" y="207" text-anchor="middle" class="nb-text-feat">[2, 4]</text>
+            <!-- central node -->
+            <circle cx="230" cy="115" r="32" class="central-node"/>
+            <text x="230" y="109" text-anchor="middle" font-family="Inter" font-weight="700" font-size="11" fill="#0d6e6e">nó v</text>
+            <text x="230" y="123" text-anchor="middle" font-family="Fira Code" font-size="10" fill="#0d6e6e" id="svgResult">[?, ?]</text>
           </svg>
 
-          <div class="vec-display" id="visLabel">Passo 1: h_v = [0.8, 0.3] &nbsp;|&nbsp; m_agg = [6, 7]</div>
+          <div class="method-formula" id="formulaBox">
+            <div id="formulaText">AGG = Sum: [1+3+2, 2+1+4] = <span style="color:#c2410c;font-weight:700;">[6, 7]</span></div>
+          </div>
+
+          <div class="step-calc" id="stepCalc">
+            <span class="sum-color">Dimensão 1:</span> 1 + 3 + 2 = <span class="sum-color">6</span><br>
+            <span class="sum-color">Dimensão 2:</span> 2 + 1 + 4 = <span class="sum-color">7</span>
+          </div>
+        </div>
+
+        <!-- RIGHT: result + bar chart -->
+        <div class="agg-right">
+          <div class="panel-title">Resultado Agregado</div>
+          <div class="result-box sum" id="resultBox">m_v = [6, 7]</div>
+
+          <div style="font-size:0.85rem;color:var(--text-muted);font-weight:600;">Vetor agregado por dimensão:</div>
+          <div class="bar-chart" id="barChart">
+            <div class="bar-wrap">
+              <span class="bar-val" id="barVal0">6</span>
+              <div class="bar sum" id="bar0" style="height:86px;"></div>
+              <span class="bar-lbl">dim 1</span>
+            </div>
+            <div class="bar-wrap">
+              <span class="bar-val" id="barVal1">7</span>
+              <div class="bar sum" id="bar1" style="height:100px;"></div>
+              <span class="bar-lbl">dim 2</span>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+          <div style="font-size:0.82rem;color:var(--text-dim);">Valores dos vizinhos:</div>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+            <span style="background:#fff7ed;border:1.5px solid #f97316;border-radius:6px;padding:0.2rem 0.6rem;font-family:'Fira Code',monospace;font-size:0.85rem;color:#c2410c;">h₁=[1,2]</span>
+            <span style="background:#fff7ed;border:1.5px solid #f97316;border-radius:6px;padding:0.2rem 0.6rem;font-family:'Fira Code',monospace;font-size:0.85rem;color:#c2410c;">h₂=[3,1]</span>
+            <span style="background:#fff7ed;border:1.5px solid #f97316;border-radius:6px;padding:0.2rem 0.6rem;font-family:'Fira Code',monospace;font-size:0.85rem;color:#c2410c;">h₃=[2,4]</span>
+          </div>
         </div>
       </div>
 
       <div class="insight-box">
-        <span class="i-icon">🧠</span>
+        <span class="i-icon">⚖️</span>
         <span class="i-text">
-          A <strong>não-linearidade</strong> σ é fundamental — sem ela, múltiplas camadas colapsariam em uma única transformação linear.
+          <strong>Sum</strong> preserva a quantidade de vizinhos &nbsp;·&nbsp;
+          <strong>Mean</strong> normaliza pela vizinhança &nbsp;·&nbsp;
+          <strong>Max</strong> captura o sinal mais forte
         </span>
       </div>
     </main>
@@ -271,148 +202,46 @@
   </div>
 
   <script>
-    let currentStep = 0; // 0 = initial state (step0 done)
-    const totalSteps = 5;
+    const aggData = {
+      sum:  { d0: 6,    d1: 7,    label: 'm_v = [6, 7]',      formula: 'AGG = Sum: [1+3+2, 2+1+4] = <span style="color:#c2410c;font-weight:700;">[6, 7]</span>', calc: '<span class="sum-color">Dimensão 1:</span> 1 + 3 + 2 = <span class="sum-color">6</span><br><span class="sum-color">Dimensão 2:</span> 2 + 1 + 4 = <span class="sum-color">7</span>', maxVal: 7, cls: 'sum',  svgRes: '[6, 7]' },
+      mean: { d0: 2.0,  d1: 2.33, label: 'm_v = [2.0, 2.33]', formula: 'AGG = Mean: [6/3, 7/3] = <span style="color:#1d4ed8;font-weight:700;">[2.0, 2.33]</span>', calc: '<span class="mean-color">Dimensão 1:</span> (1+3+2)/3 = <span class="mean-color">2.0</span><br><span class="mean-color">Dimensão 2:</span> (2+1+4)/3 = <span class="mean-color">2.33</span>', maxVal: 2.33, cls: 'mean', svgRes: '[2.0, 2.33]' },
+      max:  { d0: 3,    d1: 4,    label: 'm_v = [3, 4]',      formula: 'AGG = Max: [max(1,3,2), max(2,1,4)] = <span style="color:#166534;font-weight:700;">[3, 4]</span>', calc: '<span class="max-color">Dimensão 1:</span> max(1, 3, 2) = <span class="max-color">3</span><br><span class="max-color">Dimensão 2:</span> max(2, 1, 4) = <span class="max-color">4</span>', maxVal: 4, cls: 'max',  svgRes: '[3, 4]' }
+    };
 
-    const stepConfigs = [
-      // step 1: concat
-      {
-        activate: 'step1',
-        arrowsOn: ['arr1','arr2'],
-        visLabel: 'Passo 2: Concatenação → [0.8, 0.3, 6, 7]',
-        visLabelClass: 'concat',
-        makeVisible: ['vis_concat'],
-        nodeUpdate: null
-      },
-      // step 2: linear
-      {
-        activate: 'step2',
-        arrowsOn: ['arr3'],
-        visLabel: 'Passo 3: W · [0.8, 0.3, 6, 7] = z',
-        visLabelClass: 'linear',
-        makeVisible: ['vis_W'],
-        nodeUpdate: null
-      },
-      // step 3: activation
-      {
-        activate: 'step3',
-        arrowsOn: ['arr4'],
-        visLabel: 'Passo 4: σ(z) = ReLU(z) → aplica não-linearidade',
-        visLabelClass: 'linear',
-        makeVisible: ['vis_sigma'],
-        nodeUpdate: null
-      },
-      // step 4: new node
-      {
-        activate: 'step4',
-        arrowsOn: ['arr5'],
-        visLabel: 'Passo 5: h_v\u207a = [1.4, 0.9] — embedding atualizado! ✓',
-        visLabelClass: 'new',
-        makeVisible: [],
-        nodeUpdate: { id: 'vis_new', cls: 'node-new', labelText: 'h_v^(l+1)', featText: '[1.4, 0.9]', textFill: '#0d6e6e' }
-      }
-    ];
-
-    function nextStep() {
-      if (currentStep >= stepConfigs.length) return;
-      const cfg = stepConfigs[currentStep];
-
-      // Mark previous steps done
-      for (let i = 0; i <= currentStep; i++) {
-        document.getElementById('step' + i).classList.remove('active');
-        document.getElementById('step' + i).classList.add('done');
-        document.querySelector('#step' + i + ' .step-num').textContent = '✓';
-      }
-      // Activate current
-      document.getElementById(cfg.activate).classList.add('active');
-      document.getElementById(cfg.activate).classList.remove('done');
-      document.querySelector('#' + cfg.activate + ' .step-num').textContent = currentStep + 2;
-
-      // Show arrows
-      cfg.arrowsOn.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.style.opacity = '1';
+    function setAgg(method) {
+      const d = aggData[method];
+      // Buttons
+      ['sum','mean','max'].forEach(m => {
+        document.getElementById('btn'+m.charAt(0).toUpperCase()+m.slice(1)).classList.toggle('active', m===method);
       });
-
-      // Make SVG elements visible
-      cfg.makeVisible.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.setAttribute('opacity','1');
-      });
-
-      // Update node if needed
-      if (cfg.nodeUpdate) {
-        const nu = cfg.nodeUpdate;
-        const circle = document.getElementById(nu.id);
-        circle.className.baseVal = nu.cls;
-        const texts = circle.parentElement ? document.querySelectorAll('#updateSvg text') : [];
-        // Find and update text near the node
-        const svgEl = document.getElementById('updateSvg');
-        const allTexts = svgEl.querySelectorAll('text');
-        allTexts.forEach(t => {
-          if (t.getAttribute('x') === '90' && parseFloat(t.getAttribute('y')) < 240) {
-            t.setAttribute('fill', nu.textFill);
-            if (parseFloat(t.getAttribute('y')) <= 232) t.textContent = nu.labelText;
-            else t.textContent = nu.featText;
-          }
-        });
-      }
-
-      // Update vis label
-      const vl = document.getElementById('visLabel');
-      vl.className = 'vec-display ' + cfg.visLabelClass;
-      vl.textContent = cfg.visLabel;
-
-      currentStep++;
-      if (currentStep >= stepConfigs.length) {
-        document.getElementById('nextStepBtn').disabled = true;
-        document.getElementById('nextStepBtn').textContent = '✓ Completo';
-      }
-    }
-
-    function resetSteps() {
-      currentStep = 0;
-      // Reset step items
-      for (let i = 1; i <= 4; i++) {
-        const el = document.getElementById('step' + i);
-        el.classList.remove('active','done');
-        el.querySelector('.step-num').textContent = i + 1;
-      }
-      // Reset arrows
-      ['arr1','arr2','arr3','arr4','arr5'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.style.opacity = '0';
-      });
-      // Reset SVG boxes
-      ['vis_concat','vis_W','vis_sigma'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.setAttribute('opacity','0.3');
-      });
-      // Reset new node
-      const newNode = document.getElementById('vis_new');
-      newNode.className.baseVal = 'node-dim';
-      const svg = document.getElementById('updateSvg');
-      svg.querySelectorAll('text').forEach(t => {
-        if (t.getAttribute('x') === '90') {
-          t.setAttribute('fill','#9ca3af');
-          if (parseFloat(t.getAttribute('y')) <= 232) t.textContent = 'h_v^(l+1)';
-          else t.textContent = '???';
-        }
-      });
-      // Reset vis label
-      const vl = document.getElementById('visLabel');
-      vl.className = 'vec-display';
-      vl.textContent = 'Passo 1: h_v = [0.8, 0.3] | m_agg = [6, 7]';
-      // Re-enable button
-      const btn = document.getElementById('nextStepBtn');
-      btn.disabled = false;
-      btn.textContent = '▶ Próximo passo';
+      // Formula
+      const fbox = document.getElementById('formulaBox');
+      fbox.className = 'method-formula ' + d.cls;
+      document.getElementById('formulaText').innerHTML = d.formula;
+      // Step calc
+      document.getElementById('stepCalc').innerHTML = d.calc;
+      // Result box
+      const rbox = document.getElementById('resultBox');
+      rbox.className = 'result-box ' + d.cls;
+      rbox.textContent = d.label;
+      // SVG label
+      document.getElementById('svgResult').textContent = d.svgRes;
+      // Bars
+      const scale = 90 / d.maxVal;
+      const bar0 = document.getElementById('bar0');
+      const bar1 = document.getElementById('bar1');
+      bar0.className = 'bar ' + d.cls;
+      bar1.className = 'bar ' + d.cls;
+      bar0.style.height = Math.round(d.d0 * scale) + 'px';
+      bar1.style.height = Math.round(d.d1 * scale) + 'px';
+      document.getElementById('barVal0').textContent = d.d0;
+      document.getElementById('barVal1').textContent = d.d1;
     }
 
     (function(){
       const container = document.getElementById('navDots');
       const CURRENT = 9;
-      const TOTAL = 20;
+      const TOTAL = 22;
       for (let i = 1; i <= TOTAL; i++) {
         const dot = document.createElement('div');
         dot.className = 'dot' + (i === CURRENT ? ' active' : '');

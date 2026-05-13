@@ -17,12 +17,12 @@
       background: var(--bg2);
       border: 2px solid var(--border2);
       border-radius: var(--radius);
-      padding: 1.2rem 1rem;
+      padding: 1rem 0.8rem;
       display: flex;
       flex-direction: column;
       align-items: center;
       text-align: center;
-      gap: 0.6rem;
+      gap: 0.5rem;
       cursor: pointer;
       transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
       opacity: 0;
@@ -44,27 +44,66 @@
       from { opacity: 0; transform: translateY(20px) scale(0.95); }
       to   { opacity: 1; transform: translateY(0) scale(1); }
     }
-    .card-emoji { font-size: 2.8rem; line-height: 1; }
+    .card-emoji { font-size: 2rem; line-height: 1; }
     .card-domain {
       font-size: 1.05rem;
       font-weight: 700;
       color: var(--text);
     }
     .card-desc {
-      font-size: 0.88rem;
+      font-size: 0.85rem;
       color: var(--text-muted);
       line-height: 1.5;
     }
     .card-svg-wrap {
       width: 100%;
-      height: 60px;
-      opacity: 0;
-      transition: opacity 0.3s;
+      height: 90px;
     }
-    .domain-card:hover .card-svg-wrap { opacity: 1; }
     .mini-svg { width: 100%; height: 100%; }
+    /* Footer info box */
+    .info-footer {
+      background: var(--bg2);
+      border: 2px solid var(--teal);
+      border-radius: var(--radius);
+      padding: 0.8rem 1.2rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.5rem 1.2rem;
+      min-height: 72px;
+      transition: all 0.3s;
+    }
+    .info-col { display: flex; flex-direction: column; gap: 0.2rem; }
+    .info-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--teal);
+    }
+    .info-value {
+      font-size: 0.9rem;
+      color: var(--text);
+      line-height: 1.45;
+    }
+    .info-attrs {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+    .attr-badge {
+      display: inline-block;
+      background: var(--teal-lt);
+      border: 1px solid #5eead4;
+      border-radius: 4px;
+      padding: 0.05rem 0.35rem;
+      font-size: 0.78rem;
+      color: var(--teal);
+      margin: 0.1rem 0.1rem 0 0;
+      font-family: 'Fira Code', monospace;
+    }
     @media (max-width: 800px) {
       .cards-grid { grid-template-columns: repeat(2, 1fr); }
+      .info-footer { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -73,7 +112,7 @@
     <header class="slide-header">
       <span class="course-tag">GNNs</span>
       <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
-      <span class="slide-counter">Slide 02 / 20</span>
+      <span class="slide-counter">Slide 02 / 22</span>
     </header>
 
     <main class="slide-main">
@@ -84,156 +123,176 @@
 
       <div class="cards-grid">
         <!-- Social Networks -->
-        <div class="domain-card card-0">
+        <div class="domain-card card-0" onmouseenter="showInfo('social')" onmouseleave="showInfo('default')">
           <span class="card-emoji">🧑‍🤝‍🧑</span>
           <span class="card-domain">Redes Sociais</span>
           <span class="card-desc">Amizades, seguidores, influência</span>
           <div class="card-svg-wrap">
-            <svg class="mini-svg" viewBox="0 0 120 60">
-              <line x1="30" y1="30" x2="60" y2="15" stroke="#0d6e6e" stroke-width="1.5"/>
-              <line x1="30" y1="30" x2="60" y2="45" stroke="#0d6e6e" stroke-width="1.5"/>
-              <line x1="60" y1="15" x2="90" y2="25" stroke="#0d6e6e" stroke-width="1.5"/>
-              <line x1="60" y1="45" x2="90" y2="35" stroke="#0d6e6e" stroke-width="1.5"/>
-              <line x1="60" y1="15" x2="60" y2="45" stroke="#0d6e6e" stroke-width="1.5"/>
-              <circle cx="30" cy="30" r="7" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="1.5"/>
-              <circle cx="60" cy="15" r="7" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="1.5"/>
-              <circle cx="60" cy="45" r="7" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="1.5"/>
-              <circle cx="90" cy="25" r="7" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="1.5"/>
-              <circle cx="90" cy="35" r="7" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="1.5"/>
+            <svg class="mini-svg" viewBox="0 0 160 90">
+              <line x1="40" y1="45" x2="80" y2="22" stroke="#0d6e6e" stroke-width="2"/>
+              <line x1="40" y1="45" x2="80" y2="68" stroke="#0d6e6e" stroke-width="2"/>
+              <line x1="80" y1="22" x2="120" y2="35" stroke="#0d6e6e" stroke-width="2"/>
+              <line x1="80" y1="68" x2="120" y2="55" stroke="#0d6e6e" stroke-width="2"/>
+              <line x1="80" y1="22" x2="80" y2="68" stroke="#0d6e6e" stroke-width="2"/>
+              <circle cx="40" cy="45" r="10" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="2"/>
+              <text x="40" y="49" text-anchor="middle" font-size="9" fill="#0d6e6e" font-weight="700">Ana</text>
+              <circle cx="80" cy="22" r="10" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="2"/>
+              <text x="80" y="26" text-anchor="middle" font-size="9" fill="#0d6e6e" font-weight="700">João</text>
+              <circle cx="80" cy="68" r="10" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="2"/>
+              <text x="80" y="72" text-anchor="middle" font-size="9" fill="#0d6e6e" font-weight="700">Bia</text>
+              <circle cx="120" cy="35" r="10" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="2"/>
+              <text x="120" y="39" text-anchor="middle" font-size="9" fill="#0d6e6e" font-weight="700">Leo</text>
+              <circle cx="120" cy="55" r="10" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="2"/>
+              <text x="120" y="59" text-anchor="middle" font-size="9" fill="#0d6e6e" font-weight="700">Mia</text>
             </svg>
           </div>
         </div>
 
         <!-- Molecules -->
-        <div class="domain-card card-1">
+        <div class="domain-card card-1" onmouseenter="showInfo('mol')" onmouseleave="showInfo('default')">
           <span class="card-emoji">⚗️</span>
           <span class="card-domain">Moléculas</span>
           <span class="card-desc">Átomos como nós, ligações como arestas</span>
           <div class="card-svg-wrap">
-            <svg class="mini-svg" viewBox="0 0 120 60">
-              <line x1="35" y1="30" x2="60" y2="15" stroke="#1d4ed8" stroke-width="2"/>
-              <line x1="35" y1="30" x2="60" y2="45" stroke="#1d4ed8" stroke-width="2"/>
-              <line x1="60" y1="15" x2="85" y2="30" stroke="#1d4ed8" stroke-width="2"/>
-              <line x1="60" y1="45" x2="85" y2="30" stroke="#1d4ed8" stroke-width="2"/>
-              <circle cx="35" cy="30" r="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.5"/>
-              <text x="35" y="34" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">C</text>
-              <circle cx="60" cy="15" r="7" fill="#fee2e2" stroke="#b91c1c" stroke-width="1.5"/>
-              <text x="60" y="19" text-anchor="middle" font-size="7" fill="#b91c1c" font-weight="700">O</text>
-              <circle cx="60" cy="45" r="7" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.5"/>
-              <text x="60" y="49" text-anchor="middle" font-size="7" fill="#1d4ed8" font-weight="700">N</text>
-              <circle cx="85" cy="30" r="7" fill="#dcfce7" stroke="#166534" stroke-width="1.5"/>
-              <text x="85" y="34" text-anchor="middle" font-size="7" fill="#166534" font-weight="700">H</text>
+            <svg class="mini-svg" viewBox="0 0 160 90">
+              <line x1="45" y1="45" x2="78" y2="22" stroke="#1d4ed8" stroke-width="2.5"/>
+              <line x1="45" y1="45" x2="78" y2="68" stroke="#1d4ed8" stroke-width="2.5"/>
+              <line x1="82" y1="22" x2="115" y2="45" stroke="#1d4ed8" stroke-width="2.5"/>
+              <line x1="82" y1="68" x2="115" y2="45" stroke="#1d4ed8" stroke-width="2.5"/>
+              <circle cx="45" cy="45" r="13" fill="#dbeafe" stroke="#1d4ed8" stroke-width="2"/>
+              <text x="45" y="49" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">C</text>
+              <circle cx="80" cy="22" r="11" fill="#fee2e2" stroke="#b91c1c" stroke-width="2"/>
+              <text x="80" y="26" text-anchor="middle" font-size="11" fill="#b91c1c" font-weight="700">O</text>
+              <circle cx="80" cy="68" r="11" fill="#dbeafe" stroke="#1d4ed8" stroke-width="2"/>
+              <text x="80" y="72" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">N</text>
+              <circle cx="115" cy="45" r="11" fill="#dcfce7" stroke="#166534" stroke-width="2"/>
+              <text x="115" y="49" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">H</text>
             </svg>
           </div>
         </div>
 
         <!-- Internet -->
-        <div class="domain-card card-2">
+        <div class="domain-card card-2" onmouseenter="showInfo('web')" onmouseleave="showInfo('default')">
           <span class="card-emoji">🌐</span>
           <span class="card-domain">Internet</span>
           <span class="card-desc">Páginas web como nós, hiperlinks como arestas</span>
           <div class="card-svg-wrap">
-            <svg class="mini-svg" viewBox="0 0 120 60">
-              <line x1="60" y1="30" x2="20" y2="15" stroke="#0e7490" stroke-width="1.5" marker-end="url(#arr)"/>
-              <line x1="60" y1="30" x2="100" y2="15" stroke="#0e7490" stroke-width="1.5" marker-end="url(#arr)"/>
-              <line x1="20" y1="15" x2="60" y2="30" stroke="#0e7490" stroke-width="1.5" marker-end="url(#arr)"/>
-              <line x1="100" y1="45" x2="60" y2="30" stroke="#0e7490" stroke-width="1.5" marker-end="url(#arr)"/>
+            <svg class="mini-svg" viewBox="0 0 160 90">
               <defs>
-                <marker id="arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                <marker id="arr2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
                   <path d="M0,0 L6,3 L0,6 Z" fill="#0e7490"/>
                 </marker>
               </defs>
-              <rect x="50" y="22" width="20" height="14" rx="3" fill="#cffafe" stroke="#0e7490" stroke-width="1.5"/>
-              <text x="60" y="32" text-anchor="middle" font-size="7" fill="#0e7490" font-weight="700">www</text>
-              <rect x="10" y="8" width="20" height="14" rx="3" fill="#cffafe" stroke="#0e7490" stroke-width="1.5"/>
-              <text x="20" y="18" text-anchor="middle" font-size="7" fill="#0e7490" font-weight="700">web</text>
-              <rect x="90" y="8" width="20" height="14" rx="3" fill="#cffafe" stroke="#0e7490" stroke-width="1.5"/>
-              <text x="100" y="18" text-anchor="middle" font-size="7" fill="#0e7490" font-weight="700">url</text>
-              <rect x="90" y="38" width="20" height="14" rx="3" fill="#cffafe" stroke="#0e7490" stroke-width="1.5"/>
-              <text x="100" y="48" text-anchor="middle" font-size="7" fill="#0e7490" font-weight="700">link</text>
+              <line x1="80" y1="45" x2="30" y2="22" stroke="#0e7490" stroke-width="1.8" marker-end="url(#arr2)"/>
+              <line x1="80" y1="45" x2="130" y2="22" stroke="#0e7490" stroke-width="1.8" marker-end="url(#arr2)"/>
+              <line x1="30" y1="22" x2="78" y2="43" stroke="#0e7490" stroke-width="1.8" marker-end="url(#arr2)"/>
+              <line x1="130" y1="68" x2="82" y2="47" stroke="#0e7490" stroke-width="1.8" marker-end="url(#arr2)"/>
+              <rect x="65" y="33" width="30" height="20" rx="4" fill="#cffafe" stroke="#0e7490" stroke-width="2"/>
+              <text x="80" y="47" text-anchor="middle" font-size="8" fill="#0e7490" font-weight="700">www</text>
+              <rect x="14" y="10" width="32" height="20" rx="4" fill="#cffafe" stroke="#0e7490" stroke-width="2"/>
+              <text x="30" y="24" text-anchor="middle" font-size="8" fill="#0e7490" font-weight="700">blog</text>
+              <rect x="114" y="10" width="32" height="20" rx="4" fill="#cffafe" stroke="#0e7490" stroke-width="2"/>
+              <text x="130" y="24" text-anchor="middle" font-size="8" fill="#0e7490" font-weight="700">wiki</text>
+              <rect x="114" y="55" width="32" height="20" rx="4" fill="#cffafe" stroke="#0e7490" stroke-width="2"/>
+              <text x="130" y="69" text-anchor="middle" font-size="8" fill="#0e7490" font-weight="700">news</text>
             </svg>
           </div>
         </div>
 
         <!-- Biology -->
-        <div class="domain-card card-3">
+        <div class="domain-card card-3" onmouseenter="showInfo('bio')" onmouseleave="showInfo('default')">
           <span class="card-emoji">🧬</span>
           <span class="card-domain">Biologia</span>
           <span class="card-desc">Redes de proteínas, redes metabólicas</span>
           <div class="card-svg-wrap">
-            <svg class="mini-svg" viewBox="0 0 120 60">
-              <line x1="60" y1="30" x2="30" y2="15" stroke="#6d28d9" stroke-width="1.5"/>
-              <line x1="60" y1="30" x2="90" y2="15" stroke="#6d28d9" stroke-width="1.5"/>
-              <line x1="60" y1="30" x2="40" y2="48" stroke="#6d28d9" stroke-width="1.5"/>
-              <line x1="60" y1="30" x2="80" y2="48" stroke="#6d28d9" stroke-width="1.5"/>
-              <line x1="30" y1="15" x2="90" y2="15" stroke="#6d28d9" stroke-width="1.5"/>
-              <circle cx="60" cy="30" r="8" fill="#ede9fe" stroke="#6d28d9" stroke-width="2"/>
-              <text x="60" y="34" text-anchor="middle" font-size="7" fill="#6d28d9" font-weight="700">P1</text>
-              <circle cx="30" cy="15" r="6" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.5"/>
-              <circle cx="90" cy="15" r="6" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.5"/>
-              <circle cx="40" cy="48" r="6" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.5"/>
-              <circle cx="80" cy="48" r="6" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.5"/>
+            <svg class="mini-svg" viewBox="0 0 160 90">
+              <line x1="80" y1="45" x2="40" y2="22" stroke="#6d28d9" stroke-width="2"/>
+              <line x1="80" y1="45" x2="120" y2="22" stroke="#6d28d9" stroke-width="2"/>
+              <line x1="80" y1="45" x2="50" y2="72" stroke="#6d28d9" stroke-width="2"/>
+              <line x1="80" y1="45" x2="110" y2="72" stroke="#6d28d9" stroke-width="2"/>
+              <line x1="40" y1="22" x2="120" y2="22" stroke="#6d28d9" stroke-width="2"/>
+              <circle cx="80" cy="45" r="14" fill="#ede9fe" stroke="#6d28d9" stroke-width="2.5"/>
+              <text x="80" y="49" text-anchor="middle" font-size="10" fill="#6d28d9" font-weight="700">P1</text>
+              <circle cx="40" cy="22" r="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="2"/>
+              <text x="40" y="26" text-anchor="middle" font-size="9" fill="#6d28d9" font-weight="700">P2</text>
+              <circle cx="120" cy="22" r="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="2"/>
+              <text x="120" y="26" text-anchor="middle" font-size="9" fill="#6d28d9" font-weight="700">P3</text>
+              <circle cx="50" cy="72" r="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="2"/>
+              <text x="50" y="76" text-anchor="middle" font-size="9" fill="#6d28d9" font-weight="700">P4</text>
+              <circle cx="110" cy="72" r="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="2"/>
+              <text x="110" y="76" text-anchor="middle" font-size="9" fill="#6d28d9" font-weight="700">P5</text>
             </svg>
           </div>
         </div>
 
         <!-- Recommendation -->
-        <div class="domain-card card-4">
+        <div class="domain-card card-4" onmouseenter="showInfo('rec')" onmouseleave="showInfo('default')">
           <span class="card-emoji">🎯</span>
           <span class="card-domain">Recomendação</span>
           <span class="card-desc">Usuários e itens como nós, interações como arestas</span>
           <div class="card-svg-wrap">
-            <svg class="mini-svg" viewBox="0 0 120 60">
-              <line x1="25" y1="20" x2="70" y2="15" stroke="#c2410c" stroke-width="1.5"/>
-              <line x1="25" y1="20" x2="70" y2="35" stroke="#c2410c" stroke-width="1.5"/>
-              <line x1="25" y1="40" x2="70" y2="15" stroke="#c2410c" stroke-width="1.5"/>
-              <line x1="25" y1="40" x2="70" y2="50" stroke="#c2410c" stroke-width="1.5"/>
-              <circle cx="25" cy="20" r="8" fill="#ffedd5" stroke="#c2410c" stroke-width="1.5"/>
-              <text x="25" y="24" text-anchor="middle" font-size="7" fill="#c2410c" font-weight="700">U1</text>
-              <circle cx="25" cy="40" r="8" fill="#ffedd5" stroke="#c2410c" stroke-width="1.5"/>
-              <text x="25" y="44" text-anchor="middle" font-size="7" fill="#c2410c" font-weight="700">U2</text>
-              <rect x="60" y="8" width="20" height="14" rx="3" fill="#fef9c3" stroke="#854d0e" stroke-width="1.5"/>
-              <text x="70" y="18" text-anchor="middle" font-size="7" fill="#854d0e" font-weight="700">I1</text>
-              <rect x="60" y="28" width="20" height="14" rx="3" fill="#fef9c3" stroke="#854d0e" stroke-width="1.5"/>
-              <text x="70" y="38" text-anchor="middle" font-size="7" fill="#854d0e" font-weight="700">I2</text>
-              <rect x="60" y="43" width="20" height="14" rx="3" fill="#fef9c3" stroke="#854d0e" stroke-width="1.5"/>
-              <text x="70" y="53" text-anchor="middle" font-size="7" fill="#854d0e" font-weight="700">I3</text>
+            <svg class="mini-svg" viewBox="0 0 160 90">
+              <line x1="35" y1="28" x2="95" y2="20" stroke="#c2410c" stroke-width="1.8"/>
+              <line x1="35" y1="28" x2="95" y2="50" stroke="#c2410c" stroke-width="1.8"/>
+              <line x1="35" y1="62" x2="95" y2="20" stroke="#c2410c" stroke-width="1.8"/>
+              <line x1="35" y1="62" x2="95" y2="75" stroke="#c2410c" stroke-width="1.8"/>
+              <circle cx="35" cy="28" r="13" fill="#ffedd5" stroke="#c2410c" stroke-width="2"/>
+              <text x="35" y="32" text-anchor="middle" font-size="9" fill="#c2410c" font-weight="700">U1</text>
+              <circle cx="35" cy="62" r="13" fill="#ffedd5" stroke="#c2410c" stroke-width="2"/>
+              <text x="35" y="66" text-anchor="middle" font-size="9" fill="#c2410c" font-weight="700">U2</text>
+              <rect x="82" y="10" width="30" height="20" rx="4" fill="#fef9c3" stroke="#854d0e" stroke-width="2"/>
+              <text x="97" y="24" text-anchor="middle" font-size="9" fill="#854d0e" font-weight="700">I1</text>
+              <rect x="82" y="40" width="30" height="20" rx="4" fill="#fef9c3" stroke="#854d0e" stroke-width="2"/>
+              <text x="97" y="54" text-anchor="middle" font-size="9" fill="#854d0e" font-weight="700">I2</text>
+              <rect x="82" y="65" width="30" height="20" rx="4" fill="#fef9c3" stroke="#854d0e" stroke-width="2"/>
+              <text x="97" y="79" text-anchor="middle" font-size="9" fill="#854d0e" font-weight="700">I3</text>
             </svg>
           </div>
         </div>
 
         <!-- Knowledge Graphs -->
-        <div class="domain-card card-5">
+        <div class="domain-card card-5" onmouseenter="showInfo('kg')" onmouseleave="showInfo('default')">
           <span class="card-emoji">📚</span>
           <span class="card-domain">Knowledge Graphs</span>
           <span class="card-desc">Entidades e relações (Wikidata, Freebase)</span>
           <div class="card-svg-wrap">
-            <svg class="mini-svg" viewBox="0 0 120 60">
+            <svg class="mini-svg" viewBox="0 0 160 90">
               <defs>
-                <marker id="karr" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto">
+                <marker id="karr2" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto">
                   <path d="M0,0 L5,2.5 L0,5 Z" fill="#166534"/>
                 </marker>
               </defs>
-              <line x1="28" y1="30" x2="58" y2="30" stroke="#166534" stroke-width="1.5" marker-end="url(#karr)"/>
-              <line x1="75" y1="30" x2="92" y2="15" stroke="#166534" stroke-width="1.5" marker-end="url(#karr)"/>
-              <line x1="75" y1="30" x2="92" y2="45" stroke="#166534" stroke-width="1.5" marker-end="url(#karr)"/>
-              <text x="43" y="26" text-anchor="middle" font-size="6" fill="#166534">nasce_em</text>
-              <rect x="5" y="22" width="23" height="16" rx="3" fill="#dcfce7" stroke="#166534" stroke-width="1.5"/>
-              <text x="16" y="33" text-anchor="middle" font-size="7" fill="#166534" font-weight="700">Ada</text>
-              <rect x="60" y="22" width="15" height="16" rx="3" fill="#dcfce7" stroke="#166534" stroke-width="1.5"/>
-              <text x="67" y="33" text-anchor="middle" font-size="6" fill="#166534" font-weight="700">UK</text>
-              <rect x="93" y="8" width="22" height="14" rx="3" fill="#dcfce7" stroke="#166534" stroke-width="1.5"/>
-              <text x="104" y="18" text-anchor="middle" font-size="6" fill="#166534" font-weight="700">1815</text>
-              <rect x="93" y="38" width="22" height="14" rx="3" fill="#dcfce7" stroke="#166534" stroke-width="1.5"/>
-              <text x="104" y="48" text-anchor="middle" font-size="6" fill="#166534" font-weight="700">Math</text>
+              <line x1="38" y1="45" x2="75" y2="45" stroke="#166534" stroke-width="2" marker-end="url(#karr2)"/>
+              <line x1="100" y1="45" x2="125" y2="22" stroke="#166534" stroke-width="2" marker-end="url(#karr2)"/>
+              <line x1="100" y1="45" x2="125" y2="68" stroke="#166534" stroke-width="2" marker-end="url(#karr2)"/>
+              <text x="57" y="40" text-anchor="middle" font-size="8" fill="#166534">nasceu_em</text>
+              <rect x="5" y="33" width="33" height="24" rx="4" fill="#dcfce7" stroke="#166534" stroke-width="2"/>
+              <text x="21" y="49" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">Ada</text>
+              <rect x="77" y="33" width="25" height="24" rx="4" fill="#dcfce7" stroke="#166534" stroke-width="2"/>
+              <text x="89" y="49" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">UK</text>
+              <rect x="126" y="10" width="28" height="22" rx="4" fill="#dcfce7" stroke="#166534" stroke-width="2"/>
+              <text x="140" y="25" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">1815</text>
+              <rect x="126" y="56" width="28" height="22" rx="4" fill="#dcfce7" stroke="#166534" stroke-width="2"/>
+              <text x="140" y="71" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">Math</text>
             </svg>
           </div>
         </div>
       </div>
 
-      <div class="highlight-box teal" style="margin-top:0.3rem;">
-        <span class="icon">🌍</span>
-        <span>Passe o mouse sobre cada card para ver um esboço do grafo correspondente.</span>
+      <!-- Dynamic footer info box -->
+      <div class="info-footer" id="infoFooter">
+        <div class="info-col">
+          <span class="info-label">🔵 Nós (Vértices)</span>
+          <span class="info-value" id="infoNodes">Passe o mouse sobre um card para ver exemplos</span>
+        </div>
+        <div class="info-col">
+          <span class="info-label">↔ Arestas</span>
+          <span class="info-value" id="infoEdges">—</span>
+        </div>
+        <div class="info-col">
+          <span class="info-label">🏷️ Atributos</span>
+          <span class="info-value" id="infoAttrs">—</span>
+        </div>
       </div>
     </main>
 
@@ -245,10 +304,55 @@
   </div>
 
   <script>
+    const infos = {
+      default: {
+        nodes: 'Passe o mouse sobre um card para ver exemplos de nós e arestas',
+        edges: '—',
+        attrs: 'Nós e arestas podem ter <strong>atributos</strong> (features)'
+      },
+      social: {
+        nodes: '<strong>Pessoas:</strong> Ana, João, Bia…',
+        edges: '<strong>Amizade / seguir</strong> (direcionado ou não)',
+        attrs: '<strong>Nó:</strong> <span class="attr-badge">nome</span><span class="attr-badge">idade</span><span class="attr-badge">localização</span><br><strong>Aresta:</strong> <span class="attr-badge">data_amizade</span><span class="attr-badge">peso_interação</span>'
+      },
+      mol: {
+        nodes: '<strong>Átomos:</strong> C, O, N, H…',
+        edges: '<strong>Ligações químicas</strong> (simples, dupla, tripla)',
+        attrs: '<strong>Nó:</strong> <span class="attr-badge">tipo_átomo</span><span class="attr-badge">carga</span><span class="attr-badge">massa</span><br><strong>Aresta:</strong> <span class="attr-badge">tipo_ligação</span><span class="attr-badge">comprimento</span>'
+      },
+      web: {
+        nodes: '<strong>Páginas web:</strong> blog, wiki, news…',
+        edges: '<strong>Hiperlinks</strong> (direcionado: A → B)',
+        attrs: '<strong>Nó:</strong> <span class="attr-badge">URL</span><span class="attr-badge">n_visitas</span><span class="attr-badge">idioma</span><br><strong>Aresta:</strong> <span class="attr-badge">texto_âncora</span><span class="attr-badge">relevância</span>'
+      },
+      bio: {
+        nodes: '<strong>Proteínas:</strong> P1, P2, P3…',
+        edges: '<strong>Interações proteína–proteína</strong>',
+        attrs: '<strong>Nó:</strong> <span class="attr-badge">sequência</span><span class="attr-badge">função</span><span class="attr-badge">localização_celular</span><br><strong>Aresta:</strong> <span class="attr-badge">força_interação</span><span class="attr-badge">tipo</span>'
+      },
+      rec: {
+        nodes: '<strong>Usuários</strong> (U1, U2) e <strong>Itens</strong> (I1, I2, I3)',
+        edges: '<strong>Avaliações / interações</strong> (usuário × item)',
+        attrs: '<strong>Nó (user):</strong> <span class="attr-badge">idade</span><span class="attr-badge">histórico</span><br><strong>Nó (item):</strong> <span class="attr-badge">categoria</span><span class="attr-badge">preço</span><br><strong>Aresta:</strong> <span class="attr-badge">nota</span><span class="attr-badge">timestamp</span>'
+      },
+      kg: {
+        nodes: '<strong>Entidades:</strong> Ada Lovelace, UK, 1815, Matemática',
+        edges: '<strong>Relações tipadas:</strong> nasceu_em, trabalhou_em',
+        attrs: '<strong>Nó:</strong> <span class="attr-badge">tipo_entidade</span><span class="attr-badge">descrição</span><br><strong>Aresta:</strong> <span class="attr-badge">tipo_relação</span><span class="attr-badge">confiança</span>'
+      }
+    };
+
+    function showInfo(key) {
+      const d = infos[key];
+      document.getElementById('infoNodes').innerHTML = d.nodes;
+      document.getElementById('infoEdges').innerHTML = d.edges;
+      document.getElementById('infoAttrs').innerHTML = d.attrs;
+    }
+
     (function(){
       const container = document.getElementById('navDots');
       const CURRENT = 2;
-      const TOTAL = 20;
+      const TOTAL = 22;
       for (let i = 1; i <= TOTAL; i++) {
         const dot = document.createElement('div');
         dot.className = 'dot' + (i === CURRENT ? ' active' : '');

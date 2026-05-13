@@ -47,20 +47,20 @@
     }
     .hero-prof {
       font-family: 'Fira Code', monospace;
-      font-size: 0.9rem;
+      font-size: 1rem;
       color: var(--text-dim);
       margin: 0.4rem 0 0.7rem;
     }
     .hero-sub {
       color: var(--text-muted);
-      font-size: 1rem;
+      font-size: 1.1rem;
       line-height: 1.6;
     }
 
     .blocks { display: flex; flex-direction: column; gap: 2.2rem; max-width: 960px; width: 100%; }
 
     .block-title {
-      font-size: 0.78rem;
+      font-size: 0.95rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.1em;
@@ -97,28 +97,28 @@
     }
     .sl-num {
       font-family: 'Fira Code', monospace;
-      font-size: 0.68rem;
+      font-size: 0.88rem;
       color: var(--text-dim);
       font-weight: 600;
     }
     .sl-icon { font-size: 1.5rem; line-height: 1; }
     .sl-title {
-      font-size: 0.86rem;
+      font-size: 1.05rem;
       font-weight: 700;
       line-height: 1.35;
       color: var(--text);
     }
     .sl-desc {
-      font-size: 0.72rem;
+      font-size: 0.88rem;
       color: var(--text-muted);
       line-height: 1.45;
       flex: 1;
     }
     .sl-tag {
       align-self: flex-start;
-      padding: 0.15rem 0.55rem;
+      padding: 0.18rem 0.6rem;
       border-radius: 999px;
-      font-size: 0.63rem;
+      font-size: 0.78rem;
       font-weight: 600;
       background: rgba(13,110,110,0.08);
       border: 1px solid rgba(13,110,110,0.2);
@@ -166,22 +166,29 @@
         <a href="slide02.html" class="slide-link">
           <div class="sl-num">Slide 02</div>
           <div class="sl-icon">🔢</div>
-          <div class="sl-title">Representação de Grafos</div>
-          <div class="sl-desc">Matriz de adjacência, lista de adjacência e matriz de incidência — visualização interativa de cada representação.</div>
+          <div class="sl-title">Grafos estão em todo lugar</div>
+          <div class="sl-desc">Domínios de aplicação — redes sociais, moléculas, internet, biologia, recomendação e knowledge graphs.</div>
           <div class="sl-tag">interativo</div>
         </a>
         <a href="slide03.html" class="slide-link">
           <div class="sl-num">Slide 03</div>
           <div class="sl-icon">🏷️</div>
-          <div class="sl-title">Features em Grafos</div>
-          <div class="sl-desc">Features de nós, arestas e grafos — como associar atributos a cada elemento da estrutura.</div>
+          <div class="sl-title">O que é um Grafo?</div>
+          <div class="sl-desc">G = (V, E): nós e arestas com atributos. Representações: matriz de adjacência e lista. Toggle para grafos direcionados e ponderados.</div>
           <div class="sl-tag">interativo</div>
         </a>
         <a href="slide04.html" class="slide-link">
           <div class="sl-num">Slide 04</div>
           <div class="sl-icon">🎯</div>
           <div class="sl-title">Tarefas em Grafos</div>
-          <div class="sl-desc">Três tipos de tarefa: classificação de nós, predição de arestas e classificação de grafos — com exemplos reais.</div>
+          <div class="sl-desc">Três tipos de tarefa: classificação de nós (✓/✗), predição de arestas e classificação de grafos — com exemplos reais.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide05.html" class="slide-link">
+          <div class="sl-num">Slide 05</div>
+          <div class="sl-icon">🤖</div>
+          <div class="sl-title">Detecção de Bots</div>
+          <div class="sl-desc">Exemplo de node classification: bot vs usuário legítimo em rede social. Cada nó tem 2 atributos: idade e posts nos últimos 7 dias.</div>
           <div class="sl-tag">interativo</div>
         </a>
       </div>
@@ -191,43 +198,43 @@
     <div class="block-section">
       <div class="block-title">Bloco 2 — Message Passing</div>
       <div class="slides-grid">
-        <a href="slide05.html" class="slide-link">
-          <div class="sl-num">Slide 05</div>
-          <div class="sl-icon">📨</div>
-          <div class="sl-title">A Ideia de Message Passing</div>
-          <div class="sl-desc">Intuição da propagação de informação entre vizinhos — analogia com rumores em uma rede social.</div>
-          <div class="sl-tag">interativo</div>
-        </a>
         <a href="slide06.html" class="slide-link">
           <div class="sl-num">Slide 06</div>
+          <div class="sl-icon">📨</div>
+          <div class="sl-title">Por que MLP Não Resolve?</div>
+          <div class="sl-desc">Comparação MLP vs GNN — o MLP ignora a estrutura do grafo; GNNs propagam informação pela topologia da rede.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide07.html" class="slide-link">
+          <div class="sl-num">Slide 07</div>
           <div class="sl-icon">⚙️</div>
           <div class="sl-title">Gather, Aggregate, Update</div>
           <div class="sl-desc">As três etapas do message passing passo a passo — gather mensagens dos vizinhos, agregar e atualizar o embedding.</div>
           <div class="sl-tag">interativo</div>
         </a>
-        <a href="slide07.html" class="slide-link">
-          <div class="sl-num">Slide 07</div>
+        <a href="slide08.html" class="slide-link">
+          <div class="sl-num">Slide 08</div>
           <div class="sl-icon">🧮</div>
           <div class="sl-title">GCN: Convolução em Grafos</div>
           <div class="sl-desc">Graph Convolutional Network — a fórmula H = σ(D⁻¹/²ÃD⁻¹/²HW) explicada passo a passo com exemplo matricial.</div>
           <div class="sl-tag">interativo</div>
         </a>
-        <a href="slide08.html" class="slide-link">
-          <div class="sl-num">Slide 08</div>
+        <a href="slide09.html" class="slide-link">
+          <div class="sl-num">Slide 09</div>
           <div class="sl-icon">📐</div>
           <div class="sl-title">Normalização por Grau</div>
           <div class="sl-desc">Por que dividir pelo grau do nó? Visualização do efeito da normalização simétrica D⁻¹/² nos embeddings.</div>
           <div class="sl-tag">interativo</div>
         </a>
-        <a href="slide09.html" class="slide-link">
-          <div class="sl-num">Slide 09</div>
+        <a href="slide10.html" class="slide-link">
+          <div class="sl-num">Slide 10</div>
           <div class="sl-icon">🌊</div>
           <div class="sl-title">Empilhando Camadas</div>
           <div class="sl-desc">Campo receptivo cresce com o número de camadas L — visualize como a informação se propaga a distâncias maiores.</div>
           <div class="sl-tag">interativo</div>
         </a>
-        <a href="slide10.html" class="slide-link">
-          <div class="sl-num">Slide 10</div>
+        <a href="slide11.html" class="slide-link">
+          <div class="sl-num">Slide 11</div>
           <div class="sl-icon">🏗️</div>
           <div class="sl-title">Oversmoothing</div>
           <div class="sl-desc">O problema de muitas camadas — embeddings convergem para o mesmo valor. Demonstração com L crescente.</div>
@@ -240,29 +247,29 @@
     <div class="block-section">
       <div class="block-title">Bloco 3 — Atenção em Grafos</div>
       <div class="slides-grid">
-        <a href="slide11.html" class="slide-link">
-          <div class="sl-num">Slide 11</div>
+        <a href="slide12.html" class="slide-link">
+          <div class="sl-num">Slide 12</div>
           <div class="sl-icon">🔗</div>
           <div class="sl-title">GNN como Convolução Generalizada</div>
           <div class="sl-desc">Comparação CNN vs GNN — kernel em grade regular vs agregação em grafo irregular. CNN é um caso especial de GNN!</div>
           <div class="sl-tag">interativo</div>
         </a>
-        <a href="slide12.html" class="slide-link">
-          <div class="sl-num">Slide 12</div>
+        <a href="slide13.html" class="slide-link">
+          <div class="sl-num">Slide 13</div>
           <div class="sl-icon">⚖️</div>
           <div class="sl-title">Limitação do Pooling Uniforme</div>
           <div class="sl-desc">Por que pesos iguais para todos os vizinhos é problemático — toggle para ver o efeito com e sem atenção.</div>
           <div class="sl-tag">interativo</div>
         </a>
-        <a href="slide13.html" class="slide-link">
-          <div class="sl-num">Slide 13</div>
+        <a href="slide14.html" class="slide-link">
+          <div class="sl-num">Slide 14</div>
           <div class="sl-icon">👁️</div>
           <div class="sl-title">Graph Attention Network (GAT)</div>
           <div class="sl-desc">Arquitetura GAT com slider para ajustar scores e ver os pesos de atenção (softmax) atualizarem em tempo real.</div>
           <div class="sl-tag">interativo</div>
         </a>
-        <a href="slide14.html" class="slide-link">
-          <div class="sl-num">Slide 14</div>
+        <a href="slide15.html" class="slide-link">
+          <div class="sl-num">Slide 15</div>
           <div class="sl-icon">👣</div>
           <div class="sl-title">GAT: Attention Passo a Passo</div>
           <div class="sl-desc">Walkthrough de 4 passos: inicialização → scores → softmax → agregação ponderada, com animações no grafo.</div>
@@ -275,36 +282,36 @@
     <div class="block-section">
       <div class="block-title">Bloco 4 — Conexões e Treinamento</div>
       <div class="slides-grid">
-        <a href="slide15.html" class="slide-link">
-          <div class="sl-num">Slide 15</div>
+        <a href="slide16.html" class="slide-link">
+          <div class="sl-num">Slide 16</div>
           <div class="sl-icon">🤝</div>
           <div class="sl-title">Transformers e GNNs são Primos</div>
           <div class="sl-desc">Self-attention = message passing em grafo completo. Toggle para ver Transformer como GNN esparso.</div>
           <div class="sl-tag">interativo</div>
         </a>
-        <a href="slide16.html" class="slide-link">
-          <div class="sl-num">Slide 16</div>
+        <a href="slide17.html" class="slide-link">
+          <div class="sl-num">Slide 17</div>
           <div class="sl-icon">🔄</div>
           <div class="sl-title">Indutivo vs Transdutivo</div>
           <div class="sl-desc">Dois paradigmas de aprendizado em grafos — um único grafo (Cora) vs múltiplos grafos (moléculas, proteínas).</div>
           <div class="sl-tag">interativo</div>
         </a>
-        <a href="slide17.html" class="slide-link">
-          <div class="sl-num">Slide 17</div>
+        <a href="slide18.html" class="slide-link">
+          <div class="sl-num">Slide 18</div>
           <div class="sl-icon">🔵</div>
           <div class="sl-title">Classificação de Nós</div>
           <div class="sl-desc">Splits treino/val/teste em um único grafo — animação de propagação de embeddings dos nós de treino para o restante.</div>
           <div class="sl-tag">interativo</div>
         </a>
-        <a href="slide18.html" class="slide-link">
-          <div class="sl-num">Slide 18</div>
+        <a href="slide19.html" class="slide-link">
+          <div class="sl-num">Slide 19</div>
           <div class="sl-icon">🔗</div>
           <div class="sl-title">Predição de Arestas</div>
           <div class="sl-desc">score(u,v) = σ(hᵤ · hᵥ) — calcule scores para pares candidatos e veja a aresta de maior probabilidade ser prevista.</div>
           <div class="sl-tag">interativo</div>
         </a>
-        <a href="slide19.html" class="slide-link">
-          <div class="sl-num">Slide 19</div>
+        <a href="slide20.html" class="slide-link">
+          <div class="sl-num">Slide 20</div>
           <div class="sl-icon">✂️</div>
           <div class="sl-title">Split Correto em Link Prediction</div>
           <div class="sl-desc">Abordagem ingênua (data leakage) vs correta — message edges ≠ supervision edges, com SVGs comparativos.</div>
@@ -317,15 +324,15 @@
     <div class="block-section">
       <div class="block-title">Bloco 5 — Conclusão</div>
       <div class="slides-grid">
-        <a href="slide20.html" class="slide-link">
-          <div class="sl-num">Slide 20</div>
+        <a href="slide21.html" class="slide-link">
+          <div class="sl-num">Slide 21</div>
           <div class="sl-icon">🏁</div>
           <div class="sl-title">Resumo: Graph Neural Networks</div>
           <div class="sl-desc">Pipeline completo animado, 5 conceitos-chave que aparecem progressivamente, e demo interativa de seleção de tarefa.</div>
           <div class="sl-tag">interativo</div>
         </a>
-        <a href="slide21.html" class="slide-link">
-          <div class="sl-num">Slide 21</div>
+        <a href="slide22.html" class="slide-link">
+          <div class="sl-num">Slide 22</div>
           <div class="sl-icon">🎯</div>
           <div class="sl-title">Cabeça de Predição: do Embedding à Tarefa</div>
           <div class="sl-desc">Como o MLP usa os embeddings finais da GNN para tarefas de nível de nó, aresta e grafo — com readout (sum/mean/max) para grafos.</div>

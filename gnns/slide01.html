@@ -36,11 +36,6 @@
       gap: 1rem;
       border-bottom: 1px solid var(--border2);
       align-items: center;
-      opacity: 0;
-      transition: opacity 0.4s, transform 0.4s;
-      transform: translateY(8px);
-    }
-    .tbl-row.visible {
       opacity: 1;
       transform: translateY(0);
     }
@@ -105,17 +100,13 @@
     <header class="slide-header">
       <span class="course-tag">GNNs</span>
       <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
-      <span class="slide-counter">Slide 01 / 20</span>
+      <span class="slide-counter">Slide 01 / 22</span>
     </header>
 
     <main class="slide-main">
       <div class="title-block">
         <h1 class="slide-title">Por que precisamos de GNNs?</h1>
         <p class="slide-subtitle">Bloco 1 — Motivação</p>
-      </div>
-
-      <div class="reveal-btn-wrap">
-        <button class="btn-step" id="revealBtn" onclick="revealNext()">▶ Revelar próximo</button>
       </div>
 
       <div style="display:flex;flex-direction:column;align-items:center;gap:1rem;flex:1;">
@@ -151,7 +142,7 @@
           </div>
         </div>
 
-        <div class="insight-box" id="insightBox" style="max-width:700px;width:100%;opacity:0;transition:opacity 0.5s;">
+        <div class="insight-box" id="insightBox" style="max-width:700px;width:100%">
           <span class="i-icon">💡</span>
           <span class="i-text">
             <strong>Grafos têm estrutura irregular</strong> — nem grade, nem sequência.
@@ -169,23 +160,6 @@
   </div>
 
   <script>
-    let revealed = 0;
-    const rows = ['row0','row1','row2','row3'];
-    const btn = document.getElementById('revealBtn');
-
-    function revealNext() {
-      if (revealed < rows.length) {
-        const row = document.getElementById(rows[revealed]);
-        row.classList.add('visible');
-        revealed++;
-        if (revealed === rows.length) {
-          btn.textContent = '✓ Tudo revelado';
-          btn.disabled = true;
-          document.getElementById('insightBox').style.opacity = '1';
-        }
-      }
-    }
-
     function resolveGNN() {
       const cell = document.getElementById('modelCell');
       cell.innerHTML = '<span class="model-name resolved" style="text-align:right;display:block">GNN 🎉</span>';
@@ -195,7 +169,7 @@
     (function(){
       const container = document.getElementById('navDots');
       const CURRENT = 1;
-      const TOTAL = 20;
+      const TOTAL = 22;
       for (let i = 1; i <= TOTAL; i++) {
         const dot = document.createElement('div');
         dot.className = 'dot' + (i === CURRENT ? ' active' : '');
