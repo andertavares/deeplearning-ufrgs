@@ -208,36 +208,36 @@
         <a href="slide07.html" class="slide-link">
           <div class="sl-num">Slide 07</div>
           <div class="sl-icon">⚙️</div>
-          <div class="sl-title">Gather, Aggregate, Update</div>
-          <div class="sl-desc">As três etapas do message passing passo a passo — gather mensagens dos vizinhos, agregar e atualizar o embedding.</div>
+          <div class="sl-title">Message Passing</div>
+          <div class="sl-desc">O paradigma de message passing em grafos — intuição e formalização da propagação de informação entre vizinhos.</div>
           <div class="sl-tag">interativo</div>
         </a>
         <a href="slide08.html" class="slide-link">
           <div class="sl-num">Slide 08</div>
           <div class="sl-icon">🧮</div>
-          <div class="sl-title">GCN: Convolução em Grafos</div>
-          <div class="sl-desc">Graph Convolutional Network — a fórmula H = σ(D⁻¹/²ÃD⁻¹/²HW) explicada passo a passo com exemplo matricial.</div>
+          <div class="sl-title">Etapa 1: Gather</div>
+          <div class="sl-desc">Gather — coleta das mensagens dos nós vizinhos. Primeiro passo do ciclo de message passing com exemplo visual.</div>
           <div class="sl-tag">interativo</div>
         </a>
         <a href="slide09.html" class="slide-link">
           <div class="sl-num">Slide 09</div>
           <div class="sl-icon">📐</div>
-          <div class="sl-title">Normalização por Grau</div>
-          <div class="sl-desc">Por que dividir pelo grau do nó? Visualização do efeito da normalização simétrica D⁻¹/² nos embeddings.</div>
+          <div class="sl-title">Etapa 2: Aggregate</div>
+          <div class="sl-desc">Aggregate — combinação das mensagens coletadas usando funções como sum, mean ou max.</div>
           <div class="sl-tag">interativo</div>
         </a>
         <a href="slide10.html" class="slide-link">
           <div class="sl-num">Slide 10</div>
           <div class="sl-icon">🌊</div>
-          <div class="sl-title">Empilhando Camadas</div>
-          <div class="sl-desc">Campo receptivo cresce com o número de camadas L — visualize como a informação se propaga a distâncias maiores.</div>
+          <div class="sl-title">Etapa 3: Update</div>
+          <div class="sl-desc">Update — atualização do embedding do nó a partir da sua representação atual e das mensagens agregadas.</div>
           <div class="sl-tag">interativo</div>
         </a>
         <a href="slide11.html" class="slide-link">
           <div class="sl-num">Slide 11</div>
           <div class="sl-icon">🏗️</div>
-          <div class="sl-title">Oversmoothing</div>
-          <div class="sl-desc">O problema de muitas camadas — embeddings convergem para o mesmo valor. Demonstração com L crescente.</div>
+          <div class="sl-title">Empilhando Camadas</div>
+          <div class="sl-desc">Campo receptivo cresce com o número de camadas L — visualize como a informação se propaga a distâncias maiores.</div>
           <div class="sl-tag">interativo</div>
         </a>
       </div>
