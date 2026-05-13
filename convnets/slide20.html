@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 20 – Etapas do Backpropagation</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── Layout ──────────────────────────────────────────────────────────── */
+    .bp-layout {
+      display: grid;
+      grid-template-columns: 1fr 1.35fr;
+      gap: 1.25rem;
+      flex: 1;
+    }
+
+    .bp-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.3rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+      box-shadow: var(--shadow);
+      overflow-y: auto;
+    }
+
+    /* ── Step list ───────────────────────────────────────────────────────── */
+    .step-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+    }
+
+    .step-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border2);
+      background: var(--bg3);
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s, transform 0.15s;
+      user-select: none;
+    }
+
+    .step-item:hover {
+      border-color: var(--purple);
+      transform: translateX(3px);
+    }
+
+    .step-item.active {
+      border-color: var(--purple);
+      background: var(--purple-lt);
+    }
+
+    .step-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--border2);
+      color: var(--text-dim);
+      font-size: 0.85rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .step-item.active .step-num {
+      background: var(--purple);
+      color: #fff;
+    }
+
+    .step-content {
+      flex: 1;
+    }
+
+    .step-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.2rem;
+    }
+
+    .step-desc {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
+
+    .step-item.active .step-title { color: var(--purple); }
+
+    /* ── Navigation buttons ──────────────────────────────────────────────── */
+    .step-controls {
+      display: flex;
+      gap: 0.6rem;
+      align-items: center;
+    }
+
+    .btn-step {
+      padding: 0.5rem 1.2rem;
+      border-radius: 999px;
+      border: 1.5px solid var(--purple);
+      background: var(--purple);
+      color: #fff;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .btn-step:hover { background: #4c1d95; transform: scale(1.04); }
+
+    .btn-step.secondary {
+      background: var(--bg3);
+      border-color: var(--border2);
+      color: var(--text-muted);
+    }
+
+    .btn-step.secondary:hover {
+      background: var(--purple-lt);
+      border-color: var(--purple);
+      color: var(--purple);
+    }
+
+    .step-counter-label {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      flex: 1;
+      text-align: right;
+    }
+
+    /* ── Visualization panel ─────────────────────────────────────────────── */
+    .viz-scene {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      flex: 1;
+    }
+
+    /* ── Network flow diagram ─────────────────────────────────────────────── */
+    .net-flow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.25rem;
+      flex-wrap: wrap;
+      padding: 0.5rem;
+    }
+
+    .nf-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.2rem;
+    }
+
+    .nf-box {
+      padding: 0.5rem 0.65rem;
+      border-radius: var(--radius-sm);
+      border: 2px solid;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-align: center;
+      min-width: 72px;
+      transition: box-shadow 0.35s, transform 0.3s;
+      position: relative;
+    }
+
+    .nf-box.highlight {
+      box-shadow: 0 0 0 3px var(--red), 0 0 20px rgba(185,28,28,0.35);
+      transform: scale(1.07);
+    }
+
+    .nf-box.highlight-adj {
+      box-shadow: 0 0 0 3px var(--orange), 0 0 16px rgba(194,65,12,0.3);
+      transform: scale(1.04);
+    }
+
+    .nf-label {
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      font-family: 'Fira Code', monospace;
+      text-align: center;
+    }
+
+    .nf-input   { background: var(--cyan-lt);   border-color: #67e8f9; color: var(--cyan); }
+    .nf-conv    { background: var(--blue-lt);   border-color: #93c5fd; color: var(--blue); }
+    .nf-relu    { background: var(--purple-lt); border-color: #c4b5fd; color: var(--purple); }
+    .nf-pool    { background: var(--green-lt);  border-color: #86efac; color: var(--green); }
+    .nf-dense   { background: #ffedd5;          border-color: #fdba74; color: var(--orange); }
+    .nf-out     { background: #fee2e2;          border-color: #fca5a5; color: var(--red); }
+
+    .nf-arrow {
+      font-size: 1rem;
+      color: var(--text-dim);
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .nf-arrow.back-arrow {
+      color: var(--red);
+      animation: arrowPulse 0.8s ease-in-out infinite alternate;
+    }
+
+    @keyframes arrowPulse {
+      from { opacity: 0.4; transform: scaleX(0.85); }
+      to   { opacity: 1;   transform: scaleX(1); }
+    }
+
+    /* ── Message box ─────────────────────────────────────────────────────── */
+    .viz-message {
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0.8rem 1rem;
+      font-size: 0.92rem;
+      color: var(--text);
+      line-height: 1.55;
+      min-height: 72px;
+      transition: border-color 0.3s, background 0.3s;
+    }
+
+    .viz-message.msg-error   { border-color: #fca5a5; background: #fff1f2; }
+    .viz-message.msg-dense   { border-color: #fdba74; background: #fff7ed; }
+    .viz-message.msg-feature { border-color: #93c5fd; background: #eff6ff; }
+    .viz-message.msg-filter  { border-color: #c4b5fd; background: var(--purple-lt); }
+
+    .msg-icon { font-size: 1.1rem; margin-right: 0.4rem; }
+
+    /* ── Prob bar ────────────────────────────────────────────────────────── */
+    .prob-viz {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+
+    .pv-row {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+    }
+
+    .pv-label {
+      min-width: 110px;
+      font-size: 0.83rem;
+      color: var(--text-muted);
+    }
+
+    .pv-track {
+      flex: 1;
+      height: 16px;
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .pv-fill {
+      height: 100%;
+      border-radius: 8px;
+      transition: width 0.5s ease;
+    }
+
+    .pv-fill.target { background: linear-gradient(90deg, #16a34a, #22c55e); }
+    .pv-fill.actual { background: linear-gradient(90deg, #dc2626, #ef4444); }
+
+    .pv-pct {
+      min-width: 40px;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-align: right;
+    }
+
+    /* ── Filter grid (mini) ──────────────────────────────────────────────── */
+    .filter-mini {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 3px;
+      width: 81px;
+    }
+
+    .fm-cell {
+      width: 25px;
+      height: 25px;
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.6rem;
+      font-weight: 700;
+      border: 1px solid var(--border2);
+    }
+
+    .fm-cell.pos { background: rgba(91,33,182,0.15); border-color: rgba(91,33,182,0.3); color: var(--purple); }
+    .fm-cell.neg { background: rgba(185,28,28,0.1);  border-color: rgba(185,28,28,0.25); color: var(--red); }
+    .fm-cell.zer { background: var(--bg3); color: var(--text-dim); }
+
+    .filter-updating .fm-cell {
+      animation: cellUpdate 0.4s ease both;
+    }
+
+    @keyframes cellUpdate {
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.25); background: rgba(255,220,0,0.4); border-color: #d97706; }
+      100% { transform: scale(1); }
+    }
+
+    canvas { image-rendering: pixelated; display: block; }
+
+    .canvas-label {
+      font-size: 0.72rem;
+      font-family: 'Fira Code', monospace;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    .inline-group {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .inline-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.35rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Redes Convolucionais</span>
+      <span class="prof-tag" style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 7 · Slide 2 / 3</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Etapas do Backpropagation</h1>
+        <p class="slide-subtitle">O erro percorre a rede de trás para frente — clique nos passos para animar cada etapa</p>
+      </div>
+
+      <div class="bp-layout">
+
+        <!-- ── Left: step list ──────────────────────────────────────────── -->
+        <div class="bp-panel">
+          <div class="panel-title">Passos do backprop</div>
+
+          <div class="step-list" id="step-list">
+            <div class="step-item active" data-step="0" onclick="goToStep(0)">
+              <div class="step-num">1</div>
+              <div class="step-content">
+                <div class="step-title">Erro na saída</div>
+                <div class="step-desc">A rede prevê P(X) = 0.30, mas esperamos 1.0 — calculamos a loss.</div>
+              </div>
+            </div>
+            <div class="step-item" data-step="1" onclick="goToStep(1)">
+              <div class="step-num">2</div>
+              <div class="step-content">
+                <div class="step-title">Erro volta pela rede densa</div>
+                <div class="step-desc">Gradientes fluem para trás ajustando pesos das camadas fully-connected.</div>
+              </div>
+            </div>
+            <div class="step-item" data-step="2" onclick="goToStep(2)">
+              <div class="step-num">3</div>
+              <div class="step-content">
+                <div class="step-title">Erro chega nos feature maps</div>
+                <div class="step-desc">Cada feature map recebe um gradiente indicando sua contribuição para o erro.</div>
+              </div>
+            </div>
+            <div class="step-item" data-step="3" onclick="goToStep(3)">
+              <div class="step-num">4</div>
+              <div class="step-content">
+                <div class="step-title">Erro chega aos filtros convolucionais</div>
+                <div class="step-desc">Os pesos dos filtros são ajustados para detectar melhor os padrões relevantes.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="step-controls">
+            <button class="btn-step secondary" id="btn-prev-step" onclick="prevStep()">← Anterior</button>
+            <button class="btn-step" id="btn-next-step" onclick="nextStep()">Próximo →</button>
+            <span class="step-counter-label" id="step-counter">Passo 1 / 4</span>
+          </div>
+
+          <div class="highlight-box blue">
+            <span class="icon">📐</span>
+            <p>A cadeia regra (<em>chain rule</em>) permite calcular o gradiente em cada camada
+            usando o gradiente da camada seguinte. O erro viaja de fora para dentro.</p>
+          </div>
+        </div>
+
+        <!-- ── Right: visualization ─────────────────────────────────────── -->
+        <div class="bp-panel">
+          <div class="panel-title">Visualização — <span id="viz-step-label">Etapa 1: Erro na saída</span></div>
+
+          <!-- Network flow diagram -->
+          <div class="net-flow" id="net-flow">
+            <div class="nf-block">
+              <div class="nf-box nf-input" id="nf-input">🖼️ Entrada</div>
+              <div class="nf-label">9×9</div>
+            </div>
+            <div class="nf-arrow" id="arr-01">→</div>
+            <div class="nf-block">
+              <div class="nf-box nf-conv" id="nf-conv">⚙️ Conv</div>
+              <div class="nf-label">filtros</div>
+            </div>
+            <div class="nf-arrow" id="arr-12">→</div>
+            <div class="nf-block">
+              <div class="nf-box nf-relu" id="nf-relu">⚡ ReLU</div>
+              <div class="nf-label"></div>
+            </div>
+            <div class="nf-arrow" id="arr-23">→</div>
+            <div class="nf-block">
+              <div class="nf-box nf-pool" id="nf-pool">🏊 Pool</div>
+              <div class="nf-label"></div>
+            </div>
+            <div class="nf-arrow" id="arr-34">→</div>
+            <div class="nf-block">
+              <div class="nf-box nf-dense" id="nf-dense">🧠 Dense</div>
+              <div class="nf-label">fully-conn.</div>
+            </div>
+            <div class="nf-arrow" id="arr-45">→</div>
+            <div class="nf-block">
+              <div class="nf-box nf-out" id="nf-out">🎯 Saída</div>
+              <div class="nf-label">P(X)</div>
+            </div>
+          </div>
+
+          <!-- Message -->
+          <div class="viz-message" id="viz-message">
+            <span class="msg-icon">⚠️</span>
+            <strong>Erro alto na saída!</strong>
+            A rede previu P(X) = 0.30, mas o valor esperado é 1.0.
+            Precisamos calcular o <em>loss</em> e propagar gradientes.
+          </div>
+
+          <!-- Step-specific detail -->
+          <div id="step-detail">
+            <!-- rendered by JS -->
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide19.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide21.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    /* ── Data ────────────────────────────────────────────────────────────── */
+    const N = 9;
+    const tileX = [
+      [0,0,0,0,0,0,0,0,0],
+      [0,1,0,0,0,0,0,1,0],
+      [0,0,1,0,0,0,1,0,0],
+      [0,0,0,1,0,1,0,0,0],
+      [0,0,0,0,1,0,0,0,0],
+      [0,0,0,1,0,1,0,0,0],
+      [0,0,1,0,0,0,1,0,0],
+      [0,1,0,0,0,0,0,1,0],
+      [0,0,0,0,0,0,0,0,0],
+    ];
+
+    /* Initial "bad" filter — nearly random, doesn't detect X well */
+    const filterBad  = [[ 0.1,-0.3, 0.2],[ 0.4, 0.1,-0.3],[-0.2, 0.3, 0.1]];
+    /* Final "good" filter — learns the X shape (centro ✖) */
+    const filterGood = [[ 1,-1, 1],[-1, 1,-1],[ 1,-1, 1]];
+
+    /* ── Step definitions ────────────────────────────────────────────────── */
+    const STEPS = [
+      {
+        label: 'Etapa 1: Erro na saída',
+        highlight: ['nf-out'],
+        backArrows: [],
+        msgClass: 'msg-error',
+        msg: '<span class="msg-icon">⚠️</span><strong>Erro alto na saída!</strong> A rede previu P(X) = 0.30, mas o valor esperado é 1.0. Precisamos calcular a <em>loss</em> e propagar gradientes.',
+        detail: 'prob',
+      },
+      {
+        label: 'Etapa 2: Erro volta pela rede densa',
+        highlight: ['nf-dense'],
+        backArrows: ['arr-45'],
+        msgClass: 'msg-dense',
+        msg: '<span class="msg-icon">🧠</span><strong>Primeiro corrigimos as camadas mais próximas da saída.</strong> Os pesos da camada fully-connected são ajustados via gradiente descendente.',
+        detail: 'dense',
+      },
+      {
+        label: 'Etapa 3: Erro chega nos feature maps',
+        highlight: ['nf-relu','nf-pool'],
+        backArrows: ['arr-45','arr-34','arr-23'],
+        msgClass: 'msg-feature',
+        msg: '<span class="msg-icon">🗺️</span><strong>Agora começamos a ajustar quais padrões a rede valoriza.</strong> O gradiente indica quais feature maps contribuíram mais para o erro.',
+        detail: 'features',
+      },
+      {
+        label: 'Etapa 4: Erro chega aos filtros convolucionais',
+        highlight: ['nf-conv'],
+        backArrows: ['arr-45','arr-34','arr-23','arr-12','arr-01'],
+        msgClass: 'msg-filter',
+        msg: '<span class="msg-icon">🔧</span><strong>Ponto crítico!</strong> Se um filtro deveria detectar um "X" mas não detectou bem, seus valores são ajustados para responder mais fortemente a esse padrão.',
+        detail: 'filter',
+      },
+    ];
+
+    let currentStep = 0;
+
+    /* ── Rendering helpers ───────────────────────────────────────────────── */
+    function drawInputSmall(cv) {
+      const ctx = cv.getContext('2d');
+      const CS = cv.width / N;
+      ctx.fillStyle = '#111827';
+      ctx.fillRect(0, 0, cv.width, cv.height);
+      for (let r = 0; r < N; r++)
+        for (let c = 0; c < N; c++)
+          if (tileX[r][c]) { ctx.fillStyle = '#fff'; ctx.fillRect(c*CS, r*CS, CS, CS); }
+      ctx.strokeStyle = 'rgba(51,65,85,0.35)';
+      ctx.lineWidth = 0.5;
+      for (let i = 0; i <= N; i++) {
+        ctx.beginPath(); ctx.moveTo(i*CS,0); ctx.lineTo(i*CS,cv.height); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0,i*CS); ctx.lineTo(cv.width,i*CS); ctx.stroke();
+      }
+    }
+
+    function applyFilter(weights) {
+      const F=3, pad=1, out=[];
+      for (let r=0;r<N;r++) {
+        out.push([]);
+        for (let c=0;c<N;c++) {
+          let s=0;
+          for (let fr=0;fr<F;fr++) for (let fc=0;fc<F;fc++) {
+            const ir=r+fr-pad, ic=c+fc-pad;
+            const px=(ir>=0&&ir<N&&ic>=0&&ic<N)?tileX[ir][ic]:0;
+            s+=weights[fr][fc]*px;
+          }
+          out[r].push(s);
+        }
+      }
+      return out;
+    }
+
+    function drawFeatureMap(cv, resp, strong) {
+      const ctx = cv.getContext('2d');
+      const CS = cv.width / N;
+      let maxAbs=0;
+      for (let r=0;r<N;r++) for (let c=0;c<N;c++) if (Math.abs(resp[r][c])>maxAbs) maxAbs=Math.abs(resp[r][c]);
+      ctx.fillStyle='#000'; ctx.fillRect(0,0,cv.width,cv.height);
+      for (let r=0;r<N;r++) for (let c=0;c<N;c++) {
+        const v=resp[r][c];
+        if (v===0) continue;
+        const t=maxAbs>0?Math.abs(v)/maxAbs:0;
+        const g=Math.round(255*t);
+        ctx.fillStyle=v>0?`rgb(${g},${g},${g})`:`rgb(${g},0,0)`;
+        ctx.fillRect(c*CS,r*CS,CS,CS);
+      }
+      ctx.strokeStyle='rgba(51,65,85,0.3)'; ctx.lineWidth=0.5;
+      for (let i=0;i<=N;i++) {
+        ctx.beginPath();ctx.moveTo(i*CS,0);ctx.lineTo(i*CS,cv.height);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(0,i*CS);ctx.lineTo(cv.width,i*CS);ctx.stroke();
+      }
+    }
+
+    function filterHtml(weights, updating) {
+      const cls = updating ? 'filter-mini filter-updating' : 'filter-mini';
+      let html = `<div class="${cls}">`;
+      for (let r=0;r<3;r++) for (let c=0;c<3;c++) {
+        const v=weights[r][c];
+        const cc = v>0.05?'pos':v<-0.05?'neg':'zer';
+        html += `<div class="fm-cell ${cc}">${v>0?'+':''}${v.toFixed(1)}</div>`;
+      }
+      return html + '</div>';
+    }
+
+    /* ── Detail renderers ────────────────────────────────────────────────── */
+    function renderDetail(step) {
+      const el = document.getElementById('step-detail');
+      if (step === 0) {
+        el.innerHTML = `
+          <div class="prob-viz">
+            <div class="pv-row">
+              <span class="pv-label">Saída esperada</span>
+              <div class="pv-track"><div class="pv-fill target" style="width:100%"></div></div>
+              <span class="pv-pct" style="color:var(--green)">100%</span>
+            </div>
+            <div class="pv-row">
+              <span class="pv-label">Previsão atual</span>
+              <div class="pv-track"><div class="pv-fill actual" style="width:30%"></div></div>
+              <span class="pv-pct" style="color:var(--red)">30%</span>
+            </div>
+            <div style="margin-top:0.35rem;">
+              <span style="background:#fee2e2;border:1.5px solid #fca5a5;border-radius:999px;
+                padding:0.25rem 0.85rem;color:var(--red);font-weight:700;font-size:0.88rem;">
+                Loss = −log(0.30) ≈ 1.20
+              </span>
+            </div>
+          </div>`;
+      } else if (step === 1) {
+        el.innerHTML = `
+          <div class="inline-group">
+            <div class="inline-item">
+              <span class="canvas-label">Imagem X</span>
+              <canvas id="cv-s1" width="90" height="90"></canvas>
+            </div>
+            <div style="flex:1;">
+              <div style="font-size:0.85rem;color:var(--text-muted);line-height:1.6;">
+                <p><strong style="color:var(--orange);">Gradientes na camada densa:</strong></p>
+                <p>Os pesos que ligam as features à saída são atualizados:
+                   <code style="background:var(--bg3);padding:0.1rem 0.4rem;border-radius:4px;font-size:0.78rem;">
+                   w ← w − η · ∂L/∂w</code></p>
+                <p style="margin-top:0.4rem;">O gradiente flui de volta para a camada de pooling.</p>
+              </div>
+            </div>
+          </div>`;
+        requestAnimationFrame(() => drawInputSmall(document.getElementById('cv-s1')));
+      } else if (step === 2) {
+        const fmBad = applyFilter(filterBad);
+        el.innerHTML = `
+          <div class="inline-group">
+            <div class="inline-item">
+              <span class="canvas-label">Feature map (fraco)</span>
+              <canvas id="cv-s2-fm" width="90" height="90"></canvas>
+            </div>
+            <div style="flex:1; font-size:0.85rem; color:var(--text-muted); line-height:1.6;">
+              <p><strong style="color:var(--blue);">Gradiente nos feature maps:</strong></p>
+              <p>Regiões do feature map que <em>deveriam</em> ter ativação alta recebem
+                 gradiente positivo — indicando que o filtro precisa ser ajustado.</p>
+            </div>
+          </div>`;
+        requestAnimationFrame(() => drawFeatureMap(document.getElementById('cv-s2-fm'), fmBad, false));
+      } else if (step === 3) {
+        el.innerHTML = `
+          <div class="inline-group" style="align-items:center;">
+            <div class="inline-item">
+              <span class="canvas-label">Filtro antes</span>
+              ${filterHtml(filterBad, false)}
+            </div>
+            <div style="font-size:1.5rem;color:var(--purple);font-weight:700;padding:0 0.3rem;">→</div>
+            <div class="inline-item">
+              <span class="canvas-label">Filtro depois</span>
+              ${filterHtml(filterGood, true)}
+            </div>
+            <div style="flex:1; font-size:0.83rem; color:var(--text-muted); line-height:1.6;">
+              <p><strong style="color:var(--purple);">Filtro atualizado!</strong></p>
+              <p>Os pesos do filtro foram ajustados para responder mais fortemente
+                 ao padrão X — emergindo a forma do "✖".</p>
+            </div>
+          </div>`;
+      }
+    }
+
+    /* ── Step navigation ─────────────────────────────────────────────────── */
+    function goToStep(s) {
+      currentStep = s;
+      const step = STEPS[s];
+
+      // Update step list
+      document.querySelectorAll('.step-item').forEach((el, i) => {
+        el.classList.toggle('active', i === s);
+      });
+
+      // Update viz label
+      document.getElementById('viz-step-label').textContent = step.label;
+
+      // Update network highlights
+      ['nf-input','nf-conv','nf-relu','nf-pool','nf-dense','nf-out'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.classList.remove('highlight','highlight-adj'); }
+      });
+      step.highlight.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('highlight');
+      });
+
+      // Update arrows (backward flow)
+      ['arr-01','arr-12','arr-23','arr-34','arr-45'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.classList.remove('back-arrow');
+          el.textContent = '→';
+        }
+      });
+      step.backArrows.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.classList.add('back-arrow');
+          el.textContent = '←';
+        }
+      });
+
+      // Update message
+      const msgEl = document.getElementById('viz-message');
+      msgEl.className = 'viz-message ' + step.msgClass;
+      msgEl.innerHTML = step.msg;
+
+      // Render detail
+      renderDetail(s);
+
+      // Update counter and buttons
+      document.getElementById('step-counter').textContent = `Passo ${s+1} / 4`;
+      document.getElementById('btn-prev-step').disabled = s === 0;
+      document.getElementById('btn-next-step').disabled = s === STEPS.length - 1;
+    }
+
+    function nextStep() { if (currentStep < STEPS.length-1) goToStep(currentStep+1); }
+    function prevStep() { if (currentStep > 0) goToStep(currentStep-1); }
+
+    // Init
+    goToStep(0);
+  </script>
+</body>
+</html>

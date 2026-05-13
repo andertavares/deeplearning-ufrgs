@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 15 – LSTM: Memória com Controle</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .lstm-svg { width:100%; display:block; }
+    .svg-wrap { background:var(--bg3); border:1.5px solid var(--border2); border-radius:var(--radius-sm); padding:0.7rem; }
+    .formula-line { font-family:'Fira Code',monospace; font-size:0.85rem; color:var(--text-muted);
+                    text-align:center; margin-top:0.6rem; background:var(--bg3);
+                    border:1px solid var(--border2); border-radius:var(--radius-sm); padding:0.4rem; }
+    .lstm-abbrev { font-size:0.82rem; font-family:'Fira Code',monospace; color:var(--text-dim);
+                   text-align:center; margin-bottom:0.6rem; letter-spacing:0.03em; }
+    .lstm-abbrev strong { color:var(--teal); }
+    .memory-badge { display:inline-block; padding:0.15rem 0.5rem; border-radius:4px;
+                    font-size:0.75rem; font-weight:700; font-family:'Fira Code',monospace; }
+    .badge-lt { background:var(--blue-lt); color:var(--blue); border:1px solid #93c5fd; }
+    .badge-st { background:var(--teal-lt); color:var(--teal); border:1px solid #5eead4; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Redes Neurais Recorrentes</span>
+      <span class="prof-tag" style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 9 · Slide 1 / 2</span>
+    </header>
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">LSTM: Memória com Controle</h1>
+        <p class="slide-subtitle">Dois estados separados: memória interna e estado exposto</p>
+      </div>
+      <div class="content-split">
+        <div class="panel panel-left">
+          <h2 class="panel-title">🏗️ Estrutura Tradicional da LSTM</h2>
+          <p class="lstm-abbrev"><strong>LSTM</strong> = Long Short-Term Memory</p>
+          <div class="svg-wrap">
+            <svg class="lstm-svg" viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arrowB" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+                  <path d="M0,0 L7,3.5 L0,7 Z" fill="#1d4ed8"/>
+                </marker>
+                <marker id="arrowT" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+                  <path d="M0,0 L7,3.5 L0,7 Z" fill="#0d6e6e"/>
+                </marker>
+                <marker id="arrowG" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+                  <path d="M0,0 L7,3.5 L0,7 Z" fill="#22c55e"/>
+                </marker>
+              </defs>
+
+              <!-- ── cell state track (top) ──────────────────────── -->
+              <!-- label left -->
+              <text x="6" y="38" font-size="9" font-family="Fira Code" fill="#1d4ed8" font-weight="700">c&#x209C;&#x208B;&#x2081;</text>
+              <!-- line left to cell -->
+              <line x1="6" y1="50" x2="105" y2="50" stroke="#1d4ed8" stroke-width="3" marker-end="url(#arrowB)"/>
+              <!-- line cell to right -->
+              <line x1="215" y1="50" x2="314" y2="50" stroke="#1d4ed8" stroke-width="3" marker-end="url(#arrowB)"/>
+              <!-- label right -->
+              <text x="273" y="38" font-size="9" font-family="Fira Code" fill="#1d4ed8" font-weight="700">c&#x209C;</text>
+
+              <!-- ── LSTM cell box ──────────────────────────────── -->
+              <rect x="105" y="50" width="110" height="100" rx="10" fill="var(--bg2)" stroke="var(--border2)" stroke-width="2.5"/>
+              <text x="160" y="97" text-anchor="middle" font-size="11" font-family="Fira Code" fill="var(--text)" font-weight="700">LSTM</text>
+              <text x="160" y="113" text-anchor="middle" font-size="9" font-family="Fira Code" fill="var(--text-muted)">célula</text>
+
+
+              <!-- ── hidden state track (bottom) ────────────────── -->
+              <!-- label left -->
+              <text x="6" y="163" font-size="9" font-family="Fira Code" fill="#0d6e6e" font-weight="700">h&#x209C;&#x208B;&#x2081;</text>
+              <!-- line left to cell -->
+              <line x1="6" y1="150" x2="105" y2="150" stroke="#0d6e6e" stroke-width="3" marker-end="url(#arrowT)"/>
+              <!-- line cell to right -->
+              <line x1="215" y1="150" x2="314" y2="150" stroke="#0d6e6e" stroke-width="3" marker-end="url(#arrowT)"/>
+              <!-- label right -->
+              <text x="272" y="163" font-size="9" font-family="Fira Code" fill="#0d6e6e" font-weight="700">h&#x209C;</text>
+
+              <!-- ── x_t input (bottom-up) ──────────────────────── -->
+              <line x1="160" y1="195" x2="160" y2="137" stroke="#22c55e" stroke-width="2" marker-end="url(#arrowG)"/>
+              <text x="168" y="194" font-size="9" font-family="Fira Code" fill="#22c55e" font-weight="700">x&#x209C;</text>
+            </svg>
+          </div>
+          <div class="formula-line">c&#x209C;, h&#x209C; &#x2208; &#x211D;&#x207F; &#8212; dois vetores distintos</div>
+        </div>
+        <div class="panel panel-right">
+          <h2 class="panel-title">🔑 Os Dois Tipos de Memória</h2>
+          <div class="concept-cards">
+            <div class="concept-card" style="--delay:0s">
+              <span class="card-icon">📦</span>
+              <div class="card-text">
+                <strong>Cell state c&#x209C; &nbsp;<span class="memory-badge badge-lt">memória de longo prazo</span></strong>
+                <p>Flui pelo topo da célula com pouca interferência — caminho direto que preserva informação por muitos passos. Permite gradientes mais estáveis.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.1s">
+              <span class="card-icon">👁️</span>
+              <div class="card-text">
+                <strong>Hidden state h&#x209C; &nbsp;<span class="memory-badge badge-st">memória de curto prazo</span></strong>
+                <p>Estado exposto que flui pela base da célula — enviado à próxima célula e usado como saída. Representa o que a rede "lembra agora".</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.2s">
+              <span class="card-icon">🚪</span>
+              <div class="card-text"><strong>Gates (portas)</strong><p>Mecanismos que controlam o que entra, permanece e sai de c&#x209C; e h&#x209C; a cada passo.</p></div>
+            </div>
+          </div>
+          <div class="insight-box" style="margin-top:0.8rem;">
+            <span class="i-icon">🗒️</span>
+            <div class="i-text"><strong>A LSTM funciona como um sistema editorial de notas:</strong> decide o que apagar, escrever e mostrar.</div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide14.html'">&#8592; Anterior</button>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide16.html'">Próximo &#8594;</button>
+    </nav>
+  </div>
+</body>
+</html>

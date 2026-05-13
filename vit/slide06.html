@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 06 – Atenção de Ponta a Ponta</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <!-- slide06: single-panel step-by-step with editable matrices -->
+  <style>
+    /* ── Editable inputs ── */
+    .mat-input { font-family:'Fira Code',monospace; font-size:0.82rem; font-weight:600; width:3rem; text-align:right; border:none; background:transparent; outline:none; border-bottom:1.5px dashed var(--border2); padding:0.05rem 0.1rem; border-radius:2px 2px 0 0; -moz-appearance:textfield; }
+    .mat-input::-webkit-outer-spin-button, .mat-input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
+    .mat-input:focus { border-bottom-color:var(--teal); background:var(--bg3); }
+    /* ── Matrix table ── */
+    .mat-table { font-family:'Fira Code',monospace; font-size:0.85rem; border-collapse:collapse; }
+    .mat-table th { color:var(--text-dim); font-weight:600; font-size:0.75rem; padding:0.15rem 0.42rem; text-align:right; }
+    .mat-table td { padding:0.2rem 0.4rem; text-align:right; border-radius:3px; min-width:2.5rem; }
+    .mat-table td.lbl-cell { font-weight:600; color:var(--text-dim); text-align:left; min-width:2rem; padding-right:0.25rem; }
+    .mat-table tr.row-hl td  { background:var(--blue-lt) !important; }
+    .mat-table tr.row-hl td.lbl-cell { color:var(--blue); }
+    .mat-table td.col-hl     { background:var(--purple-lt) !important; color:var(--purple) !important; font-weight:700 !important; }
+    .mat-table th.col-hl-hdr { color:var(--purple) !important; font-weight:700; }
+    .mat-table tr.row-hl-s td { border-top:2px solid rgba(13,110,110,0.4); border-bottom:2px solid rgba(13,110,110,0.4); }
+    .mat-table tr.row-hl-s td.lbl-cell { color:var(--teal); font-weight:700; border-left:3px solid var(--teal); padding-left:0.28rem; }
+    .mat-table tr.row-hl-z td { background:var(--blue-lt) !important; }
+    .mat-table tr.row-hl-z td.lbl-cell { color:var(--blue); }
+    .mat-table td.col-hl-v   { background:var(--purple-lt) !important; }
+    .mat-table th.col-hl-v   { color:var(--purple) !important; font-weight:700; }
+    .mat-table td.cell-sel-z { outline:2.5px solid var(--teal); outline-offset:-2px; border-radius:4px; }
+    .mat-table tr.row-click  { cursor:pointer; transition:background 0.12s; }
+    .mat-table tr.row-click:hover:not(.row-hl-s) td { background:var(--bg3) !important; }
+    /* ── Brackets ── */
+    .bracket-wrap { display:flex; align-items:stretch; }
+    .bracket-l { border-left:3px solid; border-top:3px solid; border-bottom:3px solid; border-radius:4px 0 0 4px; width:6px; }
+    .bracket-r { border-right:3px solid; border-top:3px solid; border-bottom:3px solid; border-radius:0 4px 4px 0; width:6px; }
+    .bc-q  { border-color:var(--blue);   }
+    .bc-k  { border-color:var(--purple); }
+    .bc-kt { border-color:var(--purple); }
+    .bc-s  { border-color:var(--teal);   }
+    .bc-v  { border-color:var(--purple); }
+    .bc-z  { border-color:var(--blue);   }
+    /* ── Mat block / label ── */
+    .mat-block { display:flex; flex-direction:column; align-items:flex-start; gap:0.18rem; }
+    .mat-label { font-family:'Fira Code',monospace; font-size:0.77rem; font-weight:700; padding:0.08rem 0.42rem; border-radius:6px; }
+    .mat-lbl-q   { background:var(--blue-lt);   color:var(--blue);   }
+    .mat-lbl-k   { background:var(--purple-lt); color:var(--purple); }
+    .mat-lbl-kt  { background:var(--purple-lt); color:var(--purple); }
+    .mat-lbl-qkt { background:var(--teal-lt);   color:var(--teal);   }
+    .mat-lbl-sc  { background:#fef3c7;           color:#92400e;       }
+    .mat-lbl-s   { background:var(--teal-lt);   color:var(--teal);   }
+    .mat-lbl-v   { background:var(--purple-lt); color:var(--purple); }
+    .mat-lbl-z   { background:var(--blue-lt);   color:var(--blue);   }
+    /* ── Comp row / operators ── */
+    .comp-row { display:flex; align-items:center; gap:0.5rem; flex-wrap:nowrap; overflow-x:auto; padding:0.2rem 0; }
+    .comp-op  { font-family:'Fira Code',monospace; font-size:1.15rem; font-weight:700; color:var(--text-dim); flex-shrink:0; align-self:center; }
+    .comp-eq  { color:var(--teal); }
+    /* ── Heatmap ── */
+    .hm-grid { display:flex; flex-direction:column; gap:0; }
+    .hm-row  { display:flex; align-items:center; }
+    .hm-row-lbl { font-family:'Fira Code',monospace; font-size:0.72rem; font-weight:600; color:var(--text-muted); width:2rem; text-align:right; padding-right:0.3rem; flex-shrink:0; }
+    .hm-col-lbl { font-family:'Fira Code',monospace; font-size:0.7rem; font-weight:600; color:var(--text-dim); text-align:center; }
+    .hm-cell { display:flex; align-items:center; justify-content:center; font-family:'Fira Code',monospace; font-size:0.75rem; font-weight:600; border-radius:4px; border:1.5px solid transparent; width:2.9rem; height:2.1rem; transition:border-color 0.15s, transform 0.1s; }
+    .hm-cell.click { cursor:pointer; }
+    .hm-cell.click:hover { transform:scale(1.05); border-color:var(--text-muted) !important; }
+    .hm-cell.sel   { border-color:var(--teal) !important; box-shadow:0 0 0 2px rgba(13,110,110,0.28); }
+    /* ── Softmax row buttons ── */
+    .smax-row-btn { display:flex; align-items:center; gap:0; cursor:pointer; border-radius:5px; padding:1px 0; transition:background 0.12s; }
+    .smax-row-btn.sel .smax-row-lbl { color:var(--teal); font-weight:700; }
+    .smax-row-lbl { font-family:'Fira Code',monospace; font-size:0.72rem; font-weight:600; color:var(--text-muted); width:2rem; text-align:right; padding-right:0.3rem; flex-shrink:0; }
+    .attn-cell { display:flex; align-items:center; justify-content:center; font-family:'Fira Code',monospace; font-size:0.75rem; font-weight:600; border-radius:4px; width:2.9rem; height:2.1rem; cursor:pointer; border:1.5px solid transparent; transition:border-color 0.15s, transform 0.1s; }
+    .attn-cell.sel { border-color:var(--teal) !important; box-shadow:0 0 0 2px rgba(13,110,110,0.28); }
+    /* ── Step sections ── */
+    .step-section { display:flex; flex-direction:column; gap:0.38rem; padding:0.48rem 0.72rem; background:var(--bg2); border:1.5px solid var(--border); border-radius:var(--radius-sm); }
+    .step-section.step-edit { border-color:var(--border2); background:var(--bg1); }
+    .step-hdr { display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; }
+    .step-badge { font-family:'Fira Code',monospace; font-size:0.69rem; font-weight:700; padding:0.1rem 0.5rem; border-radius:999px; flex-shrink:0; }
+    .step-badge-edit { background:#fef3c7;           color:#92400e;       }
+    .step-badge-1    { background:var(--purple-lt); color:var(--purple); }
+    .step-badge-2    { background:var(--blue-lt);   color:var(--blue);   }
+    .step-badge-3    { background:#fef3c7;           color:#92400e;       }
+    .step-badge-4    { background:var(--teal-lt);   color:var(--teal);   }
+    .step-badge-5    { background:#ede9fe;           color:#4c1d95;       }
+    .step-title { font-size:0.82rem; font-weight:700; color:var(--text-muted); }
+    /* ── Reset button ── */
+    .reset-btn { font-family:'Fira Code',monospace; font-size:0.73rem; font-weight:600; padding:0.18rem 0.6rem; border-radius:999px; border:1.5px solid var(--border2); background:var(--bg3); color:var(--text-muted); cursor:pointer; margin-left:auto; transition:background 0.15s; }
+    .reset-btn:hover { background:var(--bg2); color:var(--text-dim); }
+    /* ── Transpose arrow ── */
+    .t-arrow { display:flex; flex-direction:column; align-items:center; gap:0.08rem; padding:0 0.45rem; align-self:center; }
+    .t-arrow-sym { font-size:1.2rem; color:var(--purple); line-height:1; }
+    .t-arrow-lbl { font-family:'Fira Code',monospace; font-size:0.63rem; color:var(--text-muted); }
+    /* ── Detail box ── */
+    .detail-box { background:var(--bg3); border:1.5px solid var(--border2); border-radius:var(--radius-sm); padding:0.42rem 0.65rem; font-family:'Fira Code',monospace; font-size:0.79rem; display:flex; flex-direction:column; gap:0.22rem; }
+    .detail-line { display:flex; align-items:center; gap:0.28rem; flex-wrap:wrap; color:var(--text-muted); }
+    .val-badge { padding:0.07rem 0.33rem; border-radius:4px; font-weight:700; font-size:0.77rem; font-family:'Fira Code',monospace; }
+    .vb-blue   { background:var(--blue-lt);   color:var(--blue);   }
+    .vb-purple { background:var(--purple-lt); color:var(--purple); }
+    .vb-teal   { background:var(--teal-lt);   color:var(--teal);   }
+    /* ── Z term ── */
+    .step-term { display:flex; align-items:center; gap:0.35rem; padding:0.28rem 0.5rem; border-radius:var(--radius-sm); border:1.5px solid var(--border2); font-family:'Fira Code',monospace; font-size:0.79rem; flex-wrap:wrap; }
+    .weight-badge { padding:0.08rem 0.38rem; border-radius:999px; font-weight:700; font-size:0.77rem; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+    .fade-in { animation:fadeIn 0.2s ease both; }
+    /* ── Step advance/back buttons ── */
+    .step-advance-btn { font-family:'Fira Code',monospace; font-size:0.75rem; font-weight:700; padding:0.22rem 0.7rem; border-radius:999px; cursor:pointer; transition:all 0.15s; }
+    .step-btn-purple { background:var(--purple-lt); color:var(--purple); border:1.5px solid #c4b5fd; }
+    .step-btn-purple:hover { background:#c4b5fd; color:white; }
+    .step-btn-blue { background:var(--blue-lt); color:var(--blue); border:1.5px solid #93c5fd; }
+    .step-btn-blue:hover { background:#93c5fd; color:white; }
+    .step-back-btn { font-family:'Fira Code',monospace; font-size:0.73rem; font-weight:600; padding:0.18rem 0.55rem; border-radius:999px; border:1.5px solid var(--border2); background:var(--bg3); color:var(--text-muted); cursor:pointer; transition:background 0.15s; }
+    .step-back-btn:hover { background:var(--bg2); color:var(--text-dim); }
+    /* ── Locality demo ── */
+    .loc-cell { box-sizing:border-box; cursor:pointer; border:1px solid transparent; transition:border-color 0.1s, background 0.1s; }
+    .loc-cell:hover { border-color:rgba(255,255,255,0.55) !important; background:rgba(255,255,255,0.10) !important; }
+    .loc-cell.lc-sel { background:rgba(255,255,255,0.22) !important; border:2px solid white !important; }
+    .loc-cell.lc-attended { border:1.5px solid rgba(239,68,68,0.65) !important; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">ViT</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 4 · Slide 2 / 4</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Atenção de Ponta a Ponta</h1>
+        <p class="slide-subtitle">De Q, K, V aos embeddings contextuais A = S · V, S = softmax(QKᵀ / √dₖ)</p>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:0.5rem;width:100%;">
+
+        <!-- ✏ Editable matrices -->
+        <div class="step-section step-edit">
+          <div class="step-hdr">
+            <span class="step-badge step-badge-edit">✏ Entrada</span>
+            <span class="step-title">Matrizes Q, K e V — edite os valores para explorar</span>
+            <button class="reset-btn" onclick="resetMatrices()">↺ Restaurar padrão</button>
+          </div>
+          <div id="edit-section" style="display:flex;gap:1.1rem;flex-wrap:wrap;align-items:flex-start;"></div>
+        </div>
+
+        <!-- Passo 1: Q, K → Kᵀ → QKᵀ (progressive) -->
+        <div class="step-section">
+          <div class="step-hdr">
+            <span class="step-badge step-badge-1">Passo 1</span>
+            <span class="step-title" id="step12-title">Q e K &nbsp;—&nbsp; matrizes de consulta e chave</span>
+          </div>
+          <div id="step12-content"></div>
+          <div id="step12-btn-area" style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;margin-top:0.2rem;"></div>
+          <div id="step12-explain"></div>
+          <div class="detail-box" id="step2-detail" style="display:none;"></div>
+        </div>
+
+        <!-- Passo 2: Softmax → S -->
+        <div class="step-section">
+          <div class="step-hdr">
+            <span class="step-badge step-badge-4">Passo 2</span>
+            <span class="step-title">Softmax por linha → S &nbsp;—&nbsp; pesos de atenção (cada linha soma 1)</span>
+          </div>
+          <div id="step4-matrix"></div>
+          <div class="detail-box" id="step4-detail" style="display:none;"></div>
+          <div style="background:var(--purple-lt);border:1.5px solid #c4b5fd;border-radius:var(--radius-sm);padding:0.32rem 0.62rem;font-size:0.77rem;line-height:1.4;">
+            <span style="font-weight:700;color:var(--purple);">Cada linha de S</span>
+            <span style="color:var(--text-muted);"> soma exatamente 1 — é uma distribuição de probabilidade que diz o quanto cada patch "presta atenção" a cada outro.</span>
+          </div>
+        </div>
+
+        <!-- Passo 3: S · V = Z -->
+        <div class="step-section">
+          <div class="step-hdr">
+            <span class="step-badge step-badge-5">Passo 3</span>
+            <span class="step-title">A = S · V &nbsp;—&nbsp; embeddings contextuais dos patches</span>
+          </div>
+          <div id="step5-row"></div>
+          <div class="detail-box" id="step5-detail">
+            <div style="font-style:italic;color:var(--text-dim);font-size:0.79rem;">Clique em uma célula de A ou em uma linha de S para ver a soma ponderada dos values.</div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="insight-box" style="flex-direction:column;gap:0.55rem;align-items:stretch;">
+        <div style="display:flex;gap:0.85rem;align-items:flex-start;">
+          <div class="i-icon">🎓</div>
+          <div class="i-text">
+            Cada linha de A é o <strong>embedding contextual do patch</strong>: uma mistura ponderada de todos os values. Diferente das convoluções, <strong>a atenção não tem restrição de localidade</strong> — qualquer patch pode atender a qualquer outro, independente da distância na imagem. Clique num patch marcado (●) abaixo para ver um exemplo hipotético.
+          </div>
+        </div>
+        <!-- Locality demo -->
+        <div style="display:flex;gap:0.9rem;align-items:flex-start;flex-wrap:wrap;">
+          <div style="position:relative;flex-shrink:0;">
+            <img src="illusion.png" style="width:240px;height:240px;display:block;border-radius:5px;" />
+            <svg id="lc-svg" width="240" height="240" style="position:absolute;top:0;left:0;pointer-events:none;"></svg>
+            <div id="lc-grid" style="position:absolute;top:0;left:0;display:grid;grid-template-columns:repeat(8,30px);grid-template-rows:repeat(8,30px);width:240px;height:240px;"></div>
+          </div>
+          <div id="lc-info" style="flex:1;min-width:155px;max-width:260px;"></div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide05.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide07.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    // ── Constants ──
+    const PATCH_LABELS = ['P1','P2','P3','P4'];
+    const PATCH_DESC   = [
+      'topo-esq (pessoa alta)',
+      'topo-dir (pessoa pequena)',
+      'base-esq (pernas + piso)',
+      'base-dir (corpo + piso)',
+    ];
+    const SEG_COLORS = ['#0d6e6e','#1d4ed8','#6d28d9','#c2410c'];
+    const SEG_BG     = ['var(--teal-lt)','var(--blue-lt)','var(--purple-lt)','#fee2e2'];
+    const DK = 2;
+
+    // ── Helpers ──
+    function round1(x) { return Math.round(x * 10) / 10; }
+    function fmt(v)    { return (v >= 0 ? ' ' : '') + v.toFixed(1); }
+    function deepCopy(M) { return M.map(r => [...r]); }
+    function transpose(M) { return M[0].map((_,j) => M.map(r => r[j])); }
+
+    function computePE(pos) {
+      return [
+        Math.sin(pos / Math.pow(10000, 0/2)),
+        Math.cos(pos / Math.pow(10000, 0/2)),
+      ].map(v => round1(v));
+    }
+
+    // ── Default matrices (derived from X·WQ, X·WK, X·WV) ──
+    function getDefaults() {
+      const POS_ENC   = [0,1,2,3].map(i => computePE(i));
+      const PATCH_EMB = [[2,1],[1,2],[0,1],[1,0]];
+      const WQ = [[1,0],[0,1]], WK = [[0,1],[1,0]], WV = [[1,1],[0,1]];
+      const X = PATCH_EMB.map((row,i) => row.map((v,j) => round1(v + POS_ENC[i][j])));
+      const mm = (rows,W) => rows.map(row => W[0].map((_,j) => round1(row.reduce((s,v,k) => s+v*W[k][j], 0))));
+      return { Q: mm(X,WQ), K: mm(X,WK), V: mm(X,WV) };
+    }
+
+    // ── Mutable state: matrices & selections ──
+    let Q, K, V;
+    let step1State = 0;   // 0: Q+K, 1: +Kᵀ, 2: Q·Kᵀ=QKᵀ
+    let selQKT  = null;   // {i,j} — QKᵀ cell (step 2 detail)
+    let selSRow = null;   // number — S row (step 4 detail)
+    let selZCell = null;  // {i,j} — Z cell (step 5 detail)
+    let selSRowZ = null;  // number — S row selected from step-5 panel
+    let selScaled = null; // {i,j} — scaled cell (step 1 state 3 detail)
+
+    function initMatrices() {
+      const d = getDefaults();
+      Q = deepCopy(d.Q); K = deepCopy(d.K); V = deepCopy(d.V);
+    }
+
+    // ── Attention computation ──
+    function computeQKT_()  { return Q.map(qi => K.map(kj => round1(qi.reduce((s,v,k) => s+v*kj[k], 0)))); }
+    function softmaxRow(row) {
+      const mx = Math.max(...row), exps = row.map(x => Math.exp(x-mx));
+      const sm = exps.reduce((a,b) => a+b, 0);
+      return exps.map(e => round1(e/sm));
+    }
+    function computeAll() {
+      const QKT    = computeQKT_();
+      const scaled = QKT.map(row => row.map(s => round1(s / Math.sqrt(DK))));
+      const S      = scaled.map(row => softmaxRow(row));
+      const Z      = S.map(si => [0,1].map(j => round1(si.reduce((s,a,k) => s+a*V[k][j], 0))));
+      return { QKT, scaled, S, Z };
+    }
+
+    // ── Color helpers ──
+    function scoreToColor(val, mn, mx) {
+      const t = Math.min(1, Math.max(0, (val-mn)/(mx-mn+0.001)));
+      if (t < 0.5) { const f=t/0.5; return `rgb(${Math.round(254-f*14)},${Math.round(226-f*20)},${Math.round(226+f*10)})`; }
+      else          { const f=(t-0.5)/0.5; return `rgb(${Math.round(240-f*89)},${Math.round(250-f*4)},${Math.round(236-f*10)})`; }
+    }
+    function attnToColor(v) {
+      return `rgb(${Math.round(255-v*(255-13))},${Math.round(255-v*(255-110))},${Math.round(255-v*(255-110))})`;
+    }
+
+    // ══ BUILD: editable matrix ══
+    function buildEditMatrix(mat, name, lblCls, brcCls, posCol) {
+      let h = `<div class="mat-block"><div class="mat-label ${lblCls}">${name} <span style="font-size:0.62rem;font-weight:400;opacity:0.65;">(editável)</span></div>`;
+      h += `<div class="bracket-wrap"><div class="bracket-l ${brcCls}"></div>`;
+      h += `<table class="mat-table"><thead><tr><th></th><th>d₁</th><th>d₂</th></tr></thead><tbody>`;
+      mat.forEach((row,i) => {
+        h += `<tr><td class="lbl-cell">${PATCH_LABELS[i]}</td>`;
+        row.forEach((v,j) => {
+          const col = v>=0 ? posCol : '#c2410c';
+          h += `<td style="padding:0.05rem 0.08rem;"><input type="number" step="0.1" value="${v.toFixed(1)}" class="mat-input" style="color:${col};" data-mat="${name}" data-i="${i}" data-j="${j}" data-pos="${posCol}" oninput="onMatInput(this)"/></td>`;
+        });
+        h += `</tr>`;
+      });
+      h += `</tbody></table><div class="bracket-r ${brcCls}"></div></div></div>`;
+      return h;
+    }
+
+    function onMatInput(el) {
+      const v = parseFloat(el.value);
+      if (isNaN(v)) return;
+      const r = round1(v), mn = el.dataset.mat, i = +el.dataset.i, j = +el.dataset.j;
+      if (mn==='Q') Q[i][j]=r; else if (mn==='K') K[i][j]=r; else if (mn==='V') V[i][j]=r;
+      el.style.color = r>=0 ? el.dataset.pos : '#c2410c';
+      renderComputedSteps();
+    }
+
+    // ══ BUILD: K read-only ══
+    function buildMatKRO() {
+      let h = `<div class="mat-block"><div class="mat-label mat-lbl-k">K</div><div class="bracket-wrap"><div class="bracket-l bc-k"></div>`;
+      h += `<table class="mat-table"><thead><tr><th></th><th>d₁</th><th>d₂</th></tr></thead><tbody>`;
+      K.forEach((row,i) => {
+        h += `<tr><td class="lbl-cell">${PATCH_LABELS[i]}</td>`;
+        row.forEach(v => { h += `<td style="color:${v>=0?'#6d28d9':'#c2410c'}">${fmt(v)}</td>`; });
+        h += `</tr>`;
+      });
+      return h + `</tbody></table><div class="bracket-r bc-k"></div></div></div>`;
+    }
+
+    // ══ BUILD: Kᵀ (optional col highlight) ══
+    function buildMatKt(hlCol) {
+      const Kt = transpose(K);
+      let h = `<div class="mat-block"><div class="mat-label mat-lbl-kt">Kᵀ</div><div class="bracket-wrap"><div class="bracket-l bc-kt"></div>`;
+      h += `<table class="mat-table"><thead><tr><th></th>`;
+      PATCH_LABELS.forEach((l,j) => { h += `<th class="${j===hlCol?'col-hl-hdr':''}">${l}</th>`; });
+      h += `</tr></thead><tbody>`;
+      Kt.forEach((row,i) => {
+        h += `<tr><td class="lbl-cell">d${['₁','₂'][i]}</td>`;
+        row.forEach((v,j) => { h += `<td class="${j===hlCol?'col-hl':''}" style="color:${v>=0?'#6d28d9':'#c2410c'}">${fmt(v)}</td>`; });
+        h += `</tr>`;
+      });
+      return h + `</tbody></table><div class="bracket-r bc-kt"></div></div></div>`;
+    }
+
+    // ══ BUILD: Q (optional row highlight) ══
+    function buildMatQ(hlRow) {
+      let h = `<div class="mat-block"><div class="mat-label mat-lbl-q">Q</div><div class="bracket-wrap"><div class="bracket-l bc-q"></div>`;
+      h += `<table class="mat-table"><thead><tr><th></th><th>d₁</th><th>d₂</th></tr></thead><tbody>`;
+      Q.forEach((row,i) => {
+        h += `<tr class="${i===hlRow?'row-hl':''}"><td class="lbl-cell">${PATCH_LABELS[i]}</td>`;
+        row.forEach(v => { h += `<td style="color:${v>=0?'#0d6e6e':'#c2410c'}">${fmt(v)}</td>`; });
+        h += `</tr>`;
+      });
+      return h + `</tbody></table><div class="bracket-r bc-q"></div></div></div>`;
+    }
+
+    // ══ BUILD: QKᵀ heatmap (clickable, optional hl) ══
+    function buildQKTHeatmap(QKT, hlRow, hlCol, clickable, cellOnly) {
+      const mn = Math.min(...QKT.flat()), mx = Math.max(...QKT.flat());
+      let h = `<div class="mat-block"><div class="mat-label mat-lbl-qkt">QKᵀ</div><div class="hm-grid">`;
+      h += `<div class="hm-row"><div style="width:2rem;flex-shrink:0;"></div>`;
+      PATCH_LABELS.forEach((l,j) => {
+        const hl = !cellOnly && j===hlCol ? 'color:var(--purple);font-weight:700;' : '';
+        h += `<div class="hm-col-lbl" style="width:2.9rem;text-align:center;${hl}">${l}</div>`;
+      });
+      h += `</div>`;
+      QKT.forEach((row,i) => {
+        const rhl = !cellOnly && i===hlRow ? 'color:var(--blue);font-weight:700;' : '';
+        h += `<div class="hm-row"><div class="hm-row-lbl" style="${rhl}">${PATCH_LABELS[i]}</div>`;
+        row.forEach((v,j) => {
+          const bg = scoreToColor(v,mn,mx), tc = v<(mn+mx)/2 ? '#7f1d1d' : '#064e3b';
+          const isSel = i===hlRow && j===hlCol;
+          let brd = isSel ? 'border-color:var(--teal)!important;box-shadow:0 0 0 2px rgba(13,110,110,0.28);'
+                  : !cellOnly && j===hlCol ? 'border-color:var(--purple)50;'
+                  : !cellOnly && i===hlRow ? 'border-color:var(--blue)50;' : '';
+          const onclick = clickable ? `onclick="selectQKTCell(${i},${j})"` : '';
+          h += `<div class="hm-cell ${clickable?'click':''} ${isSel?'sel':''}" style="background:${bg};color:${tc};${brd}" ${onclick}>${v.toFixed(1)}</div>`;
+        });
+        h += `</div>`;
+      });
+      return h + `</div></div>`;
+    }
+
+    // ══ BUILD: Scaled matrix heatmap (optional clickable) ══
+    function buildScaledMatrix(scaled, hlRow, hlCol, clickable) {
+      const mn = Math.min(...scaled.flat()), mx = Math.max(...scaled.flat());
+      let h = `<div class="mat-block"><div class="mat-label mat-lbl-sc">QKᵀ ÷ √dₖ</div><div class="hm-grid">`;
+      h += `<div class="hm-row"><div style="width:2rem;flex-shrink:0;"></div>`;
+      PATCH_LABELS.forEach((l,j) => {
+        const hl = j===hlCol ? 'color:#92400e;font-weight:700;' : '';
+        h += `<div class="hm-col-lbl" style="width:2.9rem;text-align:center;${hl}">${l}</div>`;
+      });
+      h += `</div>`;
+      scaled.forEach((row,i) => {
+        const rhl = i===hlRow ? 'color:#92400e;font-weight:700;' : '';
+        h += `<div class="hm-row"><div class="hm-row-lbl" style="${rhl}">${PATCH_LABELS[i]}</div>`;
+        row.forEach((v,j) => {
+          const bg = scoreToColor(v,mn,mx), tc = v<(mn+mx)/2 ? '#7f1d1d' : '#064e3b';
+          const isSel = i===hlRow && j===hlCol;
+          let brd = isSel ? 'border-color:#92400e!important;box-shadow:0 0 0 2px rgba(146,64,14,0.28);'
+                  : j===hlCol ? 'border-color:#92400e50;' : i===hlRow ? 'border-color:#92400e30;' : '';
+          const onclick = clickable ? `onclick="selectScaledCell(${i},${j})"` : '';
+          h += `<div class="hm-cell ${clickable?'click':''} ${isSel?'sel':''}" style="background:${bg};color:${tc};${brd}" ${onclick}>${v.toFixed(1)}</div>`;
+        });
+        h += `</div>`;
+      });
+      return h + `</div></div>`;
+    }
+
+    // ══ BUILD: S matrix (clickable rows for step 4) ══
+    function buildSMatrix(S, hlRow) {
+      let h = `<div class="mat-block"><div class="mat-label mat-lbl-s">S = softmax(QKᵀ/√dₖ)</div><div style="display:flex;flex-direction:column;gap:0;">`;
+      h += `<div class="hm-row"><div style="width:2rem;flex-shrink:0;"></div>`;
+      PATCH_LABELS.forEach(l => { h += `<div class="hm-col-lbl" style="width:2.9rem;text-align:center;">${l}</div>`; });
+      h += `</div>`;
+      S.forEach((row,i) => {
+        const sel = i===hlRow;
+        h += `<div class="smax-row-btn ${sel?'sel':''}" onclick="selectSRow(${i})"><div class="smax-row-lbl">${PATCH_LABELS[i]}</div>`;
+        row.forEach(v => {
+          const bg = attnToColor(v), tc = v>0.45 ? 'white' : '#1a2e1a';
+          h += `<div class="attn-cell ${sel?'sel':''}" style="background:${bg};color:${tc};">${v.toFixed(1)}</div>`;
+        });
+        h += `</div>`;
+      });
+      return h + `</div></div>`;
+    }
+
+    // ══ BUILD: S matrix for step 5 (table style, row highlight) ══
+    function buildSMatrixZ(S, hlRow) {
+      let h = `<div class="mat-block"><div class="mat-label mat-lbl-s">S</div><div class="bracket-wrap"><div class="bracket-l bc-s"></div>`;
+      h += `<table class="mat-table"><thead><tr><th></th>`;
+      PATCH_LABELS.forEach(l => { h += `<th>${l}</th>`; });
+      h += `</tr></thead><tbody>`;
+      S.forEach((row,i) => {
+        h += `<tr class="row-click ${i===hlRow?'row-hl-s':''}" onclick="selectSRowZ(${i})"><td class="lbl-cell">${PATCH_LABELS[i]}</td>`;
+        row.forEach(v => {
+          const bg = attnToColor(v), tc = v>0.45 ? 'white' : '#1a2e1a';
+          h += `<td style="background:${bg};color:${tc};border-radius:3px;">${v.toFixed(1)}</td>`;
+        });
+        h += `</tr>`;
+      });
+      return h + `</tbody></table><div class="bracket-r bc-s"></div></div></div>`;
+    }
+
+    // ══ BUILD: V (optional col highlight) ══
+    function buildMatV(hlCol) {
+      let h = `<div class="mat-block"><div class="mat-label mat-lbl-v">V</div><div class="bracket-wrap"><div class="bracket-l bc-v"></div>`;
+      h += `<table class="mat-table"><thead><tr><th></th>`;
+      ['d₁','d₂'].forEach((c,j) => { h += `<th class="${j===hlCol?'col-hl-v':''}">${c}</th>`; });
+      h += `</tr></thead><tbody>`;
+      V.forEach((row,i) => {
+        h += `<tr><td class="lbl-cell">${PATCH_LABELS[i]}</td>`;
+        row.forEach((v,j) => { h += `<td class="${j===hlCol?'col-hl-v':''}" style="color:${v>=0?'#6d28d9':'#c2410c'}">${fmt(v)}</td>`; });
+        h += `</tr>`;
+      });
+      return h + `</tbody></table><div class="bracket-r bc-v"></div></div></div>`;
+    }
+
+    // ══ BUILD: Z matrix (clickable cells) ══
+    function buildMatZ(Z, hlRow) {
+      let h = `<div class="mat-block"><div class="mat-label mat-lbl-z">A (embedding contextual)</div><div class="bracket-wrap"><div class="bracket-l bc-z"></div>`;
+      h += `<table class="mat-table"><thead><tr><th></th><th>d₁</th><th>d₂</th></tr></thead><tbody>`;
+      Z.forEach((row,i) => {
+        h += `<tr class="${i===hlRow?'row-hl-z':''}"><td class="lbl-cell">${PATCH_LABELS[i]}</td>`;
+        row.forEach((v,j) => {
+          const isSel = selZCell && selZCell.i===i && selZCell.j===j;
+          h += `<td class="${isSel?'cell-sel-z':''}" style="color:${v>=0?'#1d4ed8':'#c2410c'};cursor:pointer;border-radius:4px;" onclick="selectZCell(${i},${j})">${fmt(v)}</td>`;
+        });
+        h += `</tr>`;
+      });
+      return h + `</tbody></table><div class="bracket-r bc-z"></div></div></div>`;
+    }
+
+    // ══ RENDER: edit section (called on init + reset only) ══
+    function renderEditSection() {
+      document.getElementById('edit-section').innerHTML =
+        buildEditMatrix(Q,'Q','mat-lbl-q','bc-q','#0d6e6e')
+        + buildEditMatrix(K,'K','mat-lbl-k','bc-k','#6d28d9')
+        + buildEditMatrix(V,'V','mat-lbl-v','bc-v','#6d28d9');
+    }
+
+    // ══ RENDER: Step 1 — Q+K → Kᵀ → QKᵀ → scaled (progressive) ══
+    function renderStep12(QKT, scaled) {
+      const TITLES = [
+        'Q e K &nbsp;—&nbsp; matrizes de consulta e chave',
+        'Transpondo K &nbsp;→&nbsp; Kᵀ &nbsp;—&nbsp; linhas (patches) viram colunas',
+        'Q · Kᵀ = QKᵀ &nbsp;—&nbsp; clique em uma célula para ver o produto interno',
+        'Escalonamento &nbsp;—&nbsp; QKᵀ ÷ √dₖ &nbsp;(dₖ = 2, √2 ≈ 1.4)',
+      ];
+      document.getElementById('step12-title').innerHTML = TITLES[step1State];
+      const content = document.getElementById('step12-content');
+      const detail  = document.getElementById('step2-detail');
+      const btnArea = document.getElementById('step12-btn-area');
+      const explain = document.getElementById('step12-explain');
+      if (step1State === 0) {
+        content.innerHTML = `<div class="comp-row fade-in">${buildMatQ(null)}<div style="width:1.2rem;"></div>${buildMatKRO()}</div>`;
+        btnArea.innerHTML = `<button class="step-advance-btn step-btn-purple" onclick="advanceStep12()">Transpor K →</button>`;
+        detail.style.display = 'none'; explain.innerHTML = '';
+      } else if (step1State === 1) {
+        content.innerHTML = `<div class="comp-row fade-in">${buildMatQ(null)}<div style="width:1.2rem;"></div>${buildMatKRO()}<div class="t-arrow"><div class="t-arrow-sym">⟶</div><div class="t-arrow-lbl">transpor</div></div>${buildMatKt(null)}</div>`;
+        btnArea.innerHTML = `<button class="step-back-btn" onclick="backStep12()">← Voltar</button><button class="step-advance-btn step-btn-blue" onclick="advanceStep12()">Calcular Q · Kᵀ →</button>`;
+        detail.style.display = 'none'; explain.innerHTML = '';
+      } else if (step1State === 2) {
+        const hlR = selQKT ? selQKT.i : null, hlC = selQKT ? selQKT.j : null;
+        content.innerHTML = `<div class="comp-row fade-in">${buildMatQ(hlR)}<div class="comp-op">·</div>${buildMatKt(hlC)}<div class="comp-op comp-eq">=</div>${buildQKTHeatmap(QKT,hlR,hlC,true,true)}</div>`;
+        btnArea.innerHTML = `<button class="step-back-btn" onclick="backStep12()">← Voltar</button><button class="step-advance-btn step-btn-purple" onclick="advanceStep12()">Escalonar ÷ √dₖ →</button>`;
+        detail.style.display = ''; explain.innerHTML = '';
+        if (!selQKT) {
+          detail.innerHTML = `<div style="font-style:italic;color:var(--text-dim);font-size:0.79rem;">Clique em uma célula de QKᵀ para destacar a linha de Q e a coluna de Kᵀ usadas no produto interno.</div>`;
+        } else {
+          const {i,j} = selQKT;
+          const terms = Q[i].map((q,d) =>
+            `<span class="val-badge vb-blue">${q.toFixed(1)}</span><span style="color:var(--text-dim)">×</span><span class="val-badge vb-purple">${K[j][d].toFixed(1)}</span>`
+          ).join(`<span style="color:var(--text-dim);padding:0 2px">+</span>`);
+          detail.innerHTML = `<div class="fade-in"><div class="detail-line" style="font-weight:700;margin-bottom:0.08rem;"><span style="color:var(--blue);">Q[${PATCH_LABELS[i]}]</span><span style="color:var(--text-dim);"> · </span><span style="color:var(--purple);">K[${PATCH_LABELS[j]}]</span><span style="color:var(--text-dim);"> = QKᵀ[${i+1},${j+1}]</span></div><div class="detail-line">${terms} <span style="color:var(--text-dim)">=</span> <span class="val-badge vb-teal">${QKT[i][j].toFixed(1)}</span></div></div>`;
+        }
+      } else {
+        // state 3: scaling — keep Q·Kᵀ=QKᵀ visible, append ÷√dₖ=scaled
+        const hlR = selScaled ? selScaled.i : null, hlC = selScaled ? selScaled.j : null;
+        content.innerHTML = `<div class="comp-row fade-in" style="overflow-x:auto;">${buildMatQ(hlR)}<div class="comp-op">·</div>${buildMatKt(hlC)}<div class="comp-op comp-eq">=</div>${buildQKTHeatmap(QKT,hlR,hlC,false,true)}<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 0.6rem;align-self:center;flex-shrink:0;"><div style="font-family:'Fira Code',monospace;font-size:1.05rem;font-weight:700;color:#92400e;">÷</div><div style="font-family:'Fira Code',monospace;font-size:0.75rem;color:var(--text-muted);">√dₖ ≈ 1.4</div></div><div class="comp-op comp-eq">=</div>${buildScaledMatrix(scaled,hlR,hlC,true)}</div>`;
+        btnArea.innerHTML = `<button class="step-back-btn" onclick="backStep12()">← Voltar</button>`;
+        detail.style.display = '';
+        explain.innerHTML = `<div class="fade-in" style="background:var(--blue-lt);border:1.5px solid #93c5fd;border-radius:var(--radius-sm);padding:0.32rem 0.62rem;font-size:0.77rem;line-height:1.4;"><span style="font-weight:700;color:var(--blue);">Por que ÷√dₖ?</span><span style="color:var(--text-muted);"> Com dₖ grande, produtos internos crescem e a softmax satura em zonas de gradiente quase nulo. Dividir por √dₖ mantém a variância sob controle.</span></div>`;
+        if (!selScaled) {
+          detail.innerHTML = `<div style="font-style:italic;color:var(--text-dim);font-size:0.79rem;">Clique em uma célula de QKᵀ ÷ √dₖ para ver o valor de origem em QKᵀ.</div>`;
+        } else {
+          const {i,j} = selScaled;
+          detail.innerHTML = `<div class="fade-in"><div class="detail-line" style="font-weight:700;margin-bottom:0.08rem;"><span style="color:var(--teal);">QKᵀ[${PATCH_LABELS[i]},${PATCH_LABELS[j]}]</span><span style="color:var(--text-dim);"> ÷ √dₖ = </span><span style="color:#92400e;">escalonado[${i+1},${j+1}]</span></div><div class="detail-line"><span class="val-badge vb-teal">${QKT[i][j].toFixed(1)}</span><span style="color:var(--text-dim);"> ÷ 1.4 =</span><span class="val-badge" style="background:#fef3c7;color:#92400e;">${scaled[i][j].toFixed(1)}</span></div></div>`;
+        }
+      }
+    }
+
+    // ══ BUILD: Attention arrows on image ══
+    function buildAttnArrows(S, selRow) {
+      if (selRow === null) return '';
+      // 2×2 patch grid: P1=TL, P2=TR, P3=BL, P4=BR
+      // SVG viewBox: image 200×200, extra margin 30px top/bottom/sides for self-loop
+      const IMG = 200, M = 28; // margin around image for self-loops
+      const W = IMG + 2*M, H = IMG + 2*M;
+      const half = IMG / 2;
+      // patch centers in image coords (offset by margin M)
+      const pc = [
+        {x: M + half/2,        y: M + half/2},        // P1 TL
+        {x: M + half + half/2, y: M + half/2},        // P2 TR
+        {x: M + half/2,        y: M + half + half/2}, // P3 BL
+        {x: M + half + half/2, y: M + half + half/2}, // P4 BR
+      ];
+      const row = S[selRow];
+      // defs: arrowhead markers per patch colour
+      let defs = '<defs>';
+      PATCH_LABELS.forEach((_,k) => {
+        defs += `<marker id="ahi${k}" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><polygon points="0,0 8,4 0,8" fill="${SEG_COLORS[k]}"/></marker>`;
+      });
+      defs += '</defs>';
+      // patch overlays (dim non-selected, highlight selected)
+      let overlays = '';
+      // patch positions in image coords
+      const patchX = [0, half, 0,    half];
+      const patchY = [0, 0,    half, half];
+      PATCH_LABELS.forEach((_,k) => {
+        const alpha = k === selRow ? 0.22 : 0.06;
+        overlays += `<rect x="${M+patchX[k]}" y="${M+patchY[k]}" width="${half}" height="${half}" fill="${SEG_COLORS[k]}" opacity="${alpha}"/>`;
+        if (k === selRow) {
+          overlays += `<rect x="${M+patchX[k]}" y="${M+patchY[k]}" width="${half}" height="${half}" fill="none" stroke="${SEG_COLORS[k]}" stroke-width="3"/>`;
+        }
+      });
+      // grid lines on image
+      const gx = M + half, gy = M + half;
+      const grid = `<line x1="${M}" y1="${gy}" x2="${M+IMG}" y2="${gy}" stroke="white" stroke-width="1.5" opacity="0.6"/>
+                    <line x1="${gx}" y1="${M}" x2="${gx}" y2="${M+IMG}" stroke="white" stroke-width="1.5" opacity="0.6"/>`;
+      // arrows
+      let arrows = '';
+      row.forEach((v, j) => {
+        const sw   = Math.max(1, v * 9).toFixed(1);
+        const op   = '1';
+        const {x:x1, y:y1} = pc[selRow];
+        const {x:x2, y:y2} = pc[j];
+        if (j === selRow) {
+          // self-loop: small arc outside the patch corner
+          const corner = [
+            {cx: M,        cy: M},
+            {cx: M+IMG,    cy: M},
+            {cx: M,        cy: M+IMG},
+            {cx: M+IMG,    cy: M+IMG},
+          ][j];
+          const r = 18;
+          arrows += `<circle cx="${corner.cx}" cy="${corner.cy}" r="${r}" fill="none" stroke="${SEG_COLORS[j]}" stroke-width="${sw}" opacity="${op}" marker-end="url(#ahi${j})"/>`;
+        } else {
+          // straight arrow between patch centres, offset perpendicular slightly
+          const dx = x2-x1, dy = y2-y1, len = Math.sqrt(dx*dx+dy*dy);
+          const nx = dx/len, ny = dy/len;
+          const pad = 14;
+          const sx = (x1 + nx*pad).toFixed(1), sy = (y1 + ny*pad).toFixed(1);
+          const ex = (x2 - nx*(pad+10)).toFixed(1), ey = (y2 - ny*(pad+10)).toFixed(1);
+          arrows += `<line x1="${sx}" y1="${sy}" x2="${ex}" y2="${ey}" stroke="${SEG_COLORS[j]}" stroke-width="${sw}" opacity="${op}" marker-end="url(#ahi${j})"/>`;
+        }
+      });
+      // patch labels + weight badges
+      let labels = '';
+      PATCH_LABELS.forEach((l, k) => {
+        const {x, y} = pc[k];
+        const isSel = k === selRow;
+        labels += `<text x="${x}" y="${y+1}" text-anchor="middle" dominant-baseline="middle" font-family="Fira Code,monospace" font-size="16" font-weight="700" fill="#ff2020" stroke="black" stroke-width="3" paint-order="stroke">${l}  ${row[k].toFixed(2)}</text>`;
+      });
+      const title = `<div style="font-family:'Fira Code',monospace;font-size:0.72rem;color:${SEG_COLORS[selRow]};font-weight:700;margin-bottom:0.25rem;">atenção de ${PATCH_LABELS[selRow]} — ${PATCH_DESC[selRow]}</div>`;
+      return `<div style="flex-shrink:0;">${title}<svg width="${W}" height="${H}" style="display:block;border-radius:6px;overflow:hidden;">
+        <image href="illusion.png" x="${M}" y="${M}" width="${IMG}" height="${IMG}" preserveAspectRatio="xMidYMid slice"/>
+        ${grid}${defs}${overlays}${arrows}${labels}
+      </svg></div>`;
+    }
+
+    // ══ RENDER: Step 4 — softmax → S ══
+    function renderStep4(scaled, S) {
+      const sfInd = `<div class="t-arrow"><div style="font-family:'Fira Code',monospace;font-size:0.72rem;font-weight:700;color:var(--teal);">softmax</div><div class="t-arrow-lbl">por linha</div><div class="t-arrow-sym" style="color:var(--teal);">⟶</div></div>`;
+      document.getElementById('step4-matrix').innerHTML =
+        `<div style="display:flex;gap:0.6rem;align-items:flex-start;flex-wrap:wrap;overflow-x:auto;padding:0.2rem 0;">${buildScaledMatrix(scaled,null,null,false)}${sfInd}${buildSMatrix(S,selSRow)}</div>`;
+      const area = document.getElementById('step4-detail');
+      if (selSRow === null) { area.style.display = 'none'; return; }
+      area.style.display = '';
+      const row = S[selSRow];
+      const arrowsHTML = buildAttnArrows(S, selSRow);
+      let bars = `<div class="detail-line" style="font-weight:700;color:var(--text-muted);margin-bottom:0.06rem;">${PATCH_LABELS[selSRow]}: "${PATCH_DESC[selSRow]}"</div>`;
+      PATCH_LABELS.forEach((l,j) => {
+        const pct = (row[j]*100).toFixed(0);
+        bars += `<div class="detail-line"><span class="val-badge vb-teal">${row[j].toFixed(1)}</span><span style="color:var(--text-dim);">(${pct}%) → ${l}</span><div style="flex:1;height:6px;background:var(--bg3);border-radius:4px;overflow:hidden;min-width:38px;"><div style="height:100%;width:${pct}%;background:var(--teal);border-radius:4px;transition:width 0.3s;"></div></div></div>`;
+      });
+      area.innerHTML = `<div class="fade-in" style="display:flex;gap:0.8rem;align-items:flex-start;flex-wrap:wrap;">${arrowsHTML}<div style="flex:1;min-width:130px;">${bars}</div></div>`;
+    }
+
+    // ══ RENDER: Step 5 — S · V = Z ══
+    function renderStep5(S, Z) {
+      const hlRow = selZCell ? selZCell.i : selSRowZ;
+      const hlVCol = selZCell ? selZCell.j : null;
+      document.getElementById('step5-row').innerHTML =
+        `<div class="comp-row fade-in">${buildSMatrixZ(S,hlRow)}<div class="comp-op">·</div>${buildMatV(hlVCol)}<div class="comp-op comp-eq">=</div>${buildMatZ(Z,hlRow)}</div>`;
+      // detail
+      const area = document.getElementById('step5-detail');
+      const i = selZCell ? selZCell.i : (selSRowZ !== null ? selSRowZ : null);
+      if (i === null) {
+        area.innerHTML = `<div style="font-style:italic;color:var(--text-dim);font-size:0.79rem;">Clique em uma célula de A ou em uma linha de S para ver a soma ponderada dos values.</div>`;
+        return;
+      }
+      const j = selZCell ? selZCell.j : 0;
+      const sRow = S[i], vCol = PATCH_LABELS.map((_,k) => V[k][j]);
+      const terms = sRow.map((w,k) => round1(w*vCol[k]));
+      const dimLbl = ['d₁','d₂'][j];
+      const termLines = PATCH_LABELS.map((l,k) =>
+        `<div class="step-term fade-in" style="border-color:${SEG_COLORS[k]}30;background:${SEG_BG[k]}55;">`
+        + `<span class="weight-badge" style="background:${SEG_COLORS[k]};color:white;">${sRow[k].toFixed(1)}</span>`
+        + `<span style="color:var(--text-dim);">×</span>`
+        + `<span style="color:${SEG_COLORS[k]};font-family:'Fira Code',monospace;">${fmt(vCol[k])}</span>`
+        + `<span style="color:var(--text-dim);">=</span>`
+        + `<span style="font-family:'Fira Code',monospace;color:var(--text-muted);">${terms[k].toFixed(1)}</span>`
+        + `<span style="font-size:0.68rem;color:var(--text-dim);margin-left:0.12rem;">(${l})</span></div>`
+      ).join('');
+      area.innerHTML =
+        `<div style="font-size:0.8rem;font-weight:700;color:var(--text-muted);margin-bottom:0.12rem;" class="fade-in">A(${i+1},${j+1}) = <span style="color:var(--teal);">linha ${PATCH_LABELS[i]} de S</span> · <span style="color:var(--purple);">coluna ${dimLbl} de V</span> — ${PATCH_DESC[i]}, dim. ${dimLbl}</div>`
+        + `<div style="display:flex;flex-wrap:wrap;gap:0.28rem;">${termLines}</div>`
+        + `<div style="font-family:'Fira Code',monospace;font-size:0.8rem;background:var(--teal-lt);border:1.5px solid #5eead4;border-radius:var(--radius-sm);padding:0.28rem 0.55rem;color:var(--teal);font-weight:700;margin-top:0.12rem;">Soma = A(${i+1},${j+1}) = ${Z[i][j].toFixed(1)}</div>`;
+    }
+
+    // ══ RENDER: all computed steps (called on matrix edit) ══
+    function renderComputedSteps() {
+      const { QKT, scaled, S, Z } = computeAll();
+      renderStep12(QKT, scaled);
+      renderStep4(scaled, S);
+      renderStep5(S, Z);
+    }
+
+    // ── Interaction ──
+    function selectQKTCell(i, j) {
+      selQKT = (selQKT && selQKT.i===i && selQKT.j===j) ? null : {i,j};
+      const { QKT, scaled } = computeAll();
+      renderStep12(QKT, scaled);
+    }
+    function selectScaledCell(i, j) {
+      selScaled = (selScaled && selScaled.i===i && selScaled.j===j) ? null : {i,j};
+      const { QKT, scaled } = computeAll();
+      renderStep12(QKT, scaled);
+    }
+    function advanceStep12() {
+      step1State = Math.min(step1State + 1, 3);
+      const { QKT, scaled } = computeAll();
+      renderStep12(QKT, scaled);
+    }
+    function backStep12() {
+      step1State = Math.max(step1State - 1, 0);
+      selQKT = null; selScaled = null;
+      const { QKT, scaled } = computeAll();
+      renderStep12(QKT, scaled);
+    }
+    function selectSRow(i) {
+      selSRow = (selSRow===i) ? null : i;
+      const { scaled, S } = computeAll();
+      renderStep4(scaled, S);
+    }
+    function selectSRowZ(i) {
+      selSRowZ = (selSRowZ===i) ? null : i;
+      selZCell = null;
+      const { S, Z } = computeAll();
+      renderStep5(S, Z);
+    }
+    function selectZCell(i, j) {
+      selZCell = (selZCell && selZCell.i===i && selZCell.j===j) ? null : {i,j};
+      if (selZCell) selSRowZ = i;
+      const { S, Z } = computeAll();
+      renderStep5(S, Z);
+    }
+
+    // ── Reset ──
+    function resetMatrices() {
+      initMatrices();
+      step1State = 0; selQKT = null; selScaled = null; selSRow = null; selZCell = null; selSRowZ = null;
+      renderEditSection();
+      renderComputedSteps();
+    }
+
+    // ── Init ──
+    initMatrices();
+    renderEditSection();
+    renderComputedSteps();
+
+    // ══ LOCALITY DEMO ══
+    const LC_GRID = 8, LC_CELL = 30;
+
+    // Featured patches: index = row*8 + col
+    const LC_FEATURED = {
+      1:  { label: 'pessoa alta · cabeça',    color: '#1d4ed8' }, // row 0, col 1
+      6:  { label: 'pessoa pequena · cabeça', color: '#6d28d9' }, // row 0, col 6
+      19: { label: 'pintura · centro',        color: '#0d6e6e' }, // row 2, col 3
+      50: { label: 'piso · quadrado laranja', color: '#c2410c' }, // row 6, col 2
+    };
+
+    // Attention weights per featured patch
+    // {to: patch index, w: unnormalized weight, note: description}
+    const LC_ATTN = {
+      1: [
+        { to: 17, w: 0.15, note: 'próprio corpo' },
+        { to: 11, w: 0.12, note: 'braço estendido' },
+        { to: 19, w: 0.35, note: 'pintura — objeto de atenção' },
+        { to:  6, w: 0.38, note: 'cabeça da outra pessoa' },
+      ],
+      6: [
+        { to: 22, w: 0.12, note: 'próprio corpo' },
+        { to: 13, w: 0.10, note: 'braço estendido' },
+        { to: 19, w: 0.38, note: 'pintura — objeto de atenção' },
+        { to:  1, w: 0.40, note: 'cabeça da outra pessoa' },
+      ],
+      19: [
+        { to: 20, w: 0.08, note: 'área interna' },
+        { to: 10, w: 0.12, note: 'mão apontando (esq.)' },
+        { to: 13, w: 0.10, note: 'mão apontando (dir.)' },
+        { to:  1, w: 0.32, note: 'quem observa — esquerda' },
+        { to:  6, w: 0.38, note: 'quem observa — direita' },
+      ],
+      50: [
+        { to: 51, w: 0.12, note: 'vizinho imediato' },
+        { to: 42, w: 0.10, note: 'piso acima' },
+        { to: 54, w: 0.28, note: 'mesma fileira — lado oposto' },
+        { to: 61, w: 0.24, note: 'padrão similar — canto oposto' },
+        { to: 55, w: 0.26, note: 'mesma fileira — extremo' },
+      ],
+    };
+
+    let lcSel = null;
+
+    function lcPatchCenter(idx) {
+      return { x: (idx % LC_GRID) * LC_CELL + LC_CELL / 2,
+               y: Math.floor(idx / LC_GRID) * LC_CELL + LC_CELL / 2 };
+    }
+
+    function lcManhattan(a, b) {
+      return Math.abs(Math.floor(a/LC_GRID) - Math.floor(b/LC_GRID))
+           + Math.abs((a % LC_GRID) - (b % LC_GRID));
+    }
+
+    function lcSelect(idx) {
+      lcSel = (lcSel === idx) ? null : idx;
+      renderLocalityDemo();
+    }
+
+    function renderLocalityDemo() {
+      const gridEl = document.getElementById('lc-grid');
+      const svgEl  = document.getElementById('lc-svg');
+      const infoEl = document.getElementById('lc-info');
+      if (!gridEl || !svgEl || !infoEl) return;
+
+      const attnData = (lcSel !== null) ? (LC_ATTN[lcSel] || null) : null;
+
+      // Normalize weights
+      const weights = {};
+      if (attnData) {
+        const total = attnData.reduce((s, x) => s + x.w, 0);
+        attnData.forEach(({ to, w }) => { weights[to] = w / total; });
+      }
+
+      // ── SVG attention lines ──
+      let defs = '<defs>';
+      defs += '<marker id="lca-r" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><polygon points="0,0 7,3.5 0,7" fill="#ef4444" opacity="0.9"/></marker>';
+      defs += '<marker id="lca-g" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><polygon points="0,0 7,3.5 0,7" fill="#94a3b8" opacity="0.85"/></marker>';
+      defs += '</defs>';
+      let lines = '';
+      if (lcSel !== null && attnData) {
+        const src = lcPatchCenter(lcSel);
+        attnData.forEach(({ to, w }) => {
+          if (to === lcSel) return;
+          const dst = lcPatchCenter(to);
+          const nw  = weights[to] || 0;
+          const dist = lcManhattan(lcSel, to);
+          const isLong = dist > 2;
+          // Shorten line so arrowhead doesn't overlap patch center
+          const dx = dst.x - src.x, dy = dst.y - src.y;
+          const len = Math.sqrt(dx*dx + dy*dy) || 1;
+          const ex = dst.x - dx/len * 13, ey = dst.y - dy/len * 13;
+          const sw = Math.max(1.2, nw * 14).toFixed(1);
+          const op = Math.min(0.95, nw * 3.5 + 0.2).toFixed(2);
+          const col   = isLong ? '#ef4444' : '#94a3b8';
+          const markId = isLong ? 'lca-r' : 'lca-g';
+          lines += `<line x1="${src.x.toFixed(1)}" y1="${src.y.toFixed(1)}" x2="${ex.toFixed(1)}" y2="${ey.toFixed(1)}" stroke="${col}" stroke-width="${sw}" stroke-opacity="${op}" marker-end="url(#${markId})"/>`;
+        });
+      }
+      svgEl.innerHTML = defs + lines;
+
+      // ── Grid cells ──
+      let gridHTML = '';
+      for (let i = 0; i < 64; i++) {
+        const feat  = LC_FEATURED[i];
+        const isSel = i === lcSel;
+        const nw    = weights[i] || 0;
+        let cls = 'loc-cell';
+        let extraStyle = `width:${LC_CELL}px;height:${LC_CELL}px;position:relative;`;
+        let dot = '';
+        if (isSel) {
+          cls += ' lc-sel';
+        } else if (feat) {
+          extraStyle += `border:2px solid ${feat.color}99;`;
+          dot = `<div style="position:absolute;bottom:2px;right:2px;width:6px;height:6px;border-radius:50%;background:${feat.color};"></div>`;
+        } else if (lcSel !== null && nw > 0.04) {
+          cls += ' lc-attended';
+          extraStyle += `background:rgba(239,68,68,${Math.min(0.42, nw * 2.8).toFixed(2)});`;
+        }
+        gridHTML += `<div class="${cls}" style="${extraStyle}" onclick="lcSelect(${i})">${dot}</div>`;
+      }
+      gridEl.innerHTML = gridHTML;
+
+      // ── Info panel ──
+      if (lcSel === null) {
+        infoEl.innerHTML = `<div style="font-family:'Fira Code',monospace;font-size:0.73rem;color:var(--text-dim);padding:0.35rem 0;">← clique num patch marcado <span style="font-size:0.65rem;opacity:0.7;">(●)</span> para ver sua distribuição de atenção</div>`;
+        return;
+      }
+      const feat  = LC_FEATURED[lcSel];
+      const color = feat ? feat.color : '#64748b';
+      const label = feat ? feat.label : `patch ${lcSel}`;
+      let html = `<div style="font-family:'Fira Code',monospace;font-size:0.72rem;font-weight:700;color:${color};margin-bottom:0.35rem;">${label}</div>`;
+      if (attnData) {
+        const total = attnData.reduce((s, x) => s + x.w, 0);
+        const sorted = [...attnData].sort((a, b) => b.w - a.w);
+        sorted.forEach(({ to, w, note }) => {
+          const pct  = Math.round(w / total * 100);
+          const dist = lcManhattan(lcSel, to);
+          const isLong = dist > 2;
+          const barColor = isLong ? '#ef4444' : '#94a3b8';
+          const badge = isLong
+            ? `<span style="font-size:0.62rem;padding:0.03rem 0.22rem;border-radius:3px;background:#fee2e2;color:#dc2626;font-weight:700;white-space:nowrap;">longo alcance</span>`
+            : '';
+          html += `<div style="margin-bottom:0.24rem;"><div style="display:flex;align-items:center;gap:0.3rem;margin-bottom:0.07rem;flex-wrap:wrap;"><span style="font-family:'Fira Code',monospace;font-size:0.72rem;font-weight:700;color:${barColor};">${pct}%</span><span style="font-family:'Fira Code',monospace;font-size:0.68rem;color:var(--text-dim);">${note}</span>${badge}</div><div style="height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;"><div style="height:100%;width:${pct}%;background:${barColor};border-radius:3px;transition:width 0.3s;"></div></div></div>`;
+        });
+        html += `<div style="margin-top:0.4rem;padding-top:0.3rem;border-top:1px solid var(--border);display:flex;gap:0.55rem;flex-wrap:wrap;">`;
+        html += `<div style="display:flex;align-items:center;gap:0.22rem;font-family:'Fira Code',monospace;font-size:0.64rem;color:var(--text-dim);"><div style="width:14px;height:2.5px;background:#ef4444;border-radius:2px;"></div>longo alcance (dist&gt;2)</div>`;
+        html += `<div style="display:flex;align-items:center;gap:0.22rem;font-family:'Fira Code',monospace;font-size:0.64rem;color:var(--text-dim);"><div style="width:14px;height:2.5px;background:#94a3b8;border-radius:2px;"></div>local</div>`;
+        html += `</div>`;
+      }
+      infoEl.innerHTML = html;
+    }
+
+    renderLocalityDemo();
+  </script>
+</body>
+</html>

@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 04b – Como a U-Net Aprende: Treinamento</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── Single full-width training pipeline layout ── */
+    .train-layout {
+      display: grid;
+      grid-template-columns: 1fr 2.8rem 2.2fr 2.8rem 1fr;
+      align-items: center;
+      flex: 1;
+      gap: 0;
+      min-height: 0;
+    }
+    .train-col {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      align-items: center;
+      align-self: stretch;
+      justify-content: center;
+    }
+    .arrow-col {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .data-box {
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 0.75rem 0.85rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+      align-items: center;
+      width: 100%;
+    }
+    .box-title {
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      padding-bottom: 0.28rem;
+      width: 100%;
+      text-align: center;
+      border-bottom: 1.5px solid;
+    }
+    .box-title.blue   { color: var(--blue);   border-color: var(--blue-lt); }
+    .box-title.orange { color: var(--orange);  border-color: #fde8d9; }
+    .canvas-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.2rem;
+    }
+    canvas.vis {
+      display: block;
+      border-radius: 7px;
+      border: 2px solid var(--border2);
+      image-rendering: pixelated;
+    }
+    .canvas-label {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+    .canvas-sublabel {
+      font-size: 0.68rem;
+      color: var(--text-dim);
+      text-align: center;
+      line-height: 1.3;
+    }
+    .t-chip {
+      background: #fef9c3;
+      border: 1.5px solid #fde047;
+      border-radius: 999px;
+      padding: 0.17rem 0.65rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.78rem;
+      color: var(--yellow);
+      font-weight: 700;
+    }
+    .formula-inline {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.72rem;
+      color: var(--cyan);
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 4px;
+      padding: 0.18rem 0.5rem;
+      text-align: center;
+      line-height: 1.5;
+    }
+    .separator { width: 100%; height: 1px; background: var(--border2); }
+    .unet-col-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.3rem;
+      width: 100%;
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.5rem 0.6rem;
+      box-shadow: var(--shadow);
+    }
+    .io-row {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+    }
+    .io-tag {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      border: 1.5px solid;
+    }
+    .io-tag.inp { background: var(--blue-lt);  color: var(--blue);  border-color: var(--blue); }
+    .io-tag.out { background: var(--teal-lt);  color: var(--teal);  border-color: var(--teal); }
+    .vs-row {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: var(--orange);
+      width: 100%;
+    }
+    .vs-row::before, .vs-row::after {
+      content: '';
+      flex: 1;
+      height: 1.5px;
+      background: #fde8d9;
+    }
+    .loss-chip {
+      background: var(--purple-lt);
+      border: 2px solid var(--purple);
+      border-radius: var(--radius-sm);
+      padding: 0.45rem 0.8rem;
+      text-align: center;
+      width: 100%;
+    }
+    .loss-chip-formula {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--purple);
+    }
+    .loss-chip-sub {
+      font-size: 0.67rem;
+      color: var(--purple);
+      margin-top: 0.1rem;
+    }
+    .loss-bar {
+      background: var(--bg2);
+      border: 2px solid var(--purple);
+      border-radius: var(--radius-sm);
+      padding: 0.55rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2rem;
+      flex-shrink: 0;
+      margin-top: 0.3rem;
+    }
+    .loss-bar-eq {
+      font-family: 'Fira Code', monospace;
+      font-size: 1.0rem;
+      font-weight: 700;
+      color: var(--purple);
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .loss-bar-note {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Difusão</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 4 · Slide 2 / 3</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <div class="slide-title">Como a U-Net Aprende</div>
+        <div class="slide-subtitle">Bloco 4 — Treinamento Supervisionado pelo Próprio Ruído</div>
+      </div>
+
+      <!-- ══ Single full-width panel ══ -->
+      <div class="panel" style="flex:1;overflow:visible;">
+        <div class="panel-title">🎓 Pipeline de Treinamento — A U-Net como Previsor de Ruído</div>
+
+        <div class="train-layout">
+
+          <!-- ── COL 1: Dataset pair ── -->
+          <div class="train-col">
+            <div class="data-box" style="border-color:var(--blue);">
+              <div class="box-title blue">🗂️ Par de Treino</div>
+
+              <div class="canvas-wrap">
+                <canvas id="cvNoisy" class="vis" style="border-color:var(--blue);" width="112" height="112"></canvas>
+                <div class="canvas-label">x<sub>t</sub></div>
+                <div class="canvas-sublabel">imagem ruidosa (entrada)</div>
+              </div>
+
+              <div class="t-chip">t = 450 &nbsp;·&nbsp; nível de ruído</div>
+              <div class="formula-inline">x_t = √ᾱ_t · x₀ + √(1−ᾱ_t) · ε</div>
+
+              <div class="separator"></div>
+
+              <div class="canvas-wrap">
+                <canvas id="cvEpsilon" class="vis" style="border-color:var(--text-dim);" width="112" height="112"></canvas>
+                <div class="canvas-label">ε</div>
+                <div class="canvas-sublabel">ruído adicionado <strong>(alvo)</strong></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Arrow 1 ── -->
+          <div class="arrow-col">
+            <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="marr1" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+                  <path d="M0,0.5 L7,3.5 L0,6.5 Z" fill="#0d6e6e"/>
+                </marker>
+              </defs>
+              <line x1="2" y1="20" x2="34" y2="20" stroke="#0d6e6e" stroke-width="2.8" marker-end="url(#marr1)"/>
+            </svg>
+          </div>
+
+          <!-- ── COL 2: U-Net ── -->
+          <div class="train-col">
+            <div class="unet-col-wrap">
+              <div class="io-row">
+                <span class="io-tag inp">📥 x<sub>t</sub> + emb(t)</span>
+              </div>
+
+              <!-- ════ U-Net SVG (reaproveitado do Slide 04) ════ -->
+              <svg viewBox="0 0 540 375" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;">
+                <defs>
+                  <marker id="arr" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto">
+                    <path d="M0,0.5 L7,3.5 L0,6.5 Z" fill="#6b7fa3"/>
+                  </marker>
+                  <marker id="arr-teal" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto">
+                    <path d="M0,0.5 L7,3.5 L0,6.5 Z" fill="#0d6e6e"/>
+                  </marker>
+                  <marker id="arr-skip" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto">
+                    <path d="M0,0.5 L7,3.5 L0,6.5 Z" fill="#c2410c"/>
+                  </marker>
+                </defs>
+                <text x="90" y="13" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#1d4ed8">ENCODER</text>
+                <text x="450" y="13" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#0d6e6e">DECODER</text>
+                <text x="90" y="30" text-anchor="middle" font-family="Inter,sans-serif" font-size="10" fill="#3d4f6e">🖼️ x_t (entrada ruidosa)</text>
+                <text x="450" y="30" text-anchor="middle" font-family="Inter,sans-serif" font-size="10" fill="#3d4f6e">🎯 ε̂ (ruído previsto)</text>
+                <!-- Encoder -->
+                <rect x="20" y="35" width="140" height="42" rx="6" fill="#dbeafe" stroke="#1d4ed8" stroke-width="2"/>
+                <text x="90" y="53" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#1d4ed8">Enc 1 — Conv×2</text>
+                <text x="90" y="68" text-anchor="middle" font-family="'Fira Code',monospace" font-size="9" fill="#3d4f6e">256×256 · 64ch</text>
+                <line x1="90" y1="77" x2="90" y2="102" stroke="#6b7fa3" stroke-width="1.8" marker-end="url(#arr)"/>
+                <text x="74" y="93" font-family="'Fira Code',monospace" font-size="8" fill="#6b7fa3">Pool↓</text>
+                <rect x="20" y="104" width="140" height="42" rx="6" fill="#dbeafe" stroke="#1d4ed8" stroke-width="2"/>
+                <text x="90" y="122" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#1d4ed8">Enc 2 — Conv×2</text>
+                <text x="90" y="137" text-anchor="middle" font-family="'Fira Code',monospace" font-size="9" fill="#3d4f6e">128×128 · 128ch</text>
+                <line x1="90" y1="146" x2="90" y2="171" stroke="#6b7fa3" stroke-width="1.8" marker-end="url(#arr)"/>
+                <text x="74" y="162" font-family="'Fira Code',monospace" font-size="8" fill="#6b7fa3">Pool↓</text>
+                <rect x="20" y="173" width="140" height="42" rx="6" fill="#dbeafe" stroke="#1d4ed8" stroke-width="2"/>
+                <text x="90" y="191" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#1d4ed8">Enc 3 — Conv×2</text>
+                <text x="90" y="206" text-anchor="middle" font-family="'Fira Code',monospace" font-size="9" fill="#3d4f6e">64×64 · 256ch</text>
+                <line x1="90" y1="215" x2="90" y2="240" stroke="#6b7fa3" stroke-width="1.8" marker-end="url(#arr)"/>
+                <text x="74" y="231" font-family="'Fira Code',monospace" font-size="8" fill="#6b7fa3">Pool↓</text>
+                <rect x="20" y="242" width="140" height="42" rx="6" fill="#dbeafe" stroke="#1d4ed8" stroke-width="2"/>
+                <text x="90" y="260" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#1d4ed8">Enc 4 — Conv×2</text>
+                <text x="90" y="275" text-anchor="middle" font-family="'Fira Code',monospace" font-size="9" fill="#3d4f6e">32×32 · 512ch</text>
+                <path d="M90,284 L90,316 L185,316" stroke="#6b7fa3" stroke-width="1.8" fill="none" marker-end="url(#arr)"/>
+                <!-- Bottleneck -->
+                <rect x="185" y="304" width="170" height="44" rx="8" fill="#ede9fe" stroke="#6d28d9" stroke-width="2.5"/>
+                <text x="270" y="323" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#6d28d9">Gargalo</text>
+                <text x="270" y="339" text-anchor="middle" font-family="'Fira Code',monospace" font-size="9" fill="#6d28d9">16×16 · 1024ch</text>
+                <path d="M355,316 L450,316 L450,284" stroke="#0d6e6e" stroke-width="1.8" fill="none" marker-end="url(#arr-teal)"/>
+                <!-- Decoder -->
+                <rect x="380" y="242" width="140" height="42" rx="6" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="2"/>
+                <text x="450" y="260" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#0d6e6e">Dec 1 — UpConv</text>
+                <text x="450" y="275" text-anchor="middle" font-family="'Fira Code',monospace" font-size="9" fill="#3d4f6e">32×32 · 512ch</text>
+                <line x1="450" y1="242" x2="450" y2="215" stroke="#0d6e6e" stroke-width="1.8" marker-end="url(#arr-teal)"/>
+                <text x="455" y="232" font-family="'Fira Code',monospace" font-size="8" fill="#0d6e6e">Up↑</text>
+                <rect x="380" y="173" width="140" height="42" rx="6" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="2"/>
+                <text x="450" y="191" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#0d6e6e">Dec 2 — UpConv</text>
+                <text x="450" y="206" text-anchor="middle" font-family="'Fira Code',monospace" font-size="9" fill="#3d4f6e">64×64 · 256ch</text>
+                <line x1="450" y1="173" x2="450" y2="146" stroke="#0d6e6e" stroke-width="1.8" marker-end="url(#arr-teal)"/>
+                <text x="455" y="163" font-family="'Fira Code',monospace" font-size="8" fill="#0d6e6e">Up↑</text>
+                <rect x="380" y="104" width="140" height="42" rx="6" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="2"/>
+                <text x="450" y="122" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#0d6e6e">Dec 3 — UpConv</text>
+                <text x="450" y="137" text-anchor="middle" font-family="'Fira Code',monospace" font-size="9" fill="#3d4f6e">128×128 · 128ch</text>
+                <line x1="450" y1="104" x2="450" y2="77" stroke="#0d6e6e" stroke-width="1.8" marker-end="url(#arr-teal)"/>
+                <text x="455" y="94" font-family="'Fira Code',monospace" font-size="8" fill="#0d6e6e">Up↑</text>
+                <rect x="380" y="35" width="140" height="42" rx="6" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="2"/>
+                <text x="450" y="53" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#0d6e6e">Dec 4 — UpConv</text>
+                <text x="450" y="68" text-anchor="middle" font-family="'Fira Code',monospace" font-size="9" fill="#3d4f6e">256×256 · 64ch</text>
+                <!-- Skip connections -->
+                <line x1="160" y1="56"  x2="380" y2="56"  stroke="#c2410c" stroke-width="1.8" stroke-dasharray="6 3" marker-end="url(#arr-skip)"/>
+                <line x1="160" y1="125" x2="380" y2="125" stroke="#c2410c" stroke-width="1.8" stroke-dasharray="6 3" marker-end="url(#arr-skip)"/>
+                <line x1="160" y1="194" x2="380" y2="194" stroke="#c2410c" stroke-width="1.8" stroke-dasharray="6 3" marker-end="url(#arr-skip)"/>
+                <line x1="160" y1="263" x2="380" y2="263" stroke="#c2410c" stroke-width="1.8" stroke-dasharray="6 3" marker-end="url(#arr-skip)"/>
+                <!-- Legend -->
+                <line x1="20" y1="363" x2="48" y2="363" stroke="#c2410c" stroke-width="1.8" stroke-dasharray="6 3"/>
+                <text x="54" y="367" font-family="Inter,sans-serif" font-size="9" fill="#c2410c" font-weight="700">Skip Connection</text>
+                <rect x="175" y="357" width="11" height="11" rx="2" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.5"/>
+                <text x="191" y="367" font-family="Inter,sans-serif" font-size="9" fill="#1d4ed8">Encoder</text>
+                <rect x="265" y="357" width="11" height="11" rx="2" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="1.5"/>
+                <text x="281" y="367" font-family="Inter,sans-serif" font-size="9" fill="#0d6e6e">Decoder</text>
+                <rect x="350" y="357" width="11" height="11" rx="2" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.5"/>
+                <text x="366" y="367" font-family="Inter,sans-serif" font-size="9" fill="#6d28d9">Gargalo</text>
+              </svg>
+              <!-- ════ fim U-Net SVG ════ -->
+
+              <div class="io-row" style="justify-content:flex-end;">
+                <span class="io-tag out">📤 ε̂ (ruído previsto)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Arrow 2 ── -->
+          <div class="arrow-col">
+            <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="marr2" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+                  <path d="M0,0.5 L7,3.5 L0,6.5 Z" fill="#0d6e6e"/>
+                </marker>
+              </defs>
+              <line x1="2" y1="20" x2="34" y2="20" stroke="#0d6e6e" stroke-width="2.8" marker-end="url(#marr2)"/>
+            </svg>
+          </div>
+
+          <!-- ── COL 3: Output + Loss ── -->
+          <div class="train-col">
+            <div class="data-box" style="border-color:var(--orange);">
+              <div class="box-title orange">📉 Comparação e Loss</div>
+
+              <div class="canvas-wrap">
+                <canvas id="cvPred" class="vis" style="border-color:var(--teal);" width="112" height="112"></canvas>
+                <div class="canvas-label">ε̂</div>
+                <div class="canvas-sublabel">ruído <strong>previsto</strong> pela U-Net</div>
+              </div>
+
+              <div class="vs-row">vs</div>
+
+              <div class="canvas-wrap">
+                <canvas id="cvEpsilonRef" class="vis" style="border-color:var(--text-dim);" width="112" height="112"></canvas>
+                <div class="canvas-label">ε</div>
+                <div class="canvas-sublabel">ruído <strong>verdadeiro</strong> (alvo, do dataset)</div>
+              </div>
+
+              <div class="loss-chip">
+                <div class="loss-chip-formula">ℓ = ‖ ε − ε̂ ‖²</div>
+                <div class="loss-chip-sub">contribuição desta amostra para a loss</div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- end train-layout -->
+
+        <!-- ── Bottom: loss formula global ── -->
+        <div class="loss-bar">
+          <div class="loss-bar-eq">ℒ = 𝔼<sub>t, x₀, ε</sub> [ ‖ ε − ε<sub>θ</sub>(x<sub>t</sub>, t) ‖² ]</div>
+          <div class="loss-bar-note">
+            A loss <strong>não compara imagens</strong> — compara <em>ruídos</em>.
+            Como nós mesmos adicionamos ε, o treino é <strong>totalmente supervisionado</strong>
+            sem rótulos humanos: qualquer imagem do dataset gera automaticamente um par (x<sub>t</sub>, ε).
+            A expectativa 𝔼 é tomada sobre todos os passos t e todos os exemplos x₀.
+          </div>
+        </div>
+
+      </div><!-- end panel -->
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide04.html'">← Anterior</button>
+      <div class="nav-dots">
+        <div class="dot active"></div>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide04c.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    // Seeded LCG RNG for reproducible pixel art
+    function mkRng(seed) {
+      let s = seed >>> 0;
+      return function () {
+        s = (Math.imul(1664525, s) + 1013904223) >>> 0;
+        return s / 4294967296;
+      };
+    }
+    const clamp = v => Math.max(0, Math.min(255, Math.round(v)));
+
+    // Draw a noisy "face" image simulating x_t = √ᾱ_t·x₀ + √(1−ᾱ_t)·ε
+    function drawNoisyFace(canvas, seed, alpha) {
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width, H = canvas.height;
+      const rng = mkRng(seed);
+      const img = ctx.createImageData(W, H);
+      const cx = W / 2, cy = H * 0.48;
+
+      for (let y = 0; y < H; y++) {
+        for (let x = 0; x < W; x++) {
+          const dx = x - cx, dy = y - cy;
+          // Background: blue sky
+          let bR = 80 + (x / W) * 40, bG = 120 + (y / H) * 20, bB = 210;
+          // Face oval
+          if (Math.sqrt((dx * 0.88) ** 2 + dy ** 2) < W * 0.33) { bR = 238; bG = 185; bB = 145; }
+          // Eyes
+          if (Math.sqrt((x - W*0.37)**2 + (y - H*0.41)**2) < W*0.065) { bR=35; bG=28; bB=28; }
+          if (Math.sqrt((x - W*0.63)**2 + (y - H*0.41)**2) < W*0.065) { bR=35; bG=28; bB=28; }
+          // Mouth arc
+          const smD = Math.abs(Math.sqrt(dx**2 + (y - H*0.42)**2) - W*0.185);
+          if (smD < 3 && y > H*0.54 && y < H*0.66) { bR=160; bG=65; bB=65; }
+          // Mix signal + Gaussian noise
+          const nR = (rng() - 0.5) * 2 * 255 * alpha;
+          const nG = (rng() - 0.5) * 2 * 255 * alpha;
+          const nB = (rng() - 0.5) * 2 * 255 * alpha;
+          const sig = 1 - alpha;
+          const i = (y * W + x) * 4;
+          img.data[i]     = clamp(bR * sig + nR);
+          img.data[i + 1] = clamp(bG * sig + nG);
+          img.data[i + 2] = clamp(bB * sig + nB);
+          img.data[i + 3] = 255;
+        }
+      }
+      ctx.putImageData(img, 0, 0);
+    }
+
+    // Draw pure Gaussian noise N(128, σ²) — represents ε or ε̂
+    function drawGaussianNoise(canvas, seed) {
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width, H = canvas.height;
+      const rng = mkRng(seed);
+      const img = ctx.createImageData(W, H);
+      for (let i = 0; i < img.data.length; i += 4) {
+        const u1 = Math.max(1e-10, rng()), u2 = rng();
+        const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+        const v = clamp(128 + z * 52);
+        img.data[i] = v; img.data[i+1] = v; img.data[i+2] = v; img.data[i+3] = 255;
+      }
+      ctx.putImageData(img, 0, 0);
+    }
+
+    // t = 450/1000 → α ≈ 0.58 (bastante ruidoso, mas rosto ainda visível)
+    drawNoisyFace(document.getElementById('cvNoisy'),      7,     0.58);
+    drawGaussianNoise(document.getElementById('cvEpsilon'),    31337);  // ε verdadeiro
+    drawGaussianNoise(document.getElementById('cvPred'),       88421);  // ε̂ (semente diferente → previsão imperfeita)
+    drawGaussianNoise(document.getElementById('cvEpsilonRef'), 31337);  // mesmo ε verdadeiro (alvo)
+  </script>
+</body>
+</html>

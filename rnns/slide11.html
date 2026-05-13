@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 11 – Forward Pass em uma RNN</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .step-list { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 0.75rem; }
+    .step-item {
+      display: flex; align-items: center; gap: 0.6rem;
+      padding: 0.45rem 0.8rem; border-radius: var(--radius-sm);
+      background: var(--bg3); border: 1.5px solid var(--border2);
+      font-size: 0.85rem; opacity: 0; transform: translateX(-10px);
+      transition: opacity 0.35s, transform 0.35s, border-color 0.2s, background 0.2s;
+    }
+    .step-item.visible { opacity: 1; transform: translateX(0); }
+    .step-item.current { border-color: var(--teal); background: var(--teal-lt); font-weight: 700; color: var(--teal); }
+    .step-item.done { border-color: var(--border2); color: var(--text-muted); opacity: 1; transform: translateX(0); }
+    .step-num {
+      min-width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.72rem; font-weight: 700; background: var(--border2); color: var(--text-dim);
+    }
+    .step-item.current .step-num { background: var(--teal); color: white; }
+    .btn-row { display: flex; gap: 0.55rem; margin-bottom: 0.7rem; }
+    .btn-step {
+      padding: 0.45rem 1rem; border-radius: var(--radius-sm);
+      border: 2px solid var(--teal); background: var(--teal-lt);
+      color: var(--teal); font-family: 'Fira Code', monospace;
+      font-weight: 700; font-size: 0.88rem; cursor: pointer; transition: background 0.2s;
+    }
+    .btn-step:hover { background: var(--teal); color: white; }
+    .btn-reset {
+      padding: 0.45rem 0.9rem; border-radius: var(--radius-sm);
+      border: 2px solid var(--border2); background: var(--bg3);
+      color: var(--text-dim); font-family: 'Fira Code', monospace;
+      font-weight: 700; font-size: 0.88rem; cursor: pointer;
+    }
+    .eq-box {
+      background: var(--bg3); border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm); padding: 0.6rem 0.85rem;
+      font-family: 'Fira Code', monospace; font-size: 0.88rem;
+      color: var(--teal); font-weight: 600; margin-bottom: 0.4rem;
+      transition: border-color 0.3s, background 0.3s;
+    }
+    .eq-box.active-eq { border-color: var(--teal); background: var(--teal-lt); }
+    .sym-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-top: 0.5rem; }
+    .sym-table td { padding: 0.25rem 0.5rem; border-bottom: 1px solid var(--border); }
+    .sym-table td:first-child { font-family: 'Fira Code', monospace; font-weight: 700; color: var(--teal); width: 1.8rem; }
+    .sym-table td:last-child { color: var(--text-muted); }
+    .rnn-g { transition: opacity 0.45s ease, filter 0.45s ease; }
+    .rnn-panel { display: flex; flex-direction: column; align-items: stretch; }
+    .rnn-panel svg { width: 100%; flex: 1; min-height: 0; }
+    .seq-strip { display: flex; align-items: stretch; gap: 0.35rem; margin-bottom: 0.5rem; }
+    .seq-token {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      padding: 0.35rem 0.3rem; border-radius: var(--radius-sm);
+      background: var(--bg3); border: 1.5px solid var(--border2);
+      font-family: 'Fira Code', monospace; transition: border-color 0.3s, background 0.3s;
+    }
+    .seq-token .tok-word { font-weight: 700; font-size: 0.88rem; color: var(--text-muted); }
+    .seq-token .tok-t   { font-size: 0.68rem; color: var(--text-dim); margin-top: 0.1rem; }
+    .seq-token .tok-h   { font-size: 0.7rem; color: transparent; margin-top: 0.15rem; min-height: 0.85rem; transition: color 0.3s; }
+    .seq-token.active   { border-color: #3b82f6; background: rgba(59,130,246,0.1); }
+    .seq-token.active .tok-word { color: #60a5fa; }
+    .seq-token.done     { border-color: var(--teal); background: var(--teal-lt); }
+    .seq-token.done .tok-word { color: var(--teal); }
+    .seq-token.done .tok-h    { color: var(--teal); font-weight: 700; }
+    .seq-token.active .tok-h  { color: #94a3b8; }
+    .seq-sep { color: var(--text-dim); font-size: 1.1rem; display: flex; align-items: center; flex-shrink: 0; }
+    .progress-badge {
+      display: block; text-align: center; padding: 0.22rem 0.7rem;
+      background: var(--bg3); border: 1.5px solid var(--teal);
+      border-radius: 99px; font-size: 0.77rem; font-family: 'Fira Code', monospace;
+      font-weight: 700; color: var(--teal); margin-bottom: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Redes Neurais Recorrentes</span>
+      <span class="prof-tag" style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 5 · Slide 1 / 1</span>
+    </header>
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Forward Pass em uma RNN</h1>
+        <p class="slide-subtitle">Processando uma série de preços — a mesma célula percorre cada valor com h<sub>t−1</sub> acumulando contexto</p>
+      </div>
+      <div class="content-split">
+        <!-- LEFT PANEL: passo a passo + equações -->
+        <div class="panel panel-left">
+          <h2 class="panel-title">▶ Passo a Passo — sequência de 3 tokens</h2>
+
+          <!-- Sequence strip -->
+          <div class="seq-strip">
+            <div class="seq-token" id="st-0">
+              <span class="tok-word">102</span>
+              <span class="tok-t">t = 1</span>
+              <span class="tok-h" id="sh-0"></span>
+            </div>
+            <span class="seq-sep">→</span>
+            <div class="seq-token" id="st-1">
+              <span class="tok-word">105</span>
+              <span class="tok-t">t = 2</span>
+              <span class="tok-h" id="sh-1"></span>
+            </div>
+            <span class="seq-sep">→</span>
+            <div class="seq-token" id="st-2">
+              <span class="tok-word">98</span>
+              <span class="tok-t">t = 3</span>
+              <span class="tok-h" id="sh-2"></span>
+            </div>
+          </div>
+
+          <div class="progress-badge" id="progress-badge">pronto para iniciar ▷</div>
+
+          <div class="btn-row">
+            <button class="btn-step" onclick="nextStep()">Avançar ▶</button>
+            <button class="btn-reset" onclick="resetSteps()">↺ Reiniciar</button>
+          </div>
+
+          <div class="step-list" id="step-list">
+            <div class="step-item" data-i="0">
+              <span class="step-num">1</span>
+              <span>Ler a entrada x<sub>t</sub></span>
+            </div>
+            <div class="step-item" data-i="1">
+              <span class="step-num">2</span>
+              <span>Recuperar memória h<sub>t−1</sub></span>
+            </div>
+            <div class="step-item" data-i="2">
+              <span class="step-num">3</span>
+              <span>Somar: U·x<sub>t</sub> + V·h<sub>t−1</sub> + b<sub>h</sub></span>
+            </div>
+            <div class="step-item" data-i="3">
+              <span class="step-num">4</span>
+              <span>Aplicar φ (ativação do estado)</span>
+            </div>
+            <div class="step-item" data-i="4">
+              <span class="step-num">5</span>
+              <span>Gerar novo estado h<sub>t</sub></span>
+            </div>
+            <div class="step-item" data-i="5">
+              <span class="step-num">6</span>
+              <span>Produzir saída o<sub>t</sub> = ψ(W·h<sub>t</sub> + b<sub>o</sub>)</span>
+            </div>
+          </div>
+
+          <div class="eq-box" id="eq-ht">
+            h<sub>t</sub> = φ(U·x<sub>t</sub> + V·h<sub>t−1</sub> + b<sub>h</sub>)
+          </div>
+          <div class="eq-box" id="eq-ot">
+            o<sub>t</sub> = ψ(W·h<sub>t</sub> + b<sub>o</sub>)
+          </div>
+
+          <table class="sym-table">
+            <tr><td>U</td><td>pesos: entrada → estado</td></tr>
+            <tr><td>V</td><td>pesos: estado anterior → estado</td></tr>
+            <tr><td>W</td><td>pesos: estado → saída</td></tr>
+            <tr><td>φ</td><td>ativação do estado (customizável: tanh, relu…)</td></tr>
+            <tr><td>ψ</td><td>ativação de saída (depende da tarefa)</td></tr>
+          </table>
+        </div>
+
+        <!-- RIGHT PANEL: SVG da célula RNN -->
+        <div class="panel panel-right rnn-panel">
+          <h2 class="panel-title">🔬 Interior da Célula RNN</h2>
+
+          <svg id="rnn-cell-svg" viewBox="0 0 370 255" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <marker id="arB" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                <path d="M0,0 L6,3 L0,6 Z" fill="#1d4ed8"/>
+              </marker>
+              <marker id="arO" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                <path d="M0,0 L6,3 L0,6 Z" fill="#ea580c"/>
+              </marker>
+              <marker id="arT" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                <path d="M0,0 L6,3 L0,6 Z" fill="#0d6e6e"/>
+              </marker>
+              <marker id="arG" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                <path d="M0,0 L6,3 L0,6 Z" fill="#16a34a"/>
+              </marker>
+            </defs>
+
+            <!-- Cell boundary — always visible as a container hint -->
+            <rect x="75" y="58" width="220" height="108" rx="13"
+                  fill="#1e293b" stroke="#334155" stroke-width="2" opacity="0.55"/>
+            <text x="185" y="50" text-anchor="middle"
+                  fill="#475569" font-size="9.5" font-family="Inter,sans-serif"
+                  font-style="italic">célula RNN — pesos U, V, W compartilhados no tempo</text>
+
+            <!-- g-xt : entrada xₜ -->
+            <g id="g-xt" class="rnn-g" opacity="0.1">
+              <line x1="130" y1="238" x2="130" y2="129"
+                    stroke="#1d4ed8" stroke-width="2.5" marker-end="url(#arB)"/>
+              <rect x="115" y="178" width="24" height="18" rx="5" fill="#1e3a8a"/>
+              <text x="127" y="191" text-anchor="middle"
+                    fill="#93c5fd" font-size="11.5" font-family="Fira Code,monospace" font-weight="700">U</text>
+              <text id="svg-lbl-xt" x="130" y="250" text-anchor="middle"
+                    fill="#60a5fa" font-size="13" font-family="Fira Code,monospace" font-weight="700">x<tspan dy="4" font-size="9">t</tspan></text>
+            </g>
+
+            <!-- g-ht1 : estado anterior h_{t-1} -->
+            <g id="g-ht1" class="rnn-g" opacity="0.1">
+              <line x1="18" y1="112" x2="112" y2="112"
+                    stroke="#ea580c" stroke-width="2.5"
+                    stroke-dasharray="5,3" marker-end="url(#arO)"/>
+              <rect x="46" y="97" width="24" height="18" rx="5" fill="#7c2d12"/>
+              <text x="58" y="110" text-anchor="middle"
+                    fill="#fdba74" font-size="11.5" font-family="Fira Code,monospace" font-weight="700">V</text>
+              <text id="svg-lbl-ht1" x="12" y="108" text-anchor="start"
+                    fill="#fb923c" font-size="12" font-family="Fira Code,monospace" font-weight="700">h<tspan dy="4" font-size="8">t−1</tspan></text>
+            </g>
+
+            <!-- g-sum : nó de adição ⊕ -->
+            <g id="g-sum" class="rnn-g" opacity="0.1">
+              <circle cx="130" cy="112" r="18"
+                      fill="#0f172a" stroke="#94a3b8" stroke-width="2"/>
+              <text x="130" y="119" text-anchor="middle"
+                    fill="#e2e8f0" font-size="18" font-family="Inter,sans-serif">⊕</text>
+              <line x1="148" y1="112" x2="176" y2="112" stroke="#94a3b8" stroke-width="2"/>
+            </g>
+
+            <!-- g-tanh : bloco ativação φ -->
+            <g id="g-tanh" class="rnn-g" opacity="0.1">
+              <rect x="176" y="93" width="82" height="38" rx="8"
+                    fill="#0f172a" stroke="#0d6e6e" stroke-width="2.5"/>
+              <text x="217" y="118" text-anchor="middle"
+                    fill="#5eead4" font-size="18" font-family="Inter,sans-serif" font-weight="700">φ</text>
+            </g>
+
+            <!-- g-ht : saída hₜ para a direita -->
+            <g id="g-ht" class="rnn-g" opacity="0.1">
+              <line x1="258" y1="112" x2="356" y2="112"
+                    stroke="#0d6e6e" stroke-width="2.5" marker-end="url(#arT)"/>
+              <text id="svg-lbl-ht" x="362" y="108" text-anchor="start"
+                    fill="#2dd4bf" font-size="12.5" font-family="Fira Code,monospace" font-weight="700">h<tspan dy="4" font-size="9">t</tspan></text>
+            </g>
+
+            <!-- g-ot : saída oₜ para cima -->
+            <g id="g-ot" class="rnn-g" opacity="0.1">
+              <line x1="217" y1="93" x2="217" y2="18"
+                    stroke="#16a34a" stroke-width="2.5" marker-end="url(#arG)"/>
+              <rect x="223" y="53" width="24" height="18" rx="5" fill="#14532d"/>
+              <text x="235" y="66" text-anchor="middle"
+                    fill="#86efac" font-size="11.5" font-family="Fira Code,monospace" font-weight="700">W</text>
+              <text id="svg-lbl-ot" x="217" y="13" text-anchor="middle"
+                    fill="#4ade80" font-size="13" font-family="Fira Code,monospace" font-weight="700">o<tspan dy="4" font-size="9">t</tspan></text>
+            </g>
+          </svg>
+        </div>
+      </div>
+    </main>
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide10.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide12.html'">Próximo →</button>
+    </nav>
+  </div>
+  <script>
+    // ─── Sequence ────────────────────────────────────────────────────────────
+    const SEQ    = ['102', '105', '98'];
+    const SUBS   = ['₁', '₂', '₃'];
+    const H_SUBS = ['₀', '₁', '₂', '₃']; // h₀..h₃
+
+    const TOKENS   = SEQ.length;   // 3
+    const SUBSTEPS = 6;
+    const GRAND    = TOKENS * SUBSTEPS; // 18
+
+    // ─── SVG groups / state ──────────────────────────────────────────────────
+    const SUB_IDS  = ['g-xt', 'g-ht1', 'g-sum', 'g-tanh', 'g-ht', 'g-ot'];
+    const SUB_EQ   = [null,   null,    'eq-ht', 'eq-ht',  'eq-ht','eq-ot'];
+    const GLOW = {
+      'g-xt':   'drop-shadow(0 0 7px #3b82f6)',
+      'g-ht1':  'drop-shadow(0 0 7px #f97316)',
+      'g-sum':  'drop-shadow(0 0 7px #94a3b8)',
+      'g-tanh': 'drop-shadow(0 0 9px #0d9488)',
+      'g-ht':   'drop-shadow(0 0 8px #14b8a6)',
+      'g-ot':   'drop-shadow(0 0 7px #22c55e)',
+    };
+
+    const items = document.querySelectorAll('.step-item');
+    let currentStep = -1;
+
+    // ─── SVG label helpers ───────────────────────────────────────────────────
+    function svgSub(base, sub, dy, fs) {
+      return `${base}<tspan dy="${dy}" font-size="${fs}">${sub}</tspan>`;
+    }
+    function updateLabels(tok) {
+      document.getElementById('svg-lbl-xt').innerHTML  =
+        `${SEQ[tok]}&#8202;<tspan dy="4" font-size="8">(x${SUBS[tok]})</tspan>`;
+      document.getElementById('svg-lbl-ht1').innerHTML =
+        svgSub('h', H_SUBS[tok],   '4', '8');
+      document.getElementById('svg-lbl-ht').innerHTML  =
+        svgSub('h', H_SUBS[tok+1], '4', '9');
+      document.getElementById('svg-lbl-ot').innerHTML  =
+        svgSub('o', SUBS[tok],     '4', '9');
+    }
+    function resetLabels() {
+      document.getElementById('svg-lbl-xt').innerHTML  = svgSub('x','t','4','9');
+      document.getElementById('svg-lbl-ht1').innerHTML = `h<tspan dy="4" font-size="8">t−1</tspan>`;
+      document.getElementById('svg-lbl-ht').innerHTML  = svgSub('h','t','4','9');
+      document.getElementById('svg-lbl-ot').innerHTML  = svgSub('o','t','4','9');
+    }
+
+    // ─── SVG group opacity ───────────────────────────────────────────────────
+    function updateGroups(sub) {
+      SUB_IDS.forEach((id, i) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (i === sub)      { el.style.opacity = '1';   el.style.filter = GLOW[id]; }
+        else if (i < sub)   { el.style.opacity = '0.48'; el.style.filter = ''; }
+        else                { el.style.opacity = '0.1'; el.style.filter = ''; }
+      });
+    }
+    function dimAllGroups() {
+      SUB_IDS.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.style.opacity = '0.1'; el.style.filter = ''; }
+      });
+    }
+
+    // ─── Sequence strip ──────────────────────────────────────────────────────
+    function updateStrip(tok, sub) {
+      for (let i = 0; i < TOKENS; i++) {
+        const box = document.getElementById(`st-${i}`);
+        const lbl = document.getElementById(`sh-${i}`);
+        if (i < tok) {
+          box.className = 'seq-token done';
+          lbl.textContent = `h${H_SUBS[i+1]} ✓`;
+        } else if (i === tok) {
+          box.className = 'seq-token active';
+          lbl.textContent = sub >= 4 ? `→ h${H_SUBS[i+1]}` : '...';
+        } else {
+          box.className = 'seq-token';
+          lbl.textContent = '';
+        }
+      }
+    }
+    function resetStrip() {
+      for (let i = 0; i < TOKENS; i++) {
+        document.getElementById(`st-${i}`).className = 'seq-token';
+        document.getElementById(`sh-${i}`).textContent = '';
+      }
+    }
+
+    // ─── Step list ───────────────────────────────────────────────────────────
+    function updateStepList(sub) {
+      items.forEach((item, i) => {
+        item.classList.remove('visible', 'current', 'done');
+        if      (i < sub)  { item.classList.add('visible', 'done'); }
+        else if (i === sub) { item.classList.add('visible', 'current'); }
+      });
+    }
+
+    // ─── Equation boxes ──────────────────────────────────────────────────────
+    function updateEq(sub) {
+      ['eq-ht','eq-ot'].forEach(id => document.getElementById(id).classList.remove('active-eq'));
+      if (SUB_EQ[sub]) document.getElementById(SUB_EQ[sub]).classList.add('active-eq');
+    }
+    function resetEq() {
+      ['eq-ht','eq-ot'].forEach(id => document.getElementById(id).classList.remove('active-eq'));
+    }
+
+    // ─── Master update ───────────────────────────────────────────────────────
+    function updateAll() {
+      if (currentStep < 0) {
+        dimAllGroups();
+        resetLabels();
+        resetStrip();
+        resetEq();
+        items.forEach(item => item.classList.remove('visible','current','done'));
+        document.getElementById('progress-badge').textContent = 'pronto para iniciar ▷';
+        return;
+      }
+      const tok = Math.floor(currentStep / SUBSTEPS);
+      const sub = currentStep % SUBSTEPS;
+      updateLabels(tok);
+      updateGroups(sub);
+      updateStrip(tok, sub);
+      updateStepList(sub);
+      updateEq(sub);
+      document.getElementById('progress-badge').textContent =
+        `t = ${tok+1} / ${TOKENS}  ·  passo ${sub+1} / ${SUBSTEPS}`;
+    }
+
+    // ─── Controls ────────────────────────────────────────────────────────────
+    function nextStep() {
+      if (currentStep < GRAND - 1) { currentStep++; updateAll(); }
+    }
+    function resetSteps() {
+      currentStep = -1; updateAll();
+    }
+
+    updateAll();
+  </script>
+</body>
+</html>

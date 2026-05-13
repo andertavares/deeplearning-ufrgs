@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 05 – Como a IA sabe o que gerar?</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── pipeline diagram ── */
+    .pipeline {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      align-items: stretch;
+    }
+    .pipe-step {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0.55rem 0.8rem;
+      animation: stepIn 0.4s ease both;
+      animation-delay: var(--sd, 0s);
+    }
+    @keyframes stepIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .pipe-step.highlight {
+      background: var(--teal-lt);
+      border-color: var(--teal);
+    }
+    .pipe-icon {
+      font-size: 1.5rem;
+      flex-shrink: 0;
+      width: 2rem;
+      text-align: center;
+    }
+    .pipe-label {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--text);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .pipe-desc {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 0.1rem;
+      line-height: 1.35;
+    }
+    .pipe-arrow {
+      text-align: center;
+      font-size: 1.1rem;
+      color: var(--teal);
+      line-height: 1;
+      padding: 0.1rem 0;
+      font-weight: 700;
+    }
+    /* embedding bar visual */
+    .emb-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      height: 28px;
+      flex-shrink: 0;
+    }
+    .emb-bar {
+      width: 5px;
+      border-radius: 2px 2px 0 0;
+      background: var(--teal);
+      opacity: 0.75;
+      animation: barGrow 0.6s ease both;
+      animation-delay: var(--bd, 0s);
+    }
+    @keyframes barGrow {
+      from { transform: scaleY(0); transform-origin: bottom; }
+      to   { transform: scaleY(1); transform-origin: bottom; }
+    }
+    /* denoising strip */
+    .denoise-strip {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .dn-frame {
+      width: 28px; height: 28px;
+      border-radius: 4px;
+      border: 1px solid var(--border2);
+      overflow: hidden;
+      position: relative;
+    }
+    .dn-frame canvas { display: block; }
+    .dn-arrow-small {
+      font-size: 0.7rem;
+      color: var(--teal);
+      font-weight: 700;
+    }
+    .ca-badge {
+      font-size: 0.68rem;
+      font-weight: 700;
+      background: var(--purple-lt);
+      color: var(--purple);
+      border: 1px solid var(--purple);
+      border-radius: 4px;
+      padding: 0.1rem 0.35rem;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Difusão</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 5 · Slide 1 / 1</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <div class="slide-title">Como a IA sabe o que gerar?</div>
+        <div class="slide-subtitle">Bloco 5 — Condicionamento por Texto (Prompting)</div>
+      </div>
+
+      <div class="content-split">
+
+        <!-- Left: Pipeline diagram -->
+        <div class="panel">
+          <div class="panel-title">🗺️ Pipeline: Texto → Imagem</div>
+          <div class="pipeline">
+
+            <!-- Step 1: Prompt -->
+            <div class="pipe-step" style="--sd:0.05s">
+              <div class="pipe-icon">📝</div>
+              <div>
+                <div class="pipe-label">Prompt de Texto</div>
+                <div class="pipe-desc" style="font-family:'Fira Code',monospace;font-size:0.8rem;color:var(--blue);">
+                  "um cachorro na praia ao pôr do sol"
+                </div>
+              </div>
+            </div>
+
+            <div class="pipe-arrow">↓</div>
+
+            <!-- Step 2: Text Encoder -->
+            <div class="pipe-step highlight" style="--sd:0.12s">
+              <div class="pipe-icon">🔤</div>
+              <div style="flex:1">
+                <div class="pipe-label">Encoder de Texto (CLIP)</div>
+                <div class="pipe-desc">Tokeniza e projeta cada palavra num espaço vetorial semântico compartilhado com imagens.</div>
+              </div>
+            </div>
+
+            <div class="pipe-arrow">↓</div>
+
+            <!-- Step 3: Embedding -->
+            <div class="pipe-step" style="--sd:0.20s">
+              <div class="pipe-icon">🔢</div>
+              <div style="flex:1">
+                <div class="pipe-label">Sequência de Embeddings</div>
+                <div class="pipe-desc">Cada token vira um vetor de 768 d. O conjunto captura <strong>semântica e relações</strong> entre os termos.</div>
+              </div>
+              <div class="emb-bars" title="representação simbólica do embedding">
+                <div class="emb-bar" style="--bd:0.25s;height:60%"></div>
+                <div class="emb-bar" style="--bd:0.28s;height:90%"></div>
+                <div class="emb-bar" style="--bd:0.31s;height:40%"></div>
+                <div class="emb-bar" style="--bd:0.34s;height:75%"></div>
+                <div class="emb-bar" style="--bd:0.37s;height:55%"></div>
+                <div class="emb-bar" style="--bd:0.40s;height:100%"></div>
+                <div class="emb-bar" style="--bd:0.43s;height:30%"></div>
+                <div class="emb-bar" style="--bd:0.46s;height:70%"></div>
+              </div>
+            </div>
+
+            <div class="pipe-arrow">↓</div>
+
+            <!-- Step 4: Cross-Attention inside U-Net -->
+            <div class="pipe-step highlight" style="--sd:0.30s">
+              <div class="pipe-icon">🧠</div>
+              <div style="flex:1">
+                <div class="pipe-label">U-Net + Cross-Attention</div>
+                <div class="pipe-desc">
+                  A cada passo de denoising, o embedding <strong>alimenta o cross-attention</strong>:
+                  patches da imagem consultam tokens de texto para decidir <em>qual</em> ruído remover e <em>onde</em>.
+                </div>
+              </div>
+              <span class="ca-badge">cross-<br>attention</span>
+            </div>
+
+            <div class="pipe-arrow">↓</div>
+
+            <!-- Step 5: Denoising steps -->
+            <div class="pipe-step" style="--sd:0.38s">
+              <div class="pipe-icon">🎨</div>
+              <div style="flex:1">
+                <div class="pipe-label">Denoising Guiado (T → 0)</div>
+                <div class="pipe-desc">A cada passo, o ruído é removido <strong>em direção ao conceito do prompt</strong>. O texto age como bússola em todo o processo.</div>
+              </div>
+              <div class="denoise-strip">
+                <div class="dn-frame"><canvas id="dn0" width="28" height="28"></canvas></div>
+                <div class="dn-arrow-small">→</div>
+                <div class="dn-frame"><canvas id="dn1" width="28" height="28"></canvas></div>
+                <div class="dn-arrow-small">→</div>
+                <div class="dn-frame"><canvas id="dn2" width="28" height="28"></canvas></div>
+                <div class="dn-arrow-small">→</div>
+                <div class="dn-frame" style="background:#f8f9fb;display:flex;align-items:center;justify-content:center;font-size:1.1rem;">🐶</div>
+              </div>
+            </div>
+
+          </div><!-- /.pipeline -->
+        </div>
+
+        <!-- Right: Theory -->
+        <div class="panel">
+          <div class="panel-title">📚 Teoria do Condicionamento</div>
+          <div class="concept-cards">
+            <div class="concept-card" style="--delay:0.05s">
+              <div class="card-icon">📝</div>
+              <div class="card-text">
+                <strong>Alinhamento Texto-Imagem</strong>
+                <p>O modelo é treinado com pares (descrição, imagem). Um encoder de texto (similar ao CLIP) converte o texto em um <strong>vetor de embedding</strong>.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.12s">
+              <div class="card-icon">🧭</div>
+              <div class="card-text">
+                <strong>O Texto como Bússola</strong>
+                <p>Durante o denoising, o embedding guia cada passo de remoção de ruído. A rede não remove ruído aleatoriamente — ela o remove em direção aos <em>padrões associados ao texto</em>.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.20s">
+              <div class="card-icon">🔗</div>
+              <div class="card-text">
+                <strong>Cross-Attention na U-Net</strong>
+                <p>A U-Net mantém sua estrutura convolucional (blocos ResNet + downsampling/upsampling). Em cada resolução, um <strong>Spatial Transformer Block</strong> é inserido <em>entre</em> as convoluções:</p>
+                <ol style="margin:0.25rem 0 0 1rem;font-size:0.76rem;color:var(--text-muted);line-height:1.5">
+                  <li>O mapa de features 2D é <strong>achatado</strong> em sequência de patches (tokens visuais)</li>
+                  <li><strong>Q</strong> = projeção dos tokens visuais &nbsp;|&nbsp; <strong>K, V</strong> = projeção do embedding de texto</li>
+                  <li>Atenção: <span style="font-family:'Fira Code',monospace;font-size:0.72rem;color:var(--purple);">softmax(QKᵀ/√d)·V</span> — <em>idêntica</em> ao transformer clássico</li>
+                  <li>O resultado é <strong>reformatado para 2D</strong> e devolvido ao fluxo convolucional</li>
+                </ol>
+                <p style="margin-top:0.3rem;">As convoluções capturam <em>estrutura espacial local</em>; o cross-attention injeta <em>contexto semântico global</em> do texto a cada resolução.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.28s">
+              <div class="card-icon">🎯</div>
+              <div class="card-text">
+                <strong>Classifier-Free Guidance (CFG)</strong>
+                <p>Durante o treino, o modelo aprende <em>dois modos</em>: com prompt e sem prompt (texto vazio). Na geração, as duas predições são combinadas:</p>
+                <div style="font-family:'Fira Code',monospace;font-size:0.72rem;background:var(--bg3);border-radius:4px;padding:0.3rem 0.5rem;margin:0.3rem 0;color:var(--purple);">
+                  ε̂ = ε<sub>∅</sub> + <strong>w</strong> · (ε<sub>texto</sub> − ε<sub>∅</sub>)
+                </div>
+                <p>O fator <strong>w</strong> (guidance scale) amplifica o quanto o prompt influencia. Maior w → mais fiel ao texto, menos diversidade.</p>
+              </div>
+            </div>
+          </div>
+          <div class="insight-box">
+            <span class="i-icon">✨</span>
+            <div class="i-text">
+              <strong>Texto + Imagem + Difusão</strong> = a receita por trás de <strong>Stable Diffusion</strong>, <strong>DALL-E</strong> e <strong>Midjourney</strong>.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide04b.html'">← Anterior</button>
+      <div class="nav-dots">
+        <div class="dot active"></div>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide06.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    // Draw denoising strip: full noise → less noise → faint noise
+    const noiseAlphas = [1.0, 0.55, 0.18];
+    noiseAlphas.forEach((alpha, i) => {
+      const cv = document.getElementById('dn' + i);
+      if (!cv) return;
+      const cx = cv.getContext('2d');
+      const W = cv.width, H = cv.height;
+      // background
+      cx.fillStyle = '#f8f9fb';
+      cx.fillRect(0, 0, W, H);
+      // emoji (grows in as noise fades)
+      cx.globalAlpha = 1 - alpha;
+      cx.font = '18px serif';
+      cx.textAlign = 'center';
+      cx.textBaseline = 'middle';
+      cx.fillText('🐶', W / 2, H / 2 + 1);
+      cx.globalAlpha = 1;
+      // noise overlay
+      const img = cx.createImageData(W, H);
+      const d = img.data;
+      for (let j = 0; j < d.length; j += 4) {
+        const v = Math.floor(Math.random() * 256);
+        d[j] = v; d[j+1] = v; d[j+2] = v;
+        d[j+3] = Math.floor(alpha * 220);
+      }
+      cx.putImageData(img, 0, 0);
+    });
+  </script>
+</body>
+</html>

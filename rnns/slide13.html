@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 13 – Backpropagation Through Time (BPTT)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .btn-row { display:flex; gap:0.6rem; margin-bottom:0.6rem; }
+    .btn-step {
+      padding:0.5rem 1.1rem; border-radius:var(--radius-sm);
+      border:2px solid var(--teal); background:var(--teal-lt); color:var(--teal);
+      font-family:'Fira Code',monospace; font-weight:700; font-size:0.9rem;
+      cursor:pointer; transition:background 0.2s;
+    }
+    .btn-step:hover { background:var(--teal); color:white; }
+    .btn-reset {
+      padding:0.5rem 1rem; border-radius:var(--radius-sm);
+      border:2px solid var(--border2); background:var(--bg3); color:var(--text-dim);
+      font-family:'Fira Code',monospace; font-weight:700; font-size:0.9rem; cursor:pointer;
+    }
+    .bptt-svg { width:100%; display:block; }
+    .svg-wrap { background:var(--bg3); border:1.5px solid var(--border2); border-radius:var(--radius-sm); padding:0.7rem; margin-bottom:0.5rem; }
+    .phase-badge {
+      display:inline-block; font-size:0.78rem; font-weight:700;
+      font-family:'Fira Code',monospace; padding:0.2rem 0.7rem;
+      border-radius:var(--radius-sm); margin-bottom:0.5rem;
+    }
+    .ph-init { color:var(--text-dim); background:var(--bg3); border:1px solid var(--border2); }
+    .ph-fwd  { color:#22c55e; background:rgba(34,197,94,0.1); border:1px solid #22c55e; }
+    .ph-bwd  { color:#ef4444; background:rgba(239,68,68,0.1); border:1px solid #ef4444; }
+    .ph-done { color:var(--teal); background:var(--teal-lt); border:1px solid var(--teal); }
+    .step-list2 { list-style:none; padding:0; margin:0; }
+    .step-list2 li {
+      display:flex; gap:0.6rem; align-items:flex-start;
+      padding:0.38rem 0.3rem; border-bottom:1px solid var(--border);
+      font-size:0.83rem; opacity:0.3; transition:opacity 0.25s; border-radius:3px;
+    }
+    .step-list2 li.active { opacity:1; background:var(--bg3); }
+    .step-list2 li.done   { opacity:0.6; }
+    .step-list2 li:last-child { border-bottom:none; }
+    .sn {
+      min-width:1.3rem; height:1.3rem; background:var(--border2); color:var(--text-dim);
+      border-radius:50%; display:flex; align-items:center; justify-content:center;
+      font-size:0.72rem; font-weight:700; margin-top:0.1rem; flex-shrink:0;
+    }
+    .step-list2 li.active .sn { background:var(--teal); color:#fff; }
+    .st { font-family:'Fira Code',monospace; font-size:0.81rem; color:var(--text); line-height:1.35; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Redes Neurais Recorrentes</span>
+      <span class="prof-tag" style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 7 · Slide 1 / 1</span>
+    </header>
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Backpropagation Through Time (BPTT)</h1>
+        <p class="slide-subtitle">Propagação do gradiente de volta no tempo (tarefa many-to-one)</p>
+      </div>
+      <div class="content-split">
+        <!-- LEFT PANEL -->
+        <div class="panel panel-left">
+          <h2 class="panel-title">▶ Passo a Passo — Clique para Avançar</h2>
+          <div class="btn-row">
+            <button class="btn-step" onclick="nextStep()">Avançar Passo ▶</button>
+            <button class="btn-reset" onclick="resetSteps()">Reiniciar ↺</button>
+          </div>
+          <span id="phase-badge" class="phase-badge ph-init">Clique para começar</span>
+          <div class="svg-wrap">
+            <svg id="bptt-svg" class="bptt-svg" viewBox="0 0 320 148" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="aG" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#22c55e"/></marker>
+                <marker id="aR" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#ef4444"/></marker>
+                <marker id="aD" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#475569"/></marker>
+              </defs>
+              <!-- CELLS -->
+              <rect id="c1" x="12" y="54" width="48" height="34" rx="5" fill="var(--bg2)" stroke="#475569" stroke-width="1.5"/>
+              <rect id="c2" x="90" y="54" width="48" height="34" rx="5" fill="var(--bg2)" stroke="#475569" stroke-width="1.5"/>
+              <rect id="c3" x="168" y="54" width="48" height="34" rx="5" fill="var(--bg2)" stroke="#475569" stroke-width="1.5"/>
+              <rect id="c4" x="246" y="54" width="48" height="34" rx="5" fill="var(--bg2)" stroke="#475569" stroke-width="1.5"/>
+              <!-- CELL LABELS -->
+              <text x="36" y="76" text-anchor="middle" font-size="9" font-family="Fira Code" fill="var(--text)">t=1</text>
+              <text x="114" y="76" text-anchor="middle" font-size="9" font-family="Fira Code" fill="var(--text)">t=2</text>
+              <text x="192" y="76" text-anchor="middle" font-size="9" font-family="Fira Code" fill="var(--text)">t=3</text>
+              <text x="270" y="76" text-anchor="middle" font-size="9" font-family="Fira Code" fill="var(--text)">t=4</text>
+              <!-- INPUT ARROWS (initially dim) -->
+              <g id="xi1"><line x1="36" y1="108" x2="36" y2="90" stroke="#475569" stroke-width="1.8" marker-end="url(#aD)"/><text x="36" y="119" text-anchor="middle" font-size="9" font-family="Fira Code" fill="#475569">x₁</text></g>
+              <g id="xi2"><line x1="114" y1="108" x2="114" y2="90" stroke="#475569" stroke-width="1.8" marker-end="url(#aD)"/><text x="114" y="119" text-anchor="middle" font-size="9" font-family="Fira Code" fill="#475569">x₂</text></g>
+              <g id="xi3"><line x1="192" y1="108" x2="192" y2="90" stroke="#475569" stroke-width="1.8" marker-end="url(#aD)"/><text x="192" y="119" text-anchor="middle" font-size="9" font-family="Fira Code" fill="#475569">x₃</text></g>
+              <g id="xi4"><line x1="270" y1="108" x2="270" y2="90" stroke="#475569" stroke-width="1.8" marker-end="url(#aD)"/><text x="270" y="119" text-anchor="middle" font-size="9" font-family="Fira Code" fill="#475569">x₄</text></g>
+              <!-- FORWARD H ARROWS (initially dim) -->
+              <g id="fh1"><line x1="60" y1="66" x2="88" y2="66" stroke="#475569" stroke-width="2" marker-end="url(#aD)"/><text x="74" y="58" text-anchor="middle" font-size="8" font-family="Fira Code" fill="#475569">h₁</text></g>
+              <g id="fh2"><line x1="138" y1="66" x2="166" y2="66" stroke="#475569" stroke-width="2" marker-end="url(#aD)"/><text x="152" y="58" text-anchor="middle" font-size="8" font-family="Fira Code" fill="#475569">h₂</text></g>
+              <g id="fh3"><line x1="216" y1="66" x2="244" y2="66" stroke="#475569" stroke-width="2" marker-end="url(#aD)"/><text x="230" y="58" text-anchor="middle" font-size="8" font-family="Fira Code" fill="#475569">h₃</text></g>
+              <!-- OUTPUT ONLY AT t=4 (many-to-one) -->
+              <g id="out4"><line x1="270" y1="54" x2="270" y2="35" stroke="#475569" stroke-width="1.8" marker-end="url(#aD)"/><text x="270" y="28" text-anchor="middle" font-size="8" font-family="Fira Code" fill="#475569">o₄</text></g>
+              <!-- LOSS (hidden initially) -->
+              <text id="lossL" x="270" y="15" text-anchor="middle" font-size="9" font-family="Fira Code" fill="#f97316" font-weight="700" display="none">L</text>
+              <!-- BACKWARD ARROWS (hidden initially) -->
+              <!-- step 5: ∂L/∂h₄ — gradient from output back into cell4 -->
+              <g id="bw4" display="none">
+                <line x1="283" y1="27" x2="283" y2="53" stroke="#ef4444" stroke-width="2" stroke-dasharray="4,2" marker-end="url(#aR)"/>
+              </g>
+              <!-- step 6: ∂L/∂h₃ — from cell4 left to cell3 right -->
+              <g id="bw3" display="none">
+                <line x1="244" y1="79" x2="218" y2="79" stroke="#ef4444" stroke-width="2" stroke-dasharray="4,2" marker-end="url(#aR)"/>
+                <text x="231" y="92" text-anchor="middle" font-size="7" font-family="Fira Code" fill="#ef4444">∂h₄/∂h₃</text>
+              </g>
+              <!-- step 7: ∂L/∂h₂ — from cell3 left to cell2 right -->
+              <g id="bw2" display="none">
+                <line x1="166" y1="79" x2="140" y2="79" stroke="#ef4444" stroke-width="2" stroke-dasharray="4,2" marker-end="url(#aR)"/>
+                <text x="153" y="92" text-anchor="middle" font-size="7" font-family="Fira Code" fill="#ef4444">∂h₃/∂h₂</text>
+              </g>
+              <!-- step 8: ∂L/∂h₁ — from cell2 left to cell1 right -->
+              <g id="bw1" display="none">
+                <line x1="88" y1="79" x2="62" y2="79" stroke="#ef4444" stroke-width="2" stroke-dasharray="4,2" marker-end="url(#aR)"/>
+                <text x="75" y="92" text-anchor="middle" font-size="7" font-family="Fira Code" fill="#ef4444">∂h₂/∂h₁</text>
+              </g>
+            </svg>
+          </div>
+        </div>
+        <!-- RIGHT PANEL -->
+        <div class="panel panel-right">
+          <h2 class="panel-title">📋 Passos do BPTT</h2>
+          <ul class="step-list2" id="bptt-list">
+            <li id="s1"><span class="sn">1</span><span class="st">Forward: h₁ = φ(U·x₁ + bₕ)</span></li>
+            <li id="s2"><span class="sn">2</span><span class="st">Forward: h₂ = φ(U·x₂ + V·h₁ + bₕ)</span></li>
+            <li id="s3"><span class="sn">3</span><span class="st">Forward: h₃ = φ(U·x₃ + V·h₂ + bₕ)</span></li>
+            <li id="s4"><span class="sn">4</span><span class="st">Forward: h₄, o₄ = ψ(W·h₄), L = ℓ(o₄, ŷ)</span></li>
+            <li id="s5"><span class="sn">5</span><span class="st">Backward: ∂L/∂h₄ via ∂L/∂o₄ · ∂o₄/∂h₄</span></li>
+            <li id="s6"><span class="sn">6</span><span class="st">Backward: ∂L/∂h₃ = ∂L/∂h₄ · Vᵀ·φ′(·)</span></li>
+            <li id="s7"><span class="sn">7</span><span class="st">Backward: ∂L/∂h₂ = ∂L/∂h₃ · Vᵀ·φ′(·)</span></li>
+            <li id="s8"><span class="sn">8</span><span class="st">Backward: ∂L/∂h₁ = ∂L/∂h₂ · Vᵀ·φ′(·)</span></li>
+          </ul>
+          <div class="highlight-box blue" style="margin-top:0.8rem;">
+            <span class="icon">🔀</span>
+            <span>Em many-to-one apenas h₄ recebe gradiente direto de L. Os estados anteriores recebem gradiente apenas via conexões recorrentes (Vᵀ).</span>
+          </div>
+        </div>
+      </div>
+    </main>
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide12.html'">← Anterior</button>
+      <div class="nav-dots"><span class="dot active"></span></div>
+      <button class="btn-nav btn-next" onclick="location.href='slide14.html'">Próximo →</button>
+    </nav>
+  </div>
+  <script>
+    const DIM = '#475569', FWD = '#22c55e';
+    const STEPS = [
+      { phase:'fwd', label:'▶ Forward — t = 1',              cell:'c1', groups:['xi1'],            show:[] },
+      { phase:'fwd', label:'▶ Forward — t = 2',              cell:'c2', groups:['xi2','fh1'],       show:[] },
+      { phase:'fwd', label:'▶ Forward — t = 3',              cell:'c3', groups:['xi3','fh2'],       show:[] },
+      { phase:'fwd', label:'▶ Forward — t = 4 — calcular L', cell:'c4', groups:['xi4','fh3','out4'],show:['lossL'] },
+      { phase:'bwd', label:'◀ Backward — ∂L/∂h₄',           cell:null, groups:[],                 show:['bw4'] },
+      { phase:'bwd', label:'◀ Backward — ∂L/∂h₃',           cell:null, groups:[],                 show:['bw3'] },
+      { phase:'bwd', label:'◀ Backward — ∂L/∂h₂',           cell:null, groups:[],                 show:['bw2'] },
+      { phase:'bwd', label:'◀ Backward — ∂L/∂h₁',           cell:null, groups:[],                 show:['bw1'] },
+    ];
+    let cur = -1;
+
+    function activateGroup(id) {
+      const g = document.getElementById(id);
+      if (!g) return;
+      g.querySelectorAll('line').forEach(l => {
+        l.setAttribute('stroke', FWD);
+        l.setAttribute('marker-end', 'url(#aG)');
+        l.removeAttribute('stroke-dasharray');
+      });
+      g.querySelectorAll('text').forEach(t => t.setAttribute('fill', FWD));
+    }
+
+    function activateCell(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.setAttribute('stroke', FWD);
+      el.setAttribute('fill', 'rgba(34,197,94,0.10)');
+      el.setAttribute('stroke-width', '2.5');
+    }
+
+    function showEl(id) {
+      const el = document.getElementById(id);
+      if (el) el.removeAttribute('display');
+    }
+
+    function resetAll() {
+      ['c1','c2','c3','c4'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.setAttribute('stroke', DIM);
+          el.setAttribute('fill', 'var(--bg2)');
+          el.setAttribute('stroke-width', '1.5');
+        }
+      });
+      ['xi1','xi2','xi3','xi4','fh1','fh2','fh3','out4'].forEach(id => {
+        const g = document.getElementById(id);
+        if (!g) return;
+        g.querySelectorAll('line').forEach(l => {
+          l.setAttribute('stroke', DIM);
+          l.setAttribute('marker-end', 'url(#aD)');
+          l.removeAttribute('stroke-dasharray');
+        });
+        g.querySelectorAll('text').forEach(t => t.setAttribute('fill', DIM));
+      });
+      ['bw4','bw3','bw2','bw1'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.setAttribute('display', 'none');
+      });
+      const lL = document.getElementById('lossL');
+      if (lL) lL.setAttribute('display', 'none');
+    }
+
+    function updateBadge(i) {
+      const b = document.getElementById('phase-badge');
+      if (i < 0)              { b.textContent = 'Clique para começar'; b.className = 'phase-badge ph-init'; }
+      else if (i < STEPS.length) { b.textContent = STEPS[i].label;    b.className = 'phase-badge ph-' + STEPS[i].phase; }
+      else                    { b.textContent = '✓ BPTT concluído — acumular ∇U, ∇V, ∇W'; b.className = 'phase-badge ph-done'; }
+    }
+
+    function updateList(i) {
+      for (let k = 0; k < STEPS.length; k++) {
+        const li = document.getElementById('s' + (k + 1));
+        if (!li) continue;
+        li.classList.remove('active', 'done');
+        if (k < i)      li.classList.add('done');
+        else if (k === i) li.classList.add('active');
+      }
+    }
+
+    function nextStep() {
+      if (cur >= STEPS.length - 1) return;
+      cur++;
+      const s = STEPS[cur];
+      if (s.cell) activateCell(s.cell);
+      s.groups.forEach(id => activateGroup(id));
+      s.show.forEach(id => showEl(id));
+      updateBadge(cur);
+      updateList(cur);
+      if (cur === STEPS.length - 1) {
+        setTimeout(() => {
+          updateBadge(STEPS.length);
+          STEPS.forEach((_, k) => {
+            const li = document.getElementById('s' + (k + 1));
+            if (li) { li.classList.remove('active'); li.classList.add('done'); }
+          });
+        }, 600);
+      }
+    }
+
+    function resetSteps() {
+      cur = -1;
+      resetAll();
+      updateBadge(-1);
+      updateList(-1);
+    }
+
+    resetSteps();
+  </script>
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 09 – Inserindo o Laço de Realimentação</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .badge-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+      margin-top: 0.8rem;
+    }
+    .badge-item {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.9rem;
+      font-family: 'Fira Code', monospace;
+      font-weight: 600;
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.65rem;
+      border-radius: 6px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      font-family: 'Fira Code', monospace;
+    }
+    .badge-blue   { background: #1d4ed820; color: #1d4ed8; border: 1.5px solid #1d4ed8; }
+    .badge-orange { background: #f9731620; color: #ea580c; border: 1.5px solid #ea580c; }
+    .badge-teal   { background: var(--teal-lt); color: var(--teal); border: 1.5px solid var(--teal); }
+    .badge-green  { background: var(--green-lt); color: var(--green); border: 1.5px solid var(--green); }
+    .cell-svg { width: 100%; display: block; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Redes Neurais Recorrentes</span>
+      <span class="prof-tag" style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 4 · Slide 2 / 3</span>
+    </header>
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Inserindo o Laço de Realimentação</h1>
+        <p class="slide-subtitle">A recorrência significa que o cálculo em t depende de t-1</p>
+      </div>
+      <div class="content-split">
+        <!-- LEFT PANEL -->
+        <div class="panel panel-left">
+          <h2 class="panel-title">🔄 A Célula Recorrente</h2>
+          <svg class="cell-svg" viewBox="0 0 300 195" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <marker id="arrowB" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto">
+                <path d="M0,0 L7,3.5 L0,7 Z" fill="#1d4ed8"/>
+              </marker>
+              <marker id="arrowT" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto">
+                <path d="M0,0 L7,3.5 L0,7 Z" fill="#0d6e6e"/>
+              </marker>
+              <marker id="arrowG" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto">
+                <path d="M0,0 L7,3.5 L0,7 Z" fill="#16a34a"/>
+              </marker>
+              <marker id="arrowO" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto">
+                <path d="M0,0 L7,3.5 L0,7 Z" fill="#ea580c"/>
+              </marker>
+            </defs>
+
+            <!-- Cell box -->
+            <rect x="105" y="60" width="90" height="55" rx="10" fill="#1e293b" stroke="#0d6e6e" stroke-width="2.5"/>
+            <text x="150" y="91" text-anchor="middle" fill="white" font-size="13" font-family="Fira Code,monospace" font-weight="700">RNN</text>
+
+            <!-- xₜ enters from left -->
+            <line x1="22" y1="87" x2="104" y2="87" stroke="#1d4ed8" stroke-width="2.2" marker-end="url(#arrowB)"/>
+            <text x="13" y="83" text-anchor="middle" fill="#1d4ed8" font-size="13" font-family="Fira Code,monospace" font-weight="700">x<tspan dy="4" font-size="9">t</tspan></text>
+
+            <!-- oₜ exits upward -->
+            <line x1="150" y1="59" x2="150" y2="14" stroke="#16a34a" stroke-width="2.2" marker-end="url(#arrowG)"/>
+            <text x="161" y="40" text-anchor="start" fill="#16a34a" font-size="13" font-family="Fira Code,monospace" font-weight="700">o<tspan dy="4" font-size="9">t</tspan></text>
+
+            <!-- hₜ exits to the right -->
+            <line x1="196" y1="87" x2="275" y2="87" stroke="#0d6e6e" stroke-width="2.2" marker-end="url(#arrowT)"/>
+            <text x="278" y="83" text-anchor="start" fill="#0d6e6e" font-size="13" font-family="Fira Code,monospace" font-weight="700">h<tspan dy="4" font-size="9">t</tspan></text>
+
+            <!-- Feedback path: hₜ → down → left → up into bottom of cell (h_{t-1}) -->
+            <path d="M 275,94 L 275,172 L 150,172 L 150,116" stroke="#ea580c" stroke-width="2" fill="none" stroke-dasharray="5,3" marker-end="url(#arrowO)"/>
+
+            <!-- h_{t-1} label near the bottom input -->
+            <text x="200" y="168" text-anchor="middle" fill="#ea580c" font-size="12" font-family="Fira Code,monospace" font-weight="700">h<tspan dy="4" font-size="9">t−1</tspan></text>
+
+            <!-- small "delay" annotation -->
+            <text x="220" y="134" text-anchor="start" fill="#ea580c" font-size="8" font-family="Inter,sans-serif" opacity="0.75">delay</text>
+            <text x="220" y="144" text-anchor="start" fill="#ea580c" font-size="8" font-family="Inter,sans-serif" opacity="0.75">(1 passo)</text>
+          </svg>
+          <div class="badge-list">
+            <div class="badge-item"><span class="badge badge-blue">x<sub>t</sub></span> entrada atual</div>
+            <div class="badge-item"><span class="badge badge-orange">h<sub>t−1</sub></span> memória anterior (vem de baixo)</div>
+            <div class="badge-item"><span class="badge badge-teal">h<sub>t</sub></span> nova memória (realimentada)</div>
+            <div class="badge-item"><span class="badge badge-green">o<sub>t</sub></span> saída atual</div>
+          </div>
+        </div>
+        <!-- RIGHT PANEL -->
+        <div class="panel panel-right">
+          <h2 class="panel-title">💡 Por Que a Recorrência Importa</h2>
+          <div class="highlight-box teal" style="margin-bottom:0.9rem">
+            <span class="icon">🔁</span>
+            <span>A recorrência não repete o processamento à toa — o cálculo em <strong>t</strong> depende do estado produzido em <strong>t-1</strong>.</span>
+          </div>
+          <div class="insight-box" style="margin-bottom:0.9rem">
+            <span class="i-icon">💡</span>
+            <div class="i-text"><strong>Estado oculto hₜ:</strong> não é uma cópia de toda a sequência, mas uma representação compacta da informação relevante.</div>
+          </div>
+          <div class="concept-cards">
+            <div class="concept-card" style="--delay:0s">
+              <span class="card-icon">➡️</span>
+              <div class="card-text"><strong>Entrada atual: xₜ</strong><p>O dado do instante corrente.</p></div>
+            </div>
+            <div class="concept-card" style="--delay:0.08s">
+              <span class="card-icon">🕐</span>
+              <div class="card-text"><strong>Memória anterior: h<sub>t−1</sub></strong><p>Estado oculto do passo anterior, carrega o passado.</p></div>
+            </div>
+            <div class="concept-card" style="--delay:0.16s">
+              <span class="card-icon">🧠</span>
+              <div class="card-text"><strong>Nova memória: hₜ</strong><p>Combinação da entrada atual e da memória passada.</p></div>
+            </div>
+            <div class="concept-card" style="--delay:0.24s">
+              <span class="card-icon">📤</span>
+              <div class="card-text"><strong>Saída atual: oₜ</strong><p>Previsão ou classificação gerada no instante t.</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide08.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide10.html'">Próximo →</button>
+    </nav>
+  </div>
+</body>
+</html>

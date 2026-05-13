@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Redes Convolucionais — Índice dos Slides</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f8f9fb; --bg2: #ffffff; --bg3: #f0f2f6;
+      --border: #c7d0e0; --border2: #d1d9e8;
+      --text: #0f1724; --text-muted: #3d4f6e; --text-dim: #6b7fa3;
+      --purple: #5b21b6; --blue: #1d4ed8; --cyan: #0e7490;
+      --green: #166534; --grad1: linear-gradient(135deg, #5b21b6, #1d4ed8);
+    }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 3rem 1.5rem;
+    }
+    .hero { text-align: center; margin-bottom: 3rem; }
+    .badge {
+      display: inline-block;
+      padding: 0.3rem 1rem;
+      border-radius: 999px;
+      background: rgba(91,33,182,0.08);
+      border: 1px solid rgba(91,33,182,0.25);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--purple);
+      margin-bottom: 1.2rem;
+    }
+    h1 {
+      font-size: 2.4rem;
+      font-weight: 800;
+      background: var(--grad1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.75rem;
+    }
+    .hero-sub { color: var(--text-muted); font-size: 1.05rem; max-width: 560px; margin: 0 auto; line-height: 1.6; }
+
+    .blocks { display: flex; flex-direction: column; gap: 2rem; max-width: 860px; width: 100%; }
+    .block-section { }
+    .block-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--purple);
+      margin-bottom: 1rem;
+      padding-left: 0.5rem;
+      border-left: 3px solid var(--purple);
+    }
+    .slides-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1rem;
+    }
+    .slide-link {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      padding: 1.1rem 1.25rem;
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 14px;
+      text-decoration: none;
+      color: var(--text);
+      transition: all 0.2s;
+      box-shadow: 0 1px 4px rgba(15,23,36,0.07);
+    }
+    .slide-link:hover {
+      border-color: var(--purple);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(91,33,182,0.12);
+    }
+    .sl-num { font-family: 'Fira Code', monospace; font-size: 0.7rem; color: var(--text-dim); }
+    .sl-icon { font-size: 1.5rem; }
+    .sl-title { font-size: 0.88rem; font-weight: 600; line-height: 1.3; color: var(--text); }
+    .sl-desc { font-size: 0.72rem; color: var(--text-muted); line-height: 1.4; }
+    .sl-tag {
+      align-self: flex-start;
+      padding: 0.15rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.65rem;
+      font-weight: 600;
+      background: rgba(91,33,182,0.08);
+      border: 1px solid rgba(91,33,182,0.2);
+      color: var(--purple);
+    }
+
+    .coming-soon {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+    .coming-soon .sl-tag {
+      background: rgba(100,116,139,0.08);
+      border-color: var(--border2);
+      color: var(--text-dim);
+    }
+    footer {
+      margin-top: 3rem;
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      text-align: center;
+      font-family: 'Fira Code', monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="hero">
+    <div class="badge">UFRGS · Deep Learning</div>
+    <h1>Redes Convolucionais</h1>
+    <div class="professor-name" style="font-family:'Fira Code',monospace;font-size:0.95rem;color:var(--text-dim);margin:0.5rem 0 0.7rem 0;">Prof. Anderson Rocha Tavares</div>
+    <p class="hero-sub">Slides interativos para a aula de CNNs. Navegue pelos blocos abaixo e clique em qualquer slide para abri-lo.</p>
+  </div>
+
+  <div class="blocks">
+    <!-- Block 1 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 1 — Aprendizado de Representações e Imagens como Dados</div>
+      <div class="slides-grid">
+        <a href="slide01.html" class="slide-link">
+          <div class="sl-num">Slide 01</div>
+          <div class="sl-icon">🔢</div>
+          <div class="sl-title">Aprendizado de Representações</div>
+          <div class="sl-desc">MLP e dados tabulares — onde a rede neural clássica brilha.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide02.html" class="slide-link">
+          <div class="sl-num">Slide 02</div>
+          <div class="sl-icon">🧠</div>
+          <div class="sl-title">Arquitetura de Duas Partes</div>
+          <div class="sl-desc">Extração de representação + MLP — treinamento fim-a-fim.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide03.html" class="slide-link">
+          <div class="sl-num">Slide 03</div>
+          <div class="sl-icon">🖼️</div>
+          <div class="sl-title">Imagens em Escala de Cinza</div>
+          <div class="sl-desc">Pixel = número. Imagem = matriz. Hover para explorar!</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide04.html" class="slide-link">
+          <div class="sl-num">Slide 04</div>
+          <div class="sl-icon">🎨</div>
+          <div class="sl-title">Imagens Coloridas</div>
+          <div class="sl-desc">Decomposição RGB — um tensor 3D H × W × 3.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide05.html" class="slide-link">
+          <div class="sl-num">Slide 05</div>
+          <div class="sl-icon">☓</div>
+          <div class="sl-title">Caso de Estudo: Tiles do Jogo da Velha</div>
+          <div class="sl-desc">Imagens 9×9 binárias de X, O e espaço — classificação binária.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Block 2 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 2 — Limitações do MLP para Imagens</div>
+      <div class="slides-grid">
+        <a href="slide06.html" class="slide-link">
+          <div class="sl-num">Slide 06</div>
+          <div class="sl-icon">⚠️</div>
+          <div class="sl-title">O Problema da Translação</div>
+          <div class="sl-desc">Mova o X e veja como o MLP enxerga entradas muito diferentes para o mesmo objeto.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide07.html" class="slide-link">
+          <div class="sl-num">Slide 07</div>
+          <div class="sl-icon">🔍</div>
+          <div class="sl-title">De Pixels a Padrões</div>
+          <div class="sl-desc">Filtros detectam padrões locais independentemente da posição — motivação para CNNs.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Block 3 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 3 — O que são Convoluções e Filtros Convolucionais</div>
+      <div class="slides-grid">
+        <a href="slide08.html" class="slide-link">
+          <div class="sl-num">Slide 08</div>
+          <div class="sl-icon">⚙️</div>
+          <div class="sl-title">Filtros Convolucionais</div>
+          <div class="sl-desc">Pequenas matrizes de pesos — passe o mouse para ver o que cada filtro detecta.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide09.html" class="slide-link">
+          <div class="sl-num">Slide 09</div>
+          <div class="sl-icon">🔬</div>
+          <div class="sl-title">Convolução Passo a Passo</div>
+          <div class="sl-desc">Janela deslizante, multiplicação elemento a elemento, soma e construção do feature map.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+      </div>
+    </div>
+    <!-- Block 4 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 4 — Feature Maps e Max-Pooling</div>
+      <div class="slides-grid">
+        <a href="slide10.html" class="slide-link">
+          <div class="sl-num">Slide 10</div>
+          <div class="sl-icon">🗺️</div>
+          <div class="sl-title">Feature Maps</div>
+          <div class="sl-desc">Ligue e desligue filtros e veja o mapa de features de cada um na imagem do X.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide11.html" class="slide-link">
+          <div class="sl-num">Slide 11</div>
+          <div class="sl-icon">🏊</div>
+          <div class="sl-title">Por que Max-Pooling?</div>
+          <div class="sl-desc">Compressão de feature maps, tolerância a translações e robustez a pequenas variações de posição.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide12.html" class="slide-link">
+          <div class="sl-num">Slide 12</div>
+          <div class="sl-icon">🔢</div>
+          <div class="sl-title">Pooling Passo a Passo</div>
+          <div class="sl-desc">Escolha janela e stride, avance passo a passo ou execute tudo, e veja o máximo de cada janela destacado.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Block 5 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 5 — ReLU e Não Linearidade</div>
+      <div class="slides-grid">
+        <a href="slide13.html" class="slide-link">
+          <div class="sl-num">Slide 13</div>
+          <div class="sl-icon">⚡</div>
+          <div class="sl-title">ReLU e Não Linearidade</div>
+          <div class="sl-desc">Gráfico interativo da ReLU, comparação com sigmoide e por que ReLU viabiliza redes profundas.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide14.html" class="slide-link">
+          <div class="sl-num">Slide 14</div>
+          <div class="sl-icon">🔦</div>
+          <div class="sl-title">Aplicar ReLU no Feature Map</div>
+          <div class="sl-desc">Escolha um filtro, clique em "Aplicar ReLU" e veja quais ativações são zeradas no mapa de features.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide15.html" class="slide-link">
+          <div class="sl-num">Slide 15</div>
+          <div class="sl-icon">🔗</div>
+          <div class="sl-title">Pipeline Completo</div>
+          <div class="sl-desc">Convolução → ReLU → Max-Pooling passo a passo, com os 3 filtros e o resultado final compacto.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Block 6 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 6 — Pipeline Completo de uma CNN</div>
+      <div class="slides-grid">
+        <a href="slide16.html" class="slide-link">
+          <div class="sl-num">Slide 16</div>
+          <div class="sl-icon">📏</div>
+          <div class="sl-title">Filtros Convolucionais têm Bias</div>
+          <div class="sl-desc">Justificativa e efeito do bias — slider interativo mostrando como ele desloca as ativações antes e depois do ReLU.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide17.html" class="slide-link">
+          <div class="sl-num">Slide 17</div>
+          <div class="sl-icon">🏗️</div>
+          <div class="sl-title">Empilhando Blocos Convolucionais</div>
+          <div class="sl-desc">Arquitetura multi-bloco: Conv→ReLU→Pool repetido, hierarquia de features e parte densa para classificação.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide18.html" class="slide-link">
+          <div class="sl-num">Slide 18</div>
+          <div class="sl-icon">🔗</div>
+          <div class="sl-title">Pipeline Completo — Clique para Explorar</div>
+          <div class="sl-desc">Pipeline clicável de ponta a ponta: entrada → filtros → feature maps → ReLU → MaxPool → flatten → classificador.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Block 7 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 7 — Como a Rede Aprende os Filtros (Backpropagation em CNNs)</div>
+      <div class="slides-grid">
+        <a href="slide19.html" class="slide-link">
+          <div class="sl-num">Slide 19</div>
+          <div class="sl-icon">🎓</div>
+          <div class="sl-title">Como a Rede Aprende os Filtros</div>
+          <div class="sl-desc">Situação inicial: filtros aleatórios, erro alto — backprop vai ajustar tudo.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide20.html" class="slide-link">
+          <div class="sl-num">Slide 20</div>
+          <div class="sl-icon">⬅️</div>
+          <div class="sl-title">Etapas do Backpropagation</div>
+          <div class="sl-desc">Passo a passo: erro na saída → rede densa → feature maps → filtros convolucionais.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide21.html" class="slide-link">
+          <div class="sl-num">Slide 21</div>
+          <div class="sl-icon">🔧</div>
+          <div class="sl-title">Aprendendo a Detectar X</div>
+          <div class="sl-desc">Animação interativa: filtro ruim → backprop → filtro aprende o padrão X → P(X) = 0.85.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Block 8 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 8 — Limitações das CNNs: Dados e Ataques Adversariais</div>
+      <div class="slides-grid">
+        <a href="slide22.html" class="slide-link">
+          <div class="sl-num">Slide 22</div>
+          <div class="sl-icon">⚠️</div>
+          <div class="sl-title">Limitações das CNNs</div>
+          <div class="sl-desc">Visão geral das duas limitações fundamentais: dependência de dados e vulnerabilidade adversarial.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide23.html" class="slide-link">
+          <div class="sl-num">Slide 23</div>
+          <div class="sl-icon">🗂️</div>
+          <div class="sl-title">CNNs Precisam de Muitos Dados</div>
+          <div class="sl-desc">Por que filtros aprendidos exigem variedade de exemplos, variações e muitas amostras por classe.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide24.html" class="slide-link">
+          <div class="sl-num">Slide 24</div>
+          <div class="sl-icon">🎭</div>
+          <div class="sl-title">Ataques Adversariais</div>
+          <div class="sl-desc">Como pequenas perturbações estratégicas neutralizam filtros e enganam a rede — com comparação original vs. perturbado.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide25.html" class="slide-link">
+          <div class="sl-num">Slide 25</div>
+          <div class="sl-icon">🕹️</div>
+          <div class="sl-title">Confunda a Rede!</div>
+          <div class="sl-desc">Grid editável 9×9 com feature maps e probabilidades em tempo real — tente fazer P(X) cair abaixo de 50%!</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+      </div>
+    </div>
+
+
+    <!-- Block 9 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 9 — Redes Residuais (Skip Connections)</div>
+      <div class="slides-grid">
+        <a href="slide26.html" class="slide-link">
+          <div class="sl-num">Slide 26</div>
+          <div class="sl-icon">📉</div>
+          <div class="sl-title">Por que Redes Profundas São Difíceis de Treinar?</div>
+          <div class="sl-desc">Vanishing gradient animado: veja o gradiente enfraquecer camada por camada durante o backpropagation.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide27.html" class="slide-link">
+          <div class="sl-num">Slide 27</div>
+          <div class="sl-icon">🔗</div>
+          <div class="sl-title">Conexões Residuais: Atalhos para o Gradiente</div>
+          <div class="sl-desc">Bloco residual interativo: ajuste F(x) com o slider e veja saída = x + F(x) e os dois caminhos do gradiente.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide28.html" class="slide-link">
+          <div class="sl-num">Slide 28</div>
+          <div class="sl-icon">🏗️</div>
+          <div class="sl-title">Síntese: ResNets e Redes Muito Profundas</div>
+          <div class="sl-desc">H(x) = F(x) + x — como skip connections resolvem o vanishing gradient e permitem ResNet-152.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Block 10 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 10 — Batch Normalization</div>
+      <div class="slides-grid">
+        <a href="slide29.html" class="slide-link">
+          <div class="sl-num">Slide 29</div>
+          <div class="sl-icon">📊</div>
+          <div class="sl-title">Batch Normalization</div>
+          <div class="sl-desc">Distribuição de ativações antes e depois — clique em "Normalizar" e veja a transformação.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide30.html" class="slide-link">
+          <div class="sl-num">Slide 30</div>
+          <div class="sl-icon">📦</div>
+          <div class="sl-title">Normalização por Lote</div>
+          <div class="sl-desc">Escolha o tamanho do lote (2 ou 3) e navegue entre os lotes para comparar Z-score global com as estatísticas do mini-lote.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide31.html" class="slide-link">
+          <div class="sl-num">Slide 31</div>
+          <div class="sl-icon">🏋️</div>
+          <div class="sl-title">Treino: Z-score Global vs Normalização por Lote</div>
+          <div class="sl-desc">Treine a rede logística com Z-score global ou batch norm e compare a dinâmica de treinamento época a época.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide32.html" class="slide-link">
+          <div class="sl-num">Slide 32</div>
+          <div class="sl-icon">🎛️</div>
+          <div class="sl-title">Parâmetros Aprendidos: γ e β</div>
+          <div class="sl-desc">Sliders interativos: γ estica/comprime e β desloca a distribuição normalizada.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide33.html" class="slide-link">
+          <div class="sl-num">Slide 33</div>
+          <div class="sl-icon">⚖️</div>
+          <div class="sl-title">Síntese: BatchNorm na Prática</div>
+          <div class="sl-desc">Efeitos práticos, posição na rede e tabela comparativa Residual vs BatchNorm.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    UFRGS · Curso de Deep Learning · Slides gerados interativamente
+  </footer>
+</body>
+</html>

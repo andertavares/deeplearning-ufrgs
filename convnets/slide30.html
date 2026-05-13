@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 30 – Normalização por Lote (Batch Norm)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── Layout ──────────────────────────────────────────────────────────── */
+    .bn-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      flex: 1;
+    }
+
+    .bn-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.3rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      box-shadow: var(--shadow);
+      overflow-y: auto;
+    }
+
+    /* ── Batch size tabs ──────────────────────────────────────────────────── */
+    .mode-tabs {
+      display: flex;
+      gap: 0.5rem;
+      background: var(--bg3);
+      border-radius: 999px;
+      padding: 4px;
+      border: 1px solid var(--border2);
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 0.4rem 0.8rem;
+      border-radius: 999px;
+      border: none;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.22s;
+      background: transparent;
+      color: var(--text-muted);
+    }
+
+    .tab-btn.active-norm { background: var(--purple-lt); color: var(--purple); }
+    .tab-btn:hover:not(.active-norm) { background: var(--bg2); }
+
+    /* ── Dataset table ────────────────────────────────────────────────────── */
+    .feat-table {
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border2);
+      overflow: hidden;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.78rem;
+    }
+
+    .ft-head,
+    .ft-row {
+      display: grid;
+      grid-template-columns: 1.28fr 0.8fr 1.15fr 0.92fr;
+    }
+
+    .ft-head {
+      background: var(--bg3);
+      border-bottom: 1.5px solid var(--border2);
+    }
+
+    .ft-head-cell {
+      padding: 0.4rem 0.6rem;
+      font-weight: 700;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .ft-row {
+      border-bottom: 1px solid var(--border2);
+      transition: background 0.2s;
+    }
+
+    .ft-row:last-child { border-bottom: none; }
+
+    .ft-row.in-batch  { background: var(--purple-lt); }
+    .ft-row.out-batch { opacity: 0.5; }
+
+    .ft-cell { padding: 0.38rem 0.6rem; color: var(--text-muted); }
+    .ft-cell.label-col    { color: var(--text); font-weight: 600; }
+    .ft-cell.in-batch-val { color: var(--purple); font-weight: 700; }
+
+    .target-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 80px;
+      padding: 0.16rem 0.4rem;
+      border-radius: 999px;
+      font-size: 0.67rem;
+      font-weight: 700;
+      border: 1.5px solid;
+    }
+
+    .target-badge.approved { background: var(--green-lt); border-color: #86efac; color: var(--green); }
+    .target-badge.rejected { background: #fee2e2; border-color: #fca5a5; color: #b91c1c; }
+
+    .batch-dot { color: var(--purple); font-size: 0.55rem; vertical-align: middle; margin-left: 2px; }
+
+    /* ── Batch navigation ─────────────────────────────────────────────────── */
+    .batch-nav {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+    }
+
+    .batch-info {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--purple);
+      min-width: 80px;
+      text-align: center;
+    }
+
+    .nav-btn {
+      border: 1.5px solid var(--border2);
+      background: var(--bg3);
+      color: var(--text);
+      padding: 0.38rem 0.9rem;
+      border-radius: 999px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+
+    .nav-btn:hover:not(:disabled) { background: var(--purple-lt); border-color: #c4b5fd; color: var(--purple); }
+    .nav-btn:disabled { opacity: 0.38; cursor: not-allowed; }
+
+    /* ── Global stats pills ───────────────────────────────────────────────── */
+    .global-stats { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+
+    .stat-pill {
+      padding: 0.2rem 0.65rem;
+      border-radius: 999px;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.7rem;
+      font-weight: 700;
+      border: 1.5px solid;
+    }
+
+    .age-pill    { background: #fef9c3; border-color: #fde047; color: #854d0e; }
+    .salary-pill { background: #fee2e2; border-color: #fca5a5; color: #b91c1c; }
+
+    /* ── Stats comparison table ───────────────────────────────────────────── */
+    .stats-compare {
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      font-size: 0.8rem;
+    }
+
+    .sc-header,
+    .sc-row {
+      display: grid;
+      grid-template-columns: 0.75fr 1fr 1fr;
+      border-bottom: 1px solid var(--border2);
+    }
+
+    .sc-header { background: var(--bg3); border-bottom: 1.5px solid var(--border2); }
+    .sc-row:last-child { border-bottom: none; }
+
+    .sc-cell { padding: 0.45rem 0.6rem; display: flex; flex-direction: column; gap: 0.18rem; }
+    .sc-feat { font-weight: 700; font-size: 0.85rem; justify-content: center; color: var(--text); }
+
+    .sc-header .sc-feat   { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); font-weight: 700; }
+    .sc-header .sc-global { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--green);  font-weight: 700; }
+    .sc-header .sc-batch  { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--purple); font-weight: 700; }
+
+    .sc-stat       { font-family: 'Fira Code', monospace; font-size: 0.78rem; font-weight: 700; }
+    .sc-stat.g-val { color: var(--green); }
+    .sc-stat.b-val { color: var(--purple); }
+    .sc-stat.b-diff{ color: #b91c1c; }
+
+    /* ── Feature selector tabs ────────────────────────────────────────────── */
+    .feat-tabs { display: flex; gap: 0.5rem; }
+
+    .feat-tab {
+      flex: 1;
+      padding: 0.35rem 0.5rem;
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      background: var(--bg3);
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.2s;
+      color: var(--text-muted);
+    }
+
+    .feat-tab.active { background: var(--purple-lt); border-color: #c4b5fd; color: var(--purple); }
+    .feat-tab:hover:not(.active) { background: var(--bg2); }
+
+    /* ── Canvas ───────────────────────────────────────────────────────────── */
+    #bnCanvas {
+      display: block;
+      border-radius: var(--radius-sm);
+      background: #f8f9fb;
+      border: 1.5px solid var(--border2);
+    }
+
+    /* ── Normalized values table ──────────────────────────────────────────── */
+    .norm-vals-table {
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+
+    .nv-header,
+    .nv-row {
+      display: grid;
+      grid-template-columns: 0.95fr 0.85fr 0.85fr 0.85fr 0.85fr;
+      border-bottom: 1px solid var(--border2);
+    }
+
+    .nv-header { background: var(--bg3); border-bottom: 1.5px solid var(--border2); }
+    .nv-row:last-child { border-bottom: none; }
+
+    .nv-cell { padding: 0.38rem 0.5rem; font-family: 'Fira Code', monospace; font-size: 0.74rem; }
+    .nv-header .nv-cell { font-weight: 700; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.04em; }
+
+    .nv-sample { color: var(--text); font-weight: 600; }
+    .nv-global { color: var(--green); }
+    .nv-batch  { color: var(--purple); }
+    .nv-batch.val-diff { color: #b91c1c; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Redes Convolucionais</span>
+      <span class="prof-tag" style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 10 · Slide 2 / 5</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Normalização por Lote 📦</h1>
+        <p class="slide-subtitle">A BatchNorm normaliza cada mini-lote com <em>sua própria</em> média e desvio — diferentes lotes geram estatísticas diferentes.</p>
+      </div>
+
+      <div class="bn-layout">
+
+        <!-- ── Left panel: dataset + batch selection ────────────────────── -->
+        <div class="bn-panel">
+          <div class="panel-title">Dataset e Seleção de Lote</div>
+
+          <!-- Batch size selector -->
+          <div class="mode-tabs">
+            <button class="tab-btn" id="tabB2" onclick="setBatchSize(2)">Lote de 2</button>
+            <button class="tab-btn active-norm" id="tabB3" onclick="setBatchSize(3)">Lote de 3</button>
+          </div>
+
+          <!-- Dataset table (6 amostras) -->
+          <div class="feat-table">
+            <div class="ft-head">
+              <div class="ft-head-cell" style="color:var(--text-muted);">Amostra</div>
+              <div class="ft-head-cell" style="color:var(--yellow);">Idade</div>
+              <div class="ft-head-cell" style="color:var(--red);">Salário (R$)</div>
+              <div class="ft-head-cell" style="color:var(--text-muted);">Crédito</div>
+            </div>
+            <div id="tableBody"></div>
+          </div>
+
+          <!-- Batch navigation -->
+          <div class="batch-nav">
+            <button class="nav-btn" id="prevBatch" onclick="prevBatch()">← Anterior</button>
+            <span class="batch-info" id="batchInfo">Lote 1 / 2</span>
+            <button class="nav-btn" id="nextBatch" onclick="nextBatch()">Próximo →</button>
+          </div>
+
+          <!-- Global statistics -->
+          <div class="panel-title" style="margin-top:0;">Estatísticas Globais (todo o dataset)</div>
+          <div class="global-stats" id="globalStats"></div>
+
+          <div class="highlight-box blue">
+            <span class="icon">📐</span>
+            <p>
+              <strong>Z-score global</strong> usa μ e σ do <em>dataset inteiro</em>.
+              <strong>Batch Norm</strong> usa μ<sub>B</sub> e σ<sub>B</sub> calculados
+              <em>apenas com as amostras do lote atual</em>.
+            </p>
+          </div>
+        </div>
+
+        <!-- ── Right panel: statistics comparison ───────────────────────── -->
+        <div class="bn-panel">
+          <div class="panel-title">Estatísticas: Z-score Global vs. Lote Atual</div>
+
+          <!-- Statistics comparison table -->
+          <div class="stats-compare" id="statsCompare"></div>
+
+          <!-- Feature selector for canvas -->
+          <div class="feat-tabs">
+            <button class="feat-tab active" id="ftAge"    onclick="setFeat('age')">📊 Idade</button>
+            <button class="feat-tab"        id="ftSalary" onclick="setFeat('salary')">📊 Salário</button>
+          </div>
+
+          <!-- Canvas: grouped bar chart (global vs batch normalized values) -->
+          <div style="display:flex;justify-content:center;">
+            <canvas id="bnCanvas" width="340" height="162"></canvas>
+          </div>
+
+          <!-- Normalized values for samples in current batch -->
+          <div class="panel-title" style="margin-top:0;">Valores Normalizados — Lote Atual</div>
+          <div class="norm-vals-table" id="normValsTable"></div>
+
+          <div class="highlight-box purple">
+            <span class="icon">💡</span>
+            <p id="insightText">As mesmas amostras recebem valores normalizados
+              <strong>diferentes</strong> dependendo de quais outras amostras estão no mesmo lote!</p>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide29.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide31.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    /* ── Dataset (same as slide29) ──────────────────────────────────────── */
+    const RAW = [
+      { label: 'Pessoa A', age: 24, salary: 1800,  y: 0 },
+      { label: 'Pessoa B', age: 31, salary: 4200,  y: 0 },
+      { label: 'Pessoa C', age: 37, salary: 8200,  y: 1 },
+      { label: 'Pessoa D', age: 52, salary: 12500, y: 1 },
+      { label: 'Pessoa E', age: 61, salary: 6500,  y: 1 },
+      { label: 'Pessoa F', age: 27, salary: 9600,  y: 0 },
+    ];
+
+    /* ── Math helpers ───────────────────────────────────────────────────── */
+    function mean(arr)           { return arr.reduce((s, v) => s + v, 0) / arr.length; }
+    function stdDev(arr, mu)     { return Math.sqrt(arr.reduce((s, v) => s + (v - mu) ** 2, 0) / arr.length); }
+    function zNorm(val, mu, sig) { return (val - mu) / Math.max(sig, 1e-6); } /* guard: sigma may be 0 for constant batches */
+
+    /* ── Global statistics (computed once) ─────────────────────────────── */
+    const gAges     = RAW.map(s => s.age);
+    const gSalaries = RAW.map(s => s.salary);
+    const GLOBAL = {
+      age:    { mu: mean(gAges),     sigma: stdDev(gAges,     mean(gAges))     },
+      salary: { mu: mean(gSalaries), sigma: stdDev(gSalaries, mean(gSalaries)) },
+    };
+
+    /* ── State ──────────────────────────────────────────────────────────── */
+    let batchSize = 3;
+    let batchIdx  = 0;
+    let featKey   = 'age';
+
+    /* ── Batch helpers ──────────────────────────────────────────────────── */
+    function getBatches() {
+      const out = [];
+      for (let i = 0; i < RAW.length; i += batchSize) {
+        out.push(RAW.slice(i, i + batchSize));
+      }
+      return out;
+    }
+
+    function computeBatchStats(batch) {
+      const ages = batch.map(s => s.age);
+      const sals = batch.map(s => s.salary);
+      const muA  = mean(ages), muS = mean(sals);
+      return {
+        age:    { mu: muA, sigma: Math.max(stdDev(ages, muA), 1e-6) },
+        salary: { mu: muS, sigma: Math.max(stdDev(sals, muS), 1e-6) },
+      };
+    }
+
+    /* ── User actions ───────────────────────────────────────────────────── */
+    function setBatchSize(sz) {
+      batchSize = sz;
+      batchIdx  = 0;
+      document.getElementById('tabB2').className = 'tab-btn' + (sz === 2 ? ' active-norm' : '');
+      document.getElementById('tabB3').className = 'tab-btn' + (sz === 3 ? ' active-norm' : '');
+      render();
+    }
+
+    function prevBatch() { if (batchIdx > 0) { batchIdx--; render(); } }
+    function nextBatch() { if (batchIdx < getBatches().length - 1) { batchIdx++; render(); } }
+
+    function setFeat(key) {
+      featKey = key;
+      document.getElementById('ftAge').className    = 'feat-tab' + (key === 'age'    ? ' active' : '');
+      document.getElementById('ftSalary').className = 'feat-tab' + (key === 'salary' ? ' active' : '');
+      render();
+    }
+
+    /* ── Master render ──────────────────────────────────────────────────── */
+    function render() {
+      const batches    = getBatches();
+      const batch      = batches[batchIdx];
+      const batchStats = computeBatchStats(batch);
+      const batchStart = batchIdx * batchSize;
+
+      updateTable(batchStart, batch.length);
+      updateBatchNav(batches.length);
+      updateGlobalStats();
+      updateStatsCompare(batchStats);
+      updateNormValsTable(batch, batchStats);
+      drawCanvas(batch, batchStats);
+      updateInsight(batch, batchStats);
+    }
+
+    /* ── Dataset table ──────────────────────────────────────────────────── */
+    function updateTable(batchStart, batchLen) {
+      const body = document.getElementById('tableBody');
+      body.innerHTML = '';
+      RAW.forEach((row, i) => {
+        const inB   = i >= batchStart && i < batchStart + batchLen;
+        const badge = row.y === 1
+          ? '<span class="target-badge approved">Aprovado</span>'
+          : '<span class="target-badge rejected">Reprovado</span>';
+        const dot = inB ? '<span class="batch-dot">●</span>' : '';
+        const div = document.createElement('div');
+        div.className = 'ft-row ' + (inB ? 'in-batch' : 'out-batch');
+        div.innerHTML = `
+          <div class="ft-cell label-col">${row.label}${dot}</div>
+          <div class="ft-cell ${inB ? 'in-batch-val' : ''}">${row.age}</div>
+          <div class="ft-cell ${inB ? 'in-batch-val' : ''}">${row.salary.toLocaleString('pt-BR')}</div>
+          <div class="ft-cell">${badge}</div>
+        `;
+        body.appendChild(div);
+      });
+    }
+
+    /* ── Batch navigation ───────────────────────────────────────────────── */
+    function updateBatchNav(total) {
+      document.getElementById('batchInfo').textContent = `Lote ${batchIdx + 1} / ${total}`;
+      document.getElementById('prevBatch').disabled    = batchIdx === 0;
+      document.getElementById('nextBatch').disabled    = batchIdx === total - 1;
+    }
+
+    /* ── Global stats pills ─────────────────────────────────────────────── */
+    function updateGlobalStats() {
+      document.getElementById('globalStats').innerHTML = `
+        <span class="stat-pill age-pill">μ_idade = ${GLOBAL.age.mu.toFixed(2)}</span>
+        <span class="stat-pill age-pill">σ_idade = ${GLOBAL.age.sigma.toFixed(2)}</span>
+        <span class="stat-pill salary-pill">μ_salário = ${Math.round(GLOBAL.salary.mu).toLocaleString('pt-BR')}</span>
+        <span class="stat-pill salary-pill">σ_salário = ${Math.round(GLOBAL.salary.sigma).toLocaleString('pt-BR')}</span>
+      `;
+    }
+
+    /* ── Statistics comparison table ───────────────────────────────────── */
+    function updateStatsCompare(bs) {
+      const rows = [
+        {
+          feat: 'Idade',
+          gMu: GLOBAL.age.mu.toFixed(2),    gSig: GLOBAL.age.sigma.toFixed(2),
+          bMu: bs.age.mu.toFixed(2),         bSig: bs.age.sigma.toFixed(2),
+          dMu: Math.abs(GLOBAL.age.mu    - bs.age.mu)    > 0.5,
+          dSig:Math.abs(GLOBAL.age.sigma - bs.age.sigma) > 0.5,
+        },
+        {
+          feat: 'Salário',
+          gMu: Math.round(GLOBAL.salary.mu).toLocaleString('pt-BR'),
+          gSig:Math.round(GLOBAL.salary.sigma).toLocaleString('pt-BR'),
+          bMu: Math.round(bs.salary.mu).toLocaleString('pt-BR'),
+          bSig:Math.round(bs.salary.sigma).toLocaleString('pt-BR'),
+          dMu: Math.abs(GLOBAL.salary.mu    - bs.salary.mu)    > 100,
+          dSig:Math.abs(GLOBAL.salary.sigma - bs.salary.sigma) > 100,
+        },
+      ];
+      document.getElementById('statsCompare').innerHTML = `
+        <div class="sc-header">
+          <div class="sc-cell sc-feat">Feature</div>
+          <div class="sc-cell sc-global">📊 Z-score global</div>
+          <div class="sc-cell sc-batch">📦 Batch Norm (lote ${batchIdx + 1})</div>
+        </div>
+        ${rows.map(r => `
+          <div class="sc-row">
+            <div class="sc-cell sc-feat">${r.feat}</div>
+            <div class="sc-cell sc-global">
+              <span class="sc-stat g-val">μ = ${r.gMu}</span>
+              <span class="sc-stat g-val">σ = ${r.gSig}</span>
+            </div>
+            <div class="sc-cell sc-batch">
+              <span class="sc-stat ${r.dMu  ? 'b-diff' : 'b-val'}">μ<sub>B</sub> = ${r.bMu}</span>
+              <span class="sc-stat ${r.dSig ? 'b-diff' : 'b-val'}">σ<sub>B</sub> = ${r.bSig}</span>
+            </div>
+          </div>
+        `).join('')}
+      `;
+    }
+
+    /* ── Normalized values table ────────────────────────────────────────── */
+    function updateNormValsTable(batch, bs) {
+      document.getElementById('normValsTable').innerHTML = `
+        <div class="nv-header">
+          <div class="nv-cell nv-sample">Amostra</div>
+          <div class="nv-cell nv-global">x̂ glob. (Ida.)</div>
+          <div class="nv-cell nv-batch">x̂ lote (Ida.)</div>
+          <div class="nv-cell nv-global">x̂ glob. (Sal.)</div>
+          <div class="nv-cell nv-batch">x̂ lote (Sal.)</div>
+        </div>
+        ${batch.map(s => {
+          const gA = zNorm(s.age,    GLOBAL.age.mu,    GLOBAL.age.sigma);
+          const bA = zNorm(s.age,    bs.age.mu,        bs.age.sigma);
+          const gS = zNorm(s.salary, GLOBAL.salary.mu, GLOBAL.salary.sigma);
+          const bS = zNorm(s.salary, bs.salary.mu,     bs.salary.sigma);
+          const dA = Math.abs(gA - bA) > 0.15;
+          const dS = Math.abs(gS - bS) > 0.15;
+          return `
+            <div class="nv-row">
+              <div class="nv-cell nv-sample">${s.label}</div>
+              <div class="nv-cell nv-global">${gA.toFixed(2)}</div>
+              <div class="nv-cell nv-batch ${dA ? 'val-diff' : ''}">${bA.toFixed(2)}</div>
+              <div class="nv-cell nv-global">${gS.toFixed(2)}</div>
+              <div class="nv-cell nv-batch ${dS ? 'val-diff' : ''}">${bS.toFixed(2)}</div>
+            </div>
+          `;
+        }).join('')}
+      `;
+    }
+
+    /* ── Canvas: grouped bar chart (global vs batch) ────────────────────── */
+    function drawCanvas(batch, bs) {
+      const cv  = document.getElementById('bnCanvas');
+      const ctx = cv.getContext('2d');
+      const W   = cv.width, H = cv.height;
+      const PL = 38, PR = 14, PT = 30, PB = 38;
+      const plotW = W - PL - PR, plotH = H - PT - PB;
+
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = '#f8f9fb';
+      ctx.fillRect(0, 0, W, H);
+
+      const gSt = GLOBAL[featKey];
+      const bSt = bs[featKey];
+      const gVs = batch.map(s => zNorm(s[featKey], gSt.mu, gSt.sigma));
+      const bVs = batch.map(s => zNorm(s[featKey], bSt.mu, bSt.sigma));
+
+      // Y range (symmetric, min ±0.5)
+      const absMax = Math.max(...[...gVs, ...bVs].map(Math.abs), 0.5);
+      const yMax   = absMax * 1.3;
+      const yMin   = -yMax;
+
+      function toY(v) { return PT + plotH * (1 - (v - yMin) / (yMax - yMin)); }
+
+      // Y axis
+      ctx.strokeStyle = '#c7d0e0'; ctx.lineWidth = 1; ctx.setLineDash([]);
+      ctx.beginPath(); ctx.moveTo(PL, PT); ctx.lineTo(PL, PT + plotH); ctx.stroke();
+
+      // Zero line (dashed)
+      const y0 = toY(0);
+      ctx.strokeStyle = '#94a3b8'; ctx.setLineDash([3, 3]);
+      ctx.beginPath(); ctx.moveTo(PL, y0); ctx.lineTo(W - PR, y0); ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Axis labels
+      ctx.fillStyle = '#6b7fa3'; ctx.font = '600 9px Fira Code, monospace';
+      ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+      ctx.fillText('0', PL - 4, y0);
+      [-1, 1].forEach(v => {
+        if (v > yMin && v < yMax) {
+          ctx.fillText(v > 0 ? '+1' : '-1', PL - 4, toY(v));
+        }
+      });
+
+      // Bars
+      const slotW = plotW / batch.length;
+      const barW  = slotW * 0.28;
+
+      batch.forEach((s, i) => {
+        const gV = gVs[i], bV = bVs[i];
+        const xC = PL + (i + 0.5) * slotW;
+
+        // Global bar (green)
+        const xG    = xC - barW * 0.65;
+        const yTopG = toY(Math.max(gV, 0)), yBotG = toY(Math.min(gV, 0));
+        ctx.fillStyle = '#166534cc';
+        ctx.fillRect(xG, Math.min(yTopG, yBotG), barW, Math.max(Math.abs(yTopG - yBotG), 2));
+
+        // Batch norm bar (purple)
+        const xB    = xC + barW * 0.1;
+        const yTopB = toY(Math.max(bV, 0)), yBotB = toY(Math.min(bV, 0));
+        ctx.fillStyle = '#5b21b6cc';
+        ctx.fillRect(xB, Math.min(yTopB, yBotB), barW, Math.max(Math.abs(yTopB - yBotB), 2));
+
+        // Value labels
+        ctx.font = '600 8px Fira Code, monospace';
+        ctx.fillStyle = '#166534'; ctx.textAlign = 'center';
+        ctx.textBaseline = gV >= 0 ? 'bottom' : 'top';
+        ctx.fillText(gV.toFixed(2), xG + barW / 2, toY(gV) + (gV >= 0 ? -2 : 2));
+        ctx.fillStyle = '#5b21b6';
+        ctx.textBaseline = bV >= 0 ? 'bottom' : 'top';
+        ctx.fillText(bV.toFixed(2), xB + barW / 2, toY(bV) + (bV >= 0 ? -2 : 2));
+
+        // Sample label
+        ctx.fillStyle = '#334155'; ctx.font = '600 9px Inter, sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        ctx.fillText(s.label.split(' ')[1], xC, H - PB + 5);
+      });
+
+      // Title
+      const featLabel = featKey === 'age' ? 'Idade' : 'Salário';
+      ctx.fillStyle = '#334155'; ctx.font = '700 10px Inter, sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      ctx.fillText('Valores normalizados — ' + featLabel + ' (lote ' + (batchIdx + 1) + ')', W / 2, 4);
+
+      // Legend
+      const lx = PL + 4, ly = PT + 4;
+      ctx.fillStyle = '#166534cc'; ctx.fillRect(lx,      ly, 10, 10);
+      ctx.fillStyle = '#5b21b6cc'; ctx.fillRect(lx + 80, ly, 10, 10);
+      ctx.fillStyle = '#334155'; ctx.font = '600 8px Inter, sans-serif';
+      ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+      ctx.fillText('Z-score global', lx + 13, ly + 5);
+      ctx.fillText('Batch Norm',     lx + 93, ly + 5);
+    }
+
+    /* ── Insight text (uses currently selected feature) ────────────────── */
+    function updateInsight(batch, bs) {
+      const gSt = GLOBAL[featKey];
+      const bSt = bs[featKey];
+      const gVs = batch.map(s => zNorm(s[featKey], gSt.mu, gSt.sigma));
+      const bVs = batch.map(s => zNorm(s[featKey], bSt.mu, bSt.sigma));
+      const maxDiff = Math.max(...batch.map((_, i) => Math.abs(gVs[i] - bVs[i])));
+      const featLabel = featKey === 'age' ? 'Idade' : 'Salário';
+      const el = document.getElementById('insightText');
+      if (maxDiff > 0.5) {
+        el.innerHTML = '⚡ Para <strong>' + featLabel + '</strong> neste lote a diferença chega a <strong>' + maxDiff.toFixed(2) +
+          '</strong> unidades em relação ao Z-score global — valores em vermelho na tabela acima.';
+      } else {
+        el.innerHTML = 'As mesmas amostras recebem valores normalizados <strong>diferentes</strong> ' +
+          'dependendo de quais outras amostras estão no mesmo lote!';
+      }
+    }
+
+    /* ── Init ───────────────────────────────────────────────────────────── */
+    render();
+  </script>
+</body>
+</html>

@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 4 – Embeddings Contextuais e Introdução a Transformers</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ---- Three-phrase columns ---- */
+    .phrase-cols {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.7rem;
+    }
+    .phrase-col {
+      background: var(--bg3);
+      border: 2px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 0.85rem 0.65rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+      transition: border-color 0.22s, box-shadow 0.22s;
+    }
+    .phrase-col.highlighted {
+      border-color: var(--teal);
+      box-shadow: 0 4px 16px rgba(13,110,110,0.15);
+    }
+    .phrase-col-label {
+      font-size: 0.68rem;
+      text-align: center;
+      color: var(--text-dim);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    /* ---- Token chips inside phrase columns ---- */
+    .pc-tokens {
+      display: flex;
+      gap: 0.3rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .pc-token {
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.88rem;
+      font-weight: 600;
+      background: var(--bg2);
+      border: 2px solid var(--border2);
+      color: var(--text);
+      transition: all 0.18s;
+    }
+    .pc-token.so-token {
+      cursor: pointer;
+      border-color: var(--teal);
+      color: var(--teal);
+    }
+    .pc-token.so-token:hover {
+      background: var(--teal-lt);
+      transform: translateY(-2px);
+    }
+    .pc-token.so-token.active {
+      background: var(--teal);
+      border-color: var(--teal);
+      color: #fff;
+      transform: translateY(-2px);
+    }
+
+    /* ---- Mini embedding matrix ---- */
+    .mini-matrix {
+      background: var(--bg2);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0.4rem 0.45rem;
+      font-family: 'Fira Code', monospace;
+    }
+    .mm-title {
+      font-size: 0.66rem;
+      text-transform: uppercase;
+      color: var(--cyan);
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.3rem;
+      text-align: center;
+    }
+    .mm-header {
+      display: flex;
+      gap: 0.2rem;
+      padding: 0 0.1rem 0.2rem;
+      border-bottom: 1px solid var(--border2);
+      margin-bottom: 0.15rem;
+    }
+    .mm-header-lbl { width: 2.2rem; flex-shrink: 0; }
+    .mm-header-col {
+      flex: 1;
+      text-align: right;
+      font-size: 0.63rem;
+      color: var(--text-dim);
+      font-weight: 600;
+    }
+    .mm-row {
+      display: flex;
+      align-items: center;
+      gap: 0.2rem;
+      padding: 0.12rem 0.1rem;
+      border-radius: 3px;
+      transition: background 0.2s;
+    }
+    .mm-row:hover { background: var(--teal-lt); }
+    .mm-row-lbl {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      width: 2.2rem;
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .mm-vals { display: flex; gap: 0.15rem; flex: 1; }
+    .mm-cell {
+      flex: 1;
+      text-align: right;
+      font-size: 0.68rem;
+      color: var(--text-muted);
+    }
+    .mm-cell.pos { color: var(--teal); }
+    .mm-cell.neg { color: var(--orange); }
+
+    /* ---- Semantic observation panel ---- */
+    .sem-panel {
+      background: var(--bg2);
+      border: 2px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 0.9rem 1.1rem;
+      min-height: 88px;
+      transition: all 0.25s;
+    }
+    .sem-panel.visible {
+      border-color: var(--teal);
+      background: linear-gradient(135deg, #f0fdfb, #eff6ff);
+    }
+    .sem-panel-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--teal);
+      margin-bottom: 0.45rem;
+    }
+    .sem-tag {
+      display: inline-block;
+      padding: 0.1rem 0.55rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      background: var(--teal);
+      color: #fff;
+      margin-bottom: 0.35rem;
+    }
+    .sem-text {
+      font-size: 0.9rem;
+      line-height: 1.55;
+      color: var(--text);
+    }
+
+    /* ---- Fade-in animation ---- */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in { animation: fadeIn 0.28s ease both; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <!-- Header -->
+    <header class="slide-header">
+      <span class="course-tag">Transformers</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 4 · Slide 4 / 6</span>
+    </header>
+
+    <!-- Content -->
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Embeddings Contextuais</h1>
+        <p class="slide-subtitle">A mesma palavra em posições diferentes — significados diferentes</p>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1.65fr 1fr;gap:1.4rem;flex:1;overflow:visible;">
+        <!-- Left: three phrase columns + semantic panel -->
+        <div class="panel panel-left">
+          <h2 class="panel-title">As mesmas palavras, ordens diferentes</h2>
+          <div style="font-size:0.85rem;color:var(--text-muted);line-height:1.4;">
+            Clique em <strong style="color:var(--teal);">"só"</strong> em qualquer frase para ver como o significado muda conforme a posição.
+          </div>
+
+          <!-- Three phrase columns -->
+          <div class="phrase-cols">
+            <!-- Phrase 0: Ela saiu só -->
+            <div class="phrase-col" id="pc-0">
+              <div class="phrase-col-label">Frase 1</div>
+              <div class="pc-tokens">
+                <span class="pc-token">Ela</span>
+                <span class="pc-token">saiu</span>
+                <span class="pc-token so-token" id="so-0" onclick="clickSo(0)">só</span>
+              </div>
+              <div class="mini-matrix" id="mat-0"></div>
+            </div>
+
+            <!-- Phrase 1: Só ela saiu -->
+            <div class="phrase-col" id="pc-1">
+              <div class="phrase-col-label">Frase 2</div>
+              <div class="pc-tokens">
+                <span class="pc-token so-token" id="so-1" onclick="clickSo(1)">Só</span>
+                <span class="pc-token">ela</span>
+                <span class="pc-token">saiu</span>
+              </div>
+              <div class="mini-matrix" id="mat-1"></div>
+            </div>
+
+            <!-- Phrase 2: Ela só saiu -->
+            <div class="phrase-col" id="pc-2">
+              <div class="phrase-col-label">Frase 3</div>
+              <div class="pc-tokens">
+                <span class="pc-token">Ela</span>
+                <span class="pc-token so-token" id="so-2" onclick="clickSo(2)">só</span>
+                <span class="pc-token">saiu</span>
+              </div>
+              <div class="mini-matrix" id="mat-2"></div>
+            </div>
+          </div>
+
+          <!-- Semantic observation panel -->
+          <div class="sem-panel" id="sem-panel">
+            <div class="sem-panel-title" id="sem-title">— clique em "só" para ver a leitura semântica —</div>
+            <div id="sem-content">
+              <span style="color:var(--text-dim);font-style:italic;font-size:0.9rem;">A posição de um token determina seu papel semântico.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: concepts + speech -->
+        <div class="panel panel-right">
+          <h2 class="panel-title">Por que isso importa?</h2>
+
+          <div class="concept-cards">
+            <div class="concept-card" style="--delay:0.05s">
+              <div class="card-icon">🔄</div>
+              <div class="card-text">
+                <strong>RNNs: contexto implícito</strong>
+                <p>O contexto chega pelo estado oculto h<sub>t</sub>. O vetor base de "só" é sempre o mesmo — o contexto pode se perder em sequências longas.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.15s">
+              <div class="card-icon">✨</div>
+              <div class="card-text">
+                <strong>Necessidade: embeddings contextuais</strong>
+                <p>Cada token é representado levando em conta <em>todos</em> os outros. O vetor final de "só" muda conforme sua posição e os tokens vizinhos.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.25s">
+              <div class="card-icon">⚡</div>
+              <div class="card-text">
+                <strong>Transformers: a solução</strong>
+                <p>Transformers geram embeddings contextuais <em>e</em> processam toda a sequência <strong>em paralelo</strong> — sem dependência temporal. Os próximos blocos detalham como isso funciona.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Full-width insight strip -->
+      <div class="insight-box">
+        <div class="i-icon">🎓</div>
+        <div class="i-text">
+          "Estas frases usam as mesmas palavras, mas a ordem muda o significado.
+          O modelo precisa tratar <strong>posição e interação entre tokens</strong> de forma explícita."
+        </div>
+      </div>
+    </main>
+
+    <!-- Navigation -->
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide03.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide05.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    // ---- Embedding data (2D integers) ----
+    // Nota: na prática, embeddings têm centenas de dimensões (ex.: 768 ou 1024)
+    const EMB = {
+      'Ela':  [1,  2],
+      'ela':  [1,  2],
+      'saiu': [3, -1],
+      'só':   [-1, 2],
+      'Só':   [-1, 2],
+    };
+
+    const PHRASES = [
+      { tokens: ['Ela', 'saiu', 'só'] },
+      { tokens: ['Só', 'ela', 'saiu'] },
+      { tokens: ['Ela', 'só', 'saiu'] },
+    ];
+
+    const SEM_INFO = [
+      {
+        title: '🔵 "Ela saiu só" — "só" como modo ou condição',
+        tag: 'posição 3 — final da frase',
+        html: `"Só" modifica o <strong>estado de "Ela"</strong>: ela saiu <em>sozinha</em>.
+               Aqui funciona como adjetivo predicativo — descreve uma condição sobre o sujeito.
+               Por estar ao final, o Transformer representa "só" levando em conta que ele aparece
+               <em>após</em> o verbo, construindo um sentido de modo ou estado.`,
+      },
+      {
+        title: '🔴 "Só ela saiu" — "só" como exclusividade',
+        tag: 'posição 1 — início da frase',
+        html: `"Só" foca na <strong>exclusividade de "ela"</strong>: <em>apenas ela</em> saiu, ninguém mais.
+               É advérbio de exclusão aplicado ao sujeito.
+               Por estar no início, o Transformer representa "só" como operador sobre o sujeito
+               que o segue imediatamente — papel gramatical completamente diferente.`,
+      },
+      {
+        title: '🟢 "Ela só saiu" — "só" como limitação da ação',
+        tag: 'posição 2 — entre sujeito e verbo',
+        html: `"Só" limita o <strong>escopo do verbo</strong>: ela <em>apenas saiu</em>, não fez mais nada.
+               É advérbio de restrição aplicado à ação "saiu".
+               No meio da frase, entre sujeito e verbo, a mesma palavra assume
+               um papel gramatical e semântico diferente das outras duas ordens.`,
+      },
+    ];
+
+    let activeSo = null;
+
+    // ---- Matrix rendering ----
+    function renderMatrix(phraseIdx) {
+      const phrase = PHRASES[phraseIdx];
+      const container = document.getElementById('mat-' + phraseIdx);
+      let html = '<div class="mm-title">X (tokens × embedding)</div>';
+      html += '<div class="mm-header"><div class="mm-header-lbl"></div>';
+      ['d₁','d₂'].forEach(d => {
+        html += `<div class="mm-header-col">${d}</div>`;
+      });
+      html += '</div>';
+      phrase.tokens.forEach(tok => {
+        const vals = EMB[tok];
+        html += `<div class="mm-row"><div class="mm-row-lbl">${tok.toLowerCase()}</div><div class="mm-vals">`;
+        vals.forEach(v => {
+          const cls = v >= 0 ? 'pos' : 'neg';
+          html += `<div class="mm-cell ${cls}">${v >= 0 ? ' ' : ''}${v.toFixed(0)}</div>`;
+        });
+        html += '</div></div>';
+      });
+      container.innerHTML = html;
+    }
+
+    // ---- Click on "só" ----
+    function clickSo(phraseIdx) {
+      if (activeSo === phraseIdx) {
+        // Toggle off
+        activeSo = null;
+        document.querySelectorAll('.so-token').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.phrase-col').forEach(el => el.classList.remove('highlighted'));
+        const panel = document.getElementById('sem-panel');
+        panel.classList.remove('visible');
+        document.getElementById('sem-title').textContent = '— clique em "só" para ver a leitura semântica —';
+        document.getElementById('sem-content').innerHTML =
+          '<span style="color:var(--text-dim);font-style:italic;font-size:0.9rem;">A posição de um token determina seu papel semântico.</span>';
+        return;
+      }
+
+      activeSo = phraseIdx;
+      document.querySelectorAll('.so-token').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.phrase-col').forEach(el => el.classList.remove('highlighted'));
+      document.getElementById('so-' + phraseIdx).classList.add('active');
+      document.getElementById('pc-' + phraseIdx).classList.add('highlighted');
+
+      const info = SEM_INFO[phraseIdx];
+      const panel = document.getElementById('sem-panel');
+      panel.classList.add('visible');
+      document.getElementById('sem-title').textContent = info.title;
+      document.getElementById('sem-content').innerHTML = `
+        <div class="fade-in">
+          <span class="sem-tag">${info.tag}</span>
+          <div class="sem-text">${info.html}</div>
+        </div>`;
+    }
+
+    // ---- Init ----
+    PHRASES.forEach((_, i) => renderMatrix(i));
+  </script>
+</body>
+</html>

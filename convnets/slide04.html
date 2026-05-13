@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 4 – Imagens Coloridas: Múltiplos Canais</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .color-slide-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1.1rem;
+      overflow: visible;
+    }
+    .top-area {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 1.4rem;
+      flex: 1;
+      overflow: visible;
+    }
+    .panel-inner {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.3rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      overflow-y: auto;
+      box-shadow: var(--shadow);
+    }
+    .rgb-viz {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.7rem;
+      flex: 0 0 auto;
+      flex-wrap: wrap;
+    }
+    .channel-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .ch-label {
+      font-size: 0.95rem;
+      font-weight: 700;
+      font-family: 'Fira Code', monospace;
+      letter-spacing: 0.05em;
+    }
+    .ch-r  { color: #b91c1c; }
+    .ch-g  { color: #166534; }
+    .ch-b  { color: #1d4ed8; }
+    .ch-rgb { color: var(--text); }
+
+    canvas { border-radius: 6px; border: 2px solid var(--border2); display: block; }
+
+    .op-sign {
+      font-size: 2rem;
+      color: var(--text-dim);
+      flex-shrink: 0;
+      margin-top: 20px;
+      font-weight: 700;
+    }
+
+    .tensor-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+    }
+    .depth-vis {
+      position: relative;
+      width: 130px;
+      height: 130px;
+    }
+    .depth-face {
+      position: absolute;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.88rem;
+      font-family: 'Fira Code', monospace;
+      font-weight: 700;
+    }
+
+    .dim-formula {
+      display: flex;
+      gap: 0.6rem;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .dim-box {
+      padding: 0.5rem 1rem;
+      border-radius: var(--radius-sm);
+      font-family: 'Fira Code', monospace;
+      font-size: 1rem;
+      font-weight: 700;
+      text-align: center;
+    }
+    .dim-box.h { background: var(--yellow-lt); border: 1.5px solid #fde047; color: var(--yellow); }
+    .dim-box.w { background: var(--blue-lt);   border: 1.5px solid #93c5fd; color: var(--blue); }
+    .dim-box.c { background: var(--purple-lt); border: 1.5px solid #c4b5fd; color: var(--purple); }
+    .dim-sep { color: var(--text-dim); font-size: 1.3rem; font-weight: 700; }
+
+    .channel-breakdown {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+    .ch-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.65rem 1rem;
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      font-size: 0.97rem;
+      cursor: default;
+      transition: transform 0.2s, border-color 0.2s;
+      animation: cardSlide 0.4s ease both;
+      animation-delay: var(--delay, 0s);
+    }
+    .ch-row:hover { transform: translateX(4px); }
+    .ch-row.r-row:hover { border-color: #b91c1c; }
+    .ch-row.g-row:hover { border-color: #166534; }
+    .ch-row.b-row:hover { border-color: #1d4ed8; }
+    .ch-dot {
+      width: 13px; height: 13px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .dot-r { background: #b91c1c; }
+    .dot-g { background: #166534; }
+    .dot-b { background: #1d4ed8; }
+    .ch-name  { font-weight: 700; min-width: 32px; }
+    .ch-desc  { color: var(--text-muted); font-size: 0.92rem; }
+    .ch-range { font-family: 'Fira Code', monospace; color: var(--text-dim); font-size: 0.9rem; margin-left: auto; font-weight: 600; }
+  </style>
+
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Redes Convolucionais</span>
+      <span class="prof-tag" style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 1 · Slide 4 / 5</span>
+    </header>
+
+    <main class="slide-main color-slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Imagens Coloridas</h1>
+        <p class="slide-subtitle">Três canais (R, G, B) — um tensor 3D de dimensão <span class="mono" style="color:var(--cyan)">H × W × 3</span></p>
+      </div>
+
+      <div class="top-area">
+        <!-- Left: RGB decomposition -->
+        <div class="panel-inner">
+          <div class="panel-title">Decomposição em canais RGB — passe o mouse! 🖱️</div>
+          <div class="rgb-viz" id="rgb-viz">
+            <div class="channel-col">
+              <div class="ch-label ch-r">Canal R</div>
+              <canvas id="canvas-r" width="72" height="72" title="Canal Vermelho"></canvas>
+              <div style="font-size:0.62rem; color:#f87171; font-family:'Fira Code',monospace;">vermelho</div>
+            </div>
+            <div class="op-sign">+</div>
+            <div class="channel-col">
+              <div class="ch-label ch-g">Canal G</div>
+              <canvas id="canvas-g" width="72" height="72" title="Canal Verde"></canvas>
+              <div style="font-size:0.62rem; color:#34d399; font-family:'Fira Code',monospace;">verde</div>
+            </div>
+            <div class="op-sign">+</div>
+            <div class="channel-col">
+              <div class="ch-label ch-b">Canal B</div>
+              <canvas id="canvas-b" width="72" height="72" title="Canal Azul"></canvas>
+              <div style="font-size:0.62rem; color:#60a5fa; font-family:'Fira Code',monospace;">azul</div>
+            </div>
+            <div class="op-sign">=</div>
+            <div class="channel-col">
+              <div class="ch-label ch-rgb">RGB</div>
+              <canvas id="canvas-rgb" width="72" height="72" title="Imagem Colorida"></canvas>
+              <div style="font-size:0.62rem; color:var(--text); font-family:'Fira Code',monospace;">colorida</div>
+            </div>
+          </div>
+
+          <div class="channel-breakdown">
+            <div class="ch-row r-row" style="--delay:0.05s">
+              <span class="ch-dot dot-r"></span>
+              <span class="ch-name">R</span>
+              <span class="ch-desc">Intensidade do vermelho em cada pixel</span>
+              <span class="ch-range">[0–255]</span>
+            </div>
+            <div class="ch-row g-row" style="--delay:0.15s">
+              <span class="ch-dot dot-g"></span>
+              <span class="ch-name">G</span>
+              <span class="ch-desc">Intensidade do verde em cada pixel</span>
+              <span class="ch-range">[0–255]</span>
+            </div>
+            <div class="ch-row b-row" style="--delay:0.25s">
+              <span class="ch-dot dot-b"></span>
+              <span class="ch-name">B</span>
+              <span class="ch-desc">Intensidade do azul em cada pixel</span>
+              <span class="ch-range">[0–255]</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Tensor visualization -->
+        <div class="panel-inner scrollable">
+          <div class="panel-title">Representação como Tensor</div>
+
+          <div class="tensor-panel">
+            <!-- 3D depth visualization via CSS -->
+            <div class="depth-vis">
+              <!-- Blue layer (back) -->
+              <div class="depth-face" style="
+                width: 72px; height: 72px;
+                left: 46px; top: 4px;
+                background: rgba(29,78,216,0.15);
+                border: 2px solid #1d4ed8;
+                color: #1d4ed8;
+                transform: skewY(-10deg);
+              ">B</div>
+              <!-- Green layer (middle) -->
+              <div class="depth-face" style="
+                width: 72px; height: 72px;
+                left: 23px; top: 18px;
+                background: rgba(22,101,52,0.12);
+                border: 2px solid #166534;
+                color: #166534;
+                transform: skewY(-10deg);
+              ">G</div>
+              <!-- Red layer (front) -->
+              <div class="depth-face" style="
+                width: 72px; height: 72px;
+                left: 0px; top: 32px;
+                background: rgba(185,28,28,0.12);
+                border: 2px solid #b91c1c;
+                color: #b91c1c;
+                transform: skewY(-10deg);
+              ">R</div>
+            </div>
+
+            <div style="font-size:0.72rem; color:var(--text-muted); text-align:center; margin-top:0.3rem; font-weight:600;">
+              3 matrizes empilhadas = tensor 3D
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div style="font-size:0.78rem; color:var(--text-muted); margin-bottom:0.3rem;">Dimensões do tensor:</div>
+          <div class="dim-formula">
+            <div class="dim-box h">H<br><span style="font-size:0.6rem;font-weight:500;">altura</span></div>
+            <span class="dim-sep" style="color:var(--text-dim); font-weight:700;">×</span>
+            <div class="dim-box w">W<br><span style="font-size:0.6rem;font-weight:500;">largura</span></div>
+            <span class="dim-sep" style="color:var(--text-dim); font-weight:700;">×</span>
+            <div class="dim-box c">C<br><span style="font-size:0.6rem;font-weight:500;">canais</span></div>
+          </div>
+
+          <div class="highlight-box purple" style="flex-shrink:0; margin-top:auto;">
+            <span class="icon">🎨</span>
+            <p>Ex.: imagem 64×64 RGB → tensor de forma<br><span class="mono">(64, 64, 3)</span> com <strong>12.288 valores</strong></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="insight-box" style="flex-shrink:0;">
+        <span class="i-icon">💡</span>
+        <div class="i-text">
+          <strong>Takeaway:</strong> uma imagem colorida não é um vetor, é um <strong>tensor 3D</strong>. CNNs são projetadas para processar esse tipo de dado preservando a estrutura espacial — não achatar tudo num vetor gigante.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide03.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide05.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    // Color image data: simple 8×8 colorful pixel art (a rough rainbow gradient patch)
+    const N = 8;
+    // Each cell: [r, g, b]
+    const colorData = [];
+    for (let i = 0; i < N; i++) {
+      const row = [];
+      for (let j = 0; j < N; j++) {
+        // Create a colorful gradient pattern
+        const hue = (j / N) * 360;
+        const sat = 80 + i * 2;
+        const lit = 45 + i * 3;
+        const [r, g, b] = hslToRgb(hue, sat, lit);
+        row.push([Math.round(r), Math.round(g), Math.round(b)]);
+      }
+      colorData.push(row);
+    }
+
+    function hslToRgb(h, s, l) {
+      s /= 100; l /= 100;
+      const k = n => (n + h / 30) % 12;
+      const a = s * Math.min(l, 1 - l);
+      const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+      return [f(0) * 255, f(8) * 255, f(4) * 255];
+    }
+
+    // Draw each channel as GRAYSCALE (intensity only, no color tint)
+    function drawChannel(canvasId, channelIdx) {
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext('2d');
+      const scale = canvas.width / N;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let i = 0; i < N; i++) {
+        for (let j = 0; j < N; j++) {
+          const val = colorData[i][j][channelIdx];
+          // render as grayscale: each channel shows its intensity as gray
+          ctx.fillStyle = `rgb(${val},${val},${val})`;
+          ctx.fillRect(j * scale, i * scale, scale, scale);
+        }
+      }
+    }
+
+    function drawRGB(canvasId) {
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext('2d');
+      const scale = canvas.width / N;
+      for (let i = 0; i < N; i++) {
+        for (let j = 0; j < N; j++) {
+          const [r, g, b] = colorData[i][j];
+          ctx.fillStyle = `rgb(${r},${g},${b})`;
+          ctx.fillRect(j * scale, i * scale, scale, scale);
+        }
+      }
+    }
+
+    drawChannel('canvas-r', 0);
+    drawChannel('canvas-g', 1);
+    drawChannel('canvas-b', 2);
+    drawRGB('canvas-rgb');
+
+    // Hover highlight effect on canvas
+    ['canvas-r','canvas-g','canvas-b','canvas-rgb'].forEach(id => {
+      const canvas = document.getElementById(id);
+      canvas.addEventListener('mouseenter', () => {
+        canvas.style.borderColor = 'var(--cyan)';
+        canvas.style.transform = 'scale(1.1)';
+      });
+      canvas.addEventListener('mouseleave', () => {
+        canvas.style.borderColor = 'var(--border2)';
+        canvas.style.transform = 'scale(1)';
+      });
+    });
+  </script>
+</body>
+</html>

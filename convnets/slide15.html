@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 15 – Pipeline Completo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── Main panel ───────────────────────────────────────────────────────── */
+    .pipe-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.3rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+      box-shadow: var(--shadow);
+      flex: 1;
+    }
+
+    /* ── Controls row ─────────────────────────────────────────────────────── */
+    .play-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+
+    .play-btn {
+      padding: 0.42rem 1.1rem;
+      border-radius: 999px;
+      border: 1.5px solid var(--border2);
+      background: var(--bg3);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.87rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .play-btn:hover:not(:disabled) { border-color: var(--purple); color: var(--purple); }
+    .play-btn:disabled             { opacity: 0.38; cursor: default; }
+    .play-btn.primary              { background: var(--purple); border-color: var(--purple); color: #fff; }
+    .play-btn.primary:hover:not(:disabled) { background: #4c1d95; }
+
+    .stage-indicator {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+
+    /* ── Pipeline grid ────────────────────────────────────────────────────── */
+    .pipeline-grid {
+      display: grid;
+      grid-template-columns: auto auto auto auto auto;
+      gap: 0.65rem 0.55rem;
+      align-items: center;
+      justify-content: center;
+      overflow-x: auto;
+      padding: 0.2rem 0.2rem 0.4rem;
+    }
+
+    .col-header {
+      text-align: center;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      padding: 0.25rem 0.55rem;
+      border-radius: 999px;
+      white-space: nowrap;
+      transition: opacity 0.3s;
+    }
+    .col-header.h-input  { color: var(--cyan);   background: var(--cyan-lt);   border: 1.5px solid #67e8f9; }
+    .col-header.h-filter { color: var(--text-muted); background: var(--bg3);   border: 1.5px solid var(--border2); }
+    .col-header.h-conv   { color: var(--blue);   background: var(--blue-lt);   border: 1.5px solid #93c5fd; }
+    .col-header.h-relu   { color: var(--purple); background: var(--purple-lt); border: 1.5px solid #c4b5fd; }
+    .col-header.h-pool   { color: var(--green);  background: var(--green-lt);  border: 1.5px solid #86efac; }
+
+    .cell-entrada {
+      grid-row: 2 / span 3;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .cell-filter {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .cell-map {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.25rem;
+      transition: opacity 0.3s;
+    }
+
+    .cell-map.hidden { opacity: 0.15; }
+
+    .cell-badge {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.63rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      white-space: nowrap;
+    }
+
+    canvas { image-rendering: pixelated; display: block; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Redes Convolucionais</span>
+      <span class="prof-tag" style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 5 · Slide 3 / 3</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Pipeline Completo</h1>
+        <p class="slide-subtitle">Convolução → ReLU → Max-Pooling — as três operações que formam o bloco fundamental de uma CNN</p>
+      </div>
+
+      <div class="pipe-panel">
+        <div class="play-controls">
+          <button class="play-btn" id="btn-prev" onclick="prevStage()" disabled>← Anterior</button>
+          <button class="play-btn primary" id="btn-next" onclick="nextStage()">Próximo →</button>
+          <button class="play-btn" onclick="resetStages()">↺ Reiniciar</button>
+          <span class="stage-indicator" id="stage-indicator">Etapa 1 / 5</span>
+        </div>
+
+        <div class="pipeline-grid" id="pipeline-grid">
+          <!-- built by JS -->
+        </div>
+
+        <div class="highlight-box" id="stage-hint">
+          <span class="icon">🖼️</span>
+          <p id="stage-hint-text">Imagem de entrada 9×9 pixels — binária (0 = fundo, 1 = X).</p>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide14.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot active"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide16.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    /* ── Filters ─────────────────────────────────────────────────────────── */
+    const FILTERS = [
+      { name: 'Diagonal ↘', cssColor: '#5b21b6',
+        weights: [[ 1, 0,-1],[ 0, 1, 0],[-1, 0, 1]] },
+      { name: 'Centro ✖',   cssColor: '#0e7490',
+        weights: [[ 1,-1, 1],[-1, 1,-1],[ 1,-1, 1]] },
+      { name: 'Diagonal ↗', cssColor: '#166534',
+        weights: [[-1, 0, 1],[ 0, 1, 0],[ 1, 0,-1]] },
+    ];
+
+    /* ── Input image ─────────────────────────────────────────────────────── */
+    const N = 9;
+    const tileX = [
+      [0,0,0,0,0,0,0,0,0],
+      [0,1,0,0,0,0,0,1,0],
+      [0,0,1,0,0,0,1,0,0],
+      [0,0,0,1,0,1,0,0,0],
+      [0,0,0,0,1,0,0,0,0],
+      [0,0,0,1,0,1,0,0,0],
+      [0,0,1,0,0,0,1,0,0],
+      [0,1,0,0,0,0,0,1,0],
+      [0,0,0,0,0,0,0,0,0],
+    ];
+
+    /* ── Ops ─────────────────────────────────────────────────────────────── */
+    const NF = N - 3 + 1; // 7
+    const POOL_K = 2, POOL_S = 2;
+    const NP = Math.floor((NF - POOL_K) / POOL_S) + 1; // 3
+
+    function convolve(weights) {
+      const out = [];
+      for (let r = 0; r < NF; r++) {
+        out.push([]);
+        for (let c = 0; c < NF; c++) {
+          let s = 0;
+          for (let fr = 0; fr < 3; fr++)
+            for (let fc = 0; fc < 3; fc++)
+              s += weights[fr][fc] * tileX[r + fr][c + fc];
+          out[r].push(s);
+        }
+      }
+      return out;
+    }
+
+    function reluMap(m) { return m.map(row => row.map(v => Math.max(0, v))); }
+
+    function maxPool(m) {
+      const out = [];
+      for (let pr = 0; pr < NP; pr++) {
+        out.push([]);
+        for (let pc = 0; pc < NP; pc++) {
+          let maxV = -Infinity;
+          for (let dr = 0; dr < POOL_K; dr++)
+            for (let dc = 0; dc < POOL_K; dc++)
+              maxV = Math.max(maxV, m[pr*POOL_S+dr][pc*POOL_S+dc]);
+          out[pr].push(maxV);
+        }
+      }
+      return out;
+    }
+
+    const allConv = FILTERS.map(f => convolve(f.weights));
+    const allRelu = allConv.map(m => reluMap(m));
+    const allPool = allRelu.map(m => maxPool(m));
+
+    /* ── Draw helpers ────────────────────────────────────────────────────── */
+    function drawGrid(ctx, rows, cols, CS) {
+      ctx.strokeStyle = 'rgba(51,65,85,0.4)';
+      ctx.lineWidth = 0.5;
+      for (let i = 0; i <= cols; i++) {
+        ctx.beginPath(); ctx.moveTo(i*CS, 0); ctx.lineTo(i*CS, rows*CS); ctx.stroke();
+      }
+      for (let i = 0; i <= rows; i++) {
+        ctx.beginPath(); ctx.moveTo(0, i*CS); ctx.lineTo(cols*CS, i*CS); ctx.stroke();
+      }
+    }
+
+    function drawInput(cv) {
+      const ctx = cv.getContext('2d');
+      const CS = cv.width / N;
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, cv.width, cv.height);
+      for (let r = 0; r < N; r++)
+        for (let c = 0; c < N; c++)
+          if (tileX[r][c]) {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(c*CS, r*CS, CS, CS);
+          }
+      drawGrid(ctx, N, N, CS);
+    }
+
+    function drawFilterWeights(cv, weights, accentColor) {
+      const ctx = cv.getContext('2d');
+      const F = 3, CS = cv.width / F;
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, cv.width, cv.height);
+      for (let r = 0; r < F; r++) {
+        for (let c = 0; c < F; c++) {
+          const v = weights[r][c];
+          if (v === 0) continue;
+          ctx.fillStyle = v > 0 ? '#ffffff' : '#ff4444';
+          ctx.fillRect(c*CS, r*CS, CS, CS);
+        }
+      }
+      ctx.font = `bold ${Math.max(8, Math.floor(CS*0.42))}px Fira Code, monospace`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      for (let r = 0; r < F; r++) {
+        for (let c = 0; c < F; c++) {
+          const v = weights[r][c];
+          ctx.fillStyle = v === 0 ? 'rgba(255,255,255,0.22)' : (v > 0 ? '#111' : '#fff');
+          ctx.fillText(v, c*CS + CS/2, r*CS + CS/2);
+        }
+      }
+      drawGrid(ctx, F, F, CS);
+      ctx.strokeStyle = accentColor;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(1, 1, cv.width-2, cv.height-2);
+    }
+
+    function drawHeatmap(cv, resp, showNeg) {
+      const ctx = cv.getContext('2d');
+      const rows = resp.length, cols = resp[0].length;
+      const CS = cv.width / cols;
+      let maxAbs = 0;
+      for (let r = 0; r < rows; r++)
+        for (let c = 0; c < cols; c++)
+          if (Math.abs(resp[r][c]) > maxAbs) maxAbs = Math.abs(resp[r][c]);
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, cv.width, cv.height);
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const v = resp[r][c];
+          if (v === 0) continue;
+          const t = maxAbs > 0 ? Math.abs(v) / maxAbs : 0;
+          const g = Math.round(255 * t);
+          if (v > 0)        ctx.fillStyle = `rgb(${g},${g},${g})`;
+          else if (showNeg) ctx.fillStyle = `rgb(${g},0,0)`;
+          ctx.fillRect(c*CS, r*CS, CS, CS);
+        }
+      }
+      drawGrid(ctx, rows, cols, CS);
+    }
+
+    function drawBlank(cv, rows, cols) {
+      const ctx = cv.getContext('2d');
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(0, 0, cv.width, cv.height);
+      drawGrid(ctx, rows, cols, cv.width / cols);
+    }
+
+    /* ── Canvas sizes ────────────────────────────────────────────────────── */
+    const CS_IN   = 13;   // 9×13  = 117px
+    const CS_FILT = 17;   // 3×17  =  51px
+    const CS_CONV = 13;   // 7×13  =  91px
+    const CS_POOL = 22;   // 3×22  =  66px
+
+    /* ── Build grid DOM ──────────────────────────────────────────────────── */
+    const gridEl = document.getElementById('pipeline-grid');
+
+    function makeCanvas(id, w, h, borderColor) {
+      const cv = document.createElement('canvas');
+      cv.id = id; cv.width = w; cv.height = h;
+      cv.style.border = `1.5px solid ${borderColor || 'var(--border2)'}`;
+      cv.style.borderRadius = '4px';
+      return cv;
+    }
+
+    function makeBadge(text, color, fw) {
+      const d = document.createElement('div');
+      d.className = 'cell-badge';
+      d.textContent = text;
+      if (color) d.style.color = color;
+      if (fw) d.style.fontWeight = fw;
+      return d;
+    }
+
+    /* header row */
+    [
+      { text: 'Entrada',       cls: 'h-input'  },
+      { text: 'Filtro (3×3)', cls: 'h-filter' },
+      { text: 'Conv (7×7)',   cls: 'h-conv'   },
+      { text: 'ReLU (7×7)',   cls: 'h-relu'   },
+      { text: 'MaxPool (3×3)',cls: 'h-pool'   },
+    ].forEach(h => {
+      const d = document.createElement('div');
+      d.className = 'col-header ' + h.cls;
+      d.id = 'hdr-' + h.cls.replace('h-', '');
+      d.textContent = h.text;
+      gridEl.appendChild(d);
+    });
+
+    /* filter rows */
+    FILTERS.forEach((f, fi) => {
+      /* col 0: entrada — only for first filter, spans 3 rows */
+      if (fi === 0) {
+        const cell = document.createElement('div');
+        cell.className = 'cell-entrada';
+        const cv = makeCanvas('cv-input', N*CS_IN, N*CS_IN, '#67e8f9');
+        cell.appendChild(cv);
+        cell.appendChild(makeBadge('9 × 9', 'var(--cyan)'));
+        gridEl.appendChild(cell);
+      }
+
+      /* col 1: filter weights */
+      const cellF = document.createElement('div');
+      cellF.className = 'cell-filter';
+      const cvF = makeCanvas(`cv-filt-${fi}`, 3*CS_FILT, 3*CS_FILT, f.cssColor);
+      cellF.appendChild(cvF);
+      cellF.appendChild(makeBadge(f.name, f.cssColor, '700'));
+      gridEl.appendChild(cellF);
+
+      /* col 2: conv */
+      const cellC = document.createElement('div');
+      cellC.className = 'cell-map'; cellC.id = `cell-conv-${fi}`;
+      cellC.appendChild(makeCanvas(`cv-conv-${fi}`, NF*CS_CONV, NF*CS_CONV, '#93c5fd'));
+      cellC.appendChild(makeBadge('7 × 7', 'var(--blue)'));
+      gridEl.appendChild(cellC);
+
+      /* col 3: relu */
+      const cellR = document.createElement('div');
+      cellR.className = 'cell-map'; cellR.id = `cell-relu-${fi}`;
+      cellR.appendChild(makeCanvas(`cv-relu-${fi}`, NF*CS_CONV, NF*CS_CONV, '#c4b5fd'));
+      cellR.appendChild(makeBadge('7 × 7', 'var(--purple)'));
+      gridEl.appendChild(cellR);
+
+      /* col 4: pool */
+      const cellP = document.createElement('div');
+      cellP.className = 'cell-map'; cellP.id = `cell-pool-${fi}`;
+      cellP.appendChild(makeCanvas(`cv-pool-${fi}`, NP*CS_POOL, NP*CS_POOL, '#86efac'));
+      cellP.appendChild(makeBadge('3 × 3', 'var(--green)'));
+      gridEl.appendChild(cellP);
+    });
+
+    /* ── Stage hints ─────────────────────────────────────────────────────── */
+    const HINTS = [
+      { bg:'var(--cyan-lt)',   border:'#67e8f9',          color:'var(--cyan)',        icon:'🖼️',
+        text:'Imagem de entrada 9×9 pixels — binária (0 = fundo, 1 = letra X).' },
+      { bg:'var(--bg3)',       border:'var(--border2)',    color:'var(--text-muted)',  icon:'🔍',
+        text:'Três filtros 3×3 aprendem padrões diferentes: diagonal ↘, centro ✖ e diagonal ↗. Branco = peso +1, preto = 0, vermelho = −1.' },
+      { bg:'var(--blue-lt)',   border:'#93c5fd',           color:'var(--blue)',        icon:'⚙️',
+        text:'Convolução válida (sem padding): saída 7×7 por filtro. Branco = ativação positiva; vermelho = negativa (padrão oposto).' },
+      { bg:'var(--purple-lt)', border:'#c4b5fd',           color:'var(--purple)',      icon:'⚡',
+        text:'Após ReLU — g(z) = max(0, z): valores negativos zerados (preto). Apenas as regiões de ativação positiva permanecem.' },
+      { bg:'var(--green-lt)',  border:'#86efac',           color:'var(--green)',       icon:'🏊',
+        text:'Após max-pooling 2×2 com stride 2: cada mapa é comprimido de 7×7 para 3×3. Os 3 mapas resultantes têm apenas 27 valores no total.' },
+    ];
+
+    /* ── Stage state ─────────────────────────────────────────────────────── */
+    let currentStage = 0;
+    const TOTAL = 5;
+
+    function renderStages() {
+      drawInput(document.getElementById('cv-input'));
+
+      FILTERS.forEach((f, fi) => {
+        /* filter weights */
+        const cvF = document.getElementById(`cv-filt-${fi}`);
+        if (currentStage >= 1) drawFilterWeights(cvF, f.weights, f.cssColor);
+        else drawBlank(cvF, 3, 3);
+
+        /* conv */
+        const cvC = document.getElementById(`cv-conv-${fi}`);
+        if (currentStage >= 2) drawHeatmap(cvC, allConv[fi], true);
+        else drawBlank(cvC, NF, NF);
+        document.getElementById(`cell-conv-${fi}`).classList.toggle('hidden', currentStage < 2);
+
+        /* relu */
+        const cvR = document.getElementById(`cv-relu-${fi}`);
+        if (currentStage >= 3) drawHeatmap(cvR, allRelu[fi], false);
+        else drawBlank(cvR, NF, NF);
+        document.getElementById(`cell-relu-${fi}`).classList.toggle('hidden', currentStage < 3);
+
+        /* pool */
+        const cvP = document.getElementById(`cv-pool-${fi}`);
+        if (currentStage >= 4) drawHeatmap(cvP, allPool[fi], false);
+        else drawBlank(cvP, NP, NP);
+        document.getElementById(`cell-pool-${fi}`).classList.toggle('hidden', currentStage < 4);
+      });
+
+      /* fade future column headers */
+      document.getElementById('hdr-filter').style.opacity = currentStage >= 1 ? '1' : '0.3';
+      document.getElementById('hdr-conv').style.opacity   = currentStage >= 2 ? '1' : '0.3';
+      document.getElementById('hdr-relu').style.opacity   = currentStage >= 3 ? '1' : '0.3';
+      document.getElementById('hdr-pool').style.opacity   = currentStage >= 4 ? '1' : '0.3';
+
+      /* hint box */
+      const h = HINTS[currentStage];
+      const hintBox = document.getElementById('stage-hint');
+      hintBox.style.cssText =
+        `background:${h.bg};border:1.5px solid ${h.border};color:${h.color};` +
+        `display:flex;align-items:flex-start;gap:0.7rem;padding:0.85rem 1.1rem;` +
+        `border-radius:var(--radius-sm);font-size:0.97rem;line-height:1.55;`;
+      document.getElementById('stage-hint-text').textContent = h.text;
+      hintBox.querySelector('.icon').textContent = h.icon;
+
+      document.getElementById('stage-indicator').textContent = `Etapa ${currentStage + 1} / ${TOTAL}`;
+      document.getElementById('btn-prev').disabled = currentStage === 0;
+      document.getElementById('btn-next').disabled = currentStage === TOTAL - 1;
+    }
+
+    function nextStage()   { if (currentStage < TOTAL - 1) { currentStage++; renderStages(); } }
+    function prevStage()   { if (currentStage > 0)         { currentStage--; renderStages(); } }
+    function resetStages() { currentStage = 0; renderStages(); }
+
+    renderStages();
+  </script>
+</body>
+</html>

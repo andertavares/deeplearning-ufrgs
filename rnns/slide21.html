@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 21 – Output Gate e Estado Oculto</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .svg-wrap { background:var(--bg3); border:1.5px solid var(--border2); border-radius:var(--radius-sm); padding:0.5rem; }
+    .lstm-cell-svg { width:100%; display:block; }
+    .eq-box { font-family:'Fira Code',monospace; font-size:0.83rem; background:var(--bg3);
+              border:1.5px solid var(--border2); border-radius:var(--radius-sm);
+              padding:0.4rem 0.7rem; color:var(--text); text-align:center; }
+    .eq-pair { display:flex; flex-direction:column; gap:0.3rem; margin-top:0.4rem; }
+    .num-example { background:var(--bg3); border:1.5px solid var(--border2); border-radius:var(--radius-sm); padding:0.6rem 0.7rem; }
+    .num-title { font-size:0.8rem; font-family:'Fira Code',monospace; font-weight:700; color:var(--teal); margin-bottom:0.35rem; }
+    .num-row { display:flex; align-items:center; gap:0.5rem; padding:0.18rem 0;
+               font-family:'Fira Code',monospace; font-size:0.82rem; }
+    .num-label { color:var(--text-muted); min-width:6.5rem; font-size:0.80rem; }
+    .num-vec { display:flex; gap:0.3rem; }
+    .num-cell { padding:0.15rem 0.5rem; border-radius:4px; font-weight:700; font-size:0.82rem; }
+    .num-cell.out-g  { background:var(--teal-lt); color:var(--teal); border:1px solid #5eead4; }
+    .num-cell.cell-v { background:var(--green-lt); color:var(--green); border:1px solid #86efac; }
+    .num-cell.tanh-v { background:#f3e8ff; color:#6b21a8; border:1px solid #d8b4fe; }
+    .num-cell.result { background:var(--blue-lt); color:var(--blue); border:1px solid #93c5fd; }
+    .num-divider { border-top:1px dashed var(--border2); margin:0.25rem 0; }
+    .num-hint { font-size:0.72rem; font-family:'Fira Code',monospace; color:var(--text-dim); margin-top:0.25rem; }
+    .dim-labels { display:flex; gap:0.3rem; margin-left:6.8rem; margin-bottom:0.1rem; }
+    .dim-lbl { min-width:3.1rem; text-align:center; font-size:0.68rem; font-family:'Fira Code',monospace; color:var(--text-dim); font-style:italic; }
+    .dim-note { background:var(--yellow-lt); border:1.5px solid #fde047; border-radius:var(--radius-sm);
+                padding:0.5rem 0.7rem; font-size:0.82rem; color:var(--yellow); }
+    .dim-note strong { display:block; margin-bottom:0.2rem; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Redes Neurais Recorrentes</span>
+      <span class="prof-tag" style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 13 · Slide 1 / 1</span>
+    </header>
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Output Gate e Estado Oculto</h1>
+        <p class="slide-subtitle">A output gate controla quanto da memória interna é revelado como h&#x209C;</p>
+      </div>
+      <div class="content-split">
+        <div class="panel panel-left">
+          <h2 class="panel-title">🧠 LSTM — Output Gate em Destaque</h2>
+          <!-- LSTM diagram: output gate highlighted (lstm.svg base) -->
+          <div class="svg-wrap">
+            <svg class="lstm-cell-svg" viewBox="0 0 570 390" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="mT21" markerWidth="4.5" markerHeight="3.5" refX="3.5" refY="1.75" orient="auto"><path d="M0,0 L4.5,1.75 L0,3.5 Z" fill="#0d6e6e"/></marker>
+                <marker id="mB21" markerWidth="4.5" markerHeight="3.5" refX="3.5" refY="1.75" orient="auto"><path d="M0,0 L4.5,1.75 L0,3.5 Z" fill="#1d4ed8"/></marker>
+                <marker id="mO21" markerWidth="4.5" markerHeight="3.5" refX="3.5" refY="1.75" orient="auto"><path d="M0,0 L4.5,1.75 L0,3.5 Z" fill="#c2410c"/></marker>
+              </defs>
+              <image href="../lstm.svg" x="0" y="0" width="570" height="390"/>
+              <!-- cell state track partial + tap to tanh_out (blue) -->
+              <line x1="311" y1="93" x2="490" y2="93" stroke="#1d4ed8" stroke-width="3.5"/>
+              <line x1="398" y1="93" x2="398" y2="125" stroke="#1d4ed8" stroke-width="3.5" marker-end="url(#mB21)"/>
+              <!-- tanh_out circle (blue) -->
+              <circle cx="398" cy="139" r="14" fill="rgba(29,78,216,0.18)" stroke="#1d4ed8" stroke-width="3.5"/>
+              <!-- tanh_out → ×_out (blue) -->
+              <line x1="398" y1="153" x2="399" y2="189" stroke="#1d4ed8" stroke-width="3.5" marker-end="url(#mB21)"/>
+              <!-- σ_o circle (teal) -->
+              <circle cx="343" cy="202" r="18" fill="rgba(13,110,110,0.18)" stroke="#0d6e6e" stroke-width="3.5"/>
+              <!-- σ_o → ×_out (teal) -->
+              <line x1="361" y1="202" x2="385" y2="203" stroke="#0d6e6e" stroke-width="3" marker-end="url(#mT21)"/>
+              <!-- ×_out circle (teal) -->
+              <circle cx="399" cy="203" r="14" fill="rgba(13,110,110,0.18)" stroke="#0d6e6e" stroke-width="3.5"/>
+              <!-- ×_out → h_t (teal) -->
+              <line x1="413" y1="203" x2="500" y2="203" stroke="#0d6e6e" stroke-width="3.5" marker-end="url(#mT21)"/>
+              <!-- h bus (teal) -->
+              <line x1="108" y1="203" x2="325" y2="203" stroke="#0d6e6e" stroke-width="3"/>
+              <!-- h → σ_o (teal) -->
+              <line x1="325" y1="203" x2="341" y2="202" stroke="#0d6e6e" stroke-width="3" marker-end="url(#mT21)"/>
+              <!-- x_t bus (orange) -->
+              <line x1="177" y1="260" x2="343" y2="260" stroke="#c2410c" stroke-width="3"/>
+              <!-- x_t → σ_o (orange) -->
+              <line x1="343" y1="260" x2="343" y2="220" stroke="#c2410c" stroke-width="3" marker-end="url(#mO21)"/>
+            </svg>
+          </div>
+          <div class="eq-pair">
+            <div class="eq-box">o&#x209C; = &sigma;(Wo &middot; x&#x209C; + Uo &middot; h&#x209C;&#x208B;&#x2081; + bo)</div>
+            <div class="eq-box">h&#x209C; = o&#x209C; &#x2299; tanh(c&#x209C;)</div>
+          </div>
+          <!-- 2D numerical example using same numbers as previous slides -->
+          <div class="num-example" style="margin-top:0.4rem;">
+            <div class="num-title">📐 Exemplo Numérico (dim = 2) — mesmos valores anteriores</div>
+            <div class="dim-labels">
+              <div class="dim-lbl">dim 1</div>
+              <div class="dim-lbl">dim 2</div>
+            </div>
+            <div class="num-row">
+              <span class="num-label">c&#x209C; =</span>
+              <div class="num-vec">
+                <span class="num-cell cell-v">0.96</span>
+                <span class="num-cell cell-v">0.41</span>
+              </div>
+            </div>
+            <div class="num-row">
+              <span class="num-label">tanh(c&#x209C;) &#8776;</span>
+              <div class="num-vec">
+                <span class="num-cell tanh-v">0.745</span>
+                <span class="num-cell tanh-v">0.388</span>
+              </div>
+            </div>
+            <div class="num-row">
+              <span class="num-label">o&#x209C; =</span>
+              <div class="num-vec">
+                <span class="num-cell out-g">0.70</span>
+                <span class="num-cell out-g">0.60</span>
+              </div>
+            </div>
+            <div class="num-divider"></div>
+            <div class="num-row">
+              <span class="num-label">h&#x209C; =</span>
+              <div class="num-vec">
+                <span class="num-cell result">0.52</span>
+                <span class="num-cell result">0.23</span>
+              </div>
+            </div>
+            <div class="num-hint">dim 1: 0.70 × 0.745 &#8776; 0.52 &nbsp;|&nbsp; dim 2: 0.60 × 0.388 &#8776; 0.23</div>
+          </div>
+        </div>
+        <div class="panel panel-right">
+          <h2 class="panel-title">🔒 Memória Privada vs. Pública</h2>
+          <div class="concept-cards">
+            <div class="concept-card" style="--delay:0s">
+              <span class="card-icon">📐</span>
+              <div class="card-text"><strong>Dimensões de Wo e Uo</strong><p>Wo &#8712; &#8477;<sup>d × |x|</sup> e Uo &#8712; &#8477;<sup>d × d</sup>, onde d é a dimensão oculta escolhida como hiperparâmetro. Isso define a dimensão de o&#x209C; e de h&#x209C;. Para classificação com K classes, uma camada linear separada (W<sub>out</sub> &#8712; &#8477;<sup>K × d</sup>) mapeia h&#x209C; → ŷ &#8712; &#8477;<sup>K</sup>.</p></div>
+            </div>
+            <div class="concept-card" style="--delay:0.1s">
+              <span class="card-icon">🧠</span>
+              <div class="card-text"><strong>Cell state c&#x209C;</strong><p>Memória interna rica — pode conter muito mais do que será exposto. No exemplo: c&#x209C; = [0.96, 0.41].</p></div>
+            </div>
+            <div class="concept-card" style="--delay:0.2s">
+              <span class="card-icon">👁️</span>
+              <div class="card-text"><strong>Output gate o&#x209C;</strong><p>Janela de exposição — controla o que é revelado. No exemplo: o&#x209C; = [0.70, 0.60], produzindo h&#x209C; &#8776; [0.52, 0.23].</p></div>
+            </div>
+            <div class="concept-card" style="--delay:0.3s">
+              <span class="card-icon">🔒</span>
+              <div class="card-text"><strong>Privado vs. público</strong><p>A rede pode lembrar sem precisar mostrar tudo — o&#x209C; atua como filtro entre c&#x209C; e h&#x209C;.</p></div>
+            </div>
+          </div>
+          <div class="dim-note" style="margin-top:0.6rem;">
+            <strong>⚙️ Nota sobre dimensões</strong>
+            Wo e Uo devem ser dimensionados conforme a dimensão oculta d escolhida (hiperparâmetro). Para expor h&#x209C; como saída de classificação com K classes, utiliza-se uma camada linear separada W<sub>out</sub> &#8712; &#8477;<sup>K × d</sup> após a LSTM.
+          </div>
+          <div class="highlight-box teal" style="margin-top:0.5rem;">
+            <span class="icon">✅</span>
+            <span>Com isso, fechamos o ciclo completo da LSTM em um passo temporal.</span>
+          </div>
+        </div>
+      </div>
+    </main>
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide20.html'">&#8592; Anterior</button>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide22.html'">Próximo &#8594;</button>
+    </nav>
+  </div>
+</body>
+</html>

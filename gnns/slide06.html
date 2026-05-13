@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 06 – Message Passing</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .pipeline {
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+      justify-content: center;
+      margin: 0.3rem 0;
+    }
+    .pipe-stage {
+      flex: 1;
+      max-width: 260px;
+      background: var(--bg2);
+      border: 2.5px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 1rem 0.9rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      transition: border-color 0.25s, box-shadow 0.25s, transform 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .pipe-stage:hover {
+      border-color: var(--teal);
+      box-shadow: 0 6px 20px rgba(13,110,110,0.15);
+      transform: translateY(-3px);
+    }
+    .pipe-stage.open {
+      border-color: var(--teal);
+      box-shadow: 0 6px 24px rgba(13,110,110,0.2);
+    }
+    .pipe-stage.open.gather  { border-color: #f97316; box-shadow: 0 6px 20px rgba(249,115,22,0.2); }
+    .pipe-stage.open.aggregate { border-color: #1d4ed8; box-shadow: 0 6px 20px rgba(29,78,216,0.2); }
+    .pipe-stage.open.update { border-color: #166534; box-shadow: 0 6px 20px rgba(22,101,52,0.2); }
+
+    .stage-num {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+    .gather .stage-num   { background: #fff7ed; color: #c2410c; border: 2px solid #f97316; }
+    .aggregate .stage-num { background: #dbeafe; color: #1d4ed8; border: 2px solid #3b82f6; }
+    .update .stage-num   { background: #dcfce7; color: #166534; border: 2px solid #22c55e; }
+
+    .stage-name {
+      font-size: 1.15rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .gather .stage-name   { color: #c2410c; }
+    .aggregate .stage-name { color: #1d4ed8; }
+    .update .stage-name   { color: #166534; }
+
+    .stage-desc {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      text-align: center;
+      line-height: 1.6;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease, opacity 0.3s;
+      opacity: 0;
+    }
+    .pipe-stage.open .stage-desc {
+      max-height: 200px;
+      opacity: 1;
+    }
+
+    .pipe-arrow {
+      display: flex;
+      align-items: center;
+      padding: 0 0.3rem;
+      flex-shrink: 0;
+    }
+    .pipe-arrow svg { width: 40px; height: 40px; }
+
+    /* Mini animation area */
+    .anim-area {
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 0.8rem 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .anim-title {
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-dim);
+    }
+    .anim-wrap {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .anim-svg { width: 100%; max-width: 580px; }
+
+    /* Message particle */
+    .msg-particle {
+      fill: #fed7aa;
+      stroke: #f97316;
+      stroke-width: 1.5;
+    }
+    .msg-text { font-size: 8px; font-weight: 700; fill: #c2410c; pointer-events: none; }
+
+    /* animated flow */
+    .msg-arrow {
+      stroke: #f97316;
+      stroke-width: 2;
+      stroke-dasharray: 6 3;
+      animation: msgFlow 1s linear infinite;
+    }
+    @keyframes msgFlow { to { stroke-dashoffset: -18; } }
+    .msg-arrow.paused { animation-play-state: paused; }
+
+    /* aggregation blob */
+    .agg-ring {
+      fill: #dbeafe;
+      stroke: #3b82f6;
+      stroke-width: 2;
+      animation: aggPulse 1.5s ease-in-out infinite;
+    }
+    @keyframes aggPulse {
+      0%, 100% { r: 28; opacity: 0.5; }
+      50%       { r: 34; opacity: 0.9; }
+    }
+
+    /* updated node */
+    .updated-node {
+      animation: updateGlow 1.8s ease-in-out infinite;
+    }
+    @keyframes updateGlow {
+      0%, 100% { fill: #ccfbf1; }
+      50%       { fill: #5eead4; }
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">GNNs</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Slide 06 / 20</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Message Passing</h1>
+        <p class="slide-subtitle">Bloco 2 — O coração das GNNs</p>
+      </div>
+
+      <!-- Pipeline -->
+      <div class="pipeline">
+        <div class="pipe-stage gather" id="stageGather" onclick="toggleStage('Gather')">
+          <div class="stage-num">1</div>
+          <div class="stage-name">Gather</div>
+          <div style="font-size:2rem;">📥</div>
+          <div class="stage-desc">
+            <strong>Coleta as features dos nós vizinhos</strong><br>
+            Cada nó reúne as representações de todos os seus vizinhos para processamento.<br>
+            <code style="font-size:0.82rem;">M_v = { h_u : u ∈ N(v) }</code>
+          </div>
+        </div>
+
+        <div class="pipe-arrow">
+          <svg viewBox="0 0 40 40">
+            <defs>
+              <marker id="pArr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                <path d="M0,0 L6,3 L0,6 Z" fill="#0d6e6e"/>
+              </marker>
+            </defs>
+            <line x1="4" y1="20" x2="32" y2="20" stroke="#0d6e6e" stroke-width="2.5" marker-end="url(#pArr)"
+              stroke-dasharray="6 3" class="animated-dash"/>
+          </svg>
+        </div>
+
+        <div class="pipe-stage aggregate" id="stageAggregate" onclick="toggleStage('Aggregate')">
+          <div class="stage-num">2</div>
+          <div class="stage-name">Aggregate</div>
+          <div style="font-size:2rem;">🔀</div>
+          <div class="stage-desc">
+            <strong>Combina as mensagens recebidas</strong><br>
+            Funções permutation-invariant: soma, média, máximo.<br>
+            <code style="font-size:0.82rem;">m_v = AGG({ M_u : u ∈ N(v) })</code>
+          </div>
+        </div>
+
+        <div class="pipe-arrow">
+          <svg viewBox="0 0 40 40">
+            <defs>
+              <marker id="pArr2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                <path d="M0,0 L6,3 L0,6 Z" fill="#0d6e6e"/>
+              </marker>
+            </defs>
+            <line x1="4" y1="20" x2="32" y2="20" stroke="#0d6e6e" stroke-width="2.5" marker-end="url(#pArr2)"
+              stroke-dasharray="6 3" class="animated-dash"/>
+          </svg>
+        </div>
+
+        <div class="pipe-stage update" id="stageUpdate" onclick="toggleStage('Update')">
+          <div class="stage-num">3</div>
+          <div class="stage-name">Update</div>
+          <div style="font-size:2rem;">🔄</div>
+          <div class="stage-desc">
+            <strong>Atualiza o embedding do nó central</strong><br>
+            Combina a representação atual com a mensagem agregada via rede neural.<br>
+            <code style="font-size:0.82rem;">h_v' = σ(W · [h_v ‖ m_v])</code>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live mini-animation -->
+      <div class="anim-area">
+        <div class="anim-title">Animação ao vivo — message passing em um nó</div>
+        <div class="anim-wrap">
+          <svg class="anim-svg" viewBox="0 0 580 130" id="animSvg">
+            <defs>
+              <marker id="animArr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                <path d="M0,0 L6,3 L0,6 Z" fill="#f97316"/>
+              </marker>
+              <marker id="animArrTeal" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                <path d="M0,0 L6,3 L0,6 Z" fill="#166534"/>
+              </marker>
+            </defs>
+
+            <!-- Neighbors -->
+            <circle cx="60" cy="35" r="22" fill="#fff7ed" stroke="#f97316" stroke-width="2"/>
+            <text x="60" y="30" text-anchor="middle" font-size="9" fill="#c2410c" font-weight="700">vizinho 1</text>
+            <text x="60" y="43" text-anchor="middle" font-size="9" fill="#c2410c">[1, 2]</text>
+
+            <circle cx="60" cy="95" r="22" fill="#fff7ed" stroke="#f97316" stroke-width="2"/>
+            <text x="60" y="90" text-anchor="middle" font-size="9" fill="#c2410c" font-weight="700">vizinho 2</text>
+            <text x="60" y="103" text-anchor="middle" font-size="9" fill="#c2410c">[3, 1]</text>
+
+            <!-- extra neighbor -->
+            <circle cx="115" cy="65" r="22" fill="#fff7ed" stroke="#f97316" stroke-width="2"/>
+            <text x="115" y="60" text-anchor="middle" font-size="9" fill="#c2410c" font-weight="700">vizinho 3</text>
+            <text x="115" y="73" text-anchor="middle" font-size="9" fill="#c2410c">[2, 4]</text>
+
+            <!-- Flowing arrows -->
+            <line class="msg-arrow" x1="82" y1="45" x2="200" y2="62" marker-end="url(#animArr)"/>
+            <line class="msg-arrow" x1="82" y1="87" x2="200" y2="68" marker-end="url(#animArr)" style="animation-delay:0.3s"/>
+            <line class="msg-arrow" x1="137" y1="65" x2="200" y2="65" marker-end="url(#animArr)" style="animation-delay:0.6s"/>
+
+            <!-- Aggregate blob -->
+            <circle cx="240" cy="65" r="28" class="agg-ring"/>
+            <text x="240" y="60" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">AGG</text>
+            <text x="240" y="72" text-anchor="middle" font-size="8" fill="#1d4ed8">[6, 7]</text>
+
+            <!-- Arrow to update -->
+            <line class="msg-arrow" x1="268" y1="65" x2="330" y2="65" stroke="#1d4ed8" marker-end="url(#animArr)" style="animation-delay:0.5s"/>
+
+            <!-- Update box -->
+            <rect x="330" y="42" width="80" height="46" rx="8" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+            <text x="370" y="60" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">σ(W·[h‖m])</text>
+            <text x="370" y="73" text-anchor="middle" font-size="8" fill="#166534">UPDATE</text>
+            <text x="370" y="84" text-anchor="middle" font-size="8" fill="#166534" font-weight="600">MLP</text>
+
+            <!-- Output arrow -->
+            <line stroke="#166534" stroke-width="2.5" x1="410" y1="65" x2="460" y2="65" marker-end="url(#animArrTeal)"
+              stroke-dasharray="6 3" class="msg-arrow" style="animation-delay:0.8s"/>
+
+            <!-- Updated node -->
+            <circle cx="490" cy="65" r="26" class="updated-node" stroke="#0d6e6e" stroke-width="2.5"/>
+            <text x="490" y="60" text-anchor="middle" font-size="9" fill="#0d6e6e" font-weight="700">nó v</text>
+            <text x="490" y="73" text-anchor="middle" font-size="9" fill="#0d6e6e" font-weight="700">h_v'</text>
+
+            <!-- Labels -->
+            <text x="60" y="128" text-anchor="middle" font-size="8" fill="#9ca3af">GATHER</text>
+            <text x="240" y="110" text-anchor="middle" font-size="8" fill="#9ca3af">AGGREGATE</text>
+            <text x="370" y="100" text-anchor="middle" font-size="8" fill="#9ca3af">UPDATE</text>
+            <text x="490" y="103" text-anchor="middle" font-size="8" fill="#9ca3af">NOVO h_v</text>
+          </svg>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide05.html'">← Anterior</button>
+      <div class="nav-dots" id="navDots"></div>
+      <button class="btn-nav btn-next" onclick="location.href='slide07.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    function toggleStage(name) {
+      const ids = { Gather:'stageGather', Aggregate:'stageAggregate', Update:'stageUpdate' };
+      const el = document.getElementById(ids[name]);
+      const wasOpen = el.classList.contains('open');
+      // Close all
+      Object.values(ids).forEach(id => document.getElementById(id).classList.remove('open'));
+      if (!wasOpen) el.classList.add('open');
+    }
+
+    (function(){
+      const container = document.getElementById('navDots');
+      const CURRENT = 6;
+      const TOTAL = 20;
+      for (let i = 1; i <= TOTAL; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'dot' + (i === CURRENT ? ' active' : '');
+        dot.title = 'Slide ' + i;
+        dot.style.cursor = 'pointer';
+        dot.addEventListener('click', () => { location.href = 'slide' + String(i).padStart(2,'0') + '.html'; });
+        container.appendChild(dot);
+      }
+    })();
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') location.href = 'slide07.html';
+      if (e.key === 'ArrowLeft'  || e.key === 'PageUp')   location.href = 'slide05.html';
+    });
+  </script>
+</body>
+</html>

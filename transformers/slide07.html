@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 7 – Projeções Lineares: Q, K, V</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .token-chips { display:flex; gap:0.4rem; flex-wrap:wrap; }
+    .token-chip {
+      padding:0.3rem 0.85rem;
+      border-radius:999px;
+      font-family:'Fira Code',monospace;
+      font-size:0.88rem;
+      font-weight:600;
+      cursor:pointer;
+      border:2px solid var(--border);
+      background:var(--bg3);
+      color:var(--text-muted);
+      transition:all 0.18s;
+    }
+    .token-chip:hover { border-color:var(--teal); color:var(--teal); }
+    .token-chip.active { background:var(--teal-lt); border-color:var(--teal); color:var(--teal); }
+
+    .mat-block { display:flex; flex-direction:column; align-items:flex-start; gap:0.25rem; margin-bottom:0.6rem; }
+    .mat-label {
+      font-family:'Fira Code',monospace;
+      font-size:0.82rem;
+      font-weight:700;
+      padding:0.1rem 0.5rem;
+      border-radius:6px;
+    }
+    .mat-lbl-x  { background:var(--teal-lt);   color:var(--teal);   }
+    .mat-lbl-q  { background:var(--blue-lt);   color:var(--blue);   }
+    .mat-lbl-k  { background:var(--purple-lt); color:var(--purple); }
+    .mat-lbl-v  { background:var(--green-lt);  color:var(--green);  }
+
+    .mat-table {
+      font-family:'Fira Code',monospace;
+      font-size:1rem;
+      border-collapse:collapse;
+    }
+    .mat-table th {
+      color:var(--text-dim);
+      font-weight:600;
+      font-size:0.85rem;
+      padding:0.15rem 0.5rem;
+      text-align:right;
+    }
+    .mat-table td {
+      padding:0.3rem 0.6rem;
+      text-align:right;
+      border-radius:3px;
+      min-width:3.5rem;
+    }
+    .mat-table tr.row-hl td { background:var(--teal-lt) !important; }
+    .mat-table td.lbl-cell {
+      font-weight:600;
+      color:var(--text-dim);
+      text-align:left;
+      min-width:3rem;
+    }
+    .mat-table tr.row-hl td.lbl-cell { color:var(--teal); }
+
+    .bracket-wrap {
+      display:flex;
+      align-items:stretch;
+    }
+    .bracket-l {
+      border-left:3px solid;
+      border-top:3px solid;
+      border-bottom:3px solid;
+      border-radius:4px 0 0 4px;
+      width:7px;
+    }
+    .bracket-r {
+      border-right:3px solid;
+      border-top:3px solid;
+      border-bottom:3px solid;
+      border-radius:0 4px 4px 0;
+      width:7px;
+    }
+    .bc-x { border-color:var(--teal); }
+    .bc-q { border-color:var(--blue); }
+    .bc-k { border-color:var(--purple); }
+    .bc-v { border-color:var(--green); }
+
+    .formula-strip {
+      display:flex;
+      gap:0.8rem;
+      flex-wrap:wrap;
+      background:var(--bg3);
+      border:1px solid var(--border2);
+      border-radius:var(--radius-sm);
+      padding:0.5rem 0.8rem;
+    }
+    .formula-item {
+      font-family:'Fira Code',monospace;
+      font-size:0.9rem;
+      font-weight:600;
+    }
+    .fi-q { color:var(--blue); }
+    .fi-k { color:var(--purple); }
+    .fi-v { color:var(--green); }
+
+    .role-card {
+      padding:0.65rem 0.85rem;
+      border-radius:var(--radius-sm);
+      border:1.5px solid var(--border2);
+      background:var(--bg2);
+      display:flex;
+      flex-direction:column;
+      gap:0.3rem;
+      flex:1;
+    }
+    .role-card-header {
+      display:flex;
+      align-items:center;
+      gap:0.5rem;
+      font-weight:700;
+      font-size:0.92rem;
+    }
+    .role-card-desc {
+      font-size:0.82rem;
+      color:var(--text-muted);
+      line-height:1.45;
+    }
+    .role-card-vec {
+      font-family:'Fira Code',monospace;
+      font-size:0.85rem;
+      padding:0.25rem 0.5rem;
+      border-radius:6px;
+      margin-top:0.2rem;
+    }
+    .rvc-q { background:var(--blue-lt);   color:var(--blue);   }
+    .rvc-k { background:var(--purple-lt); color:var(--purple); }
+    .rvc-v { background:var(--green-lt);  color:var(--green);  }
+    .role-card-placeholder { font-size:0.8rem; color:var(--text-dim); font-style:italic; }
+
+    .role-cards { display:flex; flex-direction:column; gap:0.5rem; }
+
+    @keyframes fadeIn {
+      from { opacity:0; transform:translateY(4px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    .fade-in { animation:fadeIn 0.25s ease both; }
+
+    /* ---- Full-width projection layout ---- */
+    .projections-row { display:flex; gap:1rem; }
+    .proj-col { flex:1; display:flex; flex-direction:column; gap:0.7rem; }
+    .fan-section { display:flex; flex-direction:column; gap:0.2rem; padding:0 0.5rem; }
+    .wlabels-row { display:flex; justify-content:space-around; }
+    .x-panel { display:flex; flex-direction:column; gap:0.6rem; }
+
+    /* ---- W matrix modal ---- */
+    .w-btn {
+      background:none; border:none; cursor:pointer;
+      font-family:'Fira Code',monospace; font-weight:700; font-size:0.9rem;
+      padding:0.25rem 0.6rem; border-radius:6px; transition:opacity 0.15s;
+      text-decoration:underline dotted 1.5px; text-underline-offset:3px;
+    }
+    .w-btn:hover { opacity:0.65; }
+    .w-btn-q { color:var(--blue);   background:var(--blue-lt);   }
+    .w-btn-k { color:var(--purple); background:var(--purple-lt); }
+    .w-btn-v { color:var(--green);  background:var(--green-lt);  }
+    .w-overlay {
+      position:fixed; inset:0; background:rgba(10,20,45,0.45); z-index:200;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .w-card {
+      background:var(--bg2); border-radius:var(--radius); padding:1.4rem 1.6rem;
+      box-shadow:0 10px 48px rgba(0,0,0,0.22); max-width:440px; width:92%;
+      display:flex; flex-direction:column; gap:0.9rem;
+    }
+    .w-card-header {
+      display:flex; align-items:center; gap:0.6rem;
+    }
+    .w-card-title {
+      font-weight:800; font-size:1.05rem; flex:1;
+    }
+    .w-dim-badge {
+      font-size:0.78rem; font-family:'Fira Code',monospace;
+      background:var(--bg3); color:var(--text-muted);
+      padding:0.2rem 0.55rem; border-radius:5px;
+    }
+    .w-card-close {
+      background:none; border:none; cursor:pointer; font-size:1.05rem;
+      color:var(--text-dim); padding:0.15rem 0.4rem; border-radius:4px;
+    }
+    .w-card-close:hover { background:var(--bg3); }
+    .w-card-desc {
+      font-size:0.83rem; color:var(--text-muted); margin:0; line-height:1.5;
+    }
+    .w-dmodel-note {
+      font-size:0.81rem; color:var(--text-muted); line-height:1.55;
+      background:var(--bg3); border-radius:var(--radius-sm);
+      padding:0.6rem 0.85rem; border-left:3px solid var(--teal);
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Transformers</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 7 · Slide 7 / 11</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Projeções Lineares: Q, K, V</h1>
+        <p class="slide-subtitle">A mesma entrada X projetada em três papéis distintos</p>
+      </div>
+
+      <!-- Controls + X matrix: full-width panel -->
+      <div class="panel x-panel">
+        <h2 class="panel-title">A entrada X</h2>
+        <div style="display:flex;gap:1.5rem;align-items:flex-start;flex-wrap:wrap;">
+          <div style="display:flex;flex-direction:column;gap:0.4rem;">
+            <div style="font-size:0.78rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.07em;">Frase:</div>
+            <div class="toggle-group" id="phrase-toggle">
+              <button class="btn-toggle active" onclick="setPhrase(0)">Ela saiu só</button>
+              <button class="btn-toggle" onclick="setPhrase(1)">Só ela saiu</button>
+              <button class="btn-toggle" onclick="setPhrase(2)">Ela só saiu</button>
+            </div>
+          </div>
+          <div class="formula-strip" style="flex:1;align-self:center;">
+            <button class="w-btn w-btn-q" onclick="showWModal('q')">Q = X W<sup>Q</sup></button>
+            <span style="color:var(--border2);font-size:1rem;">|</span>
+            <button class="w-btn w-btn-k" onclick="showWModal('k')">K = X W<sup>K</sup></button>
+            <span style="color:var(--border2);font-size:1rem;">|</span>
+            <button class="w-btn w-btn-v" onclick="showWModal('v')">V = X W<sup>V</sup></button>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:center;">
+          <div id="x-matrix-area"></div>
+        </div>
+      </div>
+
+      <!-- Arrow fan: X → Q, K, V -->
+      <div class="fan-section">
+        <svg viewBox="0 0 120 44" preserveAspectRatio="none"
+             style="width:100%;height:55px;display:block;">
+          <defs>
+            <marker id="ah-q" viewBox="0 0 10 10" refX="9" refY="5"
+                    markerWidth="5" markerHeight="5" orient="auto">
+              <path d="M0,1.5 L9,5 L0,8.5" fill="none" stroke="#1d4ed8" stroke-width="1.8"/>
+            </marker>
+            <marker id="ah-k" viewBox="0 0 10 10" refX="9" refY="5"
+                    markerWidth="5" markerHeight="5" orient="auto">
+              <path d="M0,1.5 L9,5 L0,8.5" fill="none" stroke="#6d28d9" stroke-width="1.8"/>
+            </marker>
+            <marker id="ah-v" viewBox="0 0 10 10" refX="9" refY="5"
+                    markerWidth="5" markerHeight="5" orient="auto">
+              <path d="M0,1.5 L9,5 L0,8.5" fill="none" stroke="#065f46" stroke-width="1.8"/>
+            </marker>
+          </defs>
+          <line x1="60" y1="2" x2="22" y2="40" stroke="#1d4ed8" stroke-width="2"
+                stroke-dasharray="5,3" marker-end="url(#ah-q)"/>
+          <line x1="60" y1="2" x2="60" y2="40" stroke="#6d28d9" stroke-width="2"
+                stroke-dasharray="5,3" marker-end="url(#ah-k)"/>
+          <line x1="60" y1="2" x2="98" y2="40" stroke="#065f46" stroke-width="2"
+                stroke-dasharray="5,3" marker-end="url(#ah-v)"/>
+        </svg>
+        <div class="wlabels-row">
+          <button class="w-btn w-btn-q" onclick="showWModal('q')">× W<sup>Q</sup></button>
+          <button class="w-btn w-btn-k" onclick="showWModal('k')">× W<sup>K</sup></button>
+          <button class="w-btn w-btn-v" onclick="showWModal('v')">× W<sup>V</sup></button>
+        </div>
+      </div>
+
+      <!-- Q, K, V projection panels -->
+      <div class="projections-row">
+        <div class="panel proj-col">
+          <h2 class="panel-title" style="color:var(--blue);border-color:#bfdbfe;">Q — Query</h2>
+          <div id="q-matrix-area"></div>
+          <div id="q-role" style="margin-top:auto;"></div>
+        </div>
+        <div class="panel proj-col">
+          <h2 class="panel-title" style="color:var(--purple);border-color:#ddd6fe;">K — Key</h2>
+          <div id="k-matrix-area"></div>
+          <div id="k-role" style="margin-top:auto;"></div>
+        </div>
+        <div class="panel proj-col">
+          <h2 class="panel-title" style="color:var(--green);border-color:#bbf7d0;">V — Value</h2>
+          <div id="v-matrix-area"></div>
+          <div id="v-role" style="margin-top:auto;"></div>
+        </div>
+      </div>
+
+      <!-- Token selection -->
+      <div style="display:flex;align-items:center;gap:1rem;padding:0.35rem 0.2rem;flex-wrap:wrap;">
+        <div style="font-size:0.78rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.07em;white-space:nowrap;">Token selecionado:</div>
+        <div class="token-chips" id="token-chips"></div>
+      </div>
+
+      <!-- Full-width insight box -->
+      <div class="insight-box">
+        <div class="i-icon">🎓</div>
+        <div class="i-text">
+          Q, K e V vêm da mesma matriz X — mas projetadas de formas diferentes para papéis distintos no cálculo da atenção.
+          <br><br>
+          <strong>📌 Nota:</strong> Neste exemplo, d_model = 2. Na prática, embeddings têm centenas de dimensões (ex.: 768 no BERT), e W<sup>Q</sup>, W<sup>K</sup>, W<sup>V</sup> são matrizes aprendidas com valores não-triviais.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide06.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide08.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <!-- W matrix info modal -->
+  <div class="w-overlay" id="w-overlay" style="display:none;"
+       onclick="if(event.target===this)hideWModal()">
+    <div class="w-card">
+      <div class="w-card-header">
+        <div class="w-card-title" id="w-modal-title"></div>
+        <span class="w-dim-badge" id="w-modal-dim"></span>
+        <button class="w-card-close" onclick="hideWModal()">✕</button>
+      </div>
+      <div id="w-modal-matrix"></div>
+      <p class="w-card-desc" id="w-modal-desc"></p>
+      <div class="w-dmodel-note" id="w-modal-note"></div>
+    </div>
+  </div>
+
+  <script>
+    // Nota: na prática, embeddings têm centenas de dimensões (ex.: 768 ou 1024)
+    const EMB_LEX = {
+      'Ela':  [1,  2],
+      'ela':  [1,  2],
+      'saiu': [3, -1],
+      'só':   [-1, 2],
+      'Só':   [-1, 2],
+    };
+    function round2(x) { return Math.round(x * 100) / 100; }
+    function computePE(pos) {
+      return [
+        Math.sin(pos / Math.pow(10000, 0/2)),
+        Math.cos(pos / Math.pow(10000, 0/2)),
+      ].map(v => round2(v));
+    }
+    const POS_ENC = [computePE(0), computePE(1), computePE(2)];
+    const WQ = [[1, 0], [0, 1]];   // identity (2×2): Q = X
+    const WK = [[0, 1], [1, 0]];   // swap dims (2×2): K has swapped components
+    const WV = [[1, 1], [0, 1]];   // upper triangular (2×2): V adds context
+
+    function getMatrices(tokens) {
+      const X = tokens.map((t,i) => EMB_LEX[t].map((v,j) => round2(v + POS_ENC[i][j])));
+      const Q = X.map(row => [0,1].map(j => round2(row.reduce((s,v,k)=>s+v*WQ[k][j],0))));
+      const K = X.map(row => [0,1].map(j => round2(row.reduce((s,v,k)=>s+v*WK[k][j],0))));
+      const V = X.map(row => [0,1].map(j => round2(row.reduce((s,v,k)=>s+v*WV[k][j],0))));
+      return {X, Q, K, V};
+    }
+
+    const PHRASES = [
+      ['Ela', 'saiu', 'só'],
+      ['Só',  'ela',  'saiu'],
+      ['Ela', 'só',   'saiu'],
+    ];
+
+    let currentPhrase = 0;
+    let selectedToken = null;
+
+    function fmt(v) {
+      const s = Math.abs(v).toFixed(1);
+      return (v >= 0 ? ' ' : '-') + s;
+    }
+
+    function buildMatrixHTML(type, tokens, data, hlRow) {
+      const bcCls = `bc-${type}`;
+      const dim = data[0].length;
+      const colLabels = dim === 4
+        ? ['d₁','d₂','d₃','d₄']
+        : ['d₁','d₂'];
+
+      let html = `<div class="mat-block">`;
+      const lblMap = {x:null, q:'Q = X · W<sup>Q</sup>', k:'K = X · W<sup>K</sup>', v:'V = X · W<sup>V</sup>'};
+      const lblCls = `mat-lbl-${type}`;
+      if (lblMap[type]) html += `<div class="mat-label ${lblCls}">${lblMap[type]}</div>`;
+      html += `<div class="bracket-wrap">`;
+      html += `<div class="bracket-l ${bcCls}"></div>`;
+      html += `<table class="mat-table"><thead><tr><th></th>${colLabels.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>`;
+      tokens.forEach((tok, i) => {
+        const hl = (hlRow === i) ? 'row-hl' : '';
+        html += `<tr class="${hl}"><td class="lbl-cell">${tok.toLowerCase()}</td>`;
+        data[i].forEach(v => {
+          const color = v >= 0 ? '#0d6e6e' : '#c2410c';
+          html += `<td style="color:${color}">${fmt(v)}</td>`;
+        });
+        html += `</tr>`;
+      });
+      html += `</tbody></table>`;
+      html += `<div class="bracket-r ${bcCls}"></div>`;
+      html += `</div></div>`;
+      return html;
+    }
+
+    function renderMatrices() {
+      const tokens = PHRASES[currentPhrase];
+      const {X, Q, K, V} = getMatrices(tokens);
+      const hl = selectedToken;
+      document.getElementById('x-matrix-area').innerHTML =
+        `<div class="fade-in">${buildMatrixHTML('x', tokens, X, hl)}</div>`;
+      document.getElementById('q-matrix-area').innerHTML =
+        `<div class="fade-in">${buildMatrixHTML('q', tokens, Q, hl)}</div>`;
+      document.getElementById('k-matrix-area').innerHTML =
+        `<div class="fade-in">${buildMatrixHTML('k', tokens, K, hl)}</div>`;
+      document.getElementById('v-matrix-area').innerHTML =
+        `<div class="fade-in">${buildMatrixHTML('v', tokens, V, hl)}</div>`;
+    }
+
+    function vecStr(arr) {
+      return '[ ' + arr.map(v => fmt(v)).join(',  ') + ' ]';
+    }
+
+    function renderRoleCards() {
+      const tokens = PHRASES[currentPhrase];
+      const {Q, K, V} = getMatrices(tokens);
+      const i = selectedToken;
+      const hasSel = (i !== null);
+
+      const roles = [
+        { id:'q-role', icon:'🔍', name:'Query (Q)', rvc:'rvc-q',
+          desc:'Como este token consulta os outros',
+          vec: hasSel ? `q = ${vecStr(Q[i])}` : null },
+        { id:'k-role', icon:'🔑', name:'Key (K)',   rvc:'rvc-k',
+          desc:'Como este token se oferece para comparação',
+          vec: hasSel ? `k = ${vecStr(K[i])}` : null },
+        { id:'v-role', icon:'📦', name:'Value (V)', rvc:'rvc-v',
+          desc:'Qual conteúdo este token fornece',
+          vec: hasSel ? `v = ${vecStr(V[i])}` : null },
+      ];
+
+      roles.forEach(r => {
+        document.getElementById(r.id).innerHTML = `
+          <div class="role-card fade-in">
+            <div class="role-card-header">
+              <span>${r.icon}</span>
+              <span>${r.name}</span>
+            </div>
+            <div class="role-card-desc">${r.desc}</div>
+            ${r.vec
+              ? `<div class="role-card-vec ${r.rvc}">${r.vec}</div>`
+              : `<div class="role-card-placeholder">Clique em um token →</div>`}
+          </div>`;
+      });
+    }
+
+    function renderTokenChips() {
+      const tokens = PHRASES[currentPhrase];
+      const html = tokens.map((t, i) =>
+        `<button class="token-chip${selectedToken===i?' active':''}" onclick="selectToken(${i})">${t}</button>`
+      ).join('');
+      document.getElementById('token-chips').innerHTML = html;
+    }
+
+    function selectToken(i) {
+      selectedToken = (selectedToken === i) ? null : i;
+      renderTokenChips();
+      renderMatrices();
+      renderRoleCards();
+    }
+
+    function setPhrase(idx) {
+      currentPhrase = idx;
+      selectedToken = null;
+      document.querySelectorAll('#phrase-toggle .btn-toggle').forEach((b,i) => b.classList.toggle('active', i===idx));
+      renderTokenChips();
+      renderMatrices();
+      renderRoleCards();
+    }
+
+    // ---- W matrix modal ----
+    const W_META = {
+      q: { title:'W<sup>Q</sup> — Query projection',  cls:'q', color:'var(--blue)',
+           mat: WQ, desc:'Projeta X no espaço de <em>queries</em>: "O que este token quer encontrar?"' },
+      k: { title:'W<sup>K</sup> — Key projection',    cls:'k', color:'var(--purple)',
+           mat: WK, desc:'Projeta X no espaço de <em>keys</em>: "O que este token oferece para comparação?"' },
+      v: { title:'W<sup>V</sup> — Value projection',  cls:'v', color:'var(--green)',
+           mat: WV, desc:'Projeta X no espaço de <em>values</em>: "Qual conteúdo este token fornece?"' },
+    };
+
+    function fmtW(v) { return (v >= 0 ? ' ' : '') + v.toFixed(0); }
+
+    function buildWMatrixHTML(cls, mat) {
+      const n = mat.length, m = mat[0].length;
+      const sub = ['₁','₂','₃','₄'];
+      const rowLbls = sub.slice(0,n).map(s=>`d${s}`);
+      const colLbls = sub.slice(0,m).map(s=>`d${s}`);
+      let html = `<div class="mat-block"><div class="bracket-wrap">`;
+      html += `<div class="bracket-l bc-${cls}"></div>`;
+      html += `<table class="mat-table"><thead><tr><th></th>`;
+      colLbls.forEach(l => { html += `<th>${l}</th>`; });
+      html += `</tr></thead><tbody>`;
+      mat.forEach((row, i) => {
+        html += `<tr><td class="lbl-cell">${rowLbls[i]}</td>`;
+        row.forEach(v => {
+          const color = v >= 0 ? '#0d6e6e' : '#c2410c';
+          html += `<td style="color:${color}">${fmtW(v)}</td>`;
+        });
+        html += `</tr>`;
+      });
+      html += `</tbody></table>`;
+      html += `<div class="bracket-r bc-${cls}"></div>`;
+      html += `</div></div>`;
+      return html;
+    }
+
+    function showWModal(type) {
+      const d = W_META[type];
+      const rows = d.mat.length, cols = d.mat[0].length;
+      const dmodel = rows;
+      document.getElementById('w-modal-title').innerHTML =
+        `<span style="color:${d.color};">${d.title}</span>`;
+      document.getElementById('w-modal-dim').textContent = `${rows} × ${cols}`;
+      document.getElementById('w-modal-matrix').innerHTML = buildWMatrixHTML(d.cls, d.mat);
+      document.getElementById('w-modal-desc').innerHTML = d.desc;
+      document.getElementById('w-modal-note').innerHTML =
+        `<strong>d_model = ${dmodel}</strong> é a dimensão dos embeddings — quantos valores numéricos representam cada token. ` +
+        `Neste exemplo, d_model = ${dmodel} (para simplificar a visualização). Em modelos reais: ` +
+        `BERT usa d_model = 768; GPT-3 usa d_model = 12 288.<br><br>` +
+        `W<sup>Q</sup>, W<sup>K</sup>, W<sup>V</sup> têm forma d_model × d_k, onde d_k = d_model / n_heads ` +
+        `(em Multi-Head Attention). Neste exemplo simplificado, d_k = d_model = ${dmodel}.`;
+      document.getElementById('w-overlay').style.display = 'flex';
+    }
+
+    function hideWModal() {
+      document.getElementById('w-overlay').style.display = 'none';
+    }
+
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') hideWModal(); });
+
+    // Init
+    renderTokenChips();
+    renderMatrices();
+    renderRoleCards();
+  </script>
+</body>
+</html>

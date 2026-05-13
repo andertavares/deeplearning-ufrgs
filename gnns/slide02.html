@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 02 – Grafos estão em todo lugar</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.1rem;
+      flex: 1;
+    }
+    .domain-card {
+      background: var(--bg2);
+      border: 2px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 1.2rem 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 0.6rem;
+      cursor: pointer;
+      transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
+      opacity: 0;
+      animation: cardAppear 0.5s ease forwards;
+      box-shadow: var(--shadow);
+    }
+    .domain-card:hover {
+      border-color: var(--teal);
+      transform: translateY(-5px) scale(1.02);
+      box-shadow: 0 8px 28px rgba(13,110,110,0.15);
+    }
+    .domain-card.card-0 { animation-delay: 0.05s; }
+    .domain-card.card-1 { animation-delay: 0.15s; }
+    .domain-card.card-2 { animation-delay: 0.25s; }
+    .domain-card.card-3 { animation-delay: 0.35s; }
+    .domain-card.card-4 { animation-delay: 0.45s; }
+    .domain-card.card-5 { animation-delay: 0.55s; }
+    @keyframes cardAppear {
+      from { opacity: 0; transform: translateY(20px) scale(0.95); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .card-emoji { font-size: 2.8rem; line-height: 1; }
+    .card-domain {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .card-desc {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .card-svg-wrap {
+      width: 100%;
+      height: 60px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .domain-card:hover .card-svg-wrap { opacity: 1; }
+    .mini-svg { width: 100%; height: 100%; }
+    @media (max-width: 800px) {
+      .cards-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">GNNs</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Slide 02 / 20</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Grafos estão em todo lugar</h1>
+        <p class="slide-subtitle">Bloco 1 — Motivação</p>
+      </div>
+
+      <div class="cards-grid">
+        <!-- Social Networks -->
+        <div class="domain-card card-0">
+          <span class="card-emoji">🧑‍🤝‍🧑</span>
+          <span class="card-domain">Redes Sociais</span>
+          <span class="card-desc">Amizades, seguidores, influência</span>
+          <div class="card-svg-wrap">
+            <svg class="mini-svg" viewBox="0 0 120 60">
+              <line x1="30" y1="30" x2="60" y2="15" stroke="#0d6e6e" stroke-width="1.5"/>
+              <line x1="30" y1="30" x2="60" y2="45" stroke="#0d6e6e" stroke-width="1.5"/>
+              <line x1="60" y1="15" x2="90" y2="25" stroke="#0d6e6e" stroke-width="1.5"/>
+              <line x1="60" y1="45" x2="90" y2="35" stroke="#0d6e6e" stroke-width="1.5"/>
+              <line x1="60" y1="15" x2="60" y2="45" stroke="#0d6e6e" stroke-width="1.5"/>
+              <circle cx="30" cy="30" r="7" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="1.5"/>
+              <circle cx="60" cy="15" r="7" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="1.5"/>
+              <circle cx="60" cy="45" r="7" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="1.5"/>
+              <circle cx="90" cy="25" r="7" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="1.5"/>
+              <circle cx="90" cy="35" r="7" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="1.5"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Molecules -->
+        <div class="domain-card card-1">
+          <span class="card-emoji">⚗️</span>
+          <span class="card-domain">Moléculas</span>
+          <span class="card-desc">Átomos como nós, ligações como arestas</span>
+          <div class="card-svg-wrap">
+            <svg class="mini-svg" viewBox="0 0 120 60">
+              <line x1="35" y1="30" x2="60" y2="15" stroke="#1d4ed8" stroke-width="2"/>
+              <line x1="35" y1="30" x2="60" y2="45" stroke="#1d4ed8" stroke-width="2"/>
+              <line x1="60" y1="15" x2="85" y2="30" stroke="#1d4ed8" stroke-width="2"/>
+              <line x1="60" y1="45" x2="85" y2="30" stroke="#1d4ed8" stroke-width="2"/>
+              <circle cx="35" cy="30" r="9" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.5"/>
+              <text x="35" y="34" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">C</text>
+              <circle cx="60" cy="15" r="7" fill="#fee2e2" stroke="#b91c1c" stroke-width="1.5"/>
+              <text x="60" y="19" text-anchor="middle" font-size="7" fill="#b91c1c" font-weight="700">O</text>
+              <circle cx="60" cy="45" r="7" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.5"/>
+              <text x="60" y="49" text-anchor="middle" font-size="7" fill="#1d4ed8" font-weight="700">N</text>
+              <circle cx="85" cy="30" r="7" fill="#dcfce7" stroke="#166534" stroke-width="1.5"/>
+              <text x="85" y="34" text-anchor="middle" font-size="7" fill="#166534" font-weight="700">H</text>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Internet -->
+        <div class="domain-card card-2">
+          <span class="card-emoji">🌐</span>
+          <span class="card-domain">Internet</span>
+          <span class="card-desc">Páginas web como nós, hiperlinks como arestas</span>
+          <div class="card-svg-wrap">
+            <svg class="mini-svg" viewBox="0 0 120 60">
+              <line x1="60" y1="30" x2="20" y2="15" stroke="#0e7490" stroke-width="1.5" marker-end="url(#arr)"/>
+              <line x1="60" y1="30" x2="100" y2="15" stroke="#0e7490" stroke-width="1.5" marker-end="url(#arr)"/>
+              <line x1="20" y1="15" x2="60" y2="30" stroke="#0e7490" stroke-width="1.5" marker-end="url(#arr)"/>
+              <line x1="100" y1="45" x2="60" y2="30" stroke="#0e7490" stroke-width="1.5" marker-end="url(#arr)"/>
+              <defs>
+                <marker id="arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                  <path d="M0,0 L6,3 L0,6 Z" fill="#0e7490"/>
+                </marker>
+              </defs>
+              <rect x="50" y="22" width="20" height="14" rx="3" fill="#cffafe" stroke="#0e7490" stroke-width="1.5"/>
+              <text x="60" y="32" text-anchor="middle" font-size="7" fill="#0e7490" font-weight="700">www</text>
+              <rect x="10" y="8" width="20" height="14" rx="3" fill="#cffafe" stroke="#0e7490" stroke-width="1.5"/>
+              <text x="20" y="18" text-anchor="middle" font-size="7" fill="#0e7490" font-weight="700">web</text>
+              <rect x="90" y="8" width="20" height="14" rx="3" fill="#cffafe" stroke="#0e7490" stroke-width="1.5"/>
+              <text x="100" y="18" text-anchor="middle" font-size="7" fill="#0e7490" font-weight="700">url</text>
+              <rect x="90" y="38" width="20" height="14" rx="3" fill="#cffafe" stroke="#0e7490" stroke-width="1.5"/>
+              <text x="100" y="48" text-anchor="middle" font-size="7" fill="#0e7490" font-weight="700">link</text>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Biology -->
+        <div class="domain-card card-3">
+          <span class="card-emoji">🧬</span>
+          <span class="card-domain">Biologia</span>
+          <span class="card-desc">Redes de proteínas, redes metabólicas</span>
+          <div class="card-svg-wrap">
+            <svg class="mini-svg" viewBox="0 0 120 60">
+              <line x1="60" y1="30" x2="30" y2="15" stroke="#6d28d9" stroke-width="1.5"/>
+              <line x1="60" y1="30" x2="90" y2="15" stroke="#6d28d9" stroke-width="1.5"/>
+              <line x1="60" y1="30" x2="40" y2="48" stroke="#6d28d9" stroke-width="1.5"/>
+              <line x1="60" y1="30" x2="80" y2="48" stroke="#6d28d9" stroke-width="1.5"/>
+              <line x1="30" y1="15" x2="90" y2="15" stroke="#6d28d9" stroke-width="1.5"/>
+              <circle cx="60" cy="30" r="8" fill="#ede9fe" stroke="#6d28d9" stroke-width="2"/>
+              <text x="60" y="34" text-anchor="middle" font-size="7" fill="#6d28d9" font-weight="700">P1</text>
+              <circle cx="30" cy="15" r="6" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.5"/>
+              <circle cx="90" cy="15" r="6" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.5"/>
+              <circle cx="40" cy="48" r="6" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.5"/>
+              <circle cx="80" cy="48" r="6" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.5"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Recommendation -->
+        <div class="domain-card card-4">
+          <span class="card-emoji">🎯</span>
+          <span class="card-domain">Recomendação</span>
+          <span class="card-desc">Usuários e itens como nós, interações como arestas</span>
+          <div class="card-svg-wrap">
+            <svg class="mini-svg" viewBox="0 0 120 60">
+              <line x1="25" y1="20" x2="70" y2="15" stroke="#c2410c" stroke-width="1.5"/>
+              <line x1="25" y1="20" x2="70" y2="35" stroke="#c2410c" stroke-width="1.5"/>
+              <line x1="25" y1="40" x2="70" y2="15" stroke="#c2410c" stroke-width="1.5"/>
+              <line x1="25" y1="40" x2="70" y2="50" stroke="#c2410c" stroke-width="1.5"/>
+              <circle cx="25" cy="20" r="8" fill="#ffedd5" stroke="#c2410c" stroke-width="1.5"/>
+              <text x="25" y="24" text-anchor="middle" font-size="7" fill="#c2410c" font-weight="700">U1</text>
+              <circle cx="25" cy="40" r="8" fill="#ffedd5" stroke="#c2410c" stroke-width="1.5"/>
+              <text x="25" y="44" text-anchor="middle" font-size="7" fill="#c2410c" font-weight="700">U2</text>
+              <rect x="60" y="8" width="20" height="14" rx="3" fill="#fef9c3" stroke="#854d0e" stroke-width="1.5"/>
+              <text x="70" y="18" text-anchor="middle" font-size="7" fill="#854d0e" font-weight="700">I1</text>
+              <rect x="60" y="28" width="20" height="14" rx="3" fill="#fef9c3" stroke="#854d0e" stroke-width="1.5"/>
+              <text x="70" y="38" text-anchor="middle" font-size="7" fill="#854d0e" font-weight="700">I2</text>
+              <rect x="60" y="43" width="20" height="14" rx="3" fill="#fef9c3" stroke="#854d0e" stroke-width="1.5"/>
+              <text x="70" y="53" text-anchor="middle" font-size="7" fill="#854d0e" font-weight="700">I3</text>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Knowledge Graphs -->
+        <div class="domain-card card-5">
+          <span class="card-emoji">📚</span>
+          <span class="card-domain">Knowledge Graphs</span>
+          <span class="card-desc">Entidades e relações (Wikidata, Freebase)</span>
+          <div class="card-svg-wrap">
+            <svg class="mini-svg" viewBox="0 0 120 60">
+              <defs>
+                <marker id="karr" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto">
+                  <path d="M0,0 L5,2.5 L0,5 Z" fill="#166534"/>
+                </marker>
+              </defs>
+              <line x1="28" y1="30" x2="58" y2="30" stroke="#166534" stroke-width="1.5" marker-end="url(#karr)"/>
+              <line x1="75" y1="30" x2="92" y2="15" stroke="#166534" stroke-width="1.5" marker-end="url(#karr)"/>
+              <line x1="75" y1="30" x2="92" y2="45" stroke="#166534" stroke-width="1.5" marker-end="url(#karr)"/>
+              <text x="43" y="26" text-anchor="middle" font-size="6" fill="#166534">nasce_em</text>
+              <rect x="5" y="22" width="23" height="16" rx="3" fill="#dcfce7" stroke="#166534" stroke-width="1.5"/>
+              <text x="16" y="33" text-anchor="middle" font-size="7" fill="#166534" font-weight="700">Ada</text>
+              <rect x="60" y="22" width="15" height="16" rx="3" fill="#dcfce7" stroke="#166534" stroke-width="1.5"/>
+              <text x="67" y="33" text-anchor="middle" font-size="6" fill="#166534" font-weight="700">UK</text>
+              <rect x="93" y="8" width="22" height="14" rx="3" fill="#dcfce7" stroke="#166534" stroke-width="1.5"/>
+              <text x="104" y="18" text-anchor="middle" font-size="6" fill="#166534" font-weight="700">1815</text>
+              <rect x="93" y="38" width="22" height="14" rx="3" fill="#dcfce7" stroke="#166534" stroke-width="1.5"/>
+              <text x="104" y="48" text-anchor="middle" font-size="6" fill="#166534" font-weight="700">Math</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="highlight-box teal" style="margin-top:0.3rem;">
+        <span class="icon">🌍</span>
+        <span>Passe o mouse sobre cada card para ver um esboço do grafo correspondente.</span>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide01.html'">← Anterior</button>
+      <div class="nav-dots" id="navDots"></div>
+      <button class="btn-nav btn-next" onclick="location.href='slide03.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    (function(){
+      const container = document.getElementById('navDots');
+      const CURRENT = 2;
+      const TOTAL = 20;
+      for (let i = 1; i <= TOTAL; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'dot' + (i === CURRENT ? ' active' : '');
+        dot.title = 'Slide ' + i;
+        dot.style.cursor = 'pointer';
+        dot.addEventListener('click', () => { location.href = 'slide' + String(i).padStart(2,'0') + '.html'; });
+        container.appendChild(dot);
+      }
+    })();
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') location.href = 'slide03.html';
+      if (e.key === 'ArrowLeft'  || e.key === 'PageUp')   location.href = 'slide01.html';
+    });
+  </script>
+</body>
+</html>

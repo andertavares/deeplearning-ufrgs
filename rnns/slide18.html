@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 18 – Input Gate e Conteúdo Candidato</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .svg-wrap { background:var(--bg3); border:1.5px solid var(--border2); border-radius:var(--radius-sm); padding:0.5rem; }
+    .lstm-cell-svg { width:100%; display:block; }
+    .eq-box { font-family:'Fira Code',monospace; font-size:0.82rem; background:var(--bg3);
+              border:1.5px solid var(--border2); border-radius:var(--radius-sm);
+              padding:0.4rem 0.7rem; color:var(--text); text-align:center; }
+    .num-example { background:var(--bg3); border:1.5px solid var(--border2); border-radius:var(--radius-sm); padding:0.6rem 0.7rem; }
+    .num-title { font-size:0.8rem; font-family:'Fira Code',monospace; font-weight:700; color:var(--blue); margin-bottom:0.35rem; }
+    .num-row { display:flex; align-items:center; gap:0.5rem; padding:0.18rem 0;
+               font-family:'Fira Code',monospace; font-size:0.82rem; }
+    .num-label { color:var(--text-muted); min-width:5.5rem; }
+    .num-vec { display:flex; gap:0.3rem; }
+    .num-cell { padding:0.15rem 0.5rem; border-radius:4px; font-weight:700; font-size:0.82rem; }
+    .num-cell.input-g { background:var(--blue-lt); color:var(--blue); border:1px solid #93c5fd; }
+    .num-cell.cand-g { background:var(--green-lt); color:var(--green); border:1px solid #86efac; }
+    .num-cell.result { background:var(--teal-lt); color:var(--teal); border:1px solid #5eead4; }
+    .num-divider { border-top:1px dashed var(--border2); margin:0.25rem 0; }
+    .num-hint { font-size:0.72rem; font-family:'Fira Code',monospace; color:var(--text-dim); margin-top:0.25rem; }
+    .dim-labels { display:flex; gap:0.3rem; margin-left:5.9rem; margin-bottom:0.1rem; }
+    .dim-lbl { min-width:3.1rem; text-align:center; font-size:0.68rem; font-family:'Fira Code',monospace; color:var(--text-dim); font-style:italic; }
+    .eq-pair { display:flex; flex-direction:column; gap:0.3rem; margin-top:0.4rem; }
+    .trans-box { padding:0.5rem 0.8rem; background:var(--teal-lt);
+                 border:1.5px solid var(--teal); border-radius:var(--radius-sm);
+                 font-size:0.84rem; color:var(--teal); font-weight:600; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Redes Neurais Recorrentes</span>
+      <span class="prof-tag" style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 11 · Slide 1 / 1</span>
+    </header>
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Input Gate e Conteúdo Candidato</h1>
+        <p class="slide-subtitle">A input gate (quanto) e o candidato (o quê) agem juntos sobre a memória</p>
+      </div>
+      <div class="content-split">
+        <div class="panel panel-left">
+          <h2 class="panel-title">🧠 LSTM — Input Gate e Candidato em Destaque</h2>
+          <!-- LSTM diagram: input gate + candidate highlighted (lstm.svg base) -->
+          <div class="svg-wrap">
+            <svg class="lstm-cell-svg" viewBox="0 0 570 390" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="mT18" markerWidth="4.5" markerHeight="3.5" refX="3.5" refY="1.75" orient="auto"><path d="M0,0 L4.5,1.75 L0,3.5 Z" fill="#0d6e6e"/></marker>
+                <marker id="mO18" markerWidth="4.5" markerHeight="3.5" refX="3.5" refY="1.75" orient="auto"><path d="M0,0 L4.5,1.75 L0,3.5 Z" fill="#c2410c"/></marker>
+                <marker id="mP18" markerWidth="4.5" markerHeight="3.5" refX="3.5" refY="1.75" orient="auto"><path d="M0,0 L4.5,1.75 L0,3.5 Z" fill="#7c3aed"/></marker>
+              </defs>
+              <image href="../lstm.svg" x="0" y="0" width="570" height="390"/>
+              <!-- σ_i circle (teal) -->
+              <circle cx="237" cy="161" r="18" fill="rgba(13,110,110,0.18)" stroke="#0d6e6e" stroke-width="3.5"/>
+              <!-- tanh_c circle (teal) -->
+              <circle cx="297" cy="161" r="18" fill="rgba(13,110,110,0.18)" stroke="#0d6e6e" stroke-width="3.5"/>
+              <!-- ×_ic circle (purple) -->
+              <circle cx="297" cy="125" r="14" fill="rgba(124,58,237,0.18)" stroke="#7c3aed" stroke-width="3.5"/>
+              <!-- + circle (teal) -->
+              <circle cx="297" cy="93" r="14" fill="rgba(13,110,110,0.18)" stroke="#0d6e6e" stroke-width="3.5"/>
+              <!-- σ_i → ×_ic (teal) -->
+              <polyline points="237,143 237,125 283,125" fill="none" stroke="#0d6e6e" stroke-width="3" marker-end="url(#mT18)"/>
+              <!-- tanh_c → ×_ic (teal) -->
+              <line x1="297" y1="143" x2="297" y2="139" stroke="#0d6e6e" stroke-width="3" marker-end="url(#mT18)"/>
+              <!-- ×_ic → + (purple) -->
+              <line x1="297" y1="111" x2="297" y2="107" stroke="#7c3aed" stroke-width="3" marker-end="url(#mP18)"/>
+              <!-- h bus (teal) -->
+              <line x1="108" y1="203" x2="325" y2="203" stroke="#0d6e6e" stroke-width="3"/>
+              <!-- h → σ_i (teal) -->
+              <line x1="237" y1="203" x2="237" y2="179" stroke="#0d6e6e" stroke-width="3" marker-end="url(#mT18)"/>
+              <!-- h → tanh_c (teal) -->
+              <line x1="297" y1="203" x2="297" y2="179" stroke="#0d6e6e" stroke-width="3" marker-end="url(#mT18)"/>
+              <!-- x_t bus (orange) -->
+              <line x1="177" y1="260" x2="343" y2="260" stroke="#c2410c" stroke-width="3"/>
+              <!-- x_t → σ_i (orange) -->
+              <line x1="237" y1="260" x2="237" y2="179" stroke="#c2410c" stroke-width="3" marker-end="url(#mO18)"/>
+              <!-- x_t → tanh_c (orange) -->
+              <line x1="297" y1="260" x2="297" y2="179" stroke="#c2410c" stroke-width="3" marker-end="url(#mO18)"/>
+
+            </svg>
+          </div>
+          <!-- Equations -->
+          <div class="eq-pair">
+            <div class="eq-box">i&#x209C; = &sigma;(Wi &middot; x&#x209C; + Ui &middot; h&#x209C;&#x208B;&#x2081; + bi)</div>
+            <div class="eq-box">c&#771;&#x209C; = tanh(Wc &middot; x&#x209C; + Uc &middot; h&#x209C;&#x208B;&#x2081; + bc)</div>
+          </div>
+          <!-- 2D numerical example -->
+          <div class="num-example" style="margin-top:0.4rem;">
+            <div class="num-title">📐 Exemplo Numérico (dim = 2)</div>
+            <div class="dim-labels">
+              <div class="dim-lbl">dim 1</div>
+              <div class="dim-lbl">dim 2</div>
+            </div>
+            <div class="num-row">
+              <span class="num-label">c&#771;&#x209C; =</span>
+              <div class="num-vec">
+                <span class="num-cell cand-g">0.60</span>
+                <span class="num-cell cand-g">0.70</span>
+              </div>
+            </div>
+            <div class="num-row">
+              <span class="num-label">i&#x209C; =</span>
+              <div class="num-vec">
+                <span class="num-cell input-g">0.40</span>
+                <span class="num-cell input-g">0.80</span>
+              </div>
+            </div>
+            <div class="num-divider"></div>
+            <div class="num-row">
+              <span class="num-label">i&#x209C; &#x2299; c&#771;&#x209C; =</span>
+              <div class="num-vec">
+                <span class="num-cell result">0.24</span>
+                <span class="num-cell result">0.56</span>
+              </div>
+            </div>
+            <div class="num-hint">dim 1: 0.40 × 0.60 = 0.24 &nbsp;|&nbsp; dim 2: 0.80 × 0.70 = 0.56</div>
+          </div>
+        </div>
+        <div class="panel panel-right">
+          <h2 class="panel-title">💡 Quanto Escrever e O Quê Escrever</h2>
+          <div class="concept-cards">
+            <div class="concept-card" style="--delay:0s">
+              <span class="card-icon">🚦</span>
+              <div class="card-text"><strong>Input gate i&#x209C; — intensidade</strong><p>Controla quanto de cada dimensão do candidato é absorvido. Valores em [0,1]. No exemplo: dim 1 absorve 40%, dim 2 absorve 80%.</p></div>
+            </div>
+            <div class="concept-card" style="--delay:0.1s">
+              <span class="card-icon">📝</span>
+              <div class="card-text"><strong>Candidato c&#771;&#x209C; — conteúdo</strong><p>Propõe o conteúdo a ser escrito. Saída de tanh, valores em [−1, 1]. Calculado com as mesmas entradas que i&#x209C; (x&#x209C; e h&#x209C;&#x208B;&#x2081;).</p></div>
+            </div>
+            <div class="concept-card" style="--delay:0.2s">
+              <span class="card-icon">✂️</span>
+              <div class="card-text"><strong>Papéis distintos</strong><p>i&#x209C; decide <em>quanto</em> entrar; c&#771;&#x209C; decide <em>o quê</em> entrar. Um candidato rico pode ser bloqueado por uma porta fechada.</p></div>
+            </div>
+            <div class="concept-card" style="--delay:0.3s">
+              <span class="card-icon">🎛️</span>
+              <div class="card-text"><strong>Por dimensão</strong><p>Cada dimensão do vetor tem sua própria intensidade de entrada (i&#x209C;) e seu próprio conteúdo candidato (c&#771;&#x209C;).</p></div>
+            </div>
+          </div>
+          <div class="highlight-box blue" style="margin-top:0.6rem;">
+            <span class="icon">🔗</span>
+            <span>Juntos, i&#x209C; &#x2299; c&#771;&#x209C; determina a nova informação a incorporar à memória — no exemplo: [0.24, 0.56].</span>
+          </div>
+          <div class="trans-box" style="margin-top:0.5rem;">➡️ Com f&#x209C; &#x2299; c&#x209C;&#x208B;&#x2081; e i&#x209C; &#x2299; c&#771;&#x209C; calculados, podemos agora atualizar a memória c&#x209C;.</div>
+        </div>
+      </div>
+    </main>
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide17.html'">&#8592; Anterior</button>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide20.html'">Próximo &#8594;</button>
+    </nav>
+  </div>
+</body>
+</html>

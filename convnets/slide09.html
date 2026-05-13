@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 9 – Convolução Passo a Passo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── Overall layout ─────────────────────────────────────────────────── */
+    .conv-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1rem;
+      flex: 1;
+      align-items: start;
+    }
+
+    .conv-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+      box-shadow: var(--shadow);
+    }
+
+    /* ── Canvas labels ──────────────────────────────────────────────────── */
+    .cv-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .cv-label {
+      font-size: 0.72rem;
+      font-family: 'Fira Code', monospace;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    canvas.conv-canvas {
+      image-rendering: pixelated;
+      border: 1.5px solid var(--border2);
+      border-radius: 5px;
+      display: block;
+    }
+
+    /* ── Position indicator ─────────────────────────────────────────────── */
+    .pos-indicator {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    .pos-indicator strong {
+      color: var(--purple);
+      font-size: 0.9rem;
+    }
+
+    /* ── Computation panel middle ───────────────────────────────────────── */
+    .calc-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .calc-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .calc-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 26px);
+      gap: 2px;
+    }
+
+    .calc-cell {
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.68rem;
+      font-weight: 700;
+      border-radius: 3px;
+      transition: background 0.25s, color 0.25s;
+    }
+
+    .cc-active { background: rgba(91,33,182,0.15); color: var(--purple); border: 1px solid rgba(91,33,182,0.3); }
+    .cc-zero   { background: var(--bg3); color: var(--text-dim); border: 1px solid var(--border2); }
+    .cc-pos    { background: rgba(22,101,52,0.12); color: var(--green); border: 1px solid rgba(22,101,52,0.3); }
+    .cc-neg    { background: rgba(185,28,28,0.1);  color: var(--red);   border: 1px solid rgba(185,28,28,0.3); }
+    .cc-filter-pos { background: rgba(91,33,182,0.12); color: var(--purple); border: 1px solid rgba(91,33,182,0.3); }
+    .cc-filter-neg { background: rgba(185,28,28,0.1);  color: var(--red);   border: 1px solid rgba(185,28,28,0.25); }
+    .cc-filter-zero { background: var(--bg2); color: var(--text-dim); border: 1px solid var(--border2); }
+
+    .calc-op {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-dim);
+    }
+
+    .calc-sum-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.92rem;
+      font-weight: 700;
+      padding: 0.45rem 0.85rem;
+      border-radius: var(--radius-sm);
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+    }
+
+    .sum-value {
+      font-size: 1.05rem;
+      font-weight: 800;
+      transition: color 0.3s;
+    }
+
+    .calc-placeholder {
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 0.88rem;
+      padding: 1.5rem 0;
+      font-style: italic;
+    }
+
+    /* ── Editable filter grid ───────────────────────────────────────────── */
+    .filter-grid-dom {
+      display: grid;
+      grid-template-columns: repeat(3, 30px);
+      gap: 2px;
+    }
+
+    .filter-cell {
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Fira Code', monospace;
+      font-weight: 700;
+      border-radius: 4px;
+      font-size: 0.75rem;
+    }
+
+    .fc-pos  { background: rgba(91,33,182,0.12); color: var(--purple); border: 1px solid rgba(91,33,182,0.3); }
+    .fc-neg  { background: rgba(185,28,28,0.1);  color: var(--red);    border: 1px solid rgba(185,28,28,0.25); }
+    .fc-zero { background: var(--bg2);            color: var(--text-dim); border: 1px solid var(--border2); }
+
+    .filter-grid-dom input[type=number] {
+      -moz-appearance: textfield;
+      appearance: textfield;
+      width: 28px;
+      height: 28px;
+      border: none;
+      background: transparent;
+      color: inherit;
+      font-family: 'Fira Code', monospace;
+      font-weight: 700;
+      font-size: 0.75rem;
+      text-align: center;
+      outline: none;
+      padding: 0;
+      margin: 0;
+      cursor: text;
+    }
+    .filter-grid-dom input[type=number]::-webkit-outer-spin-button,
+    .filter-grid-dom input[type=number]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    /* ── Controls bar ───────────────────────────────────────────────────── */
+    .controls-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+      padding: 0.7rem 0;
+    }
+
+    .ctrl-label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      font-family: 'Fira Code', monospace;
+    }
+
+    .ctrl-select {
+      padding: 0.35rem 0.7rem;
+      border-radius: 999px;
+      border: 1.5px solid var(--border2);
+      background: var(--bg3);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .ctrl-btn {
+      padding: 0.42rem 1.1rem;
+      border-radius: 999px;
+      border: 1.5px solid var(--border2);
+      background: var(--bg3);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+
+    .ctrl-btn:hover { border-color: var(--purple); color: var(--purple); }
+
+    .ctrl-btn.primary {
+      background: var(--purple);
+      border-color: var(--purple);
+      color: #fff;
+    }
+
+    .ctrl-btn.primary:hover { background: #4c1d95; border-color: #4c1d95; }
+
+    .ctrl-btn:disabled {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    .step-counter {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-left: auto;
+    }
+
+    /* ── Progress bar ───────────────────────────────────────────────────── */
+    .progress-wrap {
+      width: 100%;
+      height: 6px;
+      background: var(--bg3);
+      border-radius: 999px;
+      border: 1px solid var(--border2);
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--purple);
+      border-radius: 999px;
+      transition: width 0.3s ease;
+    }
+
+    /* ── Interpretation guide ───────────────────────────────────────────── */
+    .interp-guide {
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+
+    .interp-chip {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.85rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      font-family: 'Fira Code', monospace;
+    }
+
+    .interp-chip.high {
+      background: rgba(91,33,182,0.12);
+      border: 1.5px solid rgba(91,33,182,0.3);
+      color: var(--purple);
+    }
+
+    .interp-chip.mid {
+      background: rgba(202,138,4,0.1);
+      border: 1.5px solid rgba(202,138,4,0.3);
+      color: var(--yellow);
+    }
+
+    .interp-chip.low {
+      background: rgba(185,28,28,0.1);
+      border: 1.5px solid rgba(185,28,28,0.25);
+      color: var(--red);
+    }
+
+    /* ── Done banner ────────────────────────────────────────────────────── */
+    .done-banner {
+      display: none;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.65rem 1.1rem;
+      border-radius: var(--radius-sm);
+      background: var(--green-lt);
+      border: 1.5px solid #86efac;
+      color: var(--green);
+      font-size: 0.92rem;
+      font-weight: 700;
+    }
+
+    .done-banner.visible { display: flex; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Redes Convolucionais</span>
+      <span class="prof-tag" style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 3 · Slide 2 / 2</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Convolução Passo a Passo</h1>
+        <p class="slide-subtitle">Veja como o filtro desliza pela imagem e constrói o mapa de saída</p>
+      </div>
+
+      <!-- ── Three-column visualization ── -->
+      <div class="conv-layout">
+
+        <!-- Column 1: Input image -->
+        <div class="conv-panel">
+          <div class="panel-title">Imagem de Entrada (9×9)</div>
+          <div class="cv-wrap">
+            <canvas id="cv-input" class="conv-canvas" width="162" height="162"></canvas>
+            <div class="cv-label">entrada — janela destacada em <span style="color:var(--purple);font-weight:700;">roxo</span></div>
+          </div>
+          <div class="pos-indicator" id="pos-indicator">
+            Clique em <strong>"Próximo passo"</strong> para iniciar
+          </div>
+        </div>
+
+        <!-- Column 2: Computation detail -->
+        <div class="conv-panel">
+          <div class="panel-title">Cálculo Atual</div>
+          <div id="calc-area">
+            <div class="calc-placeholder">
+              O cálculo aparecerá aqui quando você avançar o primeiro passo.
+            </div>
+          </div>
+        </div>
+
+        <!-- Column 3: Output feature map -->
+        <div class="conv-panel">
+          <div class="panel-title">Mapa de Saída (7×7)</div>
+          <div class="cv-wrap">
+            <canvas id="cv-output" class="conv-canvas" width="140" height="140"></canvas>
+            <div class="cv-label">feature map — sendo construído</div>
+          </div>
+
+          <!-- Value interpretation -->
+          <div style="font-size:0.78rem;font-weight:700;color:var(--text-muted);margin-top:0.25rem;">Interpretação do valor</div>
+          <div class="interp-guide">
+            <div class="interp-chip high">■ alto → padrão presente</div>
+            <div class="interp-chip mid">■ médio → presença parcial</div>
+            <div class="interp-chip low">■ baixo/neg → padrão ausente</div>
+          </div>
+
+          <!-- Colorbar legend -->
+          <div style="display:flex;align-items:center;gap:0.4rem;font-size:0.72rem;font-family:'Fira Code',monospace;color:var(--text-muted);">
+            <span style="color:#ff4444;font-weight:700;">mín</span>
+            <div style="flex:1;height:8px;border-radius:4px;background:linear-gradient(to right,#ff0000,#000000,#ffffff);border:1px solid var(--border2);"></div>
+            <span style="color:#ffffff;font-weight:700;">máx</span>
+          </div>
+
+          <div class="done-banner" id="done-banner">
+            ✓ Feature map completo! Todas as 49 posições computadas.
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Controls bar ── -->
+      <div class="conv-panel" style="flex-direction:row;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+        <span class="ctrl-label">Filtro:</span>
+        <select class="ctrl-select" id="filter-select">
+          <option value="0">Diagonal ↘</option>
+          <option value="1">Diagonal ↗</option>
+          <option value="2">Centro ✖</option>
+        </select>
+
+        <button class="ctrl-btn" id="btn-reset" onclick="resetAll()">⏮ Reiniciar</button>
+        <button class="ctrl-btn primary" id="btn-step" onclick="doStep()">⏭ Próximo passo</button>
+        <button class="ctrl-btn" id="btn-auto" onclick="toggleAuto()">▶ Executar automático</button>
+
+        <span class="step-counter" id="step-counter">0 / 49 posições</span>
+      </div>
+
+      <!-- Progress bar -->
+      <div class="progress-wrap">
+        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+
+      <!-- Insight box -->
+      <div class="insight-box">
+        <span class="i-icon">💡</span>
+        <div class="i-text">
+          <strong>Multiplicação elemento a elemento:</strong> a janela da imagem é alinhada com o filtro, cada par é multiplicado, e os 9 produtos são somados. Esse valor único é gravado no mapa de saída na posição correspondente.
+        </div>
+      </div>
+
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide08.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+      </div>
+      <button class="btn-nav btn-next"
+        style="background:var(--purple);border-color:var(--purple);color:#fff;"
+        onclick="location.href='slide10.html'">
+        Próximo Bloco →
+      </button>
+    </nav>
+  </div>
+
+  <script>
+    /* ── Constants ──────────────────────────────────────────────────────── */
+    const NI = 9;   // input size
+    const F  = 3;   // filter size
+    const NO = NI - F + 1;  // output size = 7
+    const TOTAL_STEPS = NO * NO;  // 49
+
+    const CELL_IN  = 18;  // px per input cell
+    const CELL_OUT = 20;  // px per output cell
+
+    /* ── Filters ────────────────────────────────────────────────────────── */
+    const FILTERS = [
+      { name: 'Diagonal ↘', weights: [[ 1,-1,-1],[-1, 1,-1],[-1,-1, 1]] },
+      { name: 'Diagonal ↗', weights: [[-1,-1, 1],[-1, 1,-1],[ 1,-1,-1]] },
+      { name: 'Centro ✖',   weights: [[ 1,-1, 1],[-1, 1,-1],[ 1,-1, 1]] },
+    ];
+
+    /* ── Input tile (X, 9×9) ────────────────────────────────────────────── */
+    const tileX = [
+      [0,0,0,0,0,0,0,0,0],
+      [0,1,0,0,0,0,0,1,0],
+      [0,0,1,0,0,0,1,0,0],
+      [0,0,0,1,0,1,0,0,0],
+      [0,0,0,0,1,0,0,0,0],
+      [0,0,0,1,0,1,0,0,0],
+      [0,0,1,0,0,0,1,0,0],
+      [0,1,0,0,0,0,0,1,0],
+      [0,0,0,0,0,0,0,0,0],
+    ];
+
+    /* ── State ──────────────────────────────────────────────────────────── */
+    let currentStep = -1;   // -1 = not started
+    let autoTimer   = null;
+    let outputMap   = [];   // stores computed values
+    let filterIdx   = parseInt(localStorage.getItem('selectedFilter') || '0');
+
+    /* ── Restore filter selector from localStorage ──────────────────────── */
+    const filterSelect = document.getElementById('filter-select');
+    filterSelect.value = filterIdx;
+    filterSelect.addEventListener('change', () => {
+      filterIdx = parseInt(filterSelect.value);
+      localStorage.setItem('selectedFilter', filterIdx);
+      resetAll();
+    });
+
+    /* ── Helpers ────────────────────────────────────────────────────────── */
+    function stepToRC(step) {
+      return { r: Math.floor(step / NO), c: step % NO };
+    }
+
+    function getWindow(r, c) {
+      const w = [];
+      for (let fr = 0; fr < F; fr++) {
+        const row = [];
+        for (let fc = 0; fc < F; fc++) row.push(tileX[r + fr][c + fc]);
+        w.push(row);
+      }
+      return w;
+    }
+
+    function computeProducts(win, weights) {
+      const p = [];
+      for (let i = 0; i < F; i++) {
+        const row = [];
+        for (let j = 0; j < F; j++) row.push(win[i][j] * weights[i][j]);
+        p.push(row);
+      }
+      return p;
+    }
+
+    function sumProducts(products) {
+      let s = 0;
+      products.forEach(row => row.forEach(v => s += v));
+      return s;
+    }
+
+    /* ── Draw input image ───────────────────────────────────────────────── */
+    function drawInput(highlightR, highlightC) {
+      const cv  = document.getElementById('cv-input');
+      const ctx = cv.getContext('2d');
+      ctx.fillStyle = '#111827';
+      ctx.fillRect(0, 0, cv.width, cv.height);
+
+      for (let r = 0; r < NI; r++) {
+        for (let c = 0; c < NI; c++) {
+          if (tileX[r][c]) {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(c * CELL_IN, r * CELL_IN, CELL_IN, CELL_IN);
+          }
+        }
+      }
+
+      // Grid lines
+      ctx.strokeStyle = 'rgba(51,65,85,0.35)';
+      ctx.lineWidth = 0.5;
+      for (let i = 0; i <= NI; i++) {
+        ctx.beginPath(); ctx.moveTo(i * CELL_IN, 0);           ctx.lineTo(i * CELL_IN, cv.height); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, i * CELL_IN);           ctx.lineTo(cv.width, i * CELL_IN);  ctx.stroke();
+      }
+
+      // Highlight window
+      if (highlightR !== undefined && highlightC !== undefined) {
+        const x = highlightC * CELL_IN;
+        const y = highlightR * CELL_IN;
+        const sz = F * CELL_IN;
+        ctx.strokeStyle = '#5b21b6';
+        ctx.lineWidth = 2.5;
+        ctx.strokeRect(x + 1, y + 1, sz - 2, sz - 2);
+        ctx.fillStyle = 'rgba(91,33,182,0.1)';
+        ctx.fillRect(x + 1, y + 1, sz - 2, sz - 2);
+      }
+    }
+
+    /* ── Draw output feature map ────────────────────────────────────────── */
+    function drawOutput(highlightR, highlightC) {
+      const cv  = document.getElementById('cv-output');
+      const ctx = cv.getContext('2d');
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, cv.width, cv.height);
+
+      // Find max abs for normalisation
+      let maxAbs = 0;
+      outputMap.forEach(row => row.forEach(v => { if (Math.abs(v) > maxAbs) maxAbs = Math.abs(v); }));
+      if (maxAbs === 0) maxAbs = 1;
+
+      for (let r = 0; r < NO; r++) {
+        for (let c = 0; c < NO; c++) {
+          if (outputMap[r] !== undefined && outputMap[r][c] !== undefined) {
+            const v = outputMap[r][c];
+            if (v === 0) continue;
+            const t = maxAbs > 0 ? Math.abs(v) / maxAbs : 0;
+            const g = Math.round(255 * t);
+            ctx.fillStyle = v > 0 ? `rgb(${g},${g},${g})` : `rgb(${g},0,0)`;
+            ctx.fillRect(c * CELL_OUT, r * CELL_OUT, CELL_OUT, CELL_OUT);
+          }
+        }
+      }
+
+      // Grid lines
+      ctx.strokeStyle = 'rgba(51,65,85,0.25)';
+      ctx.lineWidth = 0.5;
+      for (let i = 0; i <= NO; i++) {
+        ctx.beginPath(); ctx.moveTo(i * CELL_OUT, 0);            ctx.lineTo(i * CELL_OUT, cv.height); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, i * CELL_OUT);            ctx.lineTo(cv.width, i * CELL_OUT);  ctx.stroke();
+      }
+
+      // Highlight current output cell
+      if (highlightR !== undefined && highlightC !== undefined) {
+        ctx.strokeStyle = '#5b21b6';
+        ctx.lineWidth = 2.5;
+        ctx.strokeRect(
+          highlightC * CELL_OUT + 1,
+          highlightR * CELL_OUT + 1,
+          CELL_OUT - 2,
+          CELL_OUT - 2
+        );
+      }
+    }
+
+    /* ── Build editable filter editor ──────────────────────────────────── */
+    function buildFilterEditor(weights) {
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:0.35rem;';
+
+      const title = document.createElement('div');
+      title.style.cssText = 'font-size:0.72rem;font-family:Fira Code,monospace;color:var(--text-muted);text-align:center;';
+      title.textContent = 'Filtro (editável)';
+      wrap.appendChild(title);
+
+      const grid = document.createElement('div');
+      grid.className = 'filter-grid-dom';
+
+      weights.forEach((row, fr) => row.forEach((v, fc) => {
+        const cell = document.createElement('div');
+        cell.className = 'filter-cell ' + (v > 0 ? 'fc-pos' : v < 0 ? 'fc-neg' : 'fc-zero');
+        const inp = document.createElement('input');
+        inp.type = 'number';
+        inp.value = v;
+        inp.min = -9;
+        inp.max = 9;
+        inp.step = 1;
+        inp.title = 'Editar peso';
+        inp.addEventListener('click', e => e.stopPropagation());
+        inp.addEventListener('input', () => {
+          // Only update cell colour — do NOT parse/reset mid-type so that
+          // typing "-1" works: the "-" alone is not yet a valid number.
+          const raw = inp.value;
+          if (raw === '' || raw === '-') return;
+          const val = parseInt(raw);
+          if (isNaN(val)) return;
+          cell.className = 'filter-cell ' + (val > 0 ? 'fc-pos' : val < 0 ? 'fc-neg' : 'fc-zero');
+        });
+        inp.addEventListener('change', () => {
+          const val = Math.max(-9, Math.min(9, parseInt(inp.value) || 0));
+          inp.value = val;
+          weights[fr][fc] = val;
+          cell.className = 'filter-cell ' + (val > 0 ? 'fc-pos' : val < 0 ? 'fc-neg' : 'fc-zero');
+          resetAll();
+        });
+        cell.appendChild(inp);
+        grid.appendChild(cell);
+      }));
+
+      wrap.appendChild(grid);
+
+      const hint = document.createElement('div');
+      hint.style.cssText = 'font-size:0.65rem;color:var(--text-dim);text-align:center;font-style:italic;';
+      hint.textContent = 'Editar um peso reinicia a convolução';
+      wrap.appendChild(hint);
+
+      return wrap;
+    }
+
+    /* ── Build computation detail DOM ───────────────────────────────────── */
+    function buildCalcDOM(win, weights, products, sumVal) {
+      const area = document.getElementById('calc-area');
+      area.innerHTML = '';
+      area.appendChild(buildFilterEditor(weights));
+
+      const sep = document.createElement('div');
+      sep.className = 'divider';
+      area.appendChild(sep);
+
+      function makeGrid(data, cellClassFn) {
+        const g = document.createElement('div');
+        g.className = 'calc-grid';
+        data.forEach(row => row.forEach(v => {
+          const cell = document.createElement('div');
+          cell.className = 'calc-cell ' + cellClassFn(v);
+          cell.textContent = v;
+          g.appendChild(cell);
+        }));
+        return g;
+      }
+
+      // Row 1: "Janela" label
+      const lbl1 = document.createElement('div');
+      lbl1.style.cssText = 'font-size:0.72rem;font-family:Fira Code,monospace;color:var(--text-muted);text-align:center;margin-bottom:0.15rem;';
+      lbl1.textContent = 'janela × filtro';
+      area.appendChild(lbl1);
+
+      // Row 2: window × filter = products
+      const row = document.createElement('div');
+      row.className = 'calc-row';
+
+      row.appendChild(makeGrid(win, v => v > 0 ? 'cc-active' : 'cc-zero'));
+
+      const opX = document.createElement('div');
+      opX.className = 'calc-op';
+      opX.textContent = '×';
+      row.appendChild(opX);
+
+      const weightsData = weights.map(r => [...r]);
+      row.appendChild(makeGrid(weightsData, v => v > 0 ? 'cc-filter-pos' : v < 0 ? 'cc-filter-neg' : 'cc-filter-zero'));
+
+      const opEq = document.createElement('div');
+      opEq.className = 'calc-op';
+      opEq.textContent = '=';
+      row.appendChild(opEq);
+
+      row.appendChild(makeGrid(products, v => v > 0 ? 'cc-pos' : v < 0 ? 'cc-neg' : 'cc-zero'));
+
+      area.appendChild(row);
+
+      // Labels under grids
+      const labelsRow = document.createElement('div');
+      labelsRow.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:0.5rem;';
+      const lbls = ['janela', '×', 'filtro', '=', 'produtos'];
+      const widths = ['auto', '1rem', 'auto', '1rem', 'auto'];
+      lbls.forEach((txt, i) => {
+        const s = document.createElement('div');
+        s.style.cssText = `font-size:0.62rem;font-family:Fira Code,monospace;color:var(--text-dim);text-align:center;width:${widths[i]};`;
+        if (i % 2 === 0) s.style.width = '82px';
+        s.textContent = txt;
+        labelsRow.appendChild(s);
+      });
+      area.appendChild(labelsRow);
+
+      // Divider
+      const div = document.createElement('div');
+      div.className = 'divider';
+      area.appendChild(div);
+
+      // Sum row
+      const sumRow = document.createElement('div');
+      sumRow.className = 'calc-sum-row';
+
+      const sumLbl = document.createElement('span');
+      sumLbl.textContent = 'Σ produtos =';
+      sumLbl.style.color = 'var(--text-muted)';
+      sumRow.appendChild(sumLbl);
+
+      const sumV = document.createElement('span');
+      sumV.className = 'sum-value';
+      sumV.textContent = sumVal;
+      if (sumVal > 2)       sumV.style.color = '#5b21b6';
+      else if (sumVal > 0)  sumV.style.color = '#854d0e';
+      else if (sumVal === 0) sumV.style.color = 'var(--text-dim)';
+      else                   sumV.style.color = '#b91c1c';
+      sumRow.appendChild(sumV);
+      area.appendChild(sumRow);
+
+      // Interpretation of current value
+      const interp = document.createElement('div');
+      interp.style.cssText = 'font-size:0.8rem;color:var(--text-muted);line-height:1.45;padding:0.4rem 0.5rem;background:var(--bg3);border-radius:var(--radius-sm);border:1px solid var(--border2);';
+      if (sumVal > 2) {
+        interp.innerHTML = '🟣 <strong style="color:var(--purple)">Valor alto</strong> → o padrão buscado está presente nesta posição.';
+      } else if (sumVal > 0) {
+        interp.innerHTML = '🟡 <strong style="color:#854d0e">Valor positivo baixo</strong> → presença parcial do padrão.';
+      } else if (sumVal === 0) {
+        interp.innerHTML = '⬜ <strong style="color:var(--text-dim)">Zero</strong> → padrão neutro, sem resposta.';
+      } else {
+        interp.innerHTML = '🔴 <strong style="color:var(--red)">Valor negativo</strong> → padrão ausente ou oposto ao que o filtro detecta.';
+      }
+      area.appendChild(interp);
+
+      // Output position info
+      const outInfo = document.createElement('div');
+      outInfo.style.cssText = 'font-size:0.75rem;font-family:Fira Code,monospace;color:var(--text-muted);text-align:center;';
+      outInfo.innerHTML = `Gravado em <strong style="color:var(--purple)">mapa[${Math.floor(currentStep / NO)}][${currentStep % NO}]</strong>`;
+      area.appendChild(outInfo);
+    }
+
+    /* ── Update step ────────────────────────────────────────────────────── */
+    function updateView() {
+      const weights = FILTERS[filterIdx].weights;
+
+      if (currentStep < 0) {
+        drawInput();
+        drawOutput();
+        document.getElementById('pos-indicator').innerHTML =
+          'Clique em <strong>"Próximo passo"</strong> para iniciar';
+        const area = document.getElementById('calc-area');
+        area.innerHTML = '';
+        area.appendChild(buildFilterEditor(weights));
+        const ph = document.createElement('div');
+        ph.className = 'calc-placeholder';
+        ph.textContent = 'O cálculo aparecerá aqui quando você avançar o primeiro passo.';
+        area.appendChild(ph);
+        document.getElementById('step-counter').textContent = '0 / 49 posições';
+        document.getElementById('progress-fill').style.width = '0%';
+        document.getElementById('done-banner').classList.remove('visible');
+        return;
+      }
+
+      const { r, c } = stepToRC(currentStep);
+      const win      = getWindow(r, c);
+      const products = computeProducts(win, weights);
+      const sumVal   = sumProducts(products);
+
+      // Store in output map
+      if (!outputMap[r]) outputMap[r] = [];
+      outputMap[r][c] = sumVal;
+
+      drawInput(r, c);
+      drawOutput(r, c);
+      buildCalcDOM(win, weights, products, sumVal);
+
+      document.getElementById('pos-indicator').innerHTML =
+        `Janela em <strong>(lin ${r}, col ${c})</strong> — entrada[${r}..${r+2}][${c}..${c+2}]`;
+      document.getElementById('step-counter').textContent =
+        `${currentStep + 1} / 49 posições`;
+      document.getElementById('progress-fill').style.width =
+        ((currentStep + 1) / TOTAL_STEPS * 100).toFixed(1) + '%';
+
+      const isDone = currentStep === TOTAL_STEPS - 1;
+      document.getElementById('done-banner').classList.toggle('visible', isDone);
+      document.getElementById('btn-step').disabled = isDone;
+    }
+
+    /* ── Controls ───────────────────────────────────────────────────────── */
+    function doStep() {
+      if (currentStep < TOTAL_STEPS - 1) {
+        currentStep++;
+        updateView();
+      }
+    }
+
+    function resetAll() {
+      if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
+      document.getElementById('btn-auto').textContent = '▶ Executar automático';
+      document.getElementById('btn-auto').classList.remove('primary');
+      currentStep = -1;
+      outputMap   = [];
+      document.getElementById('btn-step').disabled = false;
+      updateView();
+    }
+
+    function toggleAuto() {
+      const btn = document.getElementById('btn-auto');
+      if (autoTimer) {
+        clearInterval(autoTimer);
+        autoTimer = null;
+        btn.textContent = '▶ Executar automático';
+        btn.classList.remove('primary');
+      } else {
+        btn.textContent = '⏸ Pausar';
+        btn.classList.add('primary');
+        autoTimer = setInterval(() => {
+          if (currentStep < TOTAL_STEPS - 1) {
+            currentStep++;
+            updateView();
+          } else {
+            clearInterval(autoTimer);
+            autoTimer = null;
+            btn.textContent = '▶ Executar automático';
+            btn.classList.remove('primary');
+          }
+        }, 220);
+      }
+    }
+
+    /* ── Init ───────────────────────────────────────────────────────────── */
+    updateView();
+  </script>
+</body>
+</html>

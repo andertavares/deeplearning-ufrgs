@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 01 – Autoencoders e GANs</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .chip-row {
+      display: flex; gap: 0.7rem; flex-wrap: wrap; justify-content: center; margin-top: 0.6rem;
+    }
+    .chip {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      padding: 0.45rem 1.1rem; border-radius: 999px;
+      background: var(--bg3); border: 1.5px solid var(--border2);
+      font-size: 0.95rem; font-weight: 600; color: var(--text-muted);
+    }
+    .chip.teal  { background: var(--teal-lt);   border-color: #5eead4; color: var(--teal); }
+    .chip.blue  { background: var(--blue-lt);   border-color: #93c5fd; color: var(--blue); }
+    .chip.cyan  { background: var(--cyan-lt);   border-color: #67e8f9; color: var(--cyan); }
+    .chip.green { background: var(--green-lt);  border-color: #86efac; color: var(--green); }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">IA Generativa</span>
+      <span style="font-size:0.9rem;color:var(--text-muted);font-weight:500;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 1 · Slide 1 / 24</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block" style="padding:1.2rem 0 0.5rem;">
+        <h1 class="slide-title">Autoencoders e GANs</h1>
+        <p class="slide-subtitle">Uma introdução à IA Generativa</p>
+      </div>
+
+      <div class="insight-box" style="max-width:680px;margin:0 auto;">
+        <span class="i-icon">🧠</span>
+        <div class="i-text">
+          De redes <strong>preditivas</strong> a redes que <strong>criam</strong> —
+          compressão, representação e síntese de dados novos a partir de exemplos existentes.
+        </div>
+      </div>
+
+      <div class="panel" style="max-width:680px;margin:0 auto;align-items:center;text-align:center;">
+        <p style="font-size:1rem;color:var(--text-muted);line-height:1.65;">
+          Nesta aula aprendemos como redes neurais podem aprender a
+          <em>entender a estrutura interna</em> dos dados — e usá-la para gerar exemplos novos e realistas.
+        </p>
+        <div class="chip-row">
+          <span class="chip teal">🧠 Representação</span>
+          <span class="chip blue">🗜 Compressão</span>
+          <span class="chip cyan">✨ Síntese</span>
+          <span class="chip green">🎨 Geração</span>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" disabled>← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide02.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') location.href = 'slide02.html';
+    });
+  </script>
+</body>
+</html>

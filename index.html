@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Deep Learning — UFRGS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:        #f8f9fb;
+      --bg2:       #ffffff;
+      --bg3:       #f0f2f6;
+      --border:    #c7d0e0;
+      --text:      #0f1724;
+      --text-muted:#3d4f6e;
+      --text-dim:  #6b7fa3;
+      --purple:    #5b21b6;
+      --purple-lt: #ede9fe;
+      --blue:      #1d4ed8;
+      --blue-lt:   #dbeafe;
+      --cyan:      #0e7490;
+      --cyan-lt:   #cffafe;
+      --green:     #166534;
+      --green-lt:  #dcfce7;
+      --orange:    #c2410c;
+      --orange-lt: #ffedd5;
+      --pink:      #9d174d;
+      --pink-lt:   #fce7f3;
+      --grad1:     linear-gradient(135deg, #5b21b6 0%, #1d4ed8 100%);
+      --shadow:    0 2px 16px rgba(15,23,36,0.10);
+      --radius:    18px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 4rem 2rem 6rem;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.4rem 1.2rem;
+      border-radius: 999px;
+      background: rgba(91,33,182,0.08);
+      border: 1px solid rgba(91,33,182,0.25);
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--purple);
+      margin-bottom: 1.4rem;
+    }
+    h1 {
+      font-size: 3.6rem;
+      font-weight: 800;
+      background: var(--grad1);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 1rem;
+    }
+    .hero-sub {
+      color: var(--text-muted);
+      font-size: 1.3rem;
+      max-width: 600px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* ── Grid ── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.8rem;
+      max-width: 1100px;
+      width: 100%;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 2.2rem 2rem;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+      transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 32px rgba(15,23,36,0.15);
+      border-color: var(--card-accent);
+    }
+
+    .card-icon {
+      font-size: 2.6rem;
+      line-height: 1;
+    }
+    .card-title {
+      font-size: 1.7rem;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      color: var(--card-accent);
+    }
+    .card-desc {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+      flex: 1;
+    }
+    .card-link {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--card-accent);
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      margin-top: 0.4rem;
+    }
+
+    /* per-card accent colors */
+    .card-convnets  { --card-accent: #5b21b6; }
+    .card-rnns      { --card-accent: #0e7490; }
+    .card-transformers { --card-accent: #1d4ed8; }
+    .card-vit       { --card-accent: #166534; }
+    .card-ia-gen    { --card-accent: #c2410c; }
+    .card-difusao   { --card-accent: #9d174d; }
+    .card-multimodal { --card-accent: #854d0e; }
+    .card-gnns      { --card-accent: #0f766e; }
+  </style>
+</head>
+<body>
+
+  <div class="hero">
+    <div class="badge">UFRGS · Materiais de Deep Learning</div>
+    <h1>Slides Interativos para Aprendizes Profundos</h1>
+    <p class="hero-sub">Pelo prof. <a href="http://inf.ufrgs.br/~artavares">Anderson Rocha Tavares</a></p>
+  </div>
+
+  <div class="grid">
+
+    <a class="card card-convnets" href="convnets/index.html">
+      <div class="card-icon">🧠</div>
+      <div class="card-title">Redes Convolucionais</div>
+      <div class="card-desc">CNNs, filtros, pooling, arquiteturas clássicas e modernas.</div>
+      <span class="card-link">Abrir slides →</span>
+    </a>
+
+    <a class="card card-rnns" href="rnns/index.html">
+      <div class="card-icon">🔁</div>
+      <div class="card-title">RNNs</div>
+      <div class="card-desc">Redes recorrentes, LSTM, GRU e modelagem de sequências.</div>
+      <span class="card-link">Abrir slides →</span>
+    </a>
+
+    <a class="card card-transformers" href="transformers/index.html">
+      <div class="card-icon">⚡</div>
+      <div class="card-title">Transformers</div>
+      <div class="card-desc">Atenção, self-attention, BERT, GPT e arquitetura completa.</div>
+      <span class="card-link">Abrir slides →</span>
+    </a>
+
+    <a class="card card-vit" href="vit/index.html">
+      <div class="card-icon">👁️</div>
+      <div class="card-title">Vision Transformers</div>
+      <div class="card-desc">ViT, patches, CLIP, aprendizado contrastivo e zero-shot.</div>
+      <span class="card-link">Abrir slides →</span>
+    </a>
+
+    <a class="card card-ia-gen" href="ia-gen/index.html">
+      <div class="card-icon">🎨</div>
+      <div class="card-title">IA Generativa</div>
+      <div class="card-desc">Autoencoders, VAEs, GANs e geração de conteúdo.</div>
+      <span class="card-link">Abrir slides →</span>
+    </a>
+
+    <a class="card card-difusao" href="difusao/index.html">
+      <div class="card-icon">🌫️</div>
+      <div class="card-title">Modelos de Difusão</div>
+      <div class="card-desc">DDPM, score matching, geração de imagens por difusão.</div>
+      <span class="card-link">Abrir slides →</span>
+    </a>
+
+    <a class="card card-multimodal" href="multimodal/index.html">
+      <div class="card-icon">🔗</div>
+      <div class="card-title">Multimodal</div>
+      <div class="card-desc">Fusão de visão e linguagem, modelos multimodais modernos.</div>
+      <span class="card-link">Abrir slides →</span>
+    </a>
+
+    <a class="card card-gnns" href="gnns/index.html">
+      <div class="card-icon">🕸️</div>
+      <div class="card-title">GNNs</div>
+      <div class="card-desc">Redes neurais em grafos, message passing e aplicações.</div>
+      <span class="card-link">Abrir slides →</span>
+    </a>
+
+  </div>
+
+  <footer style="margin-top: 5rem; color: var(--text-dim); font-size: 1rem; text-align: center; line-height: 1.7;">
+    UFRGS · Curso de Deep Learning · Prof. Anderson Rocha Tavares · Slides vibe-codados com ❤️
+  </footer>
+
+</body>
+</html>

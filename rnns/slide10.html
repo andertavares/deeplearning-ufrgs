@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 10 – Estado Oculto como Memória — Experimente</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .toggle-wrap {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+    .toggle-btn {
+      padding: 0.65rem 1.8rem;
+      border-radius: 24px;
+      border: 2.5px solid var(--border2);
+      font-family: 'Fira Code', monospace;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+      background: var(--bg3);
+      color: var(--text);
+    }
+    .toggle-btn.mem-off { border-color: #ef4444; color: #ef4444; background: #ef444410; }
+    .toggle-btn.mem-on  { border-color: #16a34a; color: #16a34a; background: #16a34a10; }
+    .rnn-svg { width: 100%; display: block; }
+    .word-chips {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+      margin-top: 0.6rem;
+      flex-wrap: wrap;
+    }
+    .word-chip-s {
+      padding: 0.35rem 0.75rem;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      transition: all 0.4s;
+    }
+    .chip-grey { background: var(--bg3); border: 2px solid var(--border2); color: var(--text-dim); }
+    .chip-teal { background: linear-gradient(135deg, #0d6e6e, #1d4ed8); border: 2px solid #0d6e6e; color: white; }
+    .desc-card {
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 1rem;
+      margin-bottom: 0.8rem;
+      font-size: 0.95rem;
+      transition: all 0.3s;
+    }
+    .desc-card.good { border-color: #16a34a; background: #16a34a10; color: var(--text); }
+    .desc-card.bad  { border-color: #ef4444;  background: #ef444410;  color: var(--text); }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Redes Neurais Recorrentes</span>
+      <span class="prof-tag" style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 4 · Slide 3 / 3</span>
+    </header>
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Estado Oculto como Memória</h1>
+        <p class="slide-subtitle">Com memória ligada, o contexto passado guia cada passo</p>
+      </div>
+      <div class="content-split">
+        <!-- LEFT PANEL -->
+        <div class="panel panel-left">
+          <h2 class="panel-title">🎛️ Modo de Operação</h2>
+          <div class="toggle-wrap">
+            <button id="toggle-btn" class="toggle-btn mem-off" onclick="toggleMemory()">🔴 Sem Memória</button>
+          </div>
+          <svg id="rnn-svg" class="rnn-svg" viewBox="0 0 300 155" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <marker id="arT" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#0d6e6e"/></marker>
+              <marker id="arB" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1d4ed8"/></marker>
+              <marker id="arG" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#16a34a"/></marker>
+            </defs>
+            <!-- Cells t=1..4 -->
+            <rect x="10"  y="55" width="55" height="30" rx="7" fill="#1e293b" stroke="#1d4ed8" stroke-width="2"/>
+            <rect x="85"  y="55" width="55" height="30" rx="7" fill="#1e293b" stroke="#1d4ed8" stroke-width="2"/>
+            <rect x="160" y="55" width="55" height="30" rx="7" fill="#1e293b" stroke="#1d4ed8" stroke-width="2"/>
+            <rect x="235" y="55" width="55" height="30" rx="7" fill="#1e293b" stroke="#1d4ed8" stroke-width="2"/>
+            <!-- RNN labels -->
+            <text x="37"  y="74" text-anchor="middle" fill="white" font-size="11" font-family="Fira Code,monospace" font-weight="700">RNN</text>
+            <text x="112" y="74" text-anchor="middle" fill="white" font-size="11" font-family="Fira Code,monospace" font-weight="700">RNN</text>
+            <text x="187" y="74" text-anchor="middle" fill="white" font-size="11" font-family="Fira Code,monospace" font-weight="700">RNN</text>
+            <text x="262" y="74" text-anchor="middle" fill="white" font-size="11" font-family="Fira Code,monospace" font-weight="700">RNN</text>
+            <!-- Input arrows from below -->
+            <line x1="37"  y1="100" x2="37"  y2="86" stroke="#1d4ed8" stroke-width="1.8" marker-end="url(#arB)"/>
+            <line x1="112" y1="100" x2="112" y2="86" stroke="#1d4ed8" stroke-width="1.8" marker-end="url(#arB)"/>
+            <line x1="187" y1="100" x2="187" y2="86" stroke="#1d4ed8" stroke-width="1.8" marker-end="url(#arB)"/>
+            <line x1="262" y1="100" x2="262" y2="86" stroke="#1d4ed8" stroke-width="1.8" marker-end="url(#arB)"/>
+            <!-- Output arrows going up -->
+            <line x1="37"  y1="55" x2="37"  y2="34" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arG)"/>
+            <line x1="112" y1="55" x2="112" y2="34" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arG)"/>
+            <line x1="187" y1="55" x2="187" y2="34" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arG)"/>
+            <line x1="262" y1="55" x2="262" y2="34" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arG)"/>
+            <!-- Input labels -->
+            <text x="37"  y="112" text-anchor="middle" fill="#60a5fa" font-size="10" font-family="Fira Code,monospace">x₁</text>
+            <text x="112" y="112" text-anchor="middle" fill="#60a5fa" font-size="10" font-family="Fira Code,monospace">x₂</text>
+            <text x="187" y="112" text-anchor="middle" fill="#60a5fa" font-size="10" font-family="Fira Code,monospace">x₃</text>
+            <text x="262" y="112" text-anchor="middle" fill="#60a5fa" font-size="10" font-family="Fira Code,monospace">x₄</text>
+            <!-- Output labels -->
+            <text x="37"  y="22" text-anchor="middle" fill="#16a34a" font-size="10" font-family="Fira Code,monospace" font-weight="700">o₁</text>
+            <text x="112" y="22" text-anchor="middle" fill="#16a34a" font-size="10" font-family="Fira Code,monospace" font-weight="700">o₂</text>
+            <text x="187" y="22" text-anchor="middle" fill="#16a34a" font-size="10" font-family="Fira Code,monospace" font-weight="700">o₃</text>
+            <text x="262" y="22" text-anchor="middle" fill="#16a34a" font-size="10" font-family="Fira Code,monospace" font-weight="700">o₄</text>
+            <!-- Hidden state arrows (initially hidden) -->
+            <g id="h-arrows" style="opacity:0;transition:opacity 0.5s">
+              <line x1="65" y1="70" x2="85" y2="70" stroke="#0d6e6e" stroke-width="2.2" marker-end="url(#arT)"/>
+              <text x="75" y="64" text-anchor="middle" fill="#0d6e6e" font-size="9" font-family="Fira Code,monospace">h₁</text>
+              <line x1="140" y1="70" x2="160" y2="70" stroke="#0d6e6e" stroke-width="2.2" marker-end="url(#arT)"/>
+              <text x="150" y="64" text-anchor="middle" fill="#0d6e6e" font-size="9" font-family="Fira Code,monospace">h₂</text>
+              <line x1="215" y1="70" x2="235" y2="70" stroke="#0d6e6e" stroke-width="2.2" marker-end="url(#arT)"/>
+              <text x="225" y="64" text-anchor="middle" fill="#0d6e6e" font-size="9" font-family="Fira Code,monospace">h₃</text>
+              <text x="293" y="64" text-anchor="middle" fill="#0d6e6e" font-size="9" font-family="Fira Code,monospace">h₄</text>
+              <line x1="290" y1="70" x2="300" y2="70" stroke="#0d6e6e" stroke-width="1.5"/>
+            </g>
+            <!-- Step labels t=1..4 -->
+            <text x="37"  y="8" text-anchor="middle" fill="#94a3b8" font-size="9" font-family="Inter,sans-serif">t=1</text>
+            <text x="112" y="8" text-anchor="middle" fill="#94a3b8" font-size="9" font-family="Inter,sans-serif">t=2</text>
+            <text x="187" y="8" text-anchor="middle" fill="#94a3b8" font-size="9" font-family="Inter,sans-serif">t=3</text>
+            <text x="262" y="8" text-anchor="middle" fill="#94a3b8" font-size="9" font-family="Inter,sans-serif">t=4</text>
+          </svg>
+          <div class="word-chips" id="word-chips">
+            <span class="word-chip-s chip-grey">O</span>
+            <span class="word-chip-s chip-grey">gato</span>
+            <span class="word-chip-s chip-grey">comeu</span>
+            <span class="word-chip-s chip-grey">o</span>
+          </div>
+        </div>
+        <!-- RIGHT PANEL -->
+        <div class="panel panel-right">
+          <h2 class="panel-title">📊 O Que Muda com a Memória?</h2>
+          <div id="desc-card" class="desc-card bad">
+            <span style="font-size:1.2rem">❌</span>
+            <strong> Sem memória:</strong> cada palavra processada isoladamente. O contexto se perde.
+          </div>
+          <div class="highlight-box teal" style="margin-top:auto">
+            <span class="icon">⚙️</span>
+            <span>O mesmo conjunto de pesos é usado em todos os instantes — <strong>compartilhamento de parâmetros no tempo</strong>.</span>
+          </div>
+        </div>
+      </div>
+    </main>
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide09.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot active"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide11.html'">Próximo →</button>
+    </nav>
+  </div>
+  <script>
+    let memOn = false;
+    function toggleMemory() {
+      memOn = !memOn;
+      const btn   = document.getElementById('toggle-btn');
+      const harr  = document.getElementById('h-arrows');
+      const chips = document.querySelectorAll('.word-chip-s');
+      const card  = document.getElementById('desc-card');
+
+      btn.textContent = memOn ? '🟢 Com Memória' : '🔴 Sem Memória';
+      btn.className   = 'toggle-btn ' + (memOn ? 'mem-on' : 'mem-off');
+      harr.style.opacity = memOn ? '1' : '0';
+
+      chips.forEach(c => {
+        c.className = 'word-chip-s ' + (memOn ? 'chip-teal' : 'chip-grey');
+      });
+      card.className = 'desc-card ' + (memOn ? 'good' : 'bad');
+      card.innerHTML = memOn
+        ? '<span style="font-size:1.2rem">✅</span> <strong>Com memória:</strong> cada palavra integra o contexto das anteriores. hₜ carrega história acumulada.'
+        : '<span style="font-size:1.2rem">❌</span> <strong>Sem memória:</strong> cada palavra processada isoladamente. O contexto se perde.';
+    }
+  </script>
+</body>
+</html>

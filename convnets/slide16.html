@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 16 – Filtros Convolucionais têm Bias</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── Layout ──────────────────────────────────────────────────────────── */
+    .bias-layout {
+      display: grid;
+      grid-template-columns: 1fr 1.3fr;
+      gap: 1.25rem;
+      flex: 1;
+    }
+
+    .bias-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.3rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      box-shadow: var(--shadow);
+      overflow-y: auto;
+    }
+
+    /* ── Formula box ─────────────────────────────────────────────────────── */
+    .formula-box {
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 1rem 1.25rem;
+    }
+
+    .formula-top-label {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      font-family: 'Inter', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+
+    .formula-line {
+      font-family: 'Fira Code', monospace;
+      font-size: 1rem;
+      line-height: 1.7;
+      color: var(--text);
+    }
+
+    .formula-part-conv { color: var(--blue); font-weight: 700; }
+    .formula-part-bias {
+      background: var(--purple-lt);
+      border: 1.5px solid #c4b5fd;
+      border-radius: 4px;
+      padding: 0.05rem 0.45rem;
+      color: var(--purple);
+      font-weight: 700;
+    }
+
+    /* ── Spec table ──────────────────────────────────────────────────────── */
+    .spec-table {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+
+    .spec-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0.85rem;
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius-sm);
+      font-size: 0.88rem;
+    }
+
+    .spec-label { color: var(--text-muted); font-weight: 600; }
+    .spec-value {
+      font-family: 'Fira Code', monospace;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    /* ── Filter selector buttons ─────────────────────────────────────────── */
+    .filter-btns-row {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .filter-sel-btn {
+      flex: 1;
+      padding: 0.45rem 0.5rem;
+      border-radius: var(--radius-sm);
+      border: 2px solid var(--border2);
+      background: var(--bg3);
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text);
+      transition: all 0.18s;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+    }
+
+    .filter-sel-btn.selected {
+      background: var(--purple-lt);
+      border-color: var(--purple);
+      color: var(--purple);
+    }
+
+    .filter-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ── Bias slider ─────────────────────────────────────────────────────── */
+    .bias-slider-row {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0.7rem 1rem;
+    }
+
+    .bias-slider-txt {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    input[type="range"].bias-slider {
+      flex: 1;
+      accent-color: var(--purple);
+      cursor: pointer;
+    }
+
+    .bias-value-badge {
+      font-family: 'Fira Code', monospace;
+      font-weight: 700;
+      color: var(--purple);
+      font-size: 1rem;
+      min-width: 3.5rem;
+      text-align: center;
+      background: var(--purple-lt);
+      border: 1px solid #c4b5fd;
+      border-radius: 6px;
+      padding: 0.15rem 0.5rem;
+    }
+
+    /* ── Canvas area ─────────────────────────────────────────────────────── */
+    .maps-row {
+      display: flex;
+      gap: 0.65rem;
+      align-items: flex-start;
+      justify-content: center;
+      flex-wrap: nowrap;
+    }
+
+    .map-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .map-label {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    canvas.fm-canvas {
+      image-rendering: pixelated;
+      display: block;
+      border-radius: 5px;
+    }
+
+    .map-op-arrow {
+      display: flex;
+      align-items: center;
+      padding-top: 2.8rem;
+      font-size: 1.25rem;
+      color: var(--text-dim);
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Redes Convolucionais</span>
+      <span class="prof-tag" style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 6 · Slide 1 / 3</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Filtros Convolucionais têm Bias</h1>
+        <p class="slide-subtitle">Assim como neurônios do MLP, cada filtro aprende um viés que desloca as ativações</p>
+      </div>
+
+      <div class="bias-layout">
+
+        <!-- ── Left: formula + explanation ──────────────────────────────── -->
+        <div class="bias-panel">
+          <div class="panel-title">O Parâmetro de Bias</div>
+
+          <div class="formula-box">
+            <div class="formula-top-label">Convolução com bias</div>
+            <div class="formula-line">
+              saída[i,j] =
+              <span class="formula-part-conv">Σ w[k,l]·x[i+k,j+l]</span>
+              + <span class="formula-part-bias">b</span>
+            </div>
+          </div>
+
+          <div class="spec-table">
+            <div class="spec-row">
+              <span class="spec-label">Pesos do filtro (3×3)</span>
+              <span class="spec-value" style="color:var(--blue);">9 parâmetros</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-label">Bias por filtro</span>
+              <span class="spec-value" style="color:var(--purple);">1 parâmetro</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-label">Total por filtro</span>
+              <span class="spec-value">10 parâmetros</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-label">Bias é aplicado em</span>
+              <span class="spec-value">todo o feature map</span>
+            </div>
+          </div>
+
+          <div class="concept-cards">
+            <div class="concept-card" style="--delay:0.05s">
+              <div class="card-icon">⚙️</div>
+              <div class="card-text">
+                <strong>Pesos compartilhados</strong>
+                <p>O mesmo filtro (pesos + bias) desliza por toda a imagem — <em>compartilhamento de parâmetros</em>.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.15s">
+              <div class="card-icon">📏</div>
+              <div class="card-text">
+                <strong>Bias controla o limiar</strong>
+                <p>Bias positivo → mais células ativadas após ReLU. Bias negativo → apenas ativações fortes sobrevivem.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.25s">
+              <div class="card-icon">🎓</div>
+              <div class="card-text">
+                <strong>Aprendido via gradiente</strong>
+                <p>Como em qualquer rede neural, o bias é atualizado pelo gradiente durante o treinamento.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Right: interactive bias slider ────────────────────────────── -->
+        <div class="bias-panel">
+          <div class="panel-title">Efeito do Bias no Feature Map</div>
+
+          <div style="display:flex;flex-direction:column;gap:0.4rem;">
+            <div style="font-size:0.78rem;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.07em;">Selecionar filtro</div>
+            <div class="filter-btns-row" id="filter-btns-row">
+              <!-- built by JS -->
+            </div>
+          </div>
+
+          <div class="bias-slider-row">
+            <span class="bias-slider-txt">Bias &nbsp;<var>b</var> =</span>
+            <input type="range" class="bias-slider" id="bias-slider"
+                   min="-3" max="3" step="0.5" value="0" />
+            <span class="bias-value-badge" id="bias-value-badge">0.0</span>
+          </div>
+
+          <div class="maps-row">
+            <div class="map-wrap">
+              <span class="map-label" style="color:var(--blue);">Conv (sem bias)</span>
+              <canvas id="cv-raw" class="fm-canvas" width="154" height="154"
+                      style="border:1.5px solid #93c5fd;"></canvas>
+              <span class="map-label">7 × 7</span>
+            </div>
+            <div class="map-op-arrow">+b→</div>
+            <div class="map-wrap">
+              <span class="map-label" style="color:var(--purple);">Com bias (pré-ReLU)</span>
+              <canvas id="cv-biased" class="fm-canvas" width="154" height="154"
+                      style="border:1.5px solid #c4b5fd;"></canvas>
+              <span class="map-label">7 × 7</span>
+            </div>
+            <div class="map-op-arrow">→</div>
+            <div class="map-wrap">
+              <span class="map-label" style="color:var(--green);">Após ReLU</span>
+              <canvas id="cv-relu" class="fm-canvas" width="154" height="154"
+                      style="border:1.5px solid #86efac;"></canvas>
+              <span class="map-label">7 × 7</span>
+            </div>
+          </div>
+
+          <div class="highlight-box purple" id="bias-hint">
+            <span class="icon">📏</span>
+            <p id="bias-hint-text">Com bias = 0, o feature map é igual à convolução pura. Mova o slider para ver o efeito.</p>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide15.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide17.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    /* ── Filters (same as all previous slides) ───────────────────────── */
+    const FILTERS = [
+      { name: 'Diagonal ↘', cssColor: '#5b21b6', weights: [[ 1, 0,-1],[ 0, 1, 0],[-1, 0, 1]] },
+      { name: 'Centro ✖',   cssColor: '#0e7490', weights: [[ 1,-1, 1],[-1, 1,-1],[ 1,-1, 1]] },
+      { name: 'Diagonal ↗', cssColor: '#166534', weights: [[-1, 0, 1],[ 0, 1, 0],[ 1, 0,-1]] },
+    ];
+
+    /* ── Input tile (X, 9×9) ─────────────────────────────────────────── */
+    const tileX = [
+      [0,0,0,0,0,0,0,0,0],
+      [0,1,0,0,0,0,0,1,0],
+      [0,0,1,0,0,0,1,0,0],
+      [0,0,0,1,0,1,0,0,0],
+      [0,0,0,0,1,0,0,0,0],
+      [0,0,0,1,0,1,0,0,0],
+      [0,0,1,0,0,0,1,0,0],
+      [0,1,0,0,0,0,0,1,0],
+      [0,0,0,0,0,0,0,0,0],
+    ];
+
+    const N = 9, NF = 7;
+
+    function convolve(weights) {
+      const out = [];
+      for (let r = 0; r < NF; r++) {
+        out.push([]);
+        for (let c = 0; c < NF; c++) {
+          let s = 0;
+          for (let fr = 0; fr < 3; fr++)
+            for (let fc = 0; fc < 3; fc++)
+              s += weights[fr][fc] * tileX[r + fr][c + fc];
+          out[r].push(s);
+        }
+      }
+      return out;
+    }
+
+    function applyBias(fm, b) {
+      return fm.map(row => row.map(v => v + b));
+    }
+
+    function applyRelu(fm) {
+      return fm.map(row => row.map(v => Math.max(0, v)));
+    }
+
+    function drawHeatmap(cv, resp, showNeg) {
+      const ctx = cv.getContext('2d');
+      const rows = resp.length, cols = resp[0].length;
+      const CS = cv.width / cols;
+      let maxAbs = 0;
+      for (let r = 0; r < rows; r++)
+        for (let c = 0; c < cols; c++)
+          if (Math.abs(resp[r][c]) > maxAbs) maxAbs = Math.abs(resp[r][c]);
+
+      ctx.fillStyle = '#111827';
+      ctx.fillRect(0, 0, cv.width, cv.height);
+
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const v = resp[r][c];
+          if (v === 0) continue;
+          const t = maxAbs > 0 ? Math.abs(v) / maxAbs : 0;
+          const g = Math.round(255 * t);
+          if (v > 0)       ctx.fillStyle = `rgb(${g},${g},${g})`;
+          else if (showNeg) ctx.fillStyle = `rgb(${g},0,0)`;
+          ctx.fillRect(c * CS, r * CS, CS, CS);
+        }
+      }
+
+      ctx.strokeStyle = 'rgba(51,65,85,0.35)';
+      ctx.lineWidth = 0.5;
+      for (let i = 0; i <= cols; i++) {
+        ctx.beginPath(); ctx.moveTo(i*CS, 0); ctx.lineTo(i*CS, cv.height); ctx.stroke();
+      }
+      for (let i = 0; i <= rows; i++) {
+        ctx.beginPath(); ctx.moveTo(0, i*CS); ctx.lineTo(cv.width, i*CS); ctx.stroke();
+      }
+    }
+
+    /* ── State ───────────────────────────────────────────────────────── */
+    let selectedFilter = 0;
+    let biasValue = 0;
+
+    function refresh() {
+      const fm     = convolve(FILTERS[selectedFilter].weights);
+      const biased = applyBias(fm, biasValue);
+      const relu   = applyRelu(biased);
+
+      drawHeatmap(document.getElementById('cv-raw'),    fm,     true);
+      drawHeatmap(document.getElementById('cv-biased'), biased, true);
+      drawHeatmap(document.getElementById('cv-relu'),   relu,   false);
+
+      const hint = document.getElementById('bias-hint-text');
+      if (biasValue === 0) {
+        hint.textContent = 'Com bias = 0, o feature map é igual à convolução pura. Mova o slider para ver o efeito.';
+      } else if (biasValue > 0) {
+        hint.textContent = `Bias = +${biasValue.toFixed(1)}: todas as ativações sobem ${biasValue.toFixed(1)} ${Math.abs(biasValue) === 1 ? 'unidade' : 'unidades'}. Mais células ficam ativas após ReLU — o filtro fica mais "sensível".`;
+      } else {
+        hint.textContent = `Bias = ${biasValue.toFixed(1)}: todas as ativações descem ${Math.abs(biasValue).toFixed(1)} ${Math.abs(biasValue) === 1 ? 'unidade' : 'unidades'}. Apenas ativações fortes sobrevivem ao ReLU — o filtro fica mais "seletivo".`;
+      }
+    }
+
+    /* ── Build filter buttons ────────────────────────────────────────── */
+    const btnRow = document.getElementById('filter-btns-row');
+    FILTERS.forEach((f, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'filter-sel-btn' + (i === 0 ? ' selected' : '');
+      btn.id = 'fbtn-' + i;
+
+      const dot = document.createElement('span');
+      dot.className = 'filter-dot';
+      dot.style.background = f.cssColor;
+      btn.appendChild(dot);
+      btn.appendChild(document.createTextNode(f.name));
+
+      btn.addEventListener('click', () => {
+        selectedFilter = i;
+        FILTERS.forEach((_, j) =>
+          document.getElementById('fbtn-' + j).classList.toggle('selected', j === i));
+        refresh();
+      });
+      btnRow.appendChild(btn);
+    });
+
+    /* ── Bias slider ─────────────────────────────────────────────────── */
+    const slider = document.getElementById('bias-slider');
+    slider.addEventListener('input', () => {
+      biasValue = parseFloat(slider.value);
+      const badge = document.getElementById('bias-value-badge');
+      badge.textContent = (biasValue >= 0 ? '+' : '') + biasValue.toFixed(1);
+      refresh();
+    });
+
+    /* ── Initial render ──────────────────────────────────────────────── */
+    refresh();
+  </script>
+</body>
+</html>

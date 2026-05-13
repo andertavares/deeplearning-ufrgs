@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Redes Neurais Recorrentes — Índice dos Slides</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f8f9fb; --bg2: #ffffff; --bg3: #f0f2f6;
+      --border: #c7d0e0; --border2: #d1d9e8;
+      --text: #0f1724; --text-muted: #3d4f6e; --text-dim: #6b7fa3;
+      --teal: #0d6e6e; --blue: #1d4ed8; --cyan: #0e7490;
+      --green: #166534; --grad1: linear-gradient(135deg, #0d6e6e, #1d4ed8);
+    }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 3rem 1.5rem;
+    }
+    .hero { text-align: center; margin-bottom: 3rem; }
+    .badge {
+      display: inline-block;
+      padding: 0.3rem 1rem;
+      border-radius: 999px;
+      background: rgba(13,110,110,0.08);
+      border: 1px solid rgba(13,110,110,0.25);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 1.2rem;
+    }
+    h1 {
+      font-size: 2.4rem;
+      font-weight: 800;
+      background: var(--grad1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.75rem;
+    }
+    .hero-sub { color: var(--text-muted); font-size: 1.05rem; max-width: 560px; margin: 0 auto; line-height: 1.6; }
+
+    .blocks { display: flex; flex-direction: column; gap: 2rem; max-width: 860px; width: 100%; }
+    .block-section { }
+    .block-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--teal);
+      margin-bottom: 1rem;
+      padding-left: 0.5rem;
+      border-left: 3px solid var(--teal);
+    }
+    .slides-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1rem;
+    }
+    .slide-link {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      padding: 1.1rem 1.25rem;
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 14px;
+      text-decoration: none;
+      color: var(--text);
+      transition: all 0.2s;
+      box-shadow: 0 1px 4px rgba(15,23,36,0.07);
+    }
+    .slide-link:hover {
+      border-color: var(--teal);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(13,110,110,0.12);
+    }
+    .sl-num { font-family: 'Fira Code', monospace; font-size: 0.7rem; color: var(--text-dim); }
+    .sl-icon { font-size: 1.5rem; }
+    .sl-title { font-size: 0.88rem; font-weight: 600; line-height: 1.3; color: var(--text); }
+    .sl-desc { font-size: 0.72rem; color: var(--text-muted); line-height: 1.4; }
+    .sl-tag {
+      align-self: flex-start;
+      padding: 0.15rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.65rem;
+      font-weight: 600;
+      background: rgba(13,110,110,0.08);
+      border: 1px solid rgba(13,110,110,0.2);
+      color: var(--teal);
+    }
+
+    .coming-soon {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+    .coming-soon .sl-tag {
+      background: rgba(100,116,139,0.08);
+      border-color: var(--border2);
+      color: var(--text-dim);
+    }
+    footer {
+      margin-top: 3rem;
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      text-align: center;
+      font-family: 'Fira Code', monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="hero">
+    <div class="badge">UFRGS · Deep Learning</div>
+    <h1>Redes Neurais Recorrentes</h1>
+    <div style="font-family:'Fira Code',monospace;font-size:0.95rem;color:var(--text-dim);margin:0.5rem 0 0.7rem 0;">Prof. Anderson Rocha Tavares</div>
+    <p class="hero-sub">Slides interativos para a aula de RNNs. Navegue pelos blocos abaixo e clique em qualquer slide para abri-lo.</p>
+  </div>
+
+  <div class="blocks">
+    <!-- Block 1 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 1 — Relembrando Redes Feedforward</div>
+      <div class="slides-grid">
+        <a href="slide01.html" class="slide-link">
+          <div class="sl-num">Slide 01</div>
+          <div class="sl-icon">➡️</div>
+          <div class="sl-title">Redes Feedforward: Entradas Independentes</div>
+          <div class="sl-desc">Cada exemplo é processado isoladamente — sem memória do passado.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide02.html" class="slide-link">
+          <div class="sl-num">Slide 02</div>
+          <div class="sl-icon">🔀</div>
+          <div class="sl-title">Experimente: Embaralhe as Linhas</div>
+          <div class="sl-desc">Reordene os pacientes e veja que cada diagnóstico não muda — depois, a transição para dados sequenciais.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Block 2 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 2 — Motivação: e se os Dados Tiverem Relação Temporal?</div>
+      <div class="slides-grid">
+        <a href="slide03.html" class="slide-link">
+          <div class="sl-num">Slide 03</div>
+          <div class="sl-icon">🎾</div>
+          <div class="sl-title">O Passado Importa</div>
+          <div class="sl-desc">Bola em movimento: revelar mais posições melhora a previsão da trajetória.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide04.html" class="slide-link">
+          <div class="sl-num">Slide 04</div>
+          <div class="sl-icon">📈</div>
+          <div class="sl-title">Tendência Exige Histórico</div>
+          <div class="sl-desc">Janela móvel sobre série temporal: quanto mais contexto, mais clara a tendência.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide05.html" class="slide-link">
+          <div class="sl-num">Slide 05</div>
+          <div class="sl-icon">🔤</div>
+          <div class="sl-title">A Ordem das Palavras Importa</div>
+          <div class="sl-desc">Frases embaralhadas vs. ordem correta — a sequência carrega o significado.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Block 3 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 3 — O que são Dados Sequenciais</div>
+      <div class="slides-grid">
+        <a href="slide06.html" class="slide-link">
+          <div class="sl-num">Slide 06</div>
+          <div class="sl-icon">📋</div>
+          <div class="sl-title">Dados Sequenciais: Definição e Exemplos</div>
+          <div class="sl-desc">Sequência = coleção ordenada. Exemplos em texto, áudio, finanças, vídeo, sensores.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide07.html" class="slide-link">
+          <div class="sl-num">Slide 07</div>
+          <div class="sl-icon">🗺️</div>
+          <div class="sl-title">Tipos de Mapeamento Sequencial</div>
+          <div class="sl-desc">one-to-one, one-to-many, many-to-one, many-to-many — seletor interativo de tarefas.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Block 4 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 4 — Da Rede Comum para a Rede Recorrente</div>
+      <div class="slides-grid">
+        <a href="slide08.html" class="slide-link">
+          <div class="sl-num">Slide 08</div>
+          <div class="sl-icon">🚫</div>
+          <div class="sl-title">A Limitação: Rede Sem Memória</div>
+          <div class="sl-desc">Rede feedforward vê apenas um retrato congelado — sem contexto temporal.</div>
+          <div class="sl-tag">visual</div>
+        </a>
+        <a href="slide09.html" class="slide-link">
+          <div class="sl-num">Slide 09</div>
+          <div class="sl-icon">🔄</div>
+          <div class="sl-title">Inserindo o Laço de Realimentação</div>
+          <div class="sl-desc">Recorrência: o cálculo em t depende do estado produzido em t-1.</div>
+          <div class="sl-tag">visual</div>
+        </a>
+        <a href="slide10.html" class="slide-link">
+          <div class="sl-num">Slide 10</div>
+          <div class="sl-icon">🧠</div>
+          <div class="sl-title">Estado Oculto como Memória</div>
+          <div class="sl-desc">Toggle memória ligada/desligada — veja o contexto sendo carregado ao longo do tempo.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Block 5 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 5 — Forward Pass em uma RNN</div>
+      <div class="slides-grid">
+        <a href="slide11.html" class="slide-link">
+          <div class="sl-num">Slide 11</div>
+          <div class="sl-icon">⚙️</div>
+          <div class="sl-title">Forward Pass: Passo a Passo</div>
+          <div class="sl-desc">hₜ = φ(Uxₜ + Vh_{t-1} + bₕ) — execução step-by-step com equações.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Block 6 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 6 — Unfold no Tempo</div>
+      <div class="slides-grid">
+        <a href="slide12.html" class="slide-link">
+          <div class="sl-num">Slide 12</div>
+          <div class="sl-icon">↔️</div>
+          <div class="sl-title">Desenrolando a RNN no Tempo</div>
+          <div class="sl-desc">Unfold revela a cadeia de cópias — slider ajusta o comprimento da sequência.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Block 7 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 7 — Backpropagation Through Time (BPTT)</div>
+      <div class="slides-grid">
+        <a href="slide13.html" class="slide-link">
+          <div class="sl-num">Slide 13</div>
+          <div class="sl-icon">🔁</div>
+          <div class="sl-title">Backpropagation Through Time</div>
+          <div class="sl-desc">Forward (→) e backward (←) animados. Acúmulo de gradiente em U, V, W.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Block 8 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 8 — Problema do Vanishing Gradient</div>
+      <div class="slides-grid">
+        <a href="slide14.html" class="slide-link">
+          <div class="sl-num">Slide 14</div>
+          <div class="sl-icon">📉</div>
+          <div class="sl-title">O Problema do Vanishing Gradient</div>
+          <div class="sl-desc">Simulador de decaimento com fator α — veja o gradiente desaparecer ao longo do tempo.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Block 9 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 9 — Intuição Geral da LSTM</div>
+      <div class="slides-grid">
+        <a href="slide15.html" class="slide-link">
+          <div class="sl-num">Slide 15</div>
+          <div class="sl-icon">🔑</div>
+          <div class="sl-title">LSTM: Memória com Controle</div>
+          <div class="sl-desc">Dois estados separados: cell state cₜ (memória interna) e hidden state hₜ (exposto).</div>
+          <div class="sl-tag">visual</div>
+        </a>
+        <a href="slide16.html" class="slide-link">
+          <div class="sl-num">Slide 16</div>
+          <div class="sl-icon">🚪</div>
+          <div class="sl-title">As Quatro Decisões da LSTM</div>
+          <div class="sl-desc">Forget, input, candidato e output gate — diagrama SVG clicável.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Block 10 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 10 — Forget Gate</div>
+      <div class="slides-grid">
+        <a href="slide17.html" class="slide-link">
+          <div class="sl-num">Slide 17</div>
+          <div class="sl-icon">🗑️</div>
+          <div class="sl-title">Forget Gate: O Que Esquecer</div>
+          <div class="sl-desc">fₜ = σ(…) — slider mostra quanto da memória cₜ₋₁ é preservado ou apagado.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Block 11 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 11 — Input Gate e Conteúdo Candidato</div>
+      <div class="slides-grid">
+        <a href="slide18.html" class="slide-link">
+          <div class="sl-num">Slide 18</div>
+          <div class="sl-icon">🚦</div>
+          <div class="sl-title">Input Gate: Quanto Escrever</div>
+          <div class="sl-desc">iₜ controla a intensidade da escrita — mesmo bom candidato é bloqueado se gate fechado.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide19.html" class="slide-link">
+          <div class="sl-num">Slide 19</div>
+          <div class="sl-icon">📝</div>
+          <div class="sl-title">Conteúdo Candidato: O Que Escrever</div>
+          <div class="sl-desc">c̃ₜ = tanh(…) — comparação lado a lado de iₜ e c̃ₜ com resultado combinado.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Block 12 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 12 — Atualização do Cell State</div>
+      <div class="slides-grid">
+        <a href="slide20.html" class="slide-link">
+          <div class="sl-num">Slide 20</div>
+          <div class="sl-icon">⚖️</div>
+          <div class="sl-title">Atualização do Cell State</div>
+          <div class="sl-desc">cₜ = fₜ⊙cₜ₋₁ + iₜ⊙c̃ₜ — barras coloridas mostram contribuição de cada parcela.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Block 13 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 13 — Output Gate e Hidden State</div>
+      <div class="slides-grid">
+        <a href="slide21.html" class="slide-link">
+          <div class="sl-num">Slide 21</div>
+          <div class="sl-icon">👁️</div>
+          <div class="sl-title">Output Gate e Estado Oculto</div>
+          <div class="sl-desc">hₜ = oₜ⊙tanh(cₜ) — slider de exposição mostra memória privada vs. pública.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Block 14 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 14 — Recapitulando a Lógica da LSTM</div>
+      <div class="slides-grid">
+        <a href="slide22.html" class="slide-link">
+          <div class="sl-num">Slide 22</div>
+          <div class="sl-icon">📊</div>
+          <div class="sl-title">Recapitulando: As 4 Decisões da LSTM</div>
+          <div class="sl-desc">Painel de 4 perguntas clicáveis + resumo operacional em 7 passos.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Block 15 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 15 — Fechamento Conceitual</div>
+      <div class="slides-grid">
+        <a href="slide23.html" class="slide-link">
+          <div class="sl-num">Slide 23</div>
+          <div class="sl-icon">🎓</div>
+          <div class="sl-title">Fechamento: O Poder das Sequências</div>
+          <div class="sl-desc">Progressão completa da aula — de feedforward ao LSTM, com mensagem central.</div>
+          <div class="sl-tag">síntese</div>
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    UFRGS · Curso de Deep Learning · Slides gerados interativamente
+  </footer>
+</body>
+</html>

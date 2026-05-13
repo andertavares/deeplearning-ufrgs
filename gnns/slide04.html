@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 04 – Tipos de Tarefa em Grafos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .task-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.1rem; flex: 1; }
+    .task-panel {
+      background: var(--bg2);
+      border: 2px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 1rem 0.9rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+      box-shadow: var(--shadow);
+      transition: border-color 0.2s;
+    }
+    .task-panel:hover { border-color: var(--teal); }
+    .task-panel-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      text-align: center;
+    }
+    .task-panel-title.node { color: var(--teal); }
+    .task-panel-title.link { color: var(--blue); }
+    .task-panel-title.graph { color: var(--purple); }
+    .task-svg { width: 100%; }
+    .task-example {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      text-align: center;
+      font-style: italic;
+      padding: 0.4rem 0.5rem;
+      background: var(--bg3);
+      border-radius: var(--radius-sm);
+      line-height: 1.5;
+    }
+    .task-btn { align-self: center; }
+    .animated-edge {
+      stroke-dasharray: 8 4;
+      stroke-dashoffset: 0;
+      animation: none;
+    }
+    .animated-edge.running {
+      animation: dashMove2 0.8s linear infinite;
+    }
+    @keyframes dashMove2 {
+      to { stroke-dashoffset: -24; }
+    }
+    .node-unknown { fill: #e5e7eb; stroke: #9ca3af; }
+    .node-classified-0 { fill: #ccfbf1; stroke: #0d6e6e; }
+    .node-classified-1 { fill: #dbeafe; stroke: #1d4ed8; }
+    .node-classified-anim {
+      fill: #dcfce7;
+      stroke: #166534;
+      animation: classifyPop 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+    @keyframes classifyPop {
+      from { r: 10; fill: #e5e7eb; }
+      to   { r: 18; fill: #dcfce7; }
+    }
+    .graph-class-wrap { display: flex; gap: 0.8rem; justify-content: center; align-items: center; }
+    .mol-label { font-size: 0.78rem; font-weight: 700; text-anchor: middle; }
+    .mol-toxic { fill: #b91c1c; }
+    .mol-safe  { fill: #166534; }
+    .mol-border-toxic { stroke: #b91c1c; }
+    .mol-border-safe  { stroke: #166534; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">GNNs</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Slide 04 / 20</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Tipos de Tarefa em Grafos</h1>
+        <p class="slide-subtitle">Bloco 1 — Fundamentos</p>
+      </div>
+
+      <div class="task-grid">
+        <!-- Node Classification -->
+        <div class="task-panel">
+          <div class="task-panel-title node">Classificação de Nó</div>
+          <svg class="task-svg" viewBox="0 0 240 170" id="ncSvg">
+            <line x1="60" y1="60" x2="120" y2="40" stroke="#cbd5e1" stroke-width="2"/>
+            <line x1="120" y1="40" x2="180" y2="70" stroke="#cbd5e1" stroke-width="2"/>
+            <line x1="60" y1="60" x2="80" y2="130" stroke="#cbd5e1" stroke-width="2"/>
+            <line x1="120" y1="40" x2="80" y2="130" stroke="#cbd5e1" stroke-width="2"/>
+            <line x1="80" y1="130" x2="160" y2="140" stroke="#cbd5e1" stroke-width="2"/>
+            <line x1="180" y1="70" x2="160" y2="140" stroke="#cbd5e1" stroke-width="2"/>
+            <!-- Known nodes -->
+            <circle cx="60" cy="60" r="18" class="node-classified-0"/>
+            <text x="60" y="65" text-anchor="middle" font-size="11" font-weight="700" fill="#0d6e6e">✓</text>
+            <circle cx="120" cy="40" r="18" class="node-classified-1"/>
+            <text x="120" y="45" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">✓</text>
+            <circle cx="180" cy="70" r="18" class="node-classified-0"/>
+            <text x="180" y="75" text-anchor="middle" font-size="11" font-weight="700" fill="#0d6e6e">✓</text>
+            <circle cx="160" cy="140" r="18" class="node-classified-1"/>
+            <text x="160" y="145" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">✓</text>
+            <!-- Unknown node -->
+            <circle id="unknownNode" cx="80" cy="130" r="18" class="node-unknown"/>
+            <text id="unknownLabel" x="80" y="135" text-anchor="middle" font-size="14" font-weight="700" fill="#9ca3af">?</text>
+          </svg>
+          <button class="btn-step task-btn" onclick="classifyNode()">Classificar nó</button>
+          <div class="task-example">Ex: detectar fraude em redes sociais, prever categoria de artigo</div>
+        </div>
+
+        <!-- Link Prediction -->
+        <div class="task-panel">
+          <div class="task-panel-title link">Predição de Aresta</div>
+          <svg class="task-svg" viewBox="0 0 240 170" id="lpSvg">
+            <line x1="55" y1="65" x2="120" y2="35" stroke="#cbd5e1" stroke-width="2"/>
+            <line x1="120" y1="35" x2="185" y2="65" stroke="#cbd5e1" stroke-width="2"/>
+            <line x1="55" y1="65" x2="75" y2="135" stroke="#cbd5e1" stroke-width="2"/>
+            <line x1="75" y1="135" x2="165" y2="135" stroke="#cbd5e1" stroke-width="2"/>
+            <line x1="185" y1="65" x2="165" y2="135" stroke="#cbd5e1" stroke-width="2"/>
+            <!-- Predicted edge (dashed) -->
+            <line id="predEdge" x1="55" y1="65" x2="185" y2="65"
+              stroke="#1d4ed8" stroke-width="2.5"
+              stroke-dasharray="8 5"
+              opacity="0"/>
+            <circle cx="55" cy="65" r="18" fill="#dbeafe" stroke="#1d4ed8" stroke-width="2"/>
+            <text x="55" y="70" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">U</text>
+            <circle cx="120" cy="35" r="18" fill="#dbeafe" stroke="#1d4ed8" stroke-width="2"/>
+            <text x="120" y="40" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">V</text>
+            <circle cx="185" cy="65" r="18" fill="#dbeafe" stroke="#1d4ed8" stroke-width="2"/>
+            <text x="185" y="70" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">W</text>
+            <circle cx="75" cy="135" r="18" fill="#dbeafe" stroke="#1d4ed8" stroke-width="2"/>
+            <text x="75" y="140" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">X</text>
+            <circle cx="165" cy="135" r="18" fill="#dbeafe" stroke="#1d4ed8" stroke-width="2"/>
+            <text x="165" y="140" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">Y</text>
+            <text id="predLabel" x="120" y="100" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="600" opacity="0">Nova aresta!</text>
+          </svg>
+          <button class="btn-step task-btn" onclick="predictEdge()">Prever aresta</button>
+          <div class="task-example">Ex: recomendar amizades, sugerir colaborações</div>
+        </div>
+
+        <!-- Graph Classification -->
+        <div class="task-panel">
+          <div class="task-panel-title graph">Classificação de Grafo</div>
+          <div class="graph-class-wrap" style="flex:1;">
+            <svg viewBox="0 0 110 160" width="110">
+              <rect x="5" y="5" width="100" height="150" rx="10" fill="#fee2e2" stroke="#b91c1c" stroke-width="2"/>
+              <line x1="40" y1="50" x2="70" y2="35" stroke="#b91c1c" stroke-width="2"/>
+              <line x1="70" y1="35" x2="90" y2="60" stroke="#b91c1c" stroke-width="2"/>
+              <line x1="40" y1="50" x2="55" y2="80" stroke="#b91c1c" stroke-width="2"/>
+              <line x1="70" y1="35" x2="55" y2="80" stroke="#b91c1c" stroke-width="2"/>
+              <line x1="90" y1="60" x2="55" y2="80" stroke="#b91c1c" stroke-width="2"/>
+              <circle cx="40" cy="50" r="11" fill="#fca5a5" stroke="#b91c1c" stroke-width="2"/>
+              <text x="40" y="55" text-anchor="middle" font-size="9" font-weight="700" fill="#b91c1c">C</text>
+              <circle cx="70" cy="35" r="11" fill="#fca5a5" stroke="#b91c1c" stroke-width="2"/>
+              <text x="70" y="40" text-anchor="middle" font-size="9" font-weight="700" fill="#b91c1c">N</text>
+              <circle cx="90" cy="60" r="11" fill="#fca5a5" stroke="#b91c1c" stroke-width="2"/>
+              <text x="90" y="65" text-anchor="middle" font-size="9" font-weight="700" fill="#b91c1c">O</text>
+              <circle cx="55" cy="80" r="11" fill="#fca5a5" stroke="#b91c1c" stroke-width="2"/>
+              <text x="55" y="85" text-anchor="middle" font-size="9" font-weight="700" fill="#b91c1c">H</text>
+              <text class="mol-label mol-toxic" x="55" y="130" font-size="13" font-weight="800" text-anchor="middle">🧪 Tóxico</text>
+            </svg>
+            <svg viewBox="0 0 110 160" width="110">
+              <rect x="5" y="5" width="100" height="150" rx="10" fill="#dcfce7" stroke="#166534" stroke-width="2"/>
+              <line x1="35" y1="55" x2="55" y2="35" stroke="#166534" stroke-width="2"/>
+              <line x1="55" y1="35" x2="80" y2="50" stroke="#166534" stroke-width="2"/>
+              <line x1="35" y1="55" x2="50" y2="80" stroke="#166534" stroke-width="2"/>
+              <line x1="80" y1="50" x2="50" y2="80" stroke="#166534" stroke-width="2"/>
+              <circle cx="35" cy="55" r="11" fill="#86efac" stroke="#166534" stroke-width="2"/>
+              <text x="35" y="60" text-anchor="middle" font-size="9" font-weight="700" fill="#166534">C</text>
+              <circle cx="55" cy="35" r="11" fill="#86efac" stroke="#166534" stroke-width="2"/>
+              <text x="55" y="40" text-anchor="middle" font-size="9" font-weight="700" fill="#166534">O</text>
+              <circle cx="80" cy="50" r="11" fill="#86efac" stroke="#166534" stroke-width="2"/>
+              <text x="80" y="55" text-anchor="middle" font-size="9" font-weight="700" fill="#166534">H</text>
+              <circle cx="50" cy="80" r="11" fill="#86efac" stroke="#166534" stroke-width="2"/>
+              <text x="50" y="85" text-anchor="middle" font-size="9" font-weight="700" fill="#166534">H</text>
+              <text class="mol-label mol-safe" x="55" y="130" font-size="13" font-weight="800" text-anchor="middle">✅ Não tóxico</text>
+            </svg>
+          </div>
+          <div class="task-example">Ex: prever atividade de moléculas, classificar redes cerebrais</div>
+        </div>
+      </div>
+
+      <div class="insight-box">
+        <span class="i-icon">🎯</span>
+        <span class="i-text">GNNs podem resolver as três tarefas com a <strong>mesma arquitetura base</strong> — o message passing.</span>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide03.html'">← Anterior</button>
+      <div class="nav-dots" id="navDots"></div>
+      <button class="btn-nav btn-next" onclick="location.href='slide05.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    let classified = false;
+    function classifyNode() {
+      if (classified) return;
+      classified = true;
+      const node = document.getElementById('unknownNode');
+      const label = document.getElementById('unknownLabel');
+      node.setAttribute('class', 'node-classified-anim');
+      node.setAttribute('r', '18');
+      label.setAttribute('fill', '#166534');
+      label.setAttribute('font-size', '11');
+      label.textContent = '✓';
+    }
+
+    let predicted = false;
+    function predictEdge() {
+      const edge = document.getElementById('predEdge');
+      const lbl = document.getElementById('predLabel');
+      if (!predicted) {
+        predicted = true;
+        edge.setAttribute('opacity','1');
+        edge.classList.add('running');
+        lbl.setAttribute('opacity','1');
+      } else {
+        predicted = false;
+        edge.setAttribute('opacity','0');
+        edge.classList.remove('running');
+        lbl.setAttribute('opacity','0');
+      }
+    }
+
+    (function(){
+      const container = document.getElementById('navDots');
+      const CURRENT = 4;
+      const TOTAL = 20;
+      for (let i = 1; i <= TOTAL; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'dot' + (i === CURRENT ? ' active' : '');
+        dot.title = 'Slide ' + i;
+        dot.style.cursor = 'pointer';
+        dot.addEventListener('click', () => { location.href = 'slide' + String(i).padStart(2,'0') + '.html'; });
+        container.appendChild(dot);
+      }
+    })();
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') location.href = 'slide05.html';
+      if (e.key === 'ArrowLeft'  || e.key === 'PageUp')   location.href = 'slide03.html';
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 9 – Escalonamento e Softmax</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .dual-heatmap {
+      display:flex;
+      gap:0.8rem;
+      flex-wrap:wrap;
+      align-items:flex-start;
+    }
+    .hm-container {
+      display:flex;
+      flex-direction:column;
+      align-items:flex-start;
+      gap:0.2rem;
+      flex:1;
+      min-width:0;
+    }
+    .hm-title {
+      font-size:0.78rem;
+      font-weight:700;
+      color:var(--text-dim);
+      margin-bottom:0.1rem;
+    }
+    .hm-row {
+      display:flex;
+      align-items:center;
+    }
+    .hm-row-lbl {
+      font-family:'Fira Code',monospace;
+      font-size:0.72rem;
+      font-weight:600;
+      color:var(--text-muted);
+      width:2.4rem;
+      text-align:right;
+      padding-right:0.35rem;
+      flex-shrink:0;
+    }
+    .hm-col-lbl {
+      font-family:'Fira Code',monospace;
+      font-size:0.7rem;
+      font-weight:600;
+      color:var(--text-dim);
+      text-align:center;
+    }
+    .hm-cell {
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-family:'Fira Code',monospace;
+      font-size:0.72rem;
+      font-weight:600;
+      border-radius:5px;
+      border:1px solid rgba(0,0,0,0.05);
+      width:3.1rem;
+      height:2.4rem;
+    }
+
+    .dk-slider-wrap {
+      display:flex;
+      flex-direction:column;
+      gap:0.3rem;
+    }
+    .dk-label {
+      font-family:'Fira Code',monospace;
+      font-size:0.88rem;
+      font-weight:600;
+      color:var(--blue);
+      text-align:center;
+    }
+    input[type=range] {
+      width:100%;
+      accent-color:var(--teal);
+    }
+
+    .attn-matrix-wrap {
+      display:flex;
+      flex-direction:column;
+      align-items:flex-start;
+      gap:0;
+    }
+
+    .attn-row-btn {
+      display:flex;
+      align-items:center;
+      gap:0;
+      cursor:pointer;
+      border-radius:4px;
+      transition:background 0.15s;
+      padding:1px 0;
+    }
+    .attn-row-btn.sel .attn-row-lbl {
+      color:var(--teal);
+      font-weight:700;
+    }
+    .attn-row-lbl {
+      font-family:'Fira Code',monospace;
+      font-size:0.74rem;
+      font-weight:600;
+      color:var(--text-muted);
+      width:2.4rem;
+      text-align:right;
+      padding-right:0.35rem;
+      flex-shrink:0;
+      cursor:pointer;
+    }
+    .attn-cell {
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-family:'Fira Code',monospace;
+      font-size:0.72rem;
+      font-weight:600;
+      border-radius:5px;
+      width:3.1rem;
+      height:2.4rem;
+      border:2px solid transparent;
+    }
+    .attn-row-btn.sel .attn-cell {
+      border-color:rgba(13,110,110,0.35);
+    }
+
+    .softmax-detail {
+      display:flex;
+      flex-direction:column;
+      gap:0.5rem;
+    }
+    .sd-row {
+      display:flex;
+      align-items:center;
+      gap:0.5rem;
+      flex-wrap:wrap;
+    }
+    .sd-lbl {
+      font-family:'Fira Code',monospace;
+      font-size:0.8rem;
+      font-weight:700;
+      color:var(--text-dim);
+      min-width:5rem;
+    }
+    .sd-val {
+      font-family:'Fira Code',monospace;
+      font-size:0.82rem;
+      color:var(--text-muted);
+    }
+    .sd-arr {
+      font-family:'Fira Code',monospace;
+      font-size:0.82rem;
+      padding:0.2rem 0.5rem;
+      border-radius:5px;
+      background:var(--bg3);
+      border:1px solid var(--border2);
+    }
+
+    .bar-chart {
+      display:flex;
+      flex-direction:column;
+      gap:0.3rem;
+      margin-top:0.3rem;
+    }
+    .bar-row {
+      display:flex;
+      align-items:center;
+      gap:0.5rem;
+    }
+    .bar-lbl {
+      font-family:'Fira Code',monospace;
+      font-size:0.75rem;
+      font-weight:600;
+      width:2.4rem;
+      text-align:right;
+      flex-shrink:0;
+    }
+    .bar-track {
+      flex:1;
+      height:1.4rem;
+      background:var(--bg3);
+      border-radius:6px;
+      overflow:hidden;
+      border:1px solid var(--border2);
+    }
+    .bar-fill {
+      height:100%;
+      border-radius:6px;
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      padding-right:0.4rem;
+      font-family:'Fira Code',monospace;
+      font-size:0.72rem;
+      font-weight:700;
+      color:white;
+      transition:width 0.35s ease;
+    }
+
+    .formula-badge {
+      font-family:'Fira Code',monospace;
+      font-size:0.85rem;
+      background:var(--bg3);
+      border:1px solid var(--border2);
+      border-radius:var(--radius-sm);
+      padding:0.4rem 0.8rem;
+      color:var(--text-muted);
+      text-align:center;
+    }
+
+    @keyframes fadeIn {
+      from { opacity:0; transform:translateY(4px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    .fade-in { animation:fadeIn 0.25s ease both; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Transformers</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 9 · Slide 9 / 11</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Escalonamento e Softmax</h1>
+        <p class="slide-subtitle">QKᵀ/√dₖ → softmax linha a linha → matriz de scores S</p>
+      </div>
+
+      <div class="content-split">
+        <!-- Left: scaling effect -->
+        <div class="panel panel-left">
+          <h2 class="panel-title">Efeito do escalonamento</h2>
+
+          <div style="display:flex;flex-direction:column;gap:0.4rem;">
+            <div style="font-size:0.78rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.07em;">Frase:</div>
+            <div class="toggle-group" id="phrase-toggle">
+              <button class="btn-toggle active" onclick="setPhrase(0)">Ela saiu só</button>
+              <button class="btn-toggle" onclick="setPhrase(1)">Só ela saiu</button>
+              <button class="btn-toggle" onclick="setPhrase(2)">Ela só saiu</button>
+            </div>
+          </div>
+
+          <!-- dk slider -->
+          <div class="dk-slider-wrap">
+            <div class="dk-label" id="dk-label">dₖ = 2  →  √dₖ = 1.41</div>
+            <input type="range" id="dk-slider" min="0" max="5" step="1" value="0"
+              oninput="updateDk(this.value)" />
+            <div style="display:flex;justify-content:space-between;font-family:'Fira Code',monospace;font-size:0.68rem;color:var(--text-dim);">
+              <span>2</span><span>4</span><span>8</span><span>16</span><span>32</span><span>64</span>
+            </div>
+          </div>
+
+          <!-- Dual heatmap -->
+          <div class="dual-heatmap" id="dual-heatmap"></div>
+
+          <div class="formula-badge">S = softmax(QKᵀ / √dₖ)</div>
+
+          <div style="display:flex;flex-direction:column;gap:0.5rem;margin-top:0.2rem;">
+            <div style="background:var(--blue-lt);border:1.5px solid #93c5fd;border-radius:var(--radius-sm);padding:0.55rem 0.75rem;font-size:0.82rem;line-height:1.5;">
+              <span style="font-weight:700;color:var(--blue);">O que é dₖ?</span><br>
+              <span style="color:var(--text-muted);">É a dimensão dos vetores de <em>query</em> e <em>key</em>. Aqui dₖ = 2 (apenas 2 dimensões, para facilitar a visualização); em modelos reais como o BERT, dₖ = 64.</span>
+            </div>
+            <div style="background:var(--purple-lt);border:1.5px solid #c4b5fd;border-radius:var(--radius-sm);padding:0.55rem 0.75rem;font-size:0.82rem;line-height:1.5;">
+              <span style="font-weight:700;color:var(--purple);">Por que escalonar?</span><br>
+              <span style="color:var(--text-muted);">Com dₖ grande, os produtos internos crescem em magnitude: a softmax recebe valores muito extremos, satura e tem gradientes próximos de zero. Dividir por √dₖ estabiliza o treinamento.</span>
+            </div>
+            <div style="background:var(--teal-lt);border:1.5px solid #5eead4;border-radius:var(--radius-sm);padding:0.55rem 0.75rem;font-size:0.82rem;line-height:1.5;">
+              <span style="font-weight:700;color:var(--teal);">dₖ vs d_model</span><br>
+              <span style="color:var(--text-muted);">d_model é a dimensão total do embedding (ex.: 768 no BERT, 12 288 no GPT-3). Com h cabeças de atenção, cada cabeça usa dₖ = d_model / h — assim, o custo total se mantém igual a uma atenção única de dimensão d_model.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: softmax row detail -->
+        <div class="panel panel-right">
+          <h2 class="panel-title">Softmax linha a linha</h2>
+
+          <div id="attn-matrix-area"></div>
+
+          <div class="divider"></div>
+
+          <div id="softmax-detail-area" style="flex:1;"></div>
+
+          <div id="row-insight" style="margin-top:auto;"></div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide08.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide10.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    // Nota: na prática, embeddings têm centenas de dimensões (ex.: 768 ou 1024)
+    const EMB_LEX = {
+      'Ela':  [1,  2],
+      'ela':  [1,  2],
+      'saiu': [3, -1],
+      'só':   [-1, 2],
+      'Só':   [-1, 2],
+    };
+    function round2(x) { return Math.round(x * 100) / 100; }
+    function computePE(pos) {
+      return [
+        Math.sin(pos / Math.pow(10000, 0/2)),
+        Math.cos(pos / Math.pow(10000, 0/2)),
+      ].map(v => round2(v));
+    }
+    const POS_ENC = [computePE(0), computePE(1), computePE(2)];
+    const WQ = [[1, 0], [0, 1]];   // identity (2×2): Q = X
+    const WK = [[0, 1], [1, 0]];   // swap dims (2×2): K has swapped components
+    const WV = [[1, 1], [0, 1]];   // upper triangular (2×2): V adds context
+
+    function getMatrices(tokens) {
+      const X = tokens.map((t,i) => EMB_LEX[t].map((v,j) => round2(v + POS_ENC[i][j])));
+      const Q = X.map(row => [0,1].map(j => round2(row.reduce((s,v,k)=>s+v*WQ[k][j],0))));
+      const K = X.map(row => [0,1].map(j => round2(row.reduce((s,v,k)=>s+v*WK[k][j],0))));
+      const V = X.map(row => [0,1].map(j => round2(row.reduce((s,v,k)=>s+v*WV[k][j],0))));
+      return {X, Q, K, V};
+    }
+    function computeQKT(Q, K) {
+      return Q.map(qi => K.map(kj => round2(qi.reduce((s,v,i)=>s+v*kj[i],0))));
+    }
+    function softmaxRow(row) {
+      const max = Math.max(...row);
+      const exps = row.map(x => Math.exp(x - max));
+      const sum = exps.reduce((a,b)=>a+b,0);
+      return exps.map(e => round2(e/sum));
+    }
+    function scoreToColor(val, min, max) {
+      const t = Math.min(1, Math.max(0, (val - min) / (max - min + 0.001)));
+      if (t < 0.5) {
+        const f = t / 0.5;
+        return `rgb(${Math.round(254-f*14)}, ${Math.round(226-f*20)}, ${Math.round(226+f*10)})`;
+      } else {
+        const f = (t - 0.5) / 0.5;
+        return `rgb(${Math.round(240-f*89)}, ${Math.round(250-f*4)}, ${Math.round(236-f*10)})`;
+      }
+    }
+    function attnToColor(val) {
+      const r = Math.round(255 - val * (255 - 13));
+      const g = Math.round(255 - val * (255 - 110));
+      const b = Math.round(255 - val * (255 - 110));
+      return `rgb(${r},${g},${b})`;
+    }
+
+    const PHRASES = [
+      ['Ela', 'saiu', 'só'],
+      ['Só',  'ela',  'saiu'],
+      ['Ela', 'só',   'saiu'],
+    ];
+    const DK_VALUES = [2, 4, 8, 16, 32, 64];
+    const TOK_COLORS = ['var(--teal)', 'var(--blue)', 'var(--purple)'];
+    const TOK_BG_COLORS = ['var(--teal-lt)', 'var(--blue-lt)', 'var(--purple-lt)'];
+
+    let currentPhrase = 0;
+    let currentDkIdx = 0;
+    let selectedRow = 0;
+
+    function getCurrentData() {
+      const tokens = PHRASES[currentPhrase];
+      const dk = DK_VALUES[currentDkIdx];
+      const {Q, K, V} = getMatrices(tokens);
+      const scores = computeQKT(Q, K);
+      const scaled = scores.map(row => row.map(s => round2(s / Math.sqrt(dk))));
+      const S = scaled.map(row => softmaxRow(row));
+      return {tokens, dk, scores, scaled, S};
+    }
+
+    function buildSmallHeatmap(tokens, matrix, title) {
+      const allVals = matrix.flat();
+      const minV = Math.min(...allVals);
+      const maxV = Math.max(...allVals);
+
+      let html = `<div class="hm-container">`;
+      html += `<div class="hm-title">${title}</div>`;
+
+      // col header
+      html += `<div class="hm-row"><div style="width:2.4rem;flex-shrink:0;"></div>`;
+      tokens.forEach(t => {
+        html += `<div class="hm-col-lbl" style="width:3.1rem;text-align:center;">${t}</div>`;
+      });
+      html += '</div>';
+
+      tokens.forEach((rowTok, i) => {
+        html += '<div class="hm-row">';
+        html += `<div class="hm-row-lbl">${rowTok}</div>`;
+        tokens.forEach((_, j) => {
+          const val = matrix[i][j];
+          const bg = scoreToColor(val, minV, maxV);
+          const textColor = val < (minV+maxV)/2 ? '#7f1d1d' : '#064e3b';
+          html += `<div class="hm-cell" style="background:${bg};color:${textColor};">${val.toFixed(2)}</div>`;
+        });
+        html += '</div>';
+      });
+      html += '</div>';
+      return html;
+    }
+
+    function renderDualHeatmap() {
+      const {tokens, scores, scaled} = getCurrentData();
+      const html = buildSmallHeatmap(tokens, scores, 'Scores QKᵀ') +
+                   buildSmallHeatmap(tokens, scaled, 'Escalonado QKᵀ/√dₖ');
+      document.getElementById('dual-heatmap').innerHTML = `<div class="dual-heatmap fade-in">${html}</div>`;
+    }
+
+    function renderAttnMatrix() {
+      const {tokens, S} = getCurrentData();
+      let html = '<div class="attn-matrix-wrap fade-in">';
+
+      // col header
+      html += '<div class="hm-row"><div style="width:2.4rem;flex-shrink:0;"></div>';
+      tokens.forEach(t => {
+        html += `<div class="hm-col-lbl" style="width:3.1rem;text-align:center;">${t}</div>`;
+      });
+      html += '</div>';
+
+      tokens.forEach((rowTok, i) => {
+        const selCls = (i === selectedRow) ? 'sel' : '';
+        html += `<div class="attn-row-btn ${selCls}" onclick="selectRow(${i})">`;
+        html += `<div class="attn-row-lbl">${rowTok}</div>`;
+        tokens.forEach((_, j) => {
+          const val = S[i][j];
+          const bg = attnToColor(val);
+          const textColor = val > 0.5 ? 'white' : 'var(--text)';
+          html += `<div class="attn-cell" style="background:${bg};color:${textColor};">${val.toFixed(2)}</div>`;
+        });
+        html += '</div>';
+      });
+      html += '</div>';
+
+      document.getElementById('attn-matrix-area').innerHTML = html;
+    }
+
+    function renderSoftmaxDetail() {
+      const {tokens, scores, scaled, S, dk} = getCurrentData();
+      const i = selectedRow;
+      const rawScores = scores[i];
+      const scaledScores = scaled[i];
+      const attnWeights = S[i];
+      const sqrtDk = round2(Math.sqrt(dk));
+
+      const arrStr = arr => '[' + arr.map(v => (v >= 0 ? ' ' : '') + v.toFixed(2)).join(',') + ']';
+      const sum = round2(attnWeights.reduce((a,b)=>a+b,0));
+
+      let html = '<div class="softmax-detail fade-in">';
+
+      html += `<div style="font-size:0.78rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.06em;">Linha ${i+1}: "${tokens[i]}"</div>`;
+
+      html += `<div class="sd-row">
+        <span class="sd-lbl">Scores:</span>
+        <span class="sd-arr">${arrStr(rawScores)}</span>
+      </div>`;
+      html += `<div class="sd-row">
+        <span class="sd-lbl">÷ √${dk}=${sqrtDk}:</span>
+        <span class="sd-arr">${arrStr(scaledScores)}</span>
+      </div>`;
+      html += `<div class="sd-row">
+        <span class="sd-lbl">softmax:</span>
+        <span class="sd-arr" style="color:var(--teal);font-weight:700;">${arrStr(attnWeights)}</span>
+        <span style="font-family:'Fira Code',monospace;font-size:0.76rem;color:var(--text-dim);">(Σ = ${sum.toFixed(2)})</span>
+      </div>`;
+
+      html += '<div class="bar-chart">';
+      attnWeights.forEach((w, j) => {
+        const pct = Math.round(w * 100);
+        const color = ['#0d6e6e','#1d4ed8','#6d28d9'][j];
+        html += `<div class="bar-row">
+          <div class="bar-lbl" style="color:${color};">${tokens[j]}</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width:${Math.max(pct,3)}%;background:${color};">
+              ${w.toFixed(2)}
+            </div>
+          </div>
+        </div>`;
+      });
+      html += '</div>';
+
+      html += '</div>';
+      document.getElementById('softmax-detail-area').innerHTML = html;
+
+      // Dynamic insight card
+      const maxW = Math.max(...attnWeights);
+      const maxJ = attnWeights.indexOf(maxW);
+      const minW = Math.min(...attnWeights);
+      const minJ = attnWeights.indexOf(minW);
+      const tok  = tokens[i];
+      const maxTok = tokens[maxJ];
+      const minTok = tokens[minJ];
+      const isSelf = (maxJ === i);
+      const pct = Math.round(maxW * 100);
+      const colors = ['#0d6e6e','#1d4ed8','#6d28d9'];
+      const maxColor = colors[maxJ];
+
+      let interp;
+      if (isSelf) {
+        interp = `<strong style="color:${maxColor};">“${maxTok}”</strong> concentra a maior parte da atenção em si mesmo (${pct}%). Isso indica pouca dependência contextual — o token é relativamente autocontido nesta posição.`;
+      } else {
+        interp = `<strong style="color:var(--teal);">“${tok}”</strong> presta mais atenção a <strong style="color:${maxColor};">“${maxTok}”</strong> (${pct}%) — produto interno alto indica que a <em>query</em> de “${tok}” se alinha bem com a <em>key</em> de “${maxTok}”. O token de menor atenção é <strong style="color:${colors[minJ]};">“${minTok}”</strong> (${Math.round(minW*100)}%).`;
+      }
+
+      document.getElementById('row-insight').innerHTML = `
+        <div class="insight-box fade-in" style="border-left:4px solid ${maxColor};">
+          <div class="i-icon">🎓</div>
+          <div class="i-text">${interp}<br><span style="font-size:0.78rem;color:var(--text-dim);margin-top:0.2rem;display:block;">Cada linha de S é uma distribuição de probabilidade (soma = 1). Clique em outra linha para explorar.</span></div>
+        </div>`;
+    }
+
+    function selectRow(i) {
+      selectedRow = i;
+      renderAttnMatrix();
+      renderSoftmaxDetail();
+    }
+
+    function updateDk(val) {
+      currentDkIdx = parseInt(val);
+      const dk = DK_VALUES[currentDkIdx];
+      const sqrtDk = Math.sqrt(dk).toFixed(2);
+      document.getElementById('dk-label').textContent = `dₖ = ${dk}  →  √dₖ = ${sqrtDk}`;
+      renderDualHeatmap();
+      renderAttnMatrix();
+      renderSoftmaxDetail();
+    }
+
+    function setPhrase(idx) {
+      currentPhrase = idx;
+      selectedRow = 0;
+      document.querySelectorAll('#phrase-toggle .btn-toggle').forEach((b,i) => b.classList.toggle('active', i===idx));
+      renderDualHeatmap();
+      renderAttnMatrix();
+      renderSoftmaxDetail();
+    }
+
+    // Init
+    renderDualHeatmap();
+    renderAttnMatrix();
+    renderSoftmaxDetail();
+  </script>
+</body>
+</html>

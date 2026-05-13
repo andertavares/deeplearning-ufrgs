@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 19 – Famílias de Transformers</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .slide-main { gap: 0.55rem; }
+
+    /* ── Cards grid ── */
+    .families-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.9rem;
+      flex: 1;
+    }
+
+    .family-card {
+      background: var(--bg2);
+      border: 2.5px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 1rem 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+      cursor: pointer;
+      transition: all 0.25s;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+    .family-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 28px rgba(15,23,36,0.12);
+    }
+    .family-card.expanded {
+      transform: translateY(-2px);
+    }
+
+    /* Blue – Encoder-only */
+    .card-blue { border-color: var(--border2); }
+    .card-blue.expanded { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(29,78,216,0.18), 0 8px 28px rgba(29,78,216,0.15); }
+    .card-blue .card-accent { background: var(--blue); }
+    .card-blue .card-icon-bg { background: var(--blue-lt); }
+    .card-blue .card-title { color: var(--blue); }
+    .card-blue .card-tag { background: var(--blue-lt); color: var(--blue); border-color: rgba(29,78,216,0.3); }
+    .card-blue .arch-block-inner { background: var(--blue-lt); border-color: var(--blue); color: var(--blue); }
+
+    /* Purple – Decoder-only */
+    .card-purple { border-color: var(--border2); }
+    .card-purple.expanded { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(109,40,217,0.18), 0 8px 28px rgba(109,40,217,0.15); }
+    .card-purple .card-accent { background: var(--purple); }
+    .card-purple .card-icon-bg { background: var(--purple-lt); }
+    .card-purple .card-title { color: var(--purple); }
+    .card-purple .card-tag { background: var(--purple-lt); color: var(--purple); border-color: rgba(109,40,217,0.3); }
+    .card-purple .arch-block-inner { background: var(--purple-lt); border-color: var(--purple); color: var(--purple); }
+
+    /* Teal – Encoder-Decoder */
+    .card-teal { border-color: var(--border2); }
+    .card-teal.expanded { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(13,110,110,0.18), 0 8px 28px rgba(13,110,110,0.15); }
+    .card-teal .card-accent { background: var(--teal); }
+    .card-teal .card-icon-bg { background: var(--teal-lt); }
+    .card-teal .card-title { color: var(--teal); }
+    .card-teal .card-tag { background: var(--teal-lt); color: var(--teal); border-color: rgba(13,110,110,0.3); }
+    .card-teal .arch-block-inner.enc { background: var(--blue-lt); border-color: var(--blue); color: var(--blue); }
+    .card-teal .arch-block-inner.dec { background: var(--teal-lt); border-color: var(--teal); color: var(--teal); }
+
+    /* Accent bar on top */
+    .card-accent {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+
+    /* Card header (always visible) */
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      margin-top: 0.15rem;
+    }
+    .card-icon-bg {
+      width: 2.8rem;
+      height: 2.8rem;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      line-height: 1.25;
+    }
+    .card-subtitle {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      line-height: 1.35;
+    }
+
+    /* Expand hint */
+    .card-hint {
+      font-size: 0.74rem;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .card-hint .chevron {
+      display: inline-block;
+      transition: transform 0.25s;
+    }
+    .family-card.expanded .card-hint .chevron { transform: rotate(180deg); }
+
+    /* Expandable body */
+    .card-body {
+      display: none;
+      flex-direction: column;
+      gap: 0.55rem;
+      animation: bodyReveal 0.3s ease both;
+    }
+    @keyframes bodyReveal {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .family-card.expanded .card-body { display: flex; }
+
+    /* Architecture mini-diagram */
+    .arch-diagram {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      padding: 0.4rem 0;
+    }
+    .arch-block {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+    .arch-block-inner {
+      padding: 0.28rem 1.1rem;
+      border-radius: 7px;
+      border: 2px solid;
+      font-size: 0.74rem;
+      font-weight: 700;
+      font-family: 'Fira Code', monospace;
+      text-align: center;
+      width: 100%;
+      max-width: 180px;
+    }
+    .arch-arrow {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      margin: 2px 0;
+    }
+
+    /* Tasks list */
+    .tasks-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.28rem;
+    }
+    .task-item {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: flex-start;
+      gap: 0.3rem;
+      line-height: 1.35;
+    }
+    .task-item::before { content: '•'; flex-shrink: 0; margin-top: 0.05rem; }
+
+    /* Models tags */
+    .models-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+    }
+    .card-tag {
+      padding: 0.15rem 0.55rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      border: 1.5px solid;
+      font-family: 'Fira Code', monospace;
+    }
+
+    /* Mechanism note inside card */
+    .mech-note {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      background: var(--bg3);
+      border-radius: var(--radius-sm);
+      padding: 0.4rem 0.6rem;
+      line-height: 1.45;
+      border-left: 3px solid var(--border2);
+    }
+    .card-blue .mech-note  { border-left-color: var(--blue); }
+    .card-purple .mech-note { border-left-color: var(--purple); }
+    .card-teal .mech-note  { border-left-color: var(--teal); }
+
+    /* Quote at bottom */
+    .quote-box {
+      display: none;
+      animation: bodyReveal 0.4s ease both;
+    }
+    .quote-box.visible { display: block; }
+
+    /* Comparison panel */
+    .compare-panel {
+      display: none;
+      animation: bodyReveal 0.4s ease both;
+    }
+    .compare-panel.visible { display: block; }
+
+    .compare-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.6rem;
+      margin-top: 0.4rem;
+    }
+    .compare-col {
+      background: var(--bg2);
+      border-radius: var(--radius-sm);
+      padding: 0.55rem 0.7rem;
+      border: 1.5px solid var(--border2);
+    }
+    .compare-col-head {
+      font-size: 0.73rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.35rem;
+    }
+    .compare-col.col-purple { border-color: rgba(109,40,217,0.35); }
+    .compare-col.col-purple .compare-col-head { color: var(--purple); }
+    .compare-col.col-teal { border-color: rgba(13,110,110,0.35); }
+    .compare-col.col-teal .compare-col-head { color: var(--teal); }
+    .compare-item {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+      display: flex;
+      gap: 0.3rem;
+      margin-bottom: 0.2rem;
+    }
+    .compare-item .ci-icon { flex-shrink: 0; }
+
+    @media (max-width: 900px) {
+      .families-grid { grid-template-columns: 1fr; }
+      .compare-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Transformers</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 16 · Slide 19 / 19</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block" style="padding:0.5rem 0 0.2rem;">
+        <h1 class="slide-title">Famílias de Transformers</h1>
+        <p class="slide-subtitle">Uma mecânica, três arquiteturas</p>
+      </div>
+
+      <div class="families-grid">
+
+        <!-- Card 1: Encoder-only -->
+        <div class="family-card card-blue" id="card-enc" onclick="toggleCard('enc')">
+          <div class="card-accent"></div>
+          <div class="card-header">
+            <div class="card-icon-bg">🔵</div>
+            <div>
+              <div class="card-title">Encoder-only</div>
+              <div class="card-subtitle">Entende a entrada, não gera texto</div>
+            </div>
+          </div>
+          <div class="card-hint"><span class="chevron">▼</span> Clique para expandir</div>
+
+          <div class="card-body">
+            <div class="arch-diagram">
+              <div class="arch-block"><div class="arch-block-inner">Input Tokens</div></div>
+              <div class="arch-arrow">▼</div>
+              <div class="arch-block"><div class="arch-block-inner">Encoder × N</div></div>
+              <div class="arch-arrow">▼</div>
+              <div class="arch-block"><div class="arch-block-inner">Representações A</div></div>
+            </div>
+            <div class="mech-note">Atenção <strong>bidirecional</strong>: cada token vê todos os outros. Isso produz representações ricas do contexto completo, ideais para <em>entender</em> — mas não para gerar sequências novas.</div>
+            <div class="divider"></div>
+            <div style="font-size:0.76rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;">Tarefas</div>
+            <div class="tasks-list">
+              <div class="task-item">Classificação de texto</div>
+              <div class="task-item">Reconhecimento de entidades (NER)</div>
+              <div class="task-item">Análise de sentimentos</div>
+              <div class="task-item">Extração de relações</div>
+            </div>
+            <div style="font-size:0.76rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;">Modelos</div>
+            <div class="models-row">
+              <span class="card-tag">BERT</span>
+              <span class="card-tag">RoBERTa</span>
+              <span class="card-tag">XLM-R</span>
+              <span class="card-tag">ALBERT</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: Decoder-only -->
+        <div class="family-card card-purple" id="card-dec" onclick="toggleCard('dec')">
+          <div class="card-accent"></div>
+          <div class="card-header">
+            <div class="card-icon-bg">🟣</div>
+            <div>
+              <div class="card-title">Decoder-only</div>
+              <div class="card-subtitle">Gera texto autoregressivamente</div>
+            </div>
+          </div>
+          <div class="card-hint"><span class="chevron">▼</span> Clique para expandir</div>
+
+          <div class="card-body">
+            <div class="arch-diagram">
+              <div class="arch-block"><div class="arch-block-inner">Input Tokens</div></div>
+              <div class="arch-arrow">▼</div>
+              <div class="arch-block"><div class="arch-block-inner">Decoder × N<br><span style="font-size:0.65rem;">(Masked Self-Attn)</span></div></div>
+              <div class="arch-arrow">▼</div>
+              <div class="arch-block"><div class="arch-block-inner">Linear + Softmax</div></div>
+            </div>
+            <div class="mech-note">Atenção <strong>causal (mascarada)</strong>: cada token só vê os anteriores. O modelo aprende a prever o próximo token — fonte e saída ficam na <em>mesma</em> sequência, separadas por um delimitador especial.</div>
+            <div class="divider"></div>
+            <div style="font-size:0.76rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;">Tarefas</div>
+            <div class="tasks-list">
+              <div class="task-item">Geração de texto livre</div>
+              <div class="task-item">Continuação de histórias</div>
+              <div class="task-item">Chatbots e assistentes</div>
+              <div class="task-item">Geração de código</div>
+            </div>
+            <div style="font-size:0.76rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;">Modelos</div>
+            <div class="models-row">
+              <span class="card-tag">GPT-2</span>
+              <span class="card-tag">GPT-4</span>
+              <span class="card-tag">LLaMA</span>
+              <span class="card-tag">Mistral</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: Encoder-Decoder -->
+        <div class="family-card card-teal" id="card-encdec" onclick="toggleCard('encdec')">
+          <div class="card-accent"></div>
+          <div class="card-header">
+            <div class="card-icon-bg">🟢</div>
+            <div>
+              <div class="card-title">Encoder-Decoder</div>
+              <div class="card-subtitle">Transforma uma sequência em outra</div>
+            </div>
+          </div>
+          <div class="card-hint"><span class="chevron">▼</span> Clique para expandir</div>
+
+          <div class="card-body">
+            <div class="arch-diagram">
+              <div style="display:flex;gap:0.5rem;width:100%;justify-content:center;">
+                <div class="arch-block-inner enc" style="flex:1;max-width:unset;">Encoder × N</div>
+                <div style="display:flex;align-items:center;color:var(--teal);font-weight:700;font-size:0.8rem;">→</div>
+                <div class="arch-block-inner dec" style="flex:1;max-width:unset;">Decoder × N</div>
+              </div>
+              <div class="arch-arrow">▼</div>
+              <div class="arch-block"><div class="arch-block-inner" style="background:var(--teal-lt);border-color:var(--teal);color:var(--teal);">Linear + Softmax</div></div>
+            </div>
+            <div class="mech-note"><strong>Cross-attention</strong>: o decoder recebe os vetores do encoder via uma camada de atenção extra. Cada token gerado pode se alinhar a qualquer posição da entrada — separação explícita entre <em>compreender</em> a fonte e <em>gerar</em> a saída.</div>
+            <div class="divider"></div>
+            <div style="font-size:0.76rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;">Tarefas</div>
+            <div class="tasks-list">
+              <div class="task-item">Tradução automática</div>
+              <div class="task-item">Sumarização de textos</div>
+              <div class="task-item">Pergunta-Resposta (QA)</div>
+              <div class="task-item">Reescrita e paráfrase</div>
+            </div>
+            <div style="font-size:0.76rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;">Modelos</div>
+            <div class="models-row">
+              <span class="card-tag">T5</span>
+              <span class="card-tag">BART</span>
+              <span class="card-tag">mT5</span>
+              <span class="card-tag">Flan-T5</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Comparison panel: decoder-only vs encoder-decoder (appears when enc-dec card opens) -->
+      <div class="compare-panel" id="comparePanel">
+        <div style="font-size:0.76rem;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.3rem;">⚖️ Decoder-only consegue gerar texto — por que usar Encoder-Decoder?</div>
+        <div class="compare-grid">
+          <div class="compare-col col-purple">
+            <div class="compare-col-head">Decoder-only</div>
+            <div class="compare-item"><span class="ci-icon">✔</span> Fonte e saída na mesma sequência (<code>[fonte] → [geração]</code>)</div>
+            <div class="compare-item"><span class="ci-icon">✔</span> Escala bem: um único stack de pesos</div>
+            <div class="compare-item"><span class="ci-icon">✘</span> Contexto da fonte compete com o da saída por posições de atenção</div>
+            <div class="compare-item"><span class="ci-icon">✘</span> Encoder processa a fonte com atenção <em>causal</em> — menos rico para tarefas de transformação</div>
+          </div>
+          <div class="compare-col col-teal">
+            <div class="compare-col-head">Encoder-Decoder</div>
+            <div class="compare-item"><span class="ci-icon">✔</span> Encoder lê a fonte com atenção <strong>bidirecional completa</strong> — representação mais rica</div>
+            <div class="compare-item"><span class="ci-icon">✔</span> Cross-attention permite ao decoder se <strong>alinhar explicitamente</strong> a qualquer parte da entrada a cada passo</div>
+            <div class="compare-item"><span class="ci-icon">✔</span> Fonte processada uma vez; geração independente — mais eficiente em tradução longa</div>
+            <div class="compare-item"><span class="ci-icon">✘</span> Mais parâmetros; dois stacks para treinar</div>
+          </div>
+        </div>
+        <div style="font-size:0.75rem;color:var(--text-dim);margin-top:0.4rem;line-height:1.45;">
+          <strong>Resumo:</strong> quando a tarefa é <em>transformar</em> uma sequência em outra (tradução, sumarização), a separação explícita entre compreensão bidirecional da fonte e geração autogressiva da saída tende a ser mais eficiente e mais interpretável. Quando a tarefa é geração aberta sem fonte definida, o decoder-only é suficiente — e mais simples de escalar.
+        </div>
+      </div>
+
+      <!-- Professor quote (appears after first click) -->
+      <div class="quote-box" id="quoteBox">
+        <div class="insight-box">
+          <span class="i-icon">💬</span>
+          <div class="i-text">
+            "A ideia central que estudamos hoje é a <strong>atenção como cálculo matricial de alinhamentos entre tokens</strong>.
+            É isso que sustenta as principais famílias modernas de Transformers."
+            <span style="font-size:0.82rem;color:var(--text-dim);"> — Prof. Anderson Rocha Tavares</span>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide18.html'">← Anterior</button>
+      <div class="nav-dots" id="navDots"></div>
+      <button class="btn-nav btn-next" disabled style="opacity:0.3;cursor:not-allowed;">Fim →</button>
+    </nav>
+  </div>
+
+  <script>
+    (function(){
+      const container = document.getElementById('navDots');
+      const CURRENT = 19;
+      for (let i = 1; i <= 19; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'dot' + (i === CURRENT ? ' active' : '');
+        dot.title = 'Slide ' + i;
+        dot.style.cursor = 'pointer';
+        dot.addEventListener('click', () => {
+          location.href = 'slide' + String(i).padStart(2,'0') + '.html';
+        });
+        container.appendChild(dot);
+      }
+    })();
+
+    let currentOpen = null;
+    let quoteShown = false;
+
+    function toggleCard(key) {
+      const ids = { enc: 'card-enc', dec: 'card-dec', encdec: 'card-encdec' };
+
+      if (currentOpen === key) {
+        // Collapse current
+        document.getElementById(ids[key]).classList.remove('expanded');
+        currentOpen = null;
+        // Hide compare panel and quote when all collapsed
+        document.getElementById('comparePanel').classList.remove('visible');
+        document.getElementById('quoteBox').classList.remove('visible');
+      } else {
+        // Collapse previous
+        if (currentOpen) {
+          document.getElementById(ids[currentOpen]).classList.remove('expanded');
+        }
+        // Expand new
+        document.getElementById(ids[key]).classList.add('expanded');
+        currentOpen = key;
+
+        // Show compare panel when enc-dec card opens
+        if (key === 'encdec') {
+          document.getElementById('comparePanel').classList.add('visible');
+          document.getElementById('quoteBox').classList.remove('visible');
+        } else {
+          document.getElementById('comparePanel').classList.remove('visible');
+          // Show quote on first non-encdec expand
+          if (!quoteShown) {
+            quoteShown = true;
+          }
+          document.getElementById('quoteBox').classList.add('visible');
+        }
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 04 – Autoencoder: a ideia</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .ae-flow {
+      display: flex; align-items: center; justify-content: center;
+      gap: 0.5rem; flex-wrap: wrap;
+      padding: 1.2rem 1rem;
+    }
+    .ae-block {
+      padding: 0.8rem 1rem; border-radius: var(--radius-sm);
+      font-weight: 700; font-size: 0.95rem; text-align: center;
+      min-width: 80px;
+    }
+    .ae-block.input  { background: var(--bg3); border: 1.5px solid var(--border2); color: var(--text-muted); }
+    .ae-block.enc    { background: var(--teal-lt); border: 2px solid var(--teal); color: var(--teal); }
+    .ae-block.latent { background: var(--cyan-lt); border: 2px solid var(--cyan);  color: var(--cyan);  min-width: 60px; }
+    .ae-block.dec    { background: var(--cyan-lt); border: 2px solid var(--cyan);  color: var(--cyan); }
+    .ae-block.output { background: var(--bg3); border: 1.5px solid var(--border2); color: var(--text-muted); }
+    .ae-arrow { font-size: 1.4rem; color: var(--teal); font-weight: 900; }
+    @keyframes arrowPulse {
+      0%, 100% { transform: translateX(0); opacity: 1; }
+      50%       { transform: translateX(3px); opacity: 0.6; }
+    }
+    .ae-arrow { animation: arrowPulse 1.8s ease-in-out infinite; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">IA Generativa</span>
+      <span style="font-size:0.9rem;color:var(--text-muted);font-weight:500;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 2 · Slide 4 / 24</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Autoencoder: a ideia</h1>
+        <p class="slide-subtitle">Uma rede que aprende a comprimir e reconstruir dados</p>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Arquitetura</div>
+        <div class="ae-flow">
+          <div style="text-align:center;">
+            <div style="font-size:2.4rem;">🖼</div>
+            <div class="ae-block input" style="margin-top:0.4rem;">Entrada<br/><small style="font-weight:400;font-size:0.75rem;">784 pixels</small></div>
+          </div>
+          <span class="ae-arrow">→</span>
+          <div class="ae-block enc">Encoder<br/><small style="font-weight:400;font-size:0.75rem;">comprime</small></div>
+          <span class="ae-arrow">→</span>
+          <div class="ae-block latent">z<br/><small style="font-weight:400;font-size:0.75rem;">latente<br/>32d</small></div>
+          <span class="ae-arrow">→</span>
+          <div class="ae-block dec">Decoder<br/><small style="font-weight:400;font-size:0.75rem;">reconstrói</small></div>
+          <span class="ae-arrow">→</span>
+          <div style="text-align:center;">
+            <div style="font-size:2.4rem;">🖼</div>
+            <div class="ae-block output" style="margin-top:0.4rem;">x̂ saída<br/><small style="font-weight:400;font-size:0.75rem;">≈ entrada</small></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="content-split">
+        <div class="highlight-box teal">
+          <span class="icon">🎯</span>
+          <div>
+            <strong>Objetivo do treino</strong><br/>
+            <span style="font-size:0.9rem;">Minimizar <code style="font-family:'Fira Code',monospace;">||x − x̂||²</code> — reconstrução fiel à entrada</span>
+          </div>
+        </div>
+        <div class="highlight-box blue">
+          <span class="icon">🧠</span>
+          <div>
+            <strong>O que aprende</strong><br/>
+            <span style="font-size:0.9rem;">Uma representação <em>compacta e informativa</em> dos dados no espaço latente</span>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide03.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide05.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') location.href = 'slide05.html';
+      if (e.key === 'ArrowLeft'  || e.key === 'PageUp')   location.href = 'slide03.html';
+    });
+  </script>
+</body>
+</html>

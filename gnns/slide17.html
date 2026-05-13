@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 17 – Classificação de Nós</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .node-layout { display:grid; grid-template-columns:1.4fr 0.6fr; gap:1.2rem; flex:1; }
+    .legend-row { display:flex; gap:0.8rem; flex-wrap:wrap; font-size:0.82rem; justify-content:center; }
+    .legend-item { display:flex; align-items:center; gap:0.35rem; }
+    .legend-dot { width:14px; height:14px; border-radius:50%; flex-shrink:0; border:2px solid transparent; }
+    @keyframes flowPulse {
+      0%,100% { opacity:0.2; }
+      50% { opacity:1; }
+    }
+    .flow-anim { animation: flowPulse 1.2s ease-in-out infinite; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">GNNs</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Slide 17 / 20</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Classificação de Nós</h1>
+        <p class="slide-subtitle">Bloco 4 — Treinamento em Grafos</p>
+      </div>
+
+      <div class="legend-row">
+        <span class="legend-item"><span class="legend-dot" style="background:#dbeafe;border-color:#3b82f6;"></span>Treino (rotulado)</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#fef9c3;border-color:#d97706;"></span>Validação</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#fee2e2;border-color:#ef4444;"></span>Teste (sem rótulo)</span>
+      </div>
+
+      <div class="node-layout">
+        <!-- Grafo SVG grande -->
+        <div class="panel" style="align-items:center;padding:0.7rem;">
+          <svg viewBox="0 0 380 240" id="graphSvg" style="width:100%;max-height:240px;display:block;">
+            <!-- Arestas -->
+            <g id="edgesGroup" stroke="#c7d0e0" stroke-width="1.5" fill="none">
+              <line x1="100" y1="60"  x2="180" y2="80"/>
+              <line x1="100" y1="60"  x2="80"  y2="140"/>
+              <line x1="180" y1="80"  x2="260" y2="60"/>
+              <line x1="180" y1="80"  x2="200" y2="160"/>
+              <line x1="260" y1="60"  x2="320" y2="100"/>
+              <line x1="260" y1="60"  x2="200" y2="160"/>
+              <line x1="80"  y1="140" x2="140" y2="200"/>
+              <line x1="80"  y1="140" x2="50"  y2="200"/>
+              <line x1="200" y1="160" x2="140" y2="200"/>
+              <line x1="200" y1="160" x2="280" y2="200"/>
+              <line x1="320" y1="100" x2="280" y2="200"/>
+              <line x1="320" y1="100" x2="340" y2="180"/>
+              <line x1="180" y1="80"  x2="80"  y2="140"/>
+              <line x1="260" y1="60"  x2="320" y2="100"/>
+              <line x1="50"  y1="200" x2="140" y2="200"/>
+            </g>
+
+            <!-- Nós treino (azul) -->
+            <circle cx="100" cy="60"  r="16" fill="#dbeafe" stroke="#3b82f6" stroke-width="2.5" data-split="train"/>
+            <circle cx="80"  cy="140" r="16" fill="#dbeafe" stroke="#3b82f6" stroke-width="2.5" data-split="train"/>
+            <circle cx="260" cy="60"  r="16" fill="#dbeafe" stroke="#3b82f6" stroke-width="2.5" data-split="train"/>
+            <circle cx="140" cy="200" r="16" fill="#dbeafe" stroke="#3b82f6" stroke-width="2.5" data-split="train"/>
+            <circle cx="340" cy="180" r="16" fill="#dbeafe" stroke="#3b82f6" stroke-width="2.5" data-split="train"/>
+            <!-- Nós validação (amarelo) -->
+            <circle cx="320" cy="100" r="16" fill="#fef9c3" stroke="#d97706" stroke-width="2.5" data-split="val"/>
+            <circle cx="50"  cy="200" r="16" fill="#fef9c3" stroke="#d97706" stroke-width="2.5" data-split="val"/>
+            <!-- Nós teste (vermelho) -->
+            <circle cx="180" cy="80"  r="16" fill="#fee2e2" stroke="#ef4444" stroke-width="2.5" data-split="test"/>
+            <circle cx="200" cy="160" r="16" fill="#fee2e2" stroke="#ef4444" stroke-width="2.5" data-split="test"/>
+            <circle cx="280" cy="200" r="16" fill="#fee2e2" stroke="#ef4444" stroke-width="2.5" data-split="test"/>
+
+            <!-- Labels classe nos nós de treino -->
+            <text x="100" y="64"  font-size="9" font-weight="700" fill="#1d4ed8" text-anchor="middle">A</text>
+            <text x="80"  y="144" font-size="9" font-weight="700" fill="#1d4ed8" text-anchor="middle">B</text>
+            <text x="260" y="64"  font-size="9" font-weight="700" fill="#1d4ed8" text-anchor="middle">A</text>
+            <text x="140" y="204" font-size="9" font-weight="700" fill="#1d4ed8" text-anchor="middle">B</text>
+            <text x="340" y="184" font-size="9" font-weight="700" fill="#1d4ed8" text-anchor="middle">A</text>
+            <!-- Teste: labels ocultos -->
+            <text x="180" y="84"  font-size="10" fill="#ef4444" text-anchor="middle" id="tl1">?</text>
+            <text x="200" y="164" font-size="10" fill="#ef4444" text-anchor="middle" id="tl2">?</text>
+            <text x="280" y="204" font-size="10" fill="#ef4444" text-anchor="middle" id="tl3">?</text>
+            <!-- Val: labels -->
+            <text x="320" y="104" font-size="9" font-weight="700" fill="#d97706" text-anchor="middle">B</text>
+            <text x="50"  y="204" font-size="9" font-weight="700" fill="#d97706" text-anchor="middle">A</text>
+
+            <!-- Setas de fluxo (animadas) -->
+            <g id="flowGroup" opacity="0">
+              <line x1="100" y1="60" x2="175" y2="78" stroke="#3b82f6" stroke-width="2.5" stroke-dasharray="4,3" class="flow-anim" style="animation-delay:0s"/>
+              <line x1="80"  y1="140" x2="175" y2="85" stroke="#3b82f6" stroke-width="2.5" stroke-dasharray="4,3" class="flow-anim" style="animation-delay:0.2s"/>
+              <line x1="260" y1="60" x2="185" y2="75" stroke="#3b82f6" stroke-width="2.5" stroke-dasharray="4,3" class="flow-anim" style="animation-delay:0.4s"/>
+              <line x1="100" y1="60" x2="195" y2="155" stroke="#3b82f6" stroke-width="2" stroke-dasharray="4,3" class="flow-anim" style="animation-delay:0.1s"/>
+              <line x1="260" y1="60" x2="205" y2="155" stroke="#3b82f6" stroke-width="2" stroke-dasharray="4,3" class="flow-anim" style="animation-delay:0.3s"/>
+            </g>
+          </svg>
+
+          <button class="btn-step" id="btnProp" onclick="toggleProp()">▶ Propagar Embeddings</button>
+        </div>
+
+        <!-- Painel direito com explicação -->
+        <div class="panel">
+          <div class="panel-title">📋 Splits</div>
+          <div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.85rem;">
+            <div style="background:#dbeafe;border:1.5px solid #93c5fd;border-radius:var(--radius-sm);padding:0.5rem 0.7rem;">
+              <strong style="color:#1d4ed8;">🔵 Treino (5 nós)</strong><br/>
+              <span style="color:var(--text-muted);">Labels visíveis. Gradiente calculado aqui.</span>
+            </div>
+            <div style="background:#fef9c3;border:1.5px solid #fde047;border-radius:var(--radius-sm);padding:0.5rem 0.7rem;">
+              <strong style="color:#d97706;">🟡 Validação (2 nós)</strong><br/>
+              <span style="color:var(--text-muted);">Labels visíveis, mas não usados no treino.</span>
+            </div>
+            <div style="background:#fee2e2;border:1.5px solid #fca5a5;border-radius:var(--radius-sm);padding:0.5rem 0.7rem;">
+              <strong style="color:#ef4444;">🔴 Teste (3 nós)</strong><br/>
+              <span style="color:var(--text-muted);">Labels <em>ocultos</em> — avaliação final.</span>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+          <div style="font-size:0.82rem;color:var(--text-muted);line-height:1.5;">
+            A estrutura do grafo é usada para propagar informação — até os nós de teste recebem contexto dos nós de treino via message passing.
+          </div>
+
+          <div class="highlight-box yellow" style="margin-top:0.4rem;">
+            <span class="icon">⚠️</span>
+            <span style="font-size:0.82rem;">Cuidado: treino e teste estão no <strong>mesmo grafo</strong>. Vazar labels é fácil!</span>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide16.html'">← Anterior</button>
+      <div class="nav-dots" id="navDots"></div>
+      <button class="btn-nav btn-next" onclick="location.href='slide18.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    let propagating = false;
+    function toggleProp() {
+      propagating = !propagating;
+      const fg = document.getElementById('flowGroup');
+      fg.style.opacity = propagating ? '1' : '0';
+      const btn = document.getElementById('btnProp');
+      if (propagating) {
+        btn.textContent = '⏹ Parar Propagação';
+        // Show predicted labels after 1s
+        setTimeout(()=>{
+          if(propagating){
+            document.getElementById('tl1').textContent='A';
+            document.getElementById('tl1').style.fill='#16a34a';
+            document.getElementById('tl2').textContent='B';
+            document.getElementById('tl2').style.fill='#16a34a';
+            document.getElementById('tl3').textContent='A';
+            document.getElementById('tl3').style.fill='#16a34a';
+          }
+        }, 1200);
+      } else {
+        btn.textContent = '▶ Propagar Embeddings';
+        document.getElementById('tl1').textContent='?';
+        document.getElementById('tl1').style.fill='#ef4444';
+        document.getElementById('tl2').textContent='?';
+        document.getElementById('tl2').style.fill='#ef4444';
+        document.getElementById('tl3').textContent='?';
+        document.getElementById('tl3').style.fill='#ef4444';
+      }
+    }
+
+    (function(){
+      const container = document.getElementById('navDots');
+      const CURRENT = 17, TOTAL = 20;
+      for (let i = 1; i <= TOTAL; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'dot' + (i === CURRENT ? ' active' : '');
+        dot.title = 'Slide ' + i;
+        dot.style.cursor = 'pointer';
+        dot.addEventListener('click', () => { location.href = 'slide' + String(i).padStart(2,'0') + '.html'; });
+        container.appendChild(dot);
+      }
+    })();
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') location.href = 'slide18.html';
+      if (e.key === 'ArrowLeft'  || e.key === 'PageUp')   location.href = 'slide16.html';
+    });
+  </script>
+</body>
+</html>

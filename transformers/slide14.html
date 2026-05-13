@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 14 – Encoder como Pilha</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .slide-main { gap: 0.5rem; }
+
+    /* ---- Layout grid ---- */
+    .builder-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto 1fr;
+      gap: 0.8rem;
+      flex: 1;
+    }
+
+    /* ---- Stack visualizer ---- */
+    .stack-panel {
+      grid-row: 1 / 3;
+      background: var(--bg2);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 1rem 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      box-shadow: var(--shadow);
+      overflow-y: auto;
+      min-height: 22rem;
+    }
+    .stack-panel-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--blue);
+      border-bottom: 2px solid var(--blue-lt);
+      padding-bottom: 0.4rem;
+      flex-shrink: 0;
+    }
+
+    .stack-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      flex: 1;
+      position: relative;
+    }
+
+    /* output arrow at top */
+    .stack-output-label {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--blue);
+      margin-bottom: 0.15rem;
+      letter-spacing: 0.05em;
+    }
+    .stack-output-arrow {
+      width: 2px;
+      height: 20px;
+      background: var(--blue);
+      position: relative;
+      display: flex;
+      justify-content: center;
+    }
+    .stack-output-arrow::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -4px;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-bottom: 7px solid var(--blue);
+    }
+
+    .stack-block {
+      width: 100%;
+      max-width: 320px;
+      border-radius: 10px;
+      padding: 0.6rem 0.9rem;
+      border: 2px solid;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      animation: blockDrop 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+      position: relative;
+    }
+    @keyframes blockDrop {
+      from { opacity: 0; transform: translateY(-18px) scale(0.92); }
+      to   { opacity: 1; transform: translateY(0)    scale(1); }
+    }
+    .stack-block.block-input {
+      background: var(--teal-lt);
+      border-color: var(--teal);
+    }
+    .stack-block.block-encoder {
+      background: var(--blue-lt);
+      border-color: var(--blue);
+    }
+    .stack-block-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      position: absolute;
+      left: -4.2rem;
+      top: 50%;
+      transform: translateY(-50%);
+      white-space: nowrap;
+      color: var(--text-muted);
+      font-family: 'Fira Code', monospace;
+    }
+    .block-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .block-icon { font-size: 1.1rem; }
+    .block-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .block-input .block-title { color: var(--teal); }
+    .block-encoder .block-title { color: var(--blue); }
+    .block-detail {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .block-encoder .block-detail { color: #2563eb; opacity: 0.8; }
+
+    .stack-arrow {
+      width: 2px;
+      height: 18px;
+      background: var(--border);
+      position: relative;
+      display: flex;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .stack-arrow.animate-arrow {
+      animation: arrowGrow 0.3s ease both;
+    }
+    @keyframes arrowGrow {
+      from { height: 0; opacity: 0; }
+      to   { height: 18px; opacity: 1; }
+    }
+    .stack-arrow::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -4px;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-bottom: 7px solid var(--border);
+    }
+
+    /* ---- Representation panel ---- */
+    .repr-panel {
+      background: var(--bg2);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 1rem 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+      box-shadow: var(--shadow);
+      overflow-y: auto;
+    }
+    .repr-panel-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--purple);
+      border-bottom: 2px solid var(--purple-lt);
+      padding-bottom: 0.4rem;
+      flex-shrink: 0;
+    }
+    .repr-matrix-label {
+      font-family: 'Fira Code', monospace;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--purple);
+      text-align: center;
+      margin-bottom: 0.1rem;
+    }
+    .repr-note {
+      font-size: 0.87rem;
+      color: var(--text-muted);
+      background: var(--bg3);
+      border-radius: var(--radius-sm);
+      padding: 0.5rem 0.75rem;
+      line-height: 1.5;
+      animation: noteFade 0.45s ease both;
+    }
+    @keyframes noteFade {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .complete-badge {
+      display: none;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--green-lt);
+      border: 1.5px solid #86efac;
+      border-radius: var(--radius-sm);
+      padding: 0.5rem 0.75rem;
+      font-size: 0.87rem;
+      color: var(--green);
+      font-weight: 600;
+      animation: noteFade 0.45s ease both;
+    }
+    .complete-badge.visible { display: flex; }
+
+    /* Matrix table */
+    .repr-matrix-wrap {
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0.55rem 0.7rem;
+      overflow-x: auto;
+    }
+    .repr-mat {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.82rem;
+      border-collapse: collapse;
+      width: 100%;
+    }
+    .repr-mat th {
+      font-size: 0.72rem;
+      color: var(--purple);
+      font-weight: 700;
+      padding: 0.12rem 0.55rem;
+      text-align: right;
+    }
+    .repr-mat th.lbl-col { text-align: left; color: var(--text-dim); }
+    .repr-mat td {
+      padding: 0.22rem 0.55rem;
+      text-align: right;
+      color: var(--text-muted);
+      border-radius: 4px;
+      transition: background 0.35s, color 0.35s;
+    }
+    .repr-mat td.row-lbl {
+      text-align: left;
+      font-weight: 700;
+      color: var(--text-dim);
+      min-width: 2.5rem;
+    }
+    .repr-mat td.changed {
+      background: var(--purple-lt);
+      color: var(--purple);
+      font-weight: 700;
+    }
+
+    /* ---- Control panel ---- */
+    .ctrl-panel {
+      background: var(--bg2);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 0.9rem 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+      box-shadow: var(--shadow);
+    }
+    .ctrl-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .ctrl-count {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+    }
+    .ctrl-count strong {
+      color: var(--blue);
+      font-size: 1.05rem;
+    }
+    .reset-link {
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      cursor: pointer;
+      text-decoration: underline;
+      user-select: none;
+      margin-left: auto;
+    }
+    .reset-link:hover { color: var(--teal); }
+
+    /* ---- Insight box override ---- */
+    .final-insight {
+      background: linear-gradient(135deg, var(--blue-lt), var(--purple-lt));
+      border: 1.5px solid #93c5fd;
+      border-radius: var(--radius);
+      padding: 0.9rem 1.2rem;
+      display: flex;
+      gap: 0.8rem;
+      align-items: flex-start;
+      flex-shrink: 0;
+    }
+    .final-insight .fi-icon { font-size: 1.5rem; flex-shrink: 0; }
+    .final-insight .fi-text { font-size: 0.93rem; line-height: 1.6; color: var(--text); }
+    .final-insight .fi-text strong { color: var(--blue); }
+    .final-insight .fi-prof {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 0.4rem;
+      font-style: italic;
+    }
+    .final-insight .fi-prof span { color: var(--purple); font-weight: 600; font-style: normal; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+
+    <!-- ======== HEADER ======== -->
+    <header class="slide-header">
+      <span class="course-tag">Transformers</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 14 · Slide 14 / 19</span>
+    </header>
+
+    <!-- ======== MAIN ======== -->
+    <main class="slide-main">
+
+      <!-- Title -->
+      <div class="title-block" style="padding:0.5rem 0 0.1rem;">
+        <h1 class="slide-title">Encoder como Pilha de Blocos</h1>
+        <p class="slide-subtitle">Construa o encoder camada por camada e veja as representações se refinarem</p>
+      </div>
+
+      <!-- Builder grid -->
+      <div class="builder-grid">
+
+        <!-- LEFT: Stack visualizer -->
+        <div class="stack-panel">
+          <div class="stack-panel-title">🏗 Construção do Encoder</div>
+          <div class="stack-area" id="stackArea" style="padding-left:4.5rem;">
+            <!-- Output arrow at top -->
+            <div class="stack-output-label">H<sup id="outLabel">¹</sup> ↑ saída</div>
+            <div class="stack-output-arrow"></div>
+            <!-- Encoder layer blocks injected here by JS -->
+            <!-- Arrow between encoder blocks and input -->
+            <div class="stack-arrow" id="inputArrow" style="display:none;"></div>
+            <!-- Input block always shown -->
+            <div class="stack-block block-input" style="width:100%;max-width:320px;">
+              <div class="block-header">
+                <span class="block-icon">📥</span>
+                <span class="block-title">Input: X = E + P</span>
+              </div>
+              <div class="block-detail">Ela · saiu · só<br>embeddings + positional encoding</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TOP-RIGHT: Representation panel -->
+        <div class="repr-panel">
+          <div class="repr-panel-title">📊 Representação Atual</div>
+          <div class="repr-matrix-label" id="matLabel">H¹ (após camada 1)</div>
+          <div class="repr-matrix-wrap">
+            <table class="repr-mat" id="reprMat">
+              <thead>
+                <tr>
+                  <th class="lbl-col">token</th>
+                  <th>d₁</th><th>d₂</th>
+                </tr>
+              </thead>
+              <tbody id="reprBody"></tbody>
+            </table>
+          </div>
+          <!-- Input X always visible alongside current output -->
+          <div id="inputSection" style="margin-top:0.4rem;">
+            <div style="font-size:0.75rem;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:0.25rem;">Entrada X (referência)</div>
+            <div class="repr-matrix-wrap">
+              <table class="repr-mat" id="reprMatInput">
+                <thead>
+                  <tr>
+                    <th class="lbl-col">token</th>
+                    <th>d₁</th><th>d₂</th>
+                  </tr>
+                </thead>
+                <tbody id="reprBodyInput"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="repr-note" id="reprNote">
+            Camada 1: representações contextuais — cada token "viu" os demais.
+          </div>
+          <div class="complete-badge" id="completeBadge">
+            ✅ Limite de camadas atingido <em style="font-weight:400;">(máximo de 3 camadas para visualização)</em>
+          </div>
+        </div>
+
+        <!-- BOTTOM-RIGHT: Control panel -->
+        <div class="ctrl-panel">
+          <div class="ctrl-row">
+            <button class="btn-step" id="addBtn" onclick="addLayer()">＋ Adicionar camada</button>
+            <span class="ctrl-count">Camadas: <strong id="layerCount">0</strong> / 3</span>
+            <span class="reset-link" onclick="resetStack()">↺ Reiniciar</span>
+          </div>
+          <!-- Layer progress dots -->
+          <div style="display:flex;gap:0.5rem;align-items:center;">
+            <span style="font-size:0.8rem;color:var(--text-dim);font-weight:600;">Camadas adicionadas:</span>
+            <div id="layerDots" style="display:flex;gap:0.4rem;">
+              <div class="dot" id="ldot1"></div>
+              <div class="dot" id="ldot2"></div>
+              <div class="dot" id="ldot3"></div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /builder-grid -->
+
+      <!-- Bottom insight -->
+      <div class="final-insight">
+        <div class="fi-icon">🔁</div>
+        <div class="fi-text">
+          <strong>O encoder não é um único bloco de atenção.</strong>
+          É uma <strong>pilha de camadas</strong> que recalcula e refina sucessivamente as representações contextuais.
+          <div class="fi-prof">
+            📌 Modelos como <span>BERT (N=12)</span> e <span>GPT-3 (N=96)</span> usam dezenas de camadas.
+            Cada camada contribui com uma perspectiva diferente sobre a sequência.
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- ======== NAV ======== -->
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide13.html'">← Anterior</button>
+      <div class="nav-dots">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="nav-dots" id="navDots"></div>
+      <button class="btn-nav btn-next" onclick="location.href='slide15.html'">Próximo →</button>
+    </nav>
+
+  </div><!-- /slide-container -->
+
+  <script>
+    // Build nav dots
+    (function(){
+      const container = document.getElementById('navDots');
+      const CURRENT = 14;
+      for (let i = 1; i <= 19; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'dot' + (i === CURRENT ? ' active' : '');
+        dot.title = 'Slide ' + i;
+        dot.style.cursor = 'pointer';
+        dot.addEventListener('click', () => {
+          location.href = 'slide' + String(i).padStart(2,'0') + '.html';
+        });
+        container.appendChild(dot);
+      }
+    })();
+
+    /* ---- Data ---- */
+    const TOKENS = ['Ela', 'saiu', 'só'];
+
+    const MATRICES = {
+      0: {
+        label: 'X (input)',
+        rows: [
+          [ 1.00,  3.00],
+          [ 3.84, -0.46],
+          [-0.09,  1.58],
+        ],
+        note: 'Representação inicial: apenas o embedding com posição.',
+      },
+      1: {
+        label: 'H¹ (após camada 1)',
+        rows: [
+          [-1.00,  1.00],
+          [ 1.00, -1.00],
+          [-1.00,  1.00],
+        ],
+        note: 'Camada 1: representações contextuais — cada token "viu" os demais.',
+      },
+      2: {
+        label: 'H² (após camada 2)',
+        rows: [
+          [-0.93,  1.07],
+          [ 1.06, -0.95],
+          [-0.94,  1.05],
+        ],
+        note: 'Camada 2: refinamento das representações. Padrões mais abstratos emergem.',
+      },
+      3: {
+        label: 'H³ (após camada 3)',
+        rows: [
+          [-0.88,  1.12],
+          [ 1.10, -0.91],
+          [-0.90,  1.09],
+        ],
+        note: 'Modelos como BERT usam N=12 camadas, GPT-3 usa N=96. Cada camada refina mais.',
+      },
+    };
+
+    let currentLayer = 0;
+
+    /* ---- Render input matrix (always shown) ---- */
+    function renderInputMatrix() {
+      const input = MATRICES[0];
+      const tbody = document.getElementById('reprBodyInput');
+      tbody.innerHTML = '';
+      TOKENS.forEach((tok, r) => {
+        const tr = document.createElement('tr');
+        const tdLbl = document.createElement('td');
+        tdLbl.className = 'row-lbl';
+        tdLbl.textContent = tok;
+        tr.appendChild(tdLbl);
+        input.rows[r].forEach(val => {
+          const td = document.createElement('td');
+          td.textContent = val >= 0 ? ' ' + val.toFixed(2) : val.toFixed(2);
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+    }
+
+    /* ---- Render current layer matrix ---- */
+    function renderMatrix(layerIdx, prevLayerIdx) {
+      const data = MATRICES[layerIdx];
+      const prev = prevLayerIdx !== null ? MATRICES[prevLayerIdx] : null;
+
+      document.getElementById('matLabel').textContent = data.label;
+      document.getElementById('reprNote').textContent = data.note;
+
+      const tbody = document.getElementById('reprBody');
+      tbody.innerHTML = '';
+
+      TOKENS.forEach((tok, r) => {
+        const tr = document.createElement('tr');
+        // token label cell
+        const tdLbl = document.createElement('td');
+        tdLbl.className = 'row-lbl';
+        tdLbl.textContent = tok;
+        tr.appendChild(tdLbl);
+
+        data.rows[r].forEach((val, c) => {
+          const td = document.createElement('td');
+          const formatted = val >= 0 ? ' ' + val.toFixed(2) : val.toFixed(2);
+          td.textContent = formatted;
+          if (prev && val !== prev.rows[r][c]) {
+            td.classList.add('changed');
+          }
+          tr.appendChild(td);
+        });
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    /* ---- Initialize with one layer ---- */
+    renderInputMatrix();
+    addLayer();
+
+    /* ---- Add a layer ---- */
+    function addLayer() {
+      if (currentLayer >= 3) return;
+      currentLayer++;
+
+      renderMatrix(currentLayer, currentLayer - 1);
+      insertLayerBlock(currentLayer);
+      updateDots();
+
+      if (currentLayer >= 3) {
+        document.getElementById('addBtn').disabled = true;
+        document.getElementById('completeBadge').classList.add('visible');
+      }
+    }
+
+    function insertLayerBlock(n) {
+      const area = document.getElementById('stackArea');
+      const inputArrow = document.getElementById('inputArrow');
+
+      // Build layer block element
+      const block = document.createElement('div');
+      block.className = 'stack-block block-encoder';
+      block.style.width = '100%';
+      block.id = 'encBlock' + n;
+
+      // Side label
+      const sideLabel = document.createElement('div');
+      sideLabel.className = 'stack-block-label';
+      sideLabel.textContent = 'Camada ' + n;
+      block.appendChild(sideLabel);
+
+      const header = document.createElement('div');
+      header.className = 'block-header';
+      header.innerHTML = `<span class="block-icon">🔵</span><span class="block-title">Encoder Layer ${n}</span>`;
+      block.appendChild(header);
+
+      const detail = document.createElement('div');
+      detail.className = 'block-detail';
+      detail.innerHTML = 'Multi-Head Attention → Add&amp;Norm → Feed-Forward → Add&amp;Norm';
+      block.appendChild(detail);
+
+      // Arrow between this block and the one below it
+      const arrowAbove = document.createElement('div');
+      arrowAbove.className = 'stack-arrow animate-arrow';
+
+      // Insert before inputArrow: layers are ordered top (deepest/output) → bottom (input)
+      // We insert the new block + its arrow just before inputArrow
+      if (n === 1) {
+        // Show the inputArrow for the first time
+        inputArrow.style.display = 'block';
+        inputArrow.classList.add('animate-arrow');
+      }
+
+      // Insert block at the top of the stack (after output arrow, before any existing encoder block)
+      const firstEncoder = area.querySelector('.block-encoder');
+      const insertPoint = firstEncoder || inputArrow;
+      area.insertBefore(block, insertPoint);
+      // Arrow goes between this block and the one below
+      area.insertBefore(arrowAbove, insertPoint);
+
+      // Update top output label
+      const sup = document.getElementById('outLabel');
+      sup.textContent = n === 1 ? '¹' : n === 2 ? '²' : '³';
+    }
+
+    function updateDots() {
+      for (let i = 1; i <= 3; i++) {
+        const dot = document.getElementById('ldot' + i);
+        if (i <= currentLayer) {
+          dot.style.background = 'var(--blue)';
+          dot.style.transform = 'scale(1.2)';
+        }
+      }
+      document.getElementById('layerCount').textContent = currentLayer;
+    }
+
+    /* ---- Reset ---- */
+    function resetStack() {
+      currentLayer = 0;
+      document.getElementById('addBtn').disabled = false;
+      document.getElementById('completeBadge').classList.remove('visible');
+      document.getElementById('layerCount').textContent = '0';
+      document.getElementById('outLabel').textContent = '¹';
+
+      // Remove encoder blocks and extra arrows
+      for (let i = 1; i <= 3; i++) {
+        const b = document.getElementById('encBlock' + i);
+        if (b) {
+          // Arrow is the next sibling of the block
+          const next = b.nextElementSibling;
+          if (next && next.classList.contains('stack-arrow')) {
+            next.remove();
+          }
+          b.remove();
+        }
+      }
+
+      const inputArrow = document.getElementById('inputArrow');
+      inputArrow.style.display = 'none';
+      inputArrow.classList.remove('animate-arrow');
+
+      // Reset layer dots
+      for (let i = 1; i <= 3; i++) {
+        const dot = document.getElementById('ldot' + i);
+        dot.style.background = '';
+        dot.style.transform = '';
+      }
+
+      renderInputMatrix();
+      addLayer();
+    }
+  </script>
+</body>
+</html>

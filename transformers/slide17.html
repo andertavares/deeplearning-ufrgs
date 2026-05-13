@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 17 – Cross-Attention</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .slide-main { gap: 0.5rem; }
+
+    .content-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      flex: 1;
+    }
+
+    /* ── Token diagram panel ── */
+    .diagram-panel {
+      background: var(--bg2);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 1rem 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      box-shadow: var(--shadow);
+    }
+    .diagram-panel-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      border-bottom: 1.5px solid var(--border2);
+      padding-bottom: 0.4rem;
+    }
+
+    .token-section-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0.25rem 0.7rem;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .enc-label { background: var(--blue-lt); color: var(--blue); border: 1.5px solid var(--blue); }
+    .dec-label { background: var(--purple-lt); color: var(--purple); border: 1.5px solid var(--purple); }
+
+    .token-row {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .token-chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.35rem 0.85rem;
+      border-radius: 8px;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.92rem;
+      font-weight: 700;
+      border: 2px solid;
+      cursor: pointer;
+      transition: all 0.18s;
+      user-select: none;
+    }
+    .enc-token {
+      background: var(--blue-lt);
+      border-color: var(--blue);
+      color: var(--blue);
+    }
+    .enc-token:hover, .enc-token.highlighted {
+      background: var(--blue);
+      color: #fff;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(29,78,216,0.3);
+    }
+    .dec-token {
+      background: var(--purple-lt);
+      border-color: var(--purple);
+      color: var(--purple);
+    }
+    .dec-token:hover { transform: translateY(-2px); }
+    .dec-token.active {
+      background: var(--purple);
+      color: #fff;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(109,40,217,0.35);
+    }
+
+    /* Connection arrows SVG area */
+    .arrows-container {
+      position: relative;
+      width: 100%;
+      height: 80px;
+      overflow: visible;
+    }
+    .arrows-container svg {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      overflow: visible;
+    }
+
+    .formula-box {
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem 0.9rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.78rem;
+      color: var(--text);
+      line-height: 1.8;
+      margin-top: auto;
+    }
+
+    /* ── Heatmap panel ── */
+    .heatmap-panel {
+      background: var(--bg2);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 1rem 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+      box-shadow: var(--shadow);
+    }
+    .heatmap-panel-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+    }
+
+    .matrix-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.2rem;
+    }
+    .col-header-row {
+      display: flex;
+      margin-left: 4rem;
+    }
+    .col-label {
+      width: 4rem;
+      height: 1.6rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.73rem;
+      font-weight: 700;
+      color: var(--blue);
+    }
+    .matrix-rows { display: flex; flex-direction: column; gap: 3px; }
+    .matrix-row {
+      display: flex;
+      align-items: center;
+    }
+    .row-label {
+      width: 4rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.73rem;
+      font-weight: 700;
+      color: var(--purple);
+      text-align: right;
+      padding-right: 0.45rem;
+    }
+    .matrix-cell {
+      width: 4rem;
+      height: 3rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-radius: 7px;
+      margin: 2px;
+      font-family: 'Fira Code', monospace;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 2px solid transparent;
+    }
+    .matrix-cell:hover { transform: scale(1.08); z-index: 2; }
+    .cell-val { font-size: 0.78rem; font-weight: 700; }
+    .cell-key { font-size: 0.62rem; color: var(--text-dim); }
+
+    .heat-0 { background: #f0f2f6; }
+    .heat-1 { background: #bfdbfe; }
+    .heat-2 { background: #60a5fa; }
+    .heat-3 { background: #2563eb; color: #fff; }
+    .heat-4 { background: #1d4ed8; color: #fff; }
+
+    .cell-highlighted { box-shadow: 0 0 0 3px var(--purple) !important; }
+
+    .attention-bars {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      margin-top: auto;
+    }
+    .bar-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.78rem;
+    }
+    .bar-label {
+      width: 3.5rem;
+      font-family: 'Fira Code', monospace;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-align: right;
+    }
+    .bar-track {
+      flex: 1;
+      height: 14px;
+      background: var(--bg3);
+      border-radius: 7px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 7px;
+      background: var(--blue);
+      transition: width 0.4s ease;
+    }
+    .bar-val {
+      width: 2.5rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    @media (max-width: 900px) {
+      .content-split { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Transformers</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 15 · Slide 17 / 19</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block" style="padding:0.5rem 0 0.2rem;">
+        <h1 class="slide-title">Cross-Attention</h1>
+        <p class="slide-subtitle">O decoder pergunta; o encoder responde</p>
+      </div>
+
+      <!-- Decoder pipeline overview -->
+      <div style="background:var(--bg2);border:1.5px solid var(--border2);border-radius:var(--radius-sm);padding:0.5rem 1rem;display:flex;align-items:center;gap:0.35rem;flex-wrap:wrap;box-shadow:var(--shadow);">
+        <span style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-dim);margin-right:0.3rem;">Pipeline do Decoder:</span>
+        <div style="display:flex;align-items:center;padding:0.35rem 0.7rem;border-radius:var(--radius-sm);background:var(--yellow-lt);border:2px solid var(--orange);color:var(--orange);font-size:0.78rem;font-weight:700;opacity:0.6;">🟠 Masked Self-Attn</div>
+        <span style="color:var(--text-dim);font-size:0.75rem;font-weight:700;">→</span>
+        <div style="display:flex;align-items:center;padding:0.35rem 0.7rem;border-radius:var(--radius-sm);background:var(--teal-lt);border:2px solid var(--teal);color:var(--teal);font-size:0.78rem;font-weight:700;opacity:0.6;">⚖️ Add&amp;Norm</div>
+        <span style="color:var(--text-dim);font-size:0.75rem;font-weight:700;">→</span>
+        <div style="display:flex;align-items:center;padding:0.35rem 0.7rem;border-radius:var(--radius-sm);background:var(--purple);border:2px solid var(--purple);color:#fff;font-size:0.78rem;font-weight:700;box-shadow:0 0 0 3px rgba(109,40,217,0.3);">🟣 Cross-Attn</div>
+        <span style="color:var(--text-dim);font-size:0.75rem;font-weight:700;">→</span>
+        <div style="display:flex;align-items:center;padding:0.35rem 0.7rem;border-radius:var(--radius-sm);background:var(--teal-lt);border:2px solid var(--teal);color:var(--teal);font-size:0.78rem;font-weight:700;opacity:0.6;">⚖️ Add&amp;Norm</div>
+        <span style="color:var(--text-dim);font-size:0.75rem;font-weight:700;">→</span>
+        <div style="display:flex;align-items:center;padding:0.35rem 0.7rem;border-radius:var(--radius-sm);background:var(--green-lt);border:2px solid var(--green);color:var(--green);font-size:0.78rem;font-weight:700;opacity:0.6;">🟩 FFN</div>
+        <span style="color:var(--text-dim);font-size:0.75rem;font-weight:700;">→</span>
+        <div style="display:flex;align-items:center;padding:0.35rem 0.7rem;border-radius:var(--radius-sm);background:var(--teal-lt);border:2px solid var(--teal);color:var(--teal);font-size:0.78rem;font-weight:700;opacity:0.6;">⚖️ Add&amp;Norm</div>
+        <span style="color:var(--text-dim);font-size:0.75rem;font-weight:700;">→</span>
+        <div style="display:flex;align-items:center;padding:0.35rem 0.7rem;border-radius:var(--radius-sm);background:var(--bg3);border:2px solid var(--border2);color:var(--text-muted);font-size:0.78rem;font-weight:700;opacity:0.6;">📊 Linear+Softmax</div>
+      </div>
+
+      <div class="content-split">
+        <!-- Left: token diagram -->
+        <div class="diagram-panel">
+          <div class="diagram-panel-title">Fluxo de Q, K, V entre Encoder e Decoder</div>
+
+          <div>
+            <div class="token-section-label enc-label" style="margin-bottom:0.45rem;">🔵 Encoder output A<sup>enc</sup> — K e V vêm daqui (projetados por W<sub>k</sub> e W<sub>v</sub>)</div>
+            <div class="token-row" id="encTokens"></div>
+          </div>
+
+          <div class="arrows-container" id="arrowsContainer">
+            <svg id="arrowsSvg"></svg>
+          </div>
+
+          <div>
+            <div class="token-section-label dec-label" style="margin-bottom:0.45rem;">🟣 Decoder Z<sub>dec</sub> — Q vem daqui (projetado por W<sub>q</sub>) — clique para selecionar</div>
+            <div class="token-row" id="decTokens"></div>
+          </div>
+
+          <div class="formula-box">
+Q = Z_dec · Wq  <span style="color:var(--purple);">← decoder (após masked attn + add&norm)</span><br>
+K = Z_enc · Wk  <span style="color:var(--blue);">← encoder output A<sup>enc</sup></span><br>
+V = Z_enc · Wv  <span style="color:var(--blue);">← encoder output A<sup>enc</sup></span><br>
+<br>
+Cross-Attn = softmax(QKᵀ / √dₖ) · V
+          </div>
+
+          <div style="background:var(--blue-lt);border:1.5px solid var(--blue);border-radius:6px;padding:0.5rem 0.9rem;font-size:0.8rem;color:var(--blue);line-height:1.6;margin-top:auto;">
+            <strong>Fluxo completo:</strong><br>
+            🔵 <strong>Encoder</strong>: sequência de entrada → N camadas → <strong>A<sup>enc</sup></strong> ∈ ℝ<sup>n_src × d</sup><br>
+            &nbsp;&nbsp;→ A<sup>enc</sup> é projetado em <strong>K</strong> e <strong>V</strong> (fixos para todas as posições do decoder)<br>
+            🟣 <strong>Decoder</strong>: Z<sub>dec</sub> (após Masked Self-Att) é projetado em <strong>Q</strong><br>
+            &nbsp;&nbsp;→ Q "consulta" K para obter pesos, depois pondera V
+          </div>
+        </div>
+
+        <!-- Right: heatmap + bars -->
+        <div class="heatmap-panel">
+          <div class="heatmap-panel-title">Heatmap de Cross-Attention (decoder × encoder)</div>
+
+          <div style="font-size:0.75rem;color:var(--text-dim);margin-bottom:0.1rem;">
+            Linhas = tokens do decoder &nbsp;|&nbsp; Colunas = tokens do encoder
+          </div>
+
+          <div class="matrix-wrapper">
+            <div style="font-size:0.7rem;color:var(--blue);align-self:flex-start;margin-left:4rem;margin-bottom:0.1rem;">← encoder (chave) →</div>
+            <div class="col-header-row" id="colHeaders"></div>
+            <div style="display:flex;align-items:flex-start;">
+              <div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:0.7rem;color:var(--purple);align-self:center;margin-right:0.15rem;">← decoder (query) →</div>
+              <div class="matrix-rows" id="matrixRows"></div>
+            </div>
+          </div>
+
+          <div style="font-size:0.8rem;font-weight:700;color:var(--text-muted);margin-top:0.3rem;" id="barsTitle">Pesos de atenção</div>
+          <div class="attention-bars" id="attBars"></div>
+          <div style="font-size:0.78rem;color:var(--text-dim);" id="barsHint">Clique em um token do decoder (esquerda) para ver seus pesos.</div>
+        </div>
+      </div>
+
+      <div class="insight-box">
+        <span class="i-icon">🔗</span>
+        <div class="i-text">
+          <strong>Cross-Attention</strong> é a "ponte" entre encoder e decoder. Cada token sendo gerado pode
+          <strong>atender seletivamente</strong> a qualquer parte da sequência de entrada — sem restrição de máscara causal.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide16.html'">← Anterior</button>
+      <div class="nav-dots" id="navDots"></div>
+      <button class="btn-nav btn-next" onclick="location.href='slide18.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    (function(){
+      const container = document.getElementById('navDots');
+      const CURRENT = 17;
+      for (let i = 1; i <= 19; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'dot' + (i === CURRENT ? ' active' : '');
+        dot.title = 'Slide ' + i;
+        dot.style.cursor = 'pointer';
+        dot.addEventListener('click', () => {
+          location.href = 'slide' + String(i).padStart(2,'0') + '.html';
+        });
+        container.appendChild(dot);
+      }
+    })();
+
+    const ENC_TOKENS = ['Ela', 'saiu', 'só'];
+    const DEC_TOKENS = ['<BOS>', 'Ela', 'saiu'];
+
+    // Cross-attention weights [decoder_row][encoder_col]
+    const CROSS_WEIGHTS = [
+      [0.40, 0.35, 0.25],  // <BOS>
+      [0.70, 0.20, 0.10],  // Ela
+      [0.25, 0.60, 0.15],  // saiu
+    ];
+
+    let activeDecRow = null;
+
+    function weightToHeat(w) {
+      if (w < 0.15) return 0;
+      if (w < 0.25) return 1;
+      if (w < 0.40) return 2;
+      if (w < 0.55) return 3;
+      return 4;
+    }
+
+    // Build encoder tokens
+    const encTokensEl = document.getElementById('encTokens');
+    ENC_TOKENS.forEach((t, j) => {
+      const chip = document.createElement('div');
+      chip.className = 'token-chip enc-token';
+      chip.id = 'enc-' + j;
+      chip.textContent = t;
+      encTokensEl.appendChild(chip);
+    });
+
+    // Build decoder tokens
+    const decTokensEl = document.getElementById('decTokens');
+    DEC_TOKENS.forEach((t, i) => {
+      const chip = document.createElement('div');
+      chip.className = 'token-chip dec-token';
+      chip.textContent = t;
+      chip.addEventListener('click', () => {
+        activeDecRow = (activeDecRow === i) ? null : i;
+        render();
+      });
+      decTokensEl.appendChild(chip);
+    });
+
+    // Build heatmap
+    function buildHeatmap() {
+      const colHeaders = document.getElementById('colHeaders');
+      colHeaders.innerHTML = '';
+      ENC_TOKENS.forEach(t => {
+        const d = document.createElement('div');
+        d.className = 'col-label';
+        d.textContent = t;
+        colHeaders.appendChild(d);
+      });
+
+      const matrixRows = document.getElementById('matrixRows');
+      matrixRows.innerHTML = '';
+      DEC_TOKENS.forEach((rowToken, i) => {
+        const row = document.createElement('div');
+        row.className = 'matrix-row';
+        const rowLabel = document.createElement('div');
+        rowLabel.className = 'row-label';
+        rowLabel.textContent = rowToken;
+        row.appendChild(rowLabel);
+
+        ENC_TOKENS.forEach((_, j) => {
+          const w = CROSS_WEIGHTS[i][j];
+          const cell = document.createElement('div');
+          cell.className = 'matrix-cell heat-' + weightToHeat(w);
+          if (activeDecRow === i) cell.classList.add('cell-highlighted');
+
+          const valDiv = document.createElement('div');
+          valDiv.className = 'cell-val';
+          valDiv.textContent = w.toFixed(2);
+          const keyDiv = document.createElement('div');
+          keyDiv.className = 'cell-key';
+          keyDiv.textContent = ENC_TOKENS[j];
+          cell.appendChild(valDiv);
+          cell.appendChild(keyDiv);
+          cell.addEventListener('click', () => { activeDecRow = i; render(); });
+          row.appendChild(cell);
+        });
+        matrixRows.appendChild(row);
+      });
+    }
+
+    function buildBars() {
+      const barsEl = document.getElementById('attBars');
+      const hint = document.getElementById('barsHint');
+      const title = document.getElementById('barsTitle');
+      barsEl.innerHTML = '';
+
+      if (activeDecRow === null) {
+        hint.style.display = '';
+        return;
+      }
+      hint.style.display = 'none';
+      title.textContent = `Pesos de atenção: ${DEC_TOKENS[activeDecRow]} → encoder`;
+
+      const weights = CROSS_WEIGHTS[activeDecRow];
+      ENC_TOKENS.forEach((t, j) => {
+        const w = weights[j];
+        const row = document.createElement('div');
+        row.className = 'bar-row';
+        row.innerHTML = `
+          <div class="bar-label">${t}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${(w*100).toFixed(0)}%"></div></div>
+          <div class="bar-val">${w.toFixed(2)}</div>`;
+        barsEl.appendChild(row);
+      });
+    }
+
+    function drawArrows() {
+      const svg = document.getElementById('arrowsSvg');
+      svg.innerHTML = '';
+
+      if (activeDecRow === null) return;
+
+      const weights = CROSS_WEIGHTS[activeDecRow];
+      const container = document.getElementById('arrowsContainer');
+      const contRect = container.getBoundingClientRect();
+
+      // Get positions of encoder tokens and decoder query token
+      const decChips = document.getElementById('decTokens').querySelectorAll('.token-chip');
+      const encChips = document.getElementById('encTokens').querySelectorAll('.token-chip');
+
+      const decChip = decChips[activeDecRow];
+      const decRect = decChip.getBoundingClientRect();
+
+      // source point (bottom of decoder chip)
+      const srcX = decRect.left + decRect.width / 2 - contRect.left;
+      const srcY = contRect.height; // bottom edge of arrows container = close to dec tokens
+
+      ENC_TOKENS.forEach((_, j) => {
+        const encRect = encChips[j].getBoundingClientRect();
+        const dstX = encRect.left + encRect.width / 2 - contRect.left;
+        const dstY = 0; // top = near enc tokens
+
+        const w = weights[j];
+        const opacity = 0.25 + w * 0.75;
+        const strokeWidth = 1.5 + w * 4;
+        const color = `rgba(109,40,217,${opacity})`;
+
+        const midY = contRect.height / 2;
+        const path = `M ${srcX} ${srcY} C ${srcX} ${midY} ${dstX} ${midY} ${dstX} ${dstY}`;
+        const pathEl = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        pathEl.setAttribute('d', path);
+        pathEl.setAttribute('fill', 'none');
+        pathEl.setAttribute('stroke', color);
+        pathEl.setAttribute('stroke-width', strokeWidth);
+        pathEl.setAttribute('stroke-linecap', 'round');
+        svg.appendChild(pathEl);
+
+        // Highlight encoder token
+        if (w === Math.max(...weights)) {
+          encChips[j].classList.add('highlighted');
+        }
+      });
+    }
+
+    function render() {
+      // Update dec token active states
+      document.getElementById('decTokens').querySelectorAll('.token-chip').forEach((el, i) => {
+        el.classList.toggle('active', i === activeDecRow);
+      });
+      // Clear enc token highlights
+      document.getElementById('encTokens').querySelectorAll('.token-chip').forEach(el => el.classList.remove('highlighted'));
+
+      buildHeatmap();
+      buildBars();
+      drawArrows();
+    }
+
+    render();
+  </script>
+</body>
+</html>

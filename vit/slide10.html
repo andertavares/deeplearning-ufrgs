@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 10 – Pipeline completo do ViT com [CLS]</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ─── Pipeline nav bar ───────────────────────────── */
+    .pipeline-nav {
+      display: flex;
+      align-items: center;
+      background: var(--bg3);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.3rem;
+      overflow-x: auto;
+      flex-shrink: 0;
+    }
+    .stage-btn {
+      flex: 1;
+      min-width: 105px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.12rem;
+      padding: 0.42rem 0.25rem;
+      border-radius: 6px;
+      border: 2px solid transparent;
+      background: none;
+      cursor: pointer;
+      font-size: 0.73rem;
+      font-weight: 700;
+      font-family: 'Fira Code', monospace;
+      color: var(--text-dim);
+      transition: all 0.18s;
+      white-space: nowrap;
+    }
+    .stage-btn:hover:not(.active) { background: var(--bg2); color: var(--text-muted); }
+    .stage-btn.active {
+      background: var(--bg2);
+      border-color: var(--teal);
+      color: var(--teal);
+      box-shadow: 0 2px 8px rgba(13,110,110,0.12);
+    }
+    .stage-icon { font-size: 1.1rem; line-height: 1; }
+    .stage-sub  { font-size: 0.67rem; color: var(--text-dim); }
+    .stage-btn.active .stage-sub { color: var(--teal); }
+    .pipe-arrow { font-size: 1rem; color: var(--border); flex-shrink: 0; padding: 0 0.1rem; user-select: none; }
+
+    /* ─── Matrix styles (reused from slides 05-07) ─── */
+    .mat-table { font-family:'Fira Code',monospace; font-size:0.81rem; border-collapse:collapse; }
+    .mat-table th { color:var(--text-dim); font-weight:600; font-size:0.7rem; padding:0.12rem 0.35rem; text-align:center; }
+    .mat-table td { padding:0.18rem 0.38rem; text-align:right; border-radius:3px; min-width:2.3rem; }
+    .mat-table td.lbl-cell { font-weight:700; text-align:left; min-width:2.6rem; color:var(--text-dim); }
+    .mat-table td.dim-cell { color:var(--text-dim); font-style:italic; font-size:0.72rem; text-align:center; }
+    .mat-table tr.row-cls td            { background:var(--teal-lt) !important; }
+    .mat-table tr.row-cls td.lbl-cell   { color:var(--teal); border-left:3px solid var(--teal); padding-left:0.28rem; }
+    .mat-table tr.row-hl  td            { background:var(--blue-lt) !important; }
+    .mat-table tr.row-hl  td.lbl-cell   { color:var(--blue); }
+
+    /* Brackets (reused from slides 05-07) */
+    .bracket-wrap { display:flex; align-items:stretch; }
+    .bracket-l { border-left:3px solid; border-top:3px solid; border-bottom:3px solid; border-radius:4px 0 0 4px; width:7px; flex-shrink:0; }
+    .bracket-r { border-right:3px solid; border-top:3px solid; border-bottom:3px solid; border-radius:0 4px 4px 0; width:7px; flex-shrink:0; }
+    .bc-teal   { border-color:var(--teal); }
+    .bc-blue   { border-color:var(--blue); }
+    .bc-purple { border-color:var(--purple); }
+    .bc-green  { border-color:var(--green); }
+
+    /* Matrix block + label */
+    .mat-block { display:flex; flex-direction:column; align-items:flex-start; gap:0.18rem; }
+    .mat-label { font-family:'Fira Code',monospace; font-size:0.76rem; font-weight:700; padding:0.08rem 0.45rem; border-radius:6px; }
+    .ml-teal   { background:var(--teal-lt);   color:var(--teal);   }
+    .ml-blue   { background:var(--blue-lt);   color:var(--blue);   }
+    .ml-purple { background:var(--purple-lt); color:var(--purple); }
+    .ml-green  { background:var(--green-lt);  color:var(--green);  }
+
+    /* Operator rows */
+    .comp-row { display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; overflow-x:auto; padding:0.15rem 0; }
+    .comp-op  { font-family:'Fira Code',monospace; font-size:1.2rem; font-weight:700; color:var(--text-dim); flex-shrink:0; }
+    .comp-eq  { color:var(--teal); }
+
+    /* ─── Equation display (reused from slide04) ──── */
+    .eq-display {
+      display:flex; align-items:center; justify-content:center;
+      gap:0.4rem; flex-wrap:wrap;
+      padding:0.5rem 0.6rem;
+      background:var(--bg3); border:1.5px solid var(--border2); border-radius:var(--radius-sm);
+    }
+    .eq-term { padding:0.28rem 0.6rem; border-radius:8px; font-family:'Fira Code',monospace; font-size:0.83rem; font-weight:700; }
+    .eq-cls  { background:var(--teal-lt);   border:1.5px solid #5eead4; color:var(--teal); }
+    .eq-ptch { background:var(--blue-lt);   border:1.5px solid #93c5fd; color:var(--blue); }
+    .eq-pos  { background:var(--purple-lt); border:1.5px solid #c4b5fd; color:var(--purple); }
+    .eq-z0   { background:var(--green-lt);  border:1.5px solid #86efac; color:var(--green); }
+    .eq-op   { font-size:1.2rem; font-weight:700; color:var(--text-muted); }
+
+    /* ─── Token sequence chips ──────────────────── */
+    .tok-seq { display:flex; gap:0.3rem; align-items:center; flex-wrap:wrap; justify-content:center; }
+    .tok-chip { display:inline-flex; align-items:center; justify-content:center; width:46px; height:46px; border-radius:7px; font-family:'Fira Code',monospace; font-size:0.73rem; font-weight:700; border:2px solid var(--border2); background:var(--bg3); color:var(--text-muted); }
+    .tok-chip.cls   { width:54px; height:54px; font-size:0.8rem; background:var(--teal-lt); border-color:var(--teal); color:var(--teal); font-weight:800; }
+    .tok-chip.patch { background:var(--blue-lt); border-color:var(--blue); color:var(--blue); }
+
+    /* ─── Attention heatmap (reused from slide06/08) */
+    .attn-hm { display:flex; flex-direction:column; gap:2px; }
+    .attn-hm-row { display:flex; gap:2px; align-items:center; }
+    .attn-lbl { font-family:'Fira Code',monospace; font-size:0.7rem; font-weight:700; width:2.9rem; text-align:right; padding-right:0.32rem; flex-shrink:0; color:var(--text-dim); }
+    .attn-lbl.cls { color:var(--teal); }
+    .hm-col-hdr { font-family:'Fira Code',monospace; font-size:0.66rem; font-weight:700; width:2.55rem; text-align:center; color:var(--text-dim); }
+    .hm-cell { width:2.55rem; height:2.1rem; border-radius:4px; display:flex; align-items:center; justify-content:center; font-family:'Fira Code',monospace; font-size:0.69rem; font-weight:700; }
+
+    /* ─── Probability bars (reused from original slide09) */
+    .prob-chart { display:flex; flex-direction:column; gap:0.38rem; }
+    .bar-row    { display:flex; align-items:center; gap:0.4rem; }
+    .bar-label  { font-size:0.78rem; font-weight:600; color:var(--text-muted); width:68px; text-align:right; flex-shrink:0; }
+    .bar-track  { flex:1; height:16px; background:var(--bg3); border-radius:4px; overflow:hidden; border:1px solid var(--border2); }
+    .bar-fill   { height:100%; border-radius:4px; width:0%; transition:width 0.85s cubic-bezier(.4,0,.2,1); }
+    .bar-pct    { font-family:'Fira Code',monospace; font-size:0.76rem; font-weight:700; color:var(--text); width:34px; }
+
+    /* ─── Mini patch grid (reused from slide03) ─── */
+    .mini-grid { display:grid; grid-template-columns:repeat(2,90px); grid-template-rows:repeat(2,90px); gap:3px; background:#dc2626; border:2px solid #dc2626; border-radius:8px; overflow:hidden; }
+    .mini-cell { display:flex; align-items:flex-end; justify-content:flex-start; font-family:'Fira Code',monospace; font-size:0.68rem; font-weight:700; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,0.85); padding:3px 4px; background-image:url('illusion.png'); background-size:200% 200%; }
+
+    /* ─── Misc ──────────────────────────────────── */
+    .dim-badge { display:inline-block; padding:0.13rem 0.42rem; border-radius:6px; font-family:'Fira Code',monospace; font-size:0.74rem; font-weight:700; }
+    .db-teal   { background:var(--teal-lt);   color:var(--teal); }
+    .db-blue   { background:var(--blue-lt);   color:var(--blue); }
+    .db-purple { background:var(--purple-lt); color:var(--purple); }
+    .db-green  { background:var(--green-lt);  color:var(--green); }
+    .step-lbl  { font-size:0.79rem; font-family:'Fira Code',monospace; color:var(--text-dim); text-align:center; }
+    .mlp-box   { background:var(--purple-lt); border:2px solid var(--purple); border-radius:10px; padding:0.45rem 0.95rem; font-weight:700; color:var(--purple); font-size:0.9rem; text-align:center; flex-shrink:0; }
+
+    /* ─── Insight card ─────────────────────────────── */
+    .insight-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.8rem;
+      padding: 0.65rem 1rem;
+      background: linear-gradient(135deg, var(--teal-lt) 0%, var(--blue-lt) 100%);
+      border: 2px solid var(--teal);
+      border-radius: var(--radius-sm);
+      flex-shrink: 0;
+    }
+    .insight-card-icon { font-size: 1.5rem; flex-shrink: 0; line-height: 1; margin-top: 0.1rem; }
+    .insight-card-body { display: flex; flex-direction: column; gap: 0.15rem; }
+    .insight-card-title { font-size: 0.82rem; font-weight: 800; color: var(--teal); text-transform: uppercase; letter-spacing: 0.06em; }
+    .insight-card-text  { font-size: 0.88rem; color: var(--text-muted); line-height: 1.5; }
+    .insight-card-text strong { color: var(--teal); }
+
+    /* ─── Pipeline layout ───────────────────────────── */
+    .pipeline-panel { gap: 0.8rem; }
+    .pipeline-step {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      padding: 0.75rem 0.9rem;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border2);
+      background: var(--bg2);
+    }
+    .pipe-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 800;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+    .pipe-step-badge {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.74rem;
+      font-weight: 800;
+      padding: 0.16rem 0.5rem;
+      border-radius: 999px;
+      background: var(--teal-lt);
+      color: var(--teal);
+      border: 1px solid #5eead4;
+    }
+    .pipe-body { display: flex; gap: 1rem; align-items: flex-start; flex-wrap: wrap; }
+    .pipe-divider {
+      text-align: center;
+      font-size: 1.2rem;
+      color: var(--text-dim);
+    }
+    .step-hidden { display: none; }
+
+    /* ─── MHA interactive highlight ────────────── */
+    td.hl-row,
+    tr.row-cls td.hl-row { background: #0d9c9c !important; color: #fff !important; }
+    td.hl-col { background: var(--green-lt) !important; outline: 1.5px solid var(--green); outline-offset: -1.5px; }
+    td.hl-amha { background: var(--blue) !important; color: #fff !important; }
+    .amha-cell { cursor: pointer; transition: background 0.12s; }
+    .amha-cell:hover { background: var(--blue-lt) !important; }
+
+    /* ─── Encoder + Multi-head visuals ───────────────── */
+    .mh-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(140px, 1fr));
+      gap: 0.5rem;
+    }
+    .mh-head {
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0.4rem 0.5rem;
+      background: var(--bg3);
+    }
+    .mh-title {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--teal);
+      margin-bottom: 0.25rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .encoder-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      align-items: stretch;
+      min-width: 180px;
+    }
+    .enc-block {
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 0.35rem 0.6rem;
+      background: var(--bg2);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+    .enc-pill {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.68rem;
+      font-weight: 800;
+      padding: 0.12rem 0.4rem;
+      border-radius: 999px;
+      background: var(--blue-lt);
+      color: var(--blue);
+      border: 1px solid #93c5fd;
+    }
+
+    #pipeline-panel { transition:opacity 0.18s; }
+    #pipeline-panel.fading { opacity:0; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
+    .fade-in { animation:fadeIn 0.3s ease both; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">ViT</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 5 · Slide 3 / 4</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Pipeline completo do ViT com [CLS]</h1>
+        <p class="slide-subtitle">Bloco 5 — CLS e CNN</p>
+      </div>
+
+      
+
+      <!-- Pipeline content (single full-width panel) -->
+      <div class="panel pipeline-panel" id="pipeline-panel"></div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide09.html'">← Anterior</button>
+      <div class="nav-dots">
+        <div class="dot active"></div>
+        <div class="dot"></div>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide11.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    let mhaSelected = null;
+
+    function highlightMHA(row, col) {
+      document.querySelectorAll('.hl-row, .hl-col, .hl-amha').forEach(el => {
+        el.classList.remove('hl-row', 'hl-col', 'hl-amha');
+      });
+      const key = row + ',' + col;
+      if (mhaSelected === key) { mhaSelected = null; return; }
+      mhaSelected = key;
+      for (let h = 1; h <= 3; h++) {
+        for (let c = 0; c < 2; c++) {
+          const el = document.getElementById('h' + h + '-r' + row + '-c' + c);
+          if (el) el.classList.add('hl-row');
+        }
+      }
+      for (let r = 0; r < 6; r++) {
+        const el = document.getElementById('wo-r' + r + '-c' + col);
+        if (el) el.classList.add('hl-col');
+      }
+      const amha = document.getElementById('amha-r' + row + '-c' + col);
+      if (amha) amha.classList.add('hl-amha');
+    }
+
+    function renderPipeline() {
+      const panel = document.getElementById('pipeline-panel');
+
+      panel.innerHTML = `
+        <div class="pipeline-step">
+          <div class="pipe-header"><span class="pipe-step-badge">1</span> Patches → Projeção Linear → [CLS] + Posição → Z₀</div>
+          <div class="pipe-body" style="flex-direction:column;gap:0.75rem;">
+            <div class="comp-row" style="align-items:flex-end;flex-wrap:wrap;gap:0.5rem;">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:0.35rem;">
+                <span class="step-lbl">Imagem → patches</span>
+                <div class="mini-grid">
+                  <div class="mini-cell" style="background-position:0% 0%">P₁</div>
+                  <div class="mini-cell" style="background-position:100% 0%">P₂</div>
+                  <div class="mini-cell" style="background-position:0% 100%">P₃</div>
+                  <div class="mini-cell" style="background-position:100% 100%">P₄</div>
+                </div>
+              </div>
+              <span class="comp-op" style="font-size:1.5rem;">→</span>
+              <div class="mat-block">
+                <span class="mat-label ml-blue">X</span>
+                <div class="bracket-wrap">
+                  <div class="bracket-l bc-blue"></div>
+                  <table class="mat-table">
+                    <thead><tr><th></th><th>x₁</th><th>x₂</th></tr></thead>
+                    <tbody>
+                      <tr class="row-hl"><td class="lbl-cell">P₁</td><td>0.8</td><td>0.2</td></tr>
+                      <tr>              <td class="lbl-cell">P₂</td><td>0.4</td><td>0.7</td></tr>
+                      <tr>              <td class="lbl-cell">P₃</td><td>0.6</td><td>0.1</td></tr>
+                      <tr>              <td class="lbl-cell">P₄</td><td>0.3</td><td>0.4</td></tr>
+                    </tbody>
+                  </table>
+                  <div class="bracket-r bc-blue"></div>
+                </div>
+              </div>
+              <span class="comp-op">·</span>
+              <div class="mat-block">
+                <span class="mat-label ml-purple">W_E</span>
+                <div class="bracket-wrap">
+                  <div class="bracket-l bc-purple"></div>
+                  <table class="mat-table">
+                    <thead><tr><th></th><th>d₁</th><th>d₂</th></tr></thead>
+                    <tbody>
+                      <tr><td class="lbl-cell">x₁</td><td>0.3</td><td>-0.2</td></tr>
+                      <tr><td class="lbl-cell">x₂</td><td>-0.1</td><td>0.6</td></tr>
+                    </tbody>
+                  </table>
+                  <div class="bracket-r bc-purple"></div>
+                </div>
+              </div>
+              <span class="comp-op comp-eq">=</span>
+              <div class="mat-block">
+                <span class="mat-label ml-teal">E ∈ ℝ<sup>N×D</sup></span>
+                <div class="bracket-wrap">
+                  <div class="bracket-l bc-teal"></div>
+                  <table class="mat-table">
+                    <thead><tr><th></th><th>d₁</th><th>d₂</th></tr></thead>
+                    <tbody>
+                      <tr class="row-hl"><td class="lbl-cell">e₁</td><td>0.2</td><td>-0.0</td></tr>
+                      <tr>              <td class="lbl-cell">e₂</td><td>0.1</td><td>0.3</td></tr>
+                      <tr>              <td class="lbl-cell">e₃</td><td>0.2</td><td>-0.1</td></tr>
+                      <tr>              <td class="lbl-cell">e₄</td><td>0.1</td><td>0.2</td></tr>
+                    </tbody>
+                  </table>
+                  <div class="bracket-r bc-teal"></div>
+                </div>
+              </div>
+              <span class="comp-op" style="font-family:'Fira Code',monospace;font-size:0.9rem;white-space:nowrap;">→ +[CLS]+pos →</span>
+              <div class="mat-block">
+                <span class="mat-label ml-green">Z₀ ∈ ℝ<sup>(N+1)×D</sup></span>
+                <div class="bracket-wrap">
+                  <div class="bracket-l bc-green"></div>
+                  <table class="mat-table">
+                    <thead><tr><th></th><th>d₁</th><th>d₂</th></tr></thead>
+                    <tbody>
+                      <tr class="row-cls"><td class="lbl-cell">[CLS]</td><td>0.2</td><td>0.1</td></tr>
+                      <tr><td class="lbl-cell">P₁</td><td>1.0</td><td>-0.1</td></tr>
+                      <tr><td class="lbl-cell">P₂</td><td>0.5</td><td>0.9</td></tr>
+                      <tr><td class="lbl-cell">P₃</td><td>0.1</td><td>0.7</td></tr>
+                      <tr><td class="lbl-cell">P₄</td><td>0.4</td><td>0.6</td></tr>
+                    </tbody>
+                  </table>
+                  <div class="bracket-r bc-green"></div>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:0.25rem;">
+              <span class="step-lbl">Sequência de entrada do encoder</span>
+              <div class="tok-seq">
+                <div class="tok-chip cls">[CLS]</div>
+                <div class="tok-chip patch">P₁</div>
+                <div class="tok-chip patch">P₂</div>
+                <div class="tok-chip patch">P₃</div>
+                <div class="tok-chip patch">P₄</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pipe-divider">↓</div>
+
+        <div class="pipeline-step">
+          <div class="pipe-header"><span class="pipe-step-badge">2</span> Encoder Transformer (Multi-Head Attention)</div>
+          <div class="pipe-body" style="flex-direction:column;gap:0.65rem;">
+
+            <!-- Multi-head outputs + W_O projection -->
+            <div style="display:flex;align-items:flex-end;gap:0.6rem;flex-wrap:wrap;">
+
+              <!-- 3 head output matrices -->
+              <div style="display:flex;flex-direction:column;gap:0.3rem;">
+                <span class="mat-label ml-teal">Saída por cabeça — embeddings contextuais A⁽ʰ⁾</span>
+                <div class="mh-grid">
+                  <div class="mh-head">
+                    <div class="mh-title">Head 1 — A⁽¹⁾</div>
+                    <div class="bracket-wrap">
+                      <div class="bracket-l bc-teal"></div>
+                      <table class="mat-table">
+                        <thead><tr><th></th><th>d₁</th><th>d₂</th></tr></thead>
+                        <tbody>
+                          <tr class="row-cls"><td class="lbl-cell">[C]</td><td id="h1-r0-c0">0.3</td><td id="h1-r0-c1">0.2</td></tr>
+                          <tr><td class="lbl-cell">P₁</td><td id="h1-r1-c0">0.7</td><td id="h1-r1-c1">0.1</td></tr>
+                          <tr><td class="lbl-cell">P₂</td><td id="h1-r2-c0">0.2</td><td id="h1-r2-c1">0.5</td></tr>
+                          <tr><td class="lbl-cell">P₃</td><td id="h1-r3-c0">0.4</td><td id="h1-r3-c1">0.3</td></tr>
+                          <tr><td class="lbl-cell">P₄</td><td id="h1-r4-c0">0.1</td><td id="h1-r4-c1">0.6</td></tr>
+                        </tbody>
+                      </table>
+                      <div class="bracket-r bc-teal"></div>
+                    </div>
+                  </div>
+                  <div class="mh-head">
+                    <div class="mh-title">Head 2 — A⁽²⁾</div>
+                    <div class="bracket-wrap">
+                      <div class="bracket-l bc-blue"></div>
+                      <table class="mat-table">
+                        <thead><tr><th></th><th>d₁</th><th>d₂</th></tr></thead>
+                        <tbody>
+                          <tr class="row-cls"><td class="lbl-cell">[C]</td><td id="h2-r0-c0">0.5</td><td id="h2-r0-c1">0.1</td></tr>
+                          <tr><td class="lbl-cell">P₁</td><td id="h2-r1-c0">0.1</td><td id="h2-r1-c1">0.8</td></tr>
+                          <tr><td class="lbl-cell">P₂</td><td id="h2-r2-c0">0.8</td><td id="h2-r2-c1">0.2</td></tr>
+                          <tr><td class="lbl-cell">P₃</td><td id="h2-r3-c0">0.3</td><td id="h2-r3-c1">0.4</td></tr>
+                          <tr><td class="lbl-cell">P₄</td><td id="h2-r4-c0">0.6</td><td id="h2-r4-c1">0.3</td></tr>
+                        </tbody>
+                      </table>
+                      <div class="bracket-r bc-blue"></div>
+                    </div>
+                  </div>
+                  <div class="mh-head">
+                    <div class="mh-title">Head 3 — A⁽³⁾</div>
+                    <div class="bracket-wrap">
+                      <div class="bracket-l bc-purple"></div>
+                      <table class="mat-table">
+                        <thead><tr><th></th><th>d₁</th><th>d₂</th></tr></thead>
+                        <tbody>
+                          <tr class="row-cls"><td class="lbl-cell">[C]</td><td id="h3-r0-c0">0.2</td><td id="h3-r0-c1">0.4</td></tr>
+                          <tr><td class="lbl-cell">P₁</td><td id="h3-r1-c0">0.4</td><td id="h3-r1-c1">0.2</td></tr>
+                          <tr><td class="lbl-cell">P₂</td><td id="h3-r2-c0">0.3</td><td id="h3-r2-c1">0.7</td></tr>
+                          <tr><td class="lbl-cell">P₃</td><td id="h3-r3-c0">0.6</td><td id="h3-r3-c1">0.1</td></tr>
+                          <tr><td class="lbl-cell">P₄</td><td id="h3-r4-c0">0.5</td><td id="h3-r4-c1">0.3</td></tr>
+                        </tbody>
+                      </table>
+                      <div class="bracket-r bc-purple"></div>
+                    </div>
+                  </div>
+                </div>
+                <div style="font-size:0.73rem;color:var(--text-dim);font-family:'Fira Code',monospace;">cada cabeça: (N+1) × d<sub>h</sub></div>
+              </div>
+
+              <!-- concat → · W<sub>O</sub> = Z<sub>MHA</sub> -->
+              <div class="comp-row" style="align-items:flex-end;flex-wrap:nowrap;gap:0.4rem;">
+                <div style="display:flex;flex-direction:column;align-items:center;gap:0.1rem;padding-bottom:0.2rem;">
+                  <span style="font-size:0.68rem;color:var(--text-dim);font-family:'Fira Code',monospace;">concat</span>
+                  <span class="comp-op" style="font-size:1.5rem;line-height:1;">→</span>
+                </div>
+                <span class="comp-op">·</span>
+                <div class="mat-block">
+                  <span class="mat-label ml-green">W<sub>O</sub></span>
+                  <div class="bracket-wrap">
+                    <div class="bracket-l bc-green"></div>
+                    <table class="mat-table">
+                      <thead><tr><th>d₁</th><th>d₂</th></tr></thead>
+                      <tbody>
+                        <tr style="background:var(--teal-lt)"><td id="wo-r0-c0">0.4</td><td id="wo-r0-c1">0.2</td></tr>
+                        <tr style="background:var(--teal-lt)"><td id="wo-r1-c0">-0.1</td><td id="wo-r1-c1">0.5</td></tr>
+                        <tr style="background:var(--blue-lt)"><td id="wo-r2-c0">0.3</td><td id="wo-r2-c1">-0.1</td></tr>
+                        <tr style="background:var(--blue-lt)"><td id="wo-r3-c0">0.2</td><td id="wo-r3-c1">0.4</td></tr>
+                        <tr style="background:var(--purple-lt)"><td id="wo-r4-c0">-0.2</td><td id="wo-r4-c1">0.6</td></tr>
+                        <tr style="background:var(--purple-lt)"><td id="wo-r5-c0">0.5</td><td id="wo-r5-c1">0.1</td></tr>
+                      </tbody>
+                    </table>
+                    <div class="bracket-r bc-green"></div>
+                  </div>
+                  <div style="font-size:0.72rem;color:var(--text-dim);font-family:'Fira Code',monospace;">(H·d<sub>h</sub>) × d<sub>h</sub></div>
+                </div>
+                <span class="comp-op comp-eq">=</span>
+                <div class="mat-block">
+                  <span class="mat-label ml-blue">A<sub>MHA</sub> ∈ ℝ<sup>(N+1)×d<sub>h</sub></sup></span>
+                  <div class="bracket-wrap">
+                    <div class="bracket-l bc-blue"></div>
+                    <table class="mat-table">
+                      <thead><tr><th></th><th>d₁</th><th>d₂</th></tr></thead>
+                      <tbody>
+                        <tr class="row-cls"><td class="lbl-cell">[C]</td><td id="amha-r0-c0" class="amha-cell" onclick="highlightMHA(0,0)">0.5</td><td id="amha-r0-c1" class="amha-cell" onclick="highlightMHA(0,1)">0.4</td></tr>
+                        <tr><td class="lbl-cell">P₁</td><td id="amha-r1-c0" class="amha-cell" onclick="highlightMHA(1,0)">0.7</td><td id="amha-r1-c1" class="amha-cell" onclick="highlightMHA(1,1)">0.2</td></tr>
+                        <tr><td class="lbl-cell">P₂</td><td id="amha-r2-c0" class="amha-cell" onclick="highlightMHA(2,0)">0.3</td><td id="amha-r2-c1" class="amha-cell" onclick="highlightMHA(2,1)">0.8</td></tr>
+                        <tr><td class="lbl-cell">P₃</td><td id="amha-r3-c0" class="amha-cell" onclick="highlightMHA(3,0)">0.4</td><td id="amha-r3-c1" class="amha-cell" onclick="highlightMHA(3,1)">0.6</td></tr>
+                        <tr><td class="lbl-cell">P₄</td><td id="amha-r4-c0" class="amha-cell" onclick="highlightMHA(4,0)">0.2</td><td id="amha-r4-c1" class="amha-cell" onclick="highlightMHA(4,1)">0.5</td></tr>
+                      </tbody>
+                    </table>
+                    <div class="bracket-r bc-blue"></div>
+                  </div>
+                  <div style="font-size:0.7rem;color:var(--text-dim);font-family:'Fira Code',monospace;margin-top:0.18rem;">↑ clique para explorar</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Encoder stack + Z_L (após L camadas) -->
+            <div style="display:flex;gap:1rem;align-items:flex-start;flex-wrap:wrap;">
+              <div class="encoder-stack">
+                <div class="enc-block"><span>Encoder 1</span><span class="enc-pill">MHA + MLP</span></div>
+                <div class="enc-block"><span>Encoder 2</span><span class="enc-pill">MHA + MLP</span></div>
+                <div class="enc-block"><span>Encoder 3</span><span class="enc-pill">MHA + MLP</span></div>
+                <div class="enc-block" style="background:var(--bg3);"><span>… L camadas</span><span class="enc-pill">stack</span></div>
+              </div>
+              <div class="mat-block">
+                <span class="mat-label ml-blue">Z<sub>L</sub> — embeddings contextuais finais</span>
+                <div class="bracket-wrap">
+                  <div class="bracket-l bc-blue"></div>
+                  <table class="mat-table">
+                    <thead><tr><th></th><th>d₁</th><th>d₂</th></tr></thead>
+                    <tbody>
+                      <tr class="row-cls"><td class="lbl-cell">[CLS]</td><td>0.5</td><td>0.4</td></tr>
+                      <tr><td class="lbl-cell">P₁</td><td>0.7</td><td>0.2</td></tr>
+                      <tr><td class="lbl-cell">P₂</td><td>0.3</td><td>0.8</td></tr>
+                      <tr><td class="lbl-cell">P₃</td><td>0.4</td><td>0.6</td></tr>
+                      <tr><td class="lbl-cell">P₄</td><td>0.2</td><td>0.5</td></tr>
+                    </tbody>
+                  </table>
+                  <div class="bracket-r bc-blue"></div>
+                </div>
+                <div class="dim-badge db-blue" style="margin-top:0.2rem;">(N+1) × d<sub>h</sub></div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="pipe-divider">↓</div>
+
+        <div class="pipeline-step">
+          <div class="pipe-header"><span class="pipe-step-badge">3</span> MLP Head e probabilidades</div>
+          <div class="pipe-body">
+            <div class="mat-block">
+              <span class="mat-label ml-teal">z<sub>cls</sub></span>
+              <div class="bracket-wrap">
+                <div class="bracket-l bc-teal"></div>
+                <table class="mat-table">
+                  <thead><tr><th></th><th>d₁</th><th>d₂</th></tr></thead>
+                  <tbody>
+                    <tr class="row-cls"><td class="lbl-cell">[CLS]</td><td>0.5</td><td>0.4</td></tr>
+                  </tbody>
+                </table>
+                <div class="bracket-r bc-teal"></div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:0.55rem;flex-wrap:wrap;">
+              <span style="font-size:1.3rem;color:var(--text-dim);">→</span>
+              <div class="mlp-box">MLP Head</div>
+              <span style="font-size:1.3rem;color:var(--text-dim);">→</span>
+              <div class="prob-chart" id="prob-bars" style="flex:1;min-width:170px;">
+                <div class="bar-row">
+                  <span class="bar-label">Gato</span>
+                  <div class="bar-track"><div class="bar-fill" id="bf1" style="background:#0d6e6e;"></div></div>
+                  <span class="bar-pct" id="bp1">0%</span>
+                </div>
+                <div class="bar-row">
+                  <span class="bar-label">Cachorro</span>
+                  <div class="bar-track"><div class="bar-fill" id="bf2" style="background:#1d4ed8;"></div></div>
+                  <span class="bar-pct" id="bp2">0%</span>
+                </div>
+                <div class="bar-row">
+                  <span class="bar-label">Pássaro</span>
+                  <div class="bar-track"><div class="bar-fill" id="bf3" style="background:#9333ea;"></div></div>
+                  <span class="bar-pct" id="bp3">0%</span>
+                </div>
+                <div class="bar-row">
+                  <span class="bar-label">Outro</span>
+                  <div class="bar-track"><div class="bar-fill" id="bf4" style="background:#ca8a04;"></div></div>
+                  <span class="bar-pct" id="bp4">0%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      setTimeout(() => {
+        const bars = [
+          { id:'bf1', lbl:'bp1', pct:72 },
+          { id:'bf2', lbl:'bp2', pct:15 },
+          { id:'bf3', lbl:'bp3', pct:8  },
+          { id:'bf4', lbl:'bp4', pct:5  },
+        ];
+        bars.forEach(b => {
+          const fill  = document.getElementById(b.id);
+          const label = document.getElementById(b.lbl);
+          if (fill)  fill.style.width  = b.pct + '%';
+          if (label) label.textContent = b.pct + '%';
+        });
+      }, 220);
+    }
+
+    renderPipeline();
+  </script>
+</body>
+</html>

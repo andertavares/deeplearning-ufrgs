@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 31 – Parâmetros Aprendidos: γ e β</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── Layout ──────────────────────────────────────────────────────────── */
+    .param-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      flex: 1;
+    }
+
+    .param-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.3rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      box-shadow: var(--shadow);
+      overflow-y: auto;
+    }
+
+    /* ── Batch size / feature tabs (reused from slide30) ─────────────────── */
+    .mode-tabs {
+      display: flex;
+      gap: 0.5rem;
+      background: var(--bg3);
+      border-radius: 999px;
+      padding: 4px;
+      border: 1px solid var(--border2);
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 0.38rem 0.7rem;
+      border-radius: 999px;
+      border: none;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.22s;
+      background: transparent;
+      color: var(--text-muted);
+    }
+
+    .tab-btn.active-norm { background: var(--purple-lt); color: var(--purple); }
+    .tab-btn:hover:not(.active-norm) { background: var(--bg2); }
+
+    /* ── Feature selector tabs ────────────────────────────────────────────── */
+    .feat-tabs { display: flex; gap: 0.5rem; }
+
+    .feat-tab {
+      flex: 1;
+      padding: 0.35rem 0.5rem;
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      background: var(--bg3);
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.2s;
+      color: var(--text-muted);
+    }
+
+    .feat-tab.active { background: var(--purple-lt); border-color: #c4b5fd; color: var(--purple); }
+    .feat-tab:hover:not(.active) { background: var(--bg2); }
+
+    /* ── Batch navigation ─────────────────────────────────────────────────── */
+    .batch-nav {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+    }
+
+    .batch-info {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--purple);
+      min-width: 80px;
+      text-align: center;
+    }
+
+    .nav-btn {
+      border: 1.5px solid var(--border2);
+      background: var(--bg3);
+      color: var(--text);
+      padding: 0.38rem 0.9rem;
+      border-radius: 999px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+
+    .nav-btn:hover:not(:disabled) { background: var(--purple-lt); border-color: #c4b5fd; color: var(--purple); }
+    .nav-btn:disabled { opacity: 0.38; cursor: not-allowed; }
+
+    /* ── Canvas ───────────────────────────────────────────────────────────── */
+    #cvParam {
+      display: block;
+      border-radius: var(--radius-sm);
+      background: #f8f9fb;
+      border: 1.5px solid var(--border2);
+    }
+
+    /* ── Sliders ──────────────────────────────────────────────────────────── */
+    .slider-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .slider-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.87rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .slider-val {
+      font-family: 'Fira Code', monospace;
+      font-size: 1rem;
+      font-weight: 700;
+      min-width: 52px;
+      text-align: right;
+    }
+
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      outline: none;
+      cursor: pointer;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+
+    input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+    .thumb-gamma::-webkit-slider-thumb { background: var(--purple); }
+    .thumb-beta::-webkit-slider-thumb  { background: var(--blue); }
+
+    .slider-ticks {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.68rem;
+      color: var(--text-dim);
+      font-family: 'Fira Code', monospace;
+    }
+
+    /* ── Formula display ──────────────────────────────────────────────────── */
+    .formula-display {
+      background: linear-gradient(135deg, var(--purple-lt), var(--blue-lt));
+      border: 1.5px solid #c4b5fd;
+      border-radius: var(--radius);
+      padding: 0.75rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.38rem;
+    }
+
+    .fml-main {
+      font-family: 'Fira Code', monospace;
+      font-size: 1.15rem;
+      font-weight: 700;
+      text-align: center;
+      letter-spacing: 0.02em;
+    }
+
+    .fml-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.84rem;
+    }
+
+    .fml-label { color: var(--text-muted); font-family: 'Fira Code', monospace; }
+    .fml-val   { font-weight: 700; font-family: 'Fira Code', monospace; }
+
+    /* ── Normalized + output table ────────────────────────────────────────── */
+    .out-table {
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      font-size: 0.78rem;
+    }
+
+    .ot-header,
+    .ot-row {
+      display: grid;
+      grid-template-columns: 1.05fr 0.85fr 0.85fr 0.85fr;
+      border-bottom: 1px solid var(--border2);
+    }
+
+    .ot-header { background: var(--bg3); border-bottom: 1.5px solid var(--border2); }
+    .ot-row:last-child { border-bottom: none; }
+
+    .ot-cell { padding: 0.38rem 0.55rem; font-family: 'Fira Code', monospace; font-size: 0.73rem; }
+    .ot-header .ot-cell { font-weight: 700; font-size: 0.67rem; text-transform: uppercase; letter-spacing: 0.04em; }
+    .ot-sample  { color: var(--text); font-weight: 600; }
+    .ot-raw     { color: var(--text-muted); }
+    .ot-norm    { color: #166534; font-weight: 700; }   /* green: x̂ */
+    .ot-out     { color: var(--purple); font-weight: 700; } /* purple: ŷ */
+
+    /* ── Parameter cards ──────────────────────────────────────────────────── */
+    .param-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+    }
+
+    .param-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 0.7rem 0.9rem;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid;
+      transition: transform 0.2s;
+    }
+
+    .param-card:hover { transform: translateX(4px); }
+    .param-card.gamma { background: var(--purple-lt); border-color: #c4b5fd; }
+    .param-card.beta  { background: var(--blue-lt);   border-color: #93c5fd; }
+
+    .pc-sym  { font-family: 'Fira Code', monospace; font-size: 1.5rem; font-weight: 700; flex-shrink: 0; line-height: 1; }
+    .pc-body { display: flex; flex-direction: column; gap: 0.18rem; }
+    .pc-title { font-size: 0.88rem; font-weight: 700; color: var(--text); }
+    .pc-desc  { font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Redes Convolucionais</span>
+      <span class="prof-tag" style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 10 · Slide 3 / 5</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Parâmetros Aprendidos: γ e β</h1>
+        <p class="slide-subtitle">Após normalizar o lote, a rede <em>reescala</em> com γ e <em>desloca</em> com β — ambos aprendidos por backpropagation.</p>
+      </div>
+
+      <div class="param-layout">
+
+        <!-- ── Left: controls + data table ─────────────────────────────── -->
+        <div class="param-panel">
+          <div class="panel-title">Dataset — Lote Atual</div>
+
+          <!-- Batch size selector -->
+          <div class="mode-tabs">
+            <button class="tab-btn" id="tabB2" onclick="setBatchSize(2)">Lote de 2</button>
+            <button class="tab-btn active-norm" id="tabB3" onclick="setBatchSize(3)">Lote de 3</button>
+          </div>
+
+          <!-- Feature selector -->
+          <div class="feat-tabs">
+            <button class="feat-tab active" id="ftAge"    onclick="setFeat('age')">📊 Idade</button>
+            <button class="feat-tab"        id="ftSalary" onclick="setFeat('salary')">📊 Salário</button>
+          </div>
+
+          <!-- Batch navigation -->
+          <div class="batch-nav">
+            <button class="nav-btn" id="prevBatch" onclick="prevBatch()">← Anterior</button>
+            <span class="batch-info" id="batchInfo">Lote 1 / 2</span>
+            <button class="nav-btn" id="nextBatch" onclick="nextBatch()">Próximo →</button>
+          </div>
+
+          <!-- x_raw | x̂ | ŷ table -->
+          <div class="out-table" id="outTable"></div>
+
+          <!-- γ slider -->
+          <div class="slider-group">
+            <div class="slider-label-row">
+              <span>γ — escala (estica / comprime)</span>
+              <span class="slider-val" id="gammaLabel" style="color:var(--purple);">1.00</span>
+            </div>
+            <input type="range" id="sliderGamma" class="thumb-gamma"
+                   min="0.2" max="3.0" step="0.05" value="1.0"
+                   oninput="render()" />
+            <div class="slider-ticks"><span>0.2</span><span>1.0</span><span>3.0</span></div>
+          </div>
+
+          <!-- β slider -->
+          <div class="slider-group">
+            <div class="slider-label-row">
+              <span>β — deslocamento (shift)</span>
+              <span class="slider-val" id="betaLabel" style="color:var(--blue);">0.00</span>
+            </div>
+            <input type="range" id="sliderBeta" class="thumb-beta"
+                   min="-3.0" max="3.0" step="0.1" value="0.0"
+                   oninput="render()" />
+            <div class="slider-ticks"><span>−3.0</span><span>0</span><span>+3.0</span></div>
+          </div>
+        </div>
+
+        <!-- ── Right: canvas + formula + explanation ────────────────────── -->
+        <div class="param-panel">
+          <div class="panel-title">Efeito de γ e β nos Valores do Lote</div>
+
+          <!-- canvas: grouped bar chart x̂ vs ŷ -->
+          <div style="display:flex;justify-content:center;">
+            <canvas id="cvParam" width="340" height="162"></canvas>
+          </div>
+
+          <!-- formula display -->
+          <div class="formula-display">
+            <div class="fml-main">
+              <span style="color:var(--purple);">x<sub>novo</sub></span>
+              <span style="color:var(--text-muted);"> = </span>
+              <span style="color:var(--purple);">γ</span>
+              <span style="color:var(--text-muted);"> · x̂ + </span>
+              <span style="color:var(--blue);">β</span>
+            </div>
+            <div style="height:1px;background:rgba(91,33,182,0.15);"></div>
+            <div class="fml-row">
+              <span class="fml-label">γ (escala atual)</span>
+              <span class="fml-val" id="dispGamma" style="color:var(--purple);">1.00</span>
+            </div>
+            <div class="fml-row">
+              <span class="fml-label">β (deslocamento atual)</span>
+              <span class="fml-val" id="dispBeta" style="color:var(--blue);">+0.00</span>
+            </div>
+            <div class="fml-row">
+              <span class="fml-label">μ(x<sub>novo</sub>) do lote</span>
+              <span class="fml-val" id="dispMu" style="color:var(--text-muted);">0.00</span>
+            </div>
+            <div class="fml-row">
+              <span class="fml-label">σ(x<sub>novo</sub>) do lote</span>
+              <span class="fml-val" id="dispSigma" style="color:var(--text-muted);">1.00</span>
+            </div>
+          </div>
+
+          <div class="param-cards">
+            <div class="param-card gamma">
+              <span class="pc-sym" style="color:var(--purple);">γ</span>
+              <div class="pc-body">
+                <div class="pc-title">Escala (Scale)</div>
+                <div class="pc-desc">
+                  Multiplica cada x̂ — <strong>estica</strong> (γ&gt;1) ou
+                  <strong>comprime</strong> (γ&lt;1) a dispersão dos valores.
+                  Inicializado em γ = 1.
+                </div>
+              </div>
+            </div>
+            <div class="param-card beta">
+              <span class="pc-sym" style="color:var(--blue);">β</span>
+              <div class="pc-body">
+                <div class="pc-title">Deslocamento (Shift)</div>
+                <div class="pc-desc">
+                  Soma um valor fixo — <strong>desloca</strong> todos os valores
+                  para esquerda (β&lt;0) ou direita (β&gt;0).
+                  Inicializado em β = 0.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="highlight-box purple">
+            <span class="icon">🔗</span>
+            <p>
+              Com γ=1 e β=0 a saída é a própria distribuição normalizada.
+              A rede <strong>aprende os melhores valores durante o treinamento</strong>
+              via backpropagation — sem intervenção manual.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide30.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide32.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    /* ── Dataset (same as slide30) ──────────────────────────────────────── */
+    const RAW = [
+      { label: 'Pessoa A', age: 24, salary: 1800,  y: 0 },
+      { label: 'Pessoa B', age: 31, salary: 4200,  y: 0 },
+      { label: 'Pessoa C', age: 37, salary: 8200,  y: 1 },
+      { label: 'Pessoa D', age: 52, salary: 12500, y: 1 },
+      { label: 'Pessoa E', age: 61, salary: 6500,  y: 1 },
+      { label: 'Pessoa F', age: 27, salary: 9600,  y: 0 },
+    ];
+
+    /* ── Math helpers ───────────────────────────────────────────────────── */
+    function mean(arr)       { return arr.reduce((s, v) => s + v, 0) / arr.length; }
+    function stdDev(arr, mu) { return Math.sqrt(arr.reduce((s, v) => s + (v - mu) ** 2, 0) / arr.length); }
+    function zNorm(v, mu, s) { return (v - mu) / Math.max(s, 1e-6); }
+
+    /* ── State ──────────────────────────────────────────────────────────── */
+    let batchSize = 3;
+    let batchIdx  = 0;
+    let featKey   = 'age';
+
+    /* ── Batch helpers ──────────────────────────────────────────────────── */
+    function getBatches() {
+      const out = [];
+      for (let i = 0; i < RAW.length; i += batchSize) out.push(RAW.slice(i, i + batchSize));
+      return out;
+    }
+
+    function batchStats(batch, key) {
+      const vals = batch.map(s => s[key]);
+      const mu   = mean(vals);
+      const sig  = Math.max(stdDev(vals, mu), 1e-6);
+      return { mu, sig };
+    }
+
+    /* ── User actions ───────────────────────────────────────────────────── */
+    function setBatchSize(sz) {
+      batchSize = sz; batchIdx = 0;
+      document.getElementById('tabB2').className = 'tab-btn' + (sz === 2 ? ' active-norm' : '');
+      document.getElementById('tabB3').className = 'tab-btn' + (sz === 3 ? ' active-norm' : '');
+      render();
+    }
+
+    function prevBatch() { if (batchIdx > 0) { batchIdx--; render(); } }
+    function nextBatch() {
+      if (batchIdx < getBatches().length - 1) { batchIdx++; render(); }
+    }
+
+    function setFeat(key) {
+      featKey = key;
+      document.getElementById('ftAge').className    = 'feat-tab' + (key === 'age'    ? ' active' : '');
+      document.getElementById('ftSalary').className = 'feat-tab' + (key === 'salary' ? ' active' : '');
+      render();
+    }
+
+    /* ── Master render ──────────────────────────────────────────────────── */
+    function render() {
+      const gamma = parseFloat(document.getElementById('sliderGamma').value);
+      const beta  = parseFloat(document.getElementById('sliderBeta').value);
+
+      const batches = getBatches();
+      const batch   = batches[batchIdx];
+      const stats   = batchStats(batch, featKey);
+
+      const xNorms = batch.map(s => zNorm(s[featKey], stats.mu, stats.sig));
+      const yOuts  = xNorms.map(xh => gamma * xh + beta);
+
+      /* slider labels */
+      document.getElementById('gammaLabel').textContent = gamma.toFixed(2);
+      document.getElementById('betaLabel').textContent  = (beta >= 0 ? '+' : '') + beta.toFixed(2);
+      document.getElementById('dispGamma').textContent  = gamma.toFixed(2);
+      document.getElementById('dispBeta').textContent   = (beta >= 0 ? '+' : '') + beta.toFixed(2);
+
+      /* μ(ŷ) and σ(ŷ) of current batch output */
+      const muY  = mean(yOuts);
+      const sigY = stdDev(yOuts, muY);
+      document.getElementById('dispMu').textContent    = muY.toFixed(3);
+      document.getElementById('dispSigma').textContent = sigY.toFixed(3);
+
+      /* batch nav */
+      document.getElementById('batchInfo').textContent  = `Lote ${batchIdx + 1} / ${batches.length}`;
+      document.getElementById('prevBatch').disabled     = batchIdx === 0;
+      document.getElementById('nextBatch').disabled     = batchIdx === batches.length - 1;
+
+      updateTable(batch, xNorms, yOuts);
+      drawCanvas(batch, xNorms, yOuts, gamma, beta);
+    }
+
+    /* ── Data table: raw | x̂ | ŷ ────────────────────────────────────────── */
+    function updateTable(batch, xNorms, yOuts) {
+      const featLabel = featKey === 'age' ? 'Idade' : 'Salário';
+      const fmtRaw    = v => featKey === 'age' ? v.toString() : v.toLocaleString('pt-BR');
+
+      document.getElementById('outTable').innerHTML = `
+        <div class="ot-header">
+          <div class="ot-cell ot-sample">Amostra</div>
+          <div class="ot-cell ot-raw">${featLabel} (x)</div>
+          <div class="ot-cell ot-norm">x̂ (norm.)</div>
+          <div class="ot-cell ot-out">x<sub>novo</sub> = γ·x̂+β</div>
+        </div>
+        ${batch.map((s, i) => `
+          <div class="ot-row">
+            <div class="ot-cell ot-sample">${s.label}</div>
+            <div class="ot-cell ot-raw">${fmtRaw(s[featKey])}</div>
+            <div class="ot-cell ot-norm">${xNorms[i].toFixed(3)}</div>
+            <div class="ot-cell ot-out">${yOuts[i].toFixed(3)}</div>
+          </div>
+        `).join('')}
+      `;
+    }
+
+    /* ── Canvas: grouped bar chart  x̂ (green) vs ŷ (purple) ────────────── */
+    function drawCanvas(batch, xNorms, yOuts, gamma, beta) {
+      const cv  = document.getElementById('cvParam');
+      const ctx = cv.getContext('2d');
+      const W = cv.width, H = cv.height;
+      const PL = 38, PR = 14, PT = 30, PB = 38;
+      const plotW = W - PL - PR, plotH = H - PT - PB;
+
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = '#f8f9fb';
+      ctx.fillRect(0, 0, W, H);
+
+      const allVals = [...xNorms, ...yOuts];
+      const absMax  = Math.max(...allVals.map(Math.abs), 0.5);
+      const yMax    = absMax * 1.35;
+      const yMin    = -yMax;
+
+      function toY(v) { return PT + plotH * (1 - (v - yMin) / (yMax - yMin)); }
+
+      /* Y axis */
+      ctx.strokeStyle = '#c7d0e0'; ctx.lineWidth = 1; ctx.setLineDash([]);
+      ctx.beginPath(); ctx.moveTo(PL, PT); ctx.lineTo(PL, PT + plotH); ctx.stroke();
+
+      /* Zero line */
+      const y0 = toY(0);
+      ctx.strokeStyle = '#94a3b8'; ctx.setLineDash([3, 3]);
+      ctx.beginPath(); ctx.moveTo(PL, y0); ctx.lineTo(W - PR, y0); ctx.stroke();
+      ctx.setLineDash([]);
+
+      /* Axis tick labels */
+      ctx.fillStyle = '#6b7fa3'; ctx.font = '600 9px Fira Code, monospace';
+      ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+      ctx.fillText('0', PL - 4, y0);
+      [-1, 1].forEach(v => {
+        if (v > yMin && v < yMax)
+          ctx.fillText(v > 0 ? '+1' : '-1', PL - 4, toY(v));
+      });
+
+      const slotW = plotW / batch.length;
+      const barW  = slotW * 0.28;
+      const GREEN  = '#166534cc';
+      const PURPLE = '#5b21b6cc';
+
+      batch.forEach((s, i) => {
+        const xh = xNorms[i], yh = yOuts[i];
+        const xC = PL + (i + 0.5) * slotW;
+
+        /* x̂ bar (green) */
+        const xG    = xC - barW * 0.65;
+        const yTopG = toY(Math.max(xh, 0)), yBotG = toY(Math.min(xh, 0));
+        ctx.fillStyle = GREEN;
+        ctx.fillRect(xG, Math.min(yTopG, yBotG), barW, Math.max(Math.abs(yTopG - yBotG), 2));
+
+        /* ŷ bar (purple) */
+        const xB    = xC + barW * 0.1;
+        const yTopB = toY(Math.max(yh, 0)), yBotB = toY(Math.min(yh, 0));
+        ctx.fillStyle = PURPLE;
+        ctx.fillRect(xB, Math.min(yTopB, yBotB), barW, Math.max(Math.abs(yTopB - yBotB), 2));
+
+        /* Value labels */
+        ctx.font = '600 8px Fira Code, monospace';
+        ctx.fillStyle = '#166534'; ctx.textAlign = 'center';
+        ctx.textBaseline = xh >= 0 ? 'bottom' : 'top';
+        ctx.fillText(xh.toFixed(2), xG + barW / 2, toY(xh) + (xh >= 0 ? -2 : 2));
+
+        ctx.fillStyle = '#5b21b6';
+        ctx.textBaseline = yh >= 0 ? 'bottom' : 'top';
+        ctx.fillText(yh.toFixed(2), xB + barW / 2, toY(yh) + (yh >= 0 ? -2 : 2));
+
+        /* Sample label */
+        ctx.fillStyle = '#334155'; ctx.font = '600 9px Inter, sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        ctx.fillText(s.label.split(' ')[1], xC, H - PB + 5);
+      });
+
+      /* Title */
+      const featLabel = featKey === 'age' ? 'Idade' : 'Salário';
+      ctx.fillStyle = '#334155'; ctx.font = '700 10px Inter, sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      ctx.fillText('γ=' + gamma.toFixed(2) + '  β=' + (beta >= 0 ? '+' : '') + beta.toFixed(2) +
+           '  — ' + featLabel + ' (lote ' + (batchIdx + 1) + ')', W / 2, 4);
+
+      /* Legend */
+      const lx = PL + 2, ly = PT + 4;
+      ctx.fillStyle = GREEN;   ctx.fillRect(lx,      ly, 10, 10);
+      ctx.fillStyle = PURPLE;  ctx.fillRect(lx + 70, ly, 10, 10);
+      ctx.fillStyle = '#334155'; ctx.font = '600 8px Inter, sans-serif';
+      ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+      ctx.fillText('x̂ (norm.)', lx + 13, ly + 5);
+      ctx.fillText('xnovo = γ·x̂+β', lx + 83, ly + 5);
+    }
+
+    /* ── Init ───────────────────────────────────────────────────────────── */
+    render();
+  </script>
+</body>
+</html>

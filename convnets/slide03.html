@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 3 – Imagens como Matrizes de Pixels</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .main-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.4rem;
+      flex: 1;
+      overflow: visible;
+    }
+    .inner-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.3rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      overflow-y: auto;
+      box-shadow: var(--shadow);
+    }
+    .pixel-canvas-wrap {
+      position: relative;
+      cursor: crosshair;
+    }
+    #pixel-canvas {
+      border: 2px solid var(--border2);
+      border-radius: 6px;
+      display: block;
+      image-rendering: pixelated;
+    }
+    #tooltip {
+      position: fixed;
+      background: var(--bg2);
+      border: 1.5px solid var(--cyan);
+      border-radius: 6px;
+      padding: 0.5rem 0.9rem;
+      font-size: 0.95rem;
+      font-family: 'Fira Code', monospace;
+      color: var(--cyan);
+      pointer-events: none;
+      display: none;
+      z-index: 100;
+      white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .matrix-code {
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0.7rem 0.9rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.9rem;
+      line-height: 1.7;
+      flex: 1;
+      overflow: auto;
+    }
+    .row-bracket {
+      color: var(--text-dim);
+    }
+    .val-0 { color: var(--text-dim); }
+    .val-hi { color: var(--cyan); font-weight: 700; }
+    .val-mid { color: #1d4ed8; font-weight: 600; }
+
+    .image-concepts {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+    .concept-row {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0.7rem 1rem;
+      font-size: 0.97rem;
+      animation: cardSlide 0.4s ease both;
+      animation-delay: var(--delay, 0s);
+      transition: border-color 0.2s;
+    }
+    .concept-row:hover { border-color: var(--purple); }
+    .concept-row .cr-icon { font-size: 1.4rem; flex-shrink: 0; }
+    .concept-row .cr-label { font-weight: 700; min-width: 100px; color: var(--text); }
+    .concept-row .cr-desc { color: var(--text-muted); font-size: 0.92rem; line-height: 1.35; }
+
+    .axis-label {
+      font-size: 0.88rem;
+      color: var(--text-dim);
+      font-family: 'Fira Code', monospace;
+      text-align: center;
+      font-weight: 600;
+    }
+    .hover-hint {
+      font-size: 0.88rem;
+      color: var(--text-dim);
+      font-family: 'Fira Code', monospace;
+      text-align: center;
+    }
+    .selected-info {
+      background: var(--cyan-lt);
+      border: 1.5px solid #a5f3fc;
+      border-radius: var(--radius-sm);
+      padding: 0.55rem 0.85rem;
+      font-size: 0.95rem;
+      font-family: 'Fira Code', monospace;
+      color: var(--cyan);
+      min-height: 34px;
+      transition: all 0.2s;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div id="tooltip"></div>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Redes Convolucionais</span>
+      <span class="prof-tag" style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 1 · Slide 3 / 5</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Imagens em Escala de Cinza</h1>
+        <p class="slide-subtitle">Uma imagem é uma <strong style="color:var(--cyan)">matriz de números</strong> — cada número é um pixel</p>
+      </div>
+
+      <div class="main-split">
+        <!-- Left: interactive pixel grid -->
+        <div class="inner-panel">
+          <div class="panel-title">Imagem interativa — passe o mouse! 🖱️</div>
+
+          <div style="display:flex; gap:1rem; align-items:center; justify-content:center; flex:0 0 auto;">
+            <div>
+              <div class="axis-label" style="margin-bottom:4px;">← colunas (j) →</div>
+              <div class="pixel-canvas-wrap">
+                <canvas id="pixel-canvas" width="240" height="240"></canvas>
+              </div>
+              <div class="axis-label" style="margin-top:4px;">↕ linhas (i)</div>
+            </div>
+          </div>
+
+          <div class="selected-info" id="selected-info">
+            Hover sobre um pixel para ver seu valor ✨
+          </div>
+
+          <div class="hover-hint">Cada quadrado = 1 pixel · valor entre 0 (preto) e 255 (branco)</div>
+
+          <div class="highlight-box blue" style="flex-shrink:0;">
+            <span class="icon">📐</span>
+            <p>Esta imagem tem <strong>8 × 8 = 64 pixels</strong>. Uma imagem 1920×1080 tem <strong>~2 milhões</strong> de pixels por canal.</p>
+          </div>
+        </div>
+
+        <!-- Right: matrix notation + concepts -->
+        <div class="inner-panel">
+          <div class="panel-title">Representação matemática</div>
+
+          <div style="font-size:0.75rem; color:var(--text-muted);">
+            A imagem como matriz <span class="mono" style="color:var(--cyan);">I ∈ ℝ^{H×W}</span>:
+          </div>
+
+          <div class="matrix-code" id="matrix-display">
+            <!-- filled by JS -->
+          </div>
+
+          <div class="image-concepts">
+            <div class="concept-row" style="--delay:0.05s">
+              <span class="cr-icon">⬛</span>
+              <span class="cr-label">Pixel preto</span>
+              <span class="cr-desc">valor = <span class="mono" style="color:var(--text-dim);">0</span> — sem luz refletida</span>
+            </div>
+            <div class="concept-row" style="--delay:0.15s">
+              <span class="cr-icon">⚪</span>
+              <span class="cr-label">Pixel branco</span>
+              <span class="cr-desc">valor = <span class="mono" style="color:var(--cyan);">255</span> — máxima intensidade</span>
+            </div>
+            <div class="concept-row" style="--delay:0.25s">
+              <span class="cr-icon">🔲</span>
+              <span class="cr-label">Escala de cinza</span>
+              <span class="cr-desc">1 número por pixel, 1 canal, matriz 2D</span>
+            </div>
+            <div class="concept-row" style="--delay:0.35s">
+              <span class="cr-icon">📊</span>
+              <span class="cr-label">Para o MLP</span>
+              <span class="cr-desc">precisaria "achatar" → vetor de 64 números</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide02.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide04.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    const N = 8;
+    const CELL = 30; // pixels per cell on canvas
+    const GAP  = 1;
+    const CANVAS_SIZE = N * CELL + (N - 1) * GAP;
+
+    const imgData = [
+      [  0,   0,  40, 120, 120,  40,   0,   0],
+      [  0,  20, 180, 255, 255, 180,  20,   0],
+      [  0,  20, 200,  30,  30, 200,  20,   0],
+      [  0,  20, 255, 255, 255, 255,  20,   0],
+      [  0,  20, 210,  10,  10, 210,  20,   0],
+      [  0,  20, 200,   0,   0, 200,  20,   0],
+      [  0,   0,  20,   0,   0,  20,   0,   0],
+      [  0,   0,   0,   0,   0,   0,   0,   0],
+    ];
+
+    const canvas = document.getElementById('pixel-canvas');
+    canvas.width  = CANVAS_SIZE;
+    canvas.height = CANVAS_SIZE;
+    const ctx = canvas.getContext('2d');
+    const selectedInfo = document.getElementById('selected-info');
+    const matrixDisplay = document.getElementById('matrix-display');
+
+    function drawGrid(hlR, hlC) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // background grid lines
+      ctx.fillStyle = '#c7d0e0';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      for (let i = 0; i < N; i++) {
+        for (let j = 0; j < N; j++) {
+          const x = j * (CELL + GAP);
+          const y = i * (CELL + GAP);
+          const v = imgData[i][j];
+          ctx.fillStyle = `rgb(${v},${v},${v})`;
+          ctx.fillRect(x, y, CELL, CELL);
+          if (i === hlR && j === hlC) {
+            ctx.strokeStyle = '#0e7490';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(x + 1.5, y + 1.5, CELL - 3, CELL - 3);
+          }
+        }
+      }
+    }
+
+    canvas.addEventListener('mousemove', e => {
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+      const scaleX = canvas.width  / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const px = mx * scaleX;
+      const py = my * scaleY;
+      const j = Math.floor(px / (CELL + GAP));
+      const i = Math.floor(py / (CELL + GAP));
+      if (i >= 0 && i < N && j >= 0 && j < N) {
+        const v = imgData[i][j];
+        selectedInfo.textContent = `pixel [${i},${j}] = ${v}  →  ${v === 0 ? '⬛ preto' : v === 255 ? '⬜ branco' : '▪ cinza ' + Math.round(v/255*100) + '%'}`;
+        drawGrid(i, j);
+        renderMatrix(i, j);
+      }
+    });
+
+    canvas.addEventListener('mouseleave', () => {
+      selectedInfo.textContent = 'Hover sobre um pixel para ver seu valor ✨';
+      drawGrid(-1, -1);
+      renderMatrix(-1, -1);
+    });
+
+    function renderMatrix(highlightR, highlightC) {
+      let html = '<span style="color:var(--text-dim)">I = </span>[<br>';
+      for (let i = 0; i < N; i++) {
+        html += '  [';
+        for (let j = 0; j < N; j++) {
+          const v = imgData[i][j];
+          const highlighted = (i === highlightR && j === highlightC);
+          const cls = highlighted ? 'val-hi' : (v === 0 ? 'val-0' : v > 150 ? 'val-hi' : 'val-mid');
+          const str = String(v).padStart(3, ' ');
+          if (highlighted) {
+            html += `<span class="${cls}" style="background:#cffafe; border-radius:2px;">${str}</span>`;
+          } else {
+            html += `<span class="${cls}">${str}</span>`;
+          }
+          if (j < N - 1) html += ', ';
+        }
+        html += ']';
+        if (i < N - 1) html += ',';
+        html += '<br>';
+      }
+      html += ']';
+      matrixDisplay.innerHTML = html;
+    }
+
+    drawGrid(-1, -1);
+    renderMatrix(-1, -1);
+  </script>
+</body>
+</html>

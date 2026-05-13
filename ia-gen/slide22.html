@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 22 – Comparação: AE vs GAN</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .cmp-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    .cmp-table th {
+      padding: 0.75rem 1rem; background: var(--bg3); font-size: 0.8rem;
+      text-transform: uppercase; letter-spacing: 0.07em; font-weight: 700;
+      border-bottom: 2px solid var(--border); text-align: left;
+    }
+    .cmp-table td {
+      padding: 0.7rem 1rem; border-bottom: 1px solid var(--border2);
+      vertical-align: middle; font-size: 0.88rem;
+    }
+    .cmp-table tr:last-child td { border-bottom: none; }
+    .cmp-row { transition: background 0.3s; }
+    .row-hidden { opacity: 0; transform: translateX(-10px); transition: opacity 0.4s, transform 0.4s; }
+    .row-visible { opacity: 1; transform: translateX(0); }
+    .cmp-row td:first-child { font-weight: 700; color: var(--text); }
+    .cmp-row td:nth-child(2) { color: var(--teal); }
+    .cmp-row td:nth-child(3) { color: var(--cyan); }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">IA Generativa</span>
+      <span style="font-size:0.9rem;color:var(--text-muted);font-weight:500;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 11 · Slide 22 / 24</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Comparação: AE vs GAN</h1>
+      </div>
+
+      <div class="panel" style="padding:0;overflow:hidden;max-width:820px;margin:0 auto;">
+        <table class="cmp-table">
+          <thead>
+            <tr>
+              <th>Aspecto</th>
+              <th style="color:var(--teal);">Autoencoder</th>
+              <th style="color:var(--cyan);">GAN</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="cmp-row row-hidden">
+              <td>Objetivo</td>
+              <td>Reconstruir a entrada</td>
+              <td>Enganar o discriminador</td>
+            </tr>
+            <tr class="cmp-row row-hidden">
+              <td>Arquitetura</td>
+              <td>Encoder + Decoder</td>
+              <td>Generator + Discriminator</td>
+            </tr>
+            <tr class="cmp-row row-hidden">
+              <td>Treino</td>
+              <td>Simples — minimiza loss de reconstrução</td>
+              <td>Adversarial — minimax, pode ser instável</td>
+            </tr>
+            <tr class="cmp-row row-hidden">
+              <td>Espaço latente</td>
+              <td>Explícito, pode ser explorado</td>
+              <td>Implícito (ruído → dado)</td>
+            </tr>
+            <tr class="cmp-row row-hidden">
+              <td>Qualidade da geração</td>
+              <td>Limitada, amostras podem ser borradas</td>
+              <td>Alta qualidade, amostras nítidas</td>
+            </tr>
+            <tr class="cmp-row row-hidden">
+              <td>Para quê</td>
+              <td>Compressão, denoising, representação</td>
+              <td>Síntese realista, data augmentation</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="text-align:center;">
+        <button class="btn-step" id="reveal-btn" onclick="revealRow()">Revelar</button>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide21.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide23.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    let rowIdx = 0;
+    function revealRow() {
+      const rows = document.querySelectorAll('.cmp-row');
+      if (rowIdx < rows.length) {
+        rows[rowIdx].classList.remove('row-hidden');
+        rows[rowIdx].classList.add('row-visible');
+        rowIdx++;
+      }
+      const btn = document.getElementById('reveal-btn');
+      if (rowIdx >= rows.length) btn.textContent = '✓ Completo';
+      else btn.textContent = `Revelar (${rowIdx}/${rows.length})`;
+    }
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') location.href = 'slide23.html';
+      if (e.key === 'ArrowLeft'  || e.key === 'PageUp')   location.href = 'slide21.html';
+    });
+  </script>
+</body>
+</html>

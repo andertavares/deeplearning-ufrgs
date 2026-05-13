@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 18 – Geração Autoregressiva</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .slide-main { gap: 0.45rem; }
+
+    /* ── Top: encoder bar ── */
+    .encoder-bar {
+      background: var(--blue-lt);
+      border: 1.5px solid var(--blue);
+      border-radius: var(--radius-sm);
+      padding: 0.5rem 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      flex-shrink: 0;
+    }
+    .encoder-bar-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--blue);
+      white-space: nowrap;
+    }
+    .enc-token-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.22rem 0.7rem;
+      border-radius: 6px;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85rem;
+      font-weight: 700;
+      background: var(--blue);
+      color: #fff;
+    }
+
+    /* ── Main generation area ── */
+    .gen-area {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 0.9rem;
+      flex: 1;
+    }
+
+    /* ── Left: pipeline + decoder sequence ── */
+    .left-col {
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+    }
+
+    /* Decoder input sequence */
+    .dec-seq-panel {
+      background: var(--bg2);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 0.75rem 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      box-shadow: var(--shadow);
+    }
+    .dec-seq-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--purple);
+    }
+    .dec-seq-tokens {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+      align-items: center;
+      min-height: 2.4rem;
+    }
+    .dec-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.28rem 0.75rem;
+      border-radius: 7px;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.88rem;
+      font-weight: 700;
+      border: 2px solid var(--purple);
+      background: var(--purple-lt);
+      color: var(--purple);
+      animation: chipPop 0.35s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+    @keyframes chipPop {
+      from { opacity: 0; transform: scale(0.7) translateY(8px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    /* Pipeline blocks */
+    .pipeline-panel {
+      background: var(--bg2);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 0.75rem 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      box-shadow: var(--shadow);
+      flex-wrap: wrap;
+    }
+    .pip-block {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.4rem 0.7rem;
+      border-radius: var(--radius-sm);
+      border: 2px solid;
+      font-size: 0.78rem;
+      font-weight: 700;
+      transition: all 0.3s;
+      white-space: nowrap;
+    }
+    .pip-orange { background: var(--yellow-lt); border-color: var(--orange); color: var(--orange); }
+    .pip-purple { background: var(--purple-lt); border-color: var(--purple); color: var(--purple); }
+    .pip-green  { background: var(--green-lt);  border-color: var(--green);  color: var(--green);  }
+    .pip-teal   { background: var(--teal-lt);   border-color: var(--teal);   color: var(--teal);   }
+    .pip-block.active-pip {
+      transform: scale(1.08);
+      box-shadow: 0 0 0 3px rgba(13,110,110,0.25), 0 4px 14px rgba(13,110,110,0.2);
+    }
+    .pip-orange.active-pip { box-shadow: 0 0 0 3px rgba(194,65,12,0.3), 0 4px 14px rgba(194,65,12,0.22); }
+    .pip-purple.active-pip { box-shadow: 0 0 0 3px rgba(109,40,217,0.3), 0 4px 14px rgba(109,40,217,0.22); }
+    .pip-green.active-pip  { box-shadow: 0 0 0 3px rgba(22,101,52,0.3),  0 4px 14px rgba(22,101,52,0.22); }
+
+    .pip-arrow {
+      color: var(--text-dim);
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    /* ── Right: output + probability bars ── */
+    .right-col {
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+    }
+    .output-panel {
+      background: var(--bg2);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 0.9rem 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+      box-shadow: var(--shadow);
+    }
+    .output-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--teal);
+    }
+    .output-token {
+      font-family: 'Fira Code', monospace;
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--teal);
+      background: var(--teal-lt);
+      border: 2.5px solid var(--teal);
+      border-radius: var(--radius-sm);
+      padding: 0.4rem 1.2rem;
+      display: inline-block;
+      min-width: 6rem;
+      text-align: center;
+      animation: tokenReveal 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+    @keyframes tokenReveal {
+      from { opacity: 0; transform: scale(0.6); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    .output-placeholder {
+      font-size: 1.1rem;
+      color: var(--text-dim);
+      padding: 0.6rem 0;
+    }
+
+    .prob-panel {
+      background: var(--bg2);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 0.9rem 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      box-shadow: var(--shadow);
+      flex: 1;
+    }
+    .prob-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-muted);
+    }
+    .prob-bars { display: flex; flex-direction: column; gap: 0.4rem; }
+    .prob-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+    }
+    .prob-tok {
+      width: 3.8rem;
+      font-family: 'Fira Code', monospace;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-align: right;
+    }
+    .prob-track {
+      flex: 1;
+      height: 16px;
+      background: var(--bg3);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .prob-fill {
+      height: 100%;
+      border-radius: 8px;
+      background: var(--teal);
+      transition: width 0.5s ease;
+    }
+    .prob-fill.top { background: var(--teal); }
+    .prob-fill.other { background: var(--border2); }
+    .prob-num {
+      width: 2.8rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* ── Step controls ── */
+    .step-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      flex-shrink: 0;
+      padding: 0.5rem 0 0;
+    }
+    .step-indicator {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+    .step-dots {
+      display: flex;
+      gap: 0.4rem;
+    }
+    .step-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--border2);
+      transition: all 0.2s;
+    }
+    .step-dot.done { background: var(--teal); }
+    .step-dot.current { background: var(--orange); width: 22px; border-radius: 5px; }
+
+    @media (max-width: 900px) {
+      .gen-area { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Transformers</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 15 · Slide 18 / 19</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block" style="padding:0.4rem 0 0.1rem;">
+        <h1 class="slide-title">Geração Autoregressiva</h1>
+        <p class="slide-subtitle">Como o decoder gera tokens um a um</p>
+      </div>
+
+      <!-- Encoder bar -->
+      <div class="encoder-bar">
+        <span class="encoder-bar-label">🔵 Encoder processou:</span>
+        <span class="enc-token-chip">Ela</span>
+        <span class="enc-token-chip">saiu</span>
+        <span class="enc-token-chip">só</span>
+        <span style="font-size:0.8rem;color:var(--blue);margin-left:0.3rem;">→ A<sup>enc</sup> fixo (K, V)</span>
+      </div>
+
+      <div class="gen-area">
+        <!-- Left col -->
+        <div class="left-col">
+          <div class="dec-seq-panel">
+            <div class="dec-seq-label">🟣 Entrada do decoder (tokens gerados até agora)</div>
+            <div class="dec-seq-tokens" id="decSeqTokens">
+              <span style="color:var(--text-dim);font-size:0.9rem;">Pressione "Próximo passo" para iniciar</span>
+            </div>
+          </div>
+
+          <div class="pipeline-panel" id="pipelinePanel">
+            <div class="pip-block pip-orange" id="pip-masked">🟠 Masked<br>Self-Attn</div>
+            <div class="pip-arrow">→</div>
+            <div class="pip-block pip-teal" id="pip-norm1">⚖️ Add&Norm</div>
+            <div class="pip-arrow">→</div>
+            <div class="pip-block pip-purple" id="pip-cross">🟣 Cross-<br>Attention</div>
+            <div class="pip-arrow">→</div>
+            <div class="pip-block pip-teal" id="pip-norm2">⚖️ Add&Norm</div>
+            <div class="pip-arrow">→</div>
+            <div class="pip-block pip-green" id="pip-ffn">🟩 FFN</div>
+            <div class="pip-arrow">→</div>
+            <div class="pip-block pip-teal" id="pip-linear" style="background:var(--cyan-lt);border-color:var(--cyan);color:var(--cyan);">📊 Linear<br>+Softmax</div>
+          </div>
+
+          <!-- Step controls -->
+          <div class="step-controls">
+            <button class="btn-step" id="btnStep" onclick="nextStep()">▶ Próximo passo</button>
+            <button class="btn-step" id="btnReset" onclick="resetGen()" style="background:var(--bg3);color:var(--text-muted);border:1.5px solid var(--border2);">↺ Reiniciar</button>
+            <span class="step-indicator" id="stepIndicator">Passo 0 / 4</span>
+            <div class="step-dots" id="stepDots"></div>
+          </div>
+        </div>
+
+        <!-- Right col -->
+        <div class="right-col">
+          <div class="output-panel">
+            <div class="output-label">Token gerado neste passo</div>
+            <div id="outputTokenEl"><div class="output-placeholder">—</div></div>
+            <div style="font-size:0.8rem;color:var(--text-muted);" id="outputDesc"></div>
+          </div>
+
+          <div class="prob-panel">
+            <div class="prob-label">Top-3 probabilidades (softmax)</div>
+            <div class="prob-bars" id="probBars">
+              <div style="color:var(--text-dim);font-size:0.88rem;">Aguardando próximo passo…</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide17.html'">← Anterior</button>
+      <div class="nav-dots" id="navDots"></div>
+      <button class="btn-nav btn-next" onclick="location.href='slide19.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    (function(){
+      const container = document.getElementById('navDots');
+      const CURRENT = 18;
+      for (let i = 1; i <= 19; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'dot' + (i === CURRENT ? ' active' : '');
+        dot.title = 'Slide ' + i;
+        dot.style.cursor = 'pointer';
+        dot.addEventListener('click', () => {
+          location.href = 'slide' + String(i).padStart(2,'0') + '.html';
+        });
+        container.appendChild(dot);
+      }
+    })();
+
+    const STEPS = [
+      {
+        input: ['<BOS>'],
+        output: 'Ela',
+        desc: 'Passo 1: o decoder recebe &lt;BOS&gt; e, consultando o encoder, prevê "Ela" com maior probabilidade.',
+        probs: [{ tok: 'Ela', p: 0.72 }, { tok: 'saiu', p: 0.18 }, { tok: 'só', p: 0.10 }],
+        activePips: ['pip-masked','pip-cross','pip-ffn','pip-linear']
+      },
+      {
+        input: ['<BOS>', 'Ela'],
+        output: 'saiu',
+        desc: 'Passo 2: com &lt;BOS&gt; e "Ela" na entrada, o decoder prevê "saiu" como próximo token.',
+        probs: [{ tok: 'saiu', p: 0.65 }, { tok: 'só', p: 0.22 }, { tok: '<EOS>', p: 0.13 }],
+        activePips: ['pip-masked','pip-cross','pip-ffn','pip-linear']
+      },
+      {
+        input: ['<BOS>', 'Ela', 'saiu'],
+        output: 'só',
+        desc: 'Passo 3: sequência &lt;BOS&gt;, Ela, saiu → prevê "só". A máscara causal protege tokens futuros.',
+        probs: [{ tok: 'só', p: 0.58 }, { tok: '<EOS>', p: 0.29 }, { tok: 'Ela', p: 0.13 }],
+        activePips: ['pip-masked','pip-cross','pip-ffn','pip-linear']
+      },
+      {
+        input: ['<BOS>', 'Ela', 'saiu', 'só'],
+        output: '<EOS>',
+        desc: 'Passo 4: sequência completa. O decoder emite &lt;EOS&gt;, encerrando a geração.',
+        probs: [{ tok: '<EOS>', p: 0.81 }, { tok: 'só', p: 0.11 }, { tok: 'Ela', p: 0.08 }],
+        activePips: ['pip-masked','pip-cross','pip-ffn','pip-linear']
+      }
+    ];
+
+    let currentStep = 0;
+    const TOTAL = STEPS.length;
+
+    // Build step dots
+    const stepDotsEl = document.getElementById('stepDots');
+    for (let i = 0; i < TOTAL; i++) {
+      const d = document.createElement('div');
+      d.className = 'step-dot';
+      d.id = 'sdot-' + i;
+      stepDotsEl.appendChild(d);
+    }
+
+    function clearPipHighlights() {
+      ['pip-masked','pip-norm1','pip-cross','pip-norm2','pip-ffn','pip-linear'].forEach(id => {
+        document.getElementById(id).classList.remove('active-pip');
+      });
+    }
+
+    function nextStep() {
+      if (currentStep >= TOTAL) return;
+      const step = STEPS[currentStep];
+      currentStep++;
+
+      // Update decoder sequence
+      const seqEl = document.getElementById('decSeqTokens');
+      seqEl.innerHTML = '';
+      step.input.forEach(t => {
+        const chip = document.createElement('span');
+        chip.className = 'dec-chip';
+        chip.textContent = t;
+        seqEl.appendChild(chip);
+      });
+
+      // Animate pipeline
+      clearPipHighlights();
+      step.activePips.forEach((id, idx) => {
+        setTimeout(() => {
+          clearPipHighlights();
+          document.getElementById(id).classList.add('active-pip');
+        }, idx * 180);
+      });
+      const animationDuration = step.activePips.length * 180 + 300;
+      setTimeout(() => { clearPipHighlights(); }, animationDuration);
+
+      // Show output token and probabilities AFTER animation completes
+      setTimeout(() => {
+        const outputEl = document.getElementById('outputTokenEl');
+        outputEl.innerHTML = `<div class="output-token">${step.output}</div>`;
+        document.getElementById('outputDesc').innerHTML = step.desc;
+
+        // Show probability bars
+        const barsEl = document.getElementById('probBars');
+        barsEl.innerHTML = '';
+        step.probs.forEach((item, idx) => {
+          const row = document.createElement('div');
+          row.className = 'prob-row';
+          const fillClass = idx === 0 ? 'top' : 'other';
+          row.innerHTML = `
+            <div class="prob-tok">${item.tok}</div>
+            <div class="prob-track"><div class="prob-fill ${fillClass}" style="width:${(item.p*100).toFixed(0)}%"></div></div>
+            <div class="prob-num">${(item.p*100).toFixed(0)}%</div>`;
+          barsEl.appendChild(row);
+        });
+      }, animationDuration + 100);
+
+      // Update step dots
+      for (let i = 0; i < TOTAL; i++) {
+        const d = document.getElementById('sdot-' + i);
+        if (i < currentStep - 1) d.className = 'step-dot done';
+        else if (i === currentStep - 1) d.className = 'step-dot current';
+        else d.className = 'step-dot';
+      }
+
+      document.getElementById('stepIndicator').textContent = `Passo ${currentStep} / ${TOTAL}`;
+
+      if (currentStep >= TOTAL) {
+        document.getElementById('btnStep').disabled = true;
+      }
+    }
+
+    function resetGen() {
+      currentStep = 0;
+      document.getElementById('decSeqTokens').innerHTML = '<span style="color:var(--text-dim);font-size:0.9rem;">Pressione "Próximo passo" para iniciar</span>';
+      document.getElementById('outputTokenEl').innerHTML = '<div class="output-placeholder">—</div>';
+      document.getElementById('outputDesc').innerHTML = '';
+      document.getElementById('probBars').innerHTML = '<div style="color:var(--text-dim);font-size:0.88rem;">Aguardando próximo passo…</div>';
+      clearPipHighlights();
+      document.getElementById('stepIndicator').textContent = 'Passo 0 / 4';
+      for (let i = 0; i < TOTAL; i++) {
+        document.getElementById('sdot-' + i).className = 'step-dot';
+      }
+      document.getElementById('btnStep').disabled = false;
+    }
+  </script>
+</body>
+</html>

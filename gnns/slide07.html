@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 07 – Etapa 1: Gather</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .gather-layout {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 1.2rem;
+      flex: 1;
+    }
+    /* SVG graph */
+    .graph-wrap {
+      background: var(--bg2);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 0.8rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      box-shadow: var(--shadow);
+    }
+    .graph-svg { width: 100%; }
+
+    /* Node styles */
+    .g-node { cursor: pointer; transition: all 0.2s; }
+    .g-node circle { fill: var(--bg3); stroke: var(--border2); stroke-width: 2.5; transition: fill 0.25s, stroke 0.25s; }
+    .g-node:hover circle { stroke: var(--teal); }
+    .g-node.central circle { fill: #fed7aa; stroke: #c2410c; stroke-width: 3; }
+    .g-node.neighbor circle { fill: #ccfbf1; stroke: #0d6e6e; stroke-width: 3; }
+    .g-node text { font-family:'Inter',sans-serif; font-weight:700; font-size:14px; pointer-events:none; fill:var(--text); }
+    .g-node.central text { fill: #c2410c; }
+    .g-node.neighbor text { fill: #0d6e6e; }
+
+    /* Edges */
+    .g-edge { stroke: var(--border); stroke-width: 2; }
+    .g-edge.active {
+      stroke: #0d6e6e;
+      stroke-width: 3;
+      stroke-dasharray: 8 4;
+      animation: gatherFlow 0.8s linear infinite;
+    }
+    @keyframes gatherFlow { to { stroke-dashoffset: -24; } }
+
+    /* Animated message arrows */
+    .msg-anim {
+      stroke: #f97316;
+      stroke-width: 2.5;
+      stroke-dasharray: 7 4;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .msg-anim.visible {
+      opacity: 1;
+      animation: msgPulse 0.9s linear infinite;
+    }
+    @keyframes msgPulse { to { stroke-dashoffset: -22; } }
+
+    /* Right panel */
+    .messages-panel {
+      background: var(--bg2);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+      box-shadow: var(--shadow);
+    }
+    .msg-entry {
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0.55rem 0.8rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.88rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      opacity: 0;
+      transform: translateX(12px);
+      transition: opacity 0.35s, transform 0.35s, border-color 0.2s;
+    }
+    .msg-entry.visible {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    .msg-entry:hover { border-color: var(--teal); }
+    .msg-from { font-weight: 700; color: #c2410c; min-width: 24px; }
+    .msg-arrow { color: var(--text-dim); }
+    .msg-val  { color: var(--teal); }
+
+    .formula-block {
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem 0.9rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.95rem;
+      text-align: center;
+    }
+    .formula-block span { color: var(--teal); font-weight: 700; }
+    .hint-text { font-size: 0.82rem; color: var(--text-dim); text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">GNNs</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Slide 07 / 20</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Etapa 1: Gather (Coleta)</h1>
+        <p class="slide-subtitle">Bloco 2 — Message Passing</p>
+      </div>
+
+      <div class="gather-layout">
+        <!-- LEFT: graph -->
+        <div class="graph-wrap">
+          <div class="panel-title">Grafo Interativo</div>
+          <p class="hint-text">Clique em um nó para ver as mensagens que ele coleta dos vizinhos</p>
+          <svg class="graph-svg" viewBox="0 0 400 300" id="gatherSvg">
+            <defs>
+              <marker id="gArr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                <path d="M0,0 L6,3 L0,6 Z" fill="#f97316"/>
+              </marker>
+            </defs>
+            <!-- Edges -->
+            <line id="e01" class="g-edge" x1="200" y1="150" x2="100" y2="80"/>
+            <line id="e02" class="g-edge" x1="200" y1="150" x2="300" y2="80"/>
+            <line id="e03" class="g-edge" x1="200" y1="150" x2="345" y2="200"/>
+            <line id="e04" class="g-edge" x1="200" y1="150" x2="200" y2="260"/>
+            <line id="e05" class="g-edge" x1="200" y1="150" x2="60" y2="200"/>
+            <line id="e12" class="g-edge" x1="100" y1="80" x2="300" y2="80"/>
+            <line id="e34" class="g-edge" x1="345" y1="200" x2="200" y2="260"/>
+
+            <!-- Animated message arrows (hidden by default) -->
+            <line id="m10" class="msg-anim" x1="100" y1="80" x2="200" y2="150" marker-end="url(#gArr)"/>
+            <line id="m20" class="msg-anim" x1="300" y1="80" x2="200" y2="150" marker-end="url(#gArr)" style="animation-delay:0.2s"/>
+            <line id="m30" class="msg-anim" x1="345" y1="200" x2="200" y2="150" marker-end="url(#gArr)" style="animation-delay:0.4s"/>
+            <line id="m40" class="msg-anim" x1="200" y1="260" x2="200" y2="150" marker-end="url(#gArr)" style="animation-delay:0.6s"/>
+            <line id="m50" class="msg-anim" x1="60" y1="200" x2="200" y2="150" marker-end="url(#gArr)" style="animation-delay:0.1s"/>
+
+            <line id="m01" class="msg-anim" x1="200" y1="150" x2="100" y2="80" marker-end="url(#gArr)"/>
+            <line id="m21" class="msg-anim" x1="300" y1="80" x2="100" y2="80" marker-end="url(#gArr)" style="animation-delay:0.3s"/>
+
+            <line id="m02" class="msg-anim" x1="200" y1="150" x2="300" y2="80" marker-end="url(#gArr)"/>
+            <line id="m12" class="msg-anim" x1="100" y1="80" x2="300" y2="80" marker-end="url(#gArr)" style="animation-delay:0.3s"/>
+
+            <line id="m03" class="msg-anim" x1="200" y1="150" x2="345" y2="200" marker-end="url(#gArr)"/>
+            <line id="m43" class="msg-anim" x1="200" y1="260" x2="345" y2="200" marker-end="url(#gArr)" style="animation-delay:0.3s"/>
+
+            <line id="m04" class="msg-anim" x1="200" y1="150" x2="200" y2="260" marker-end="url(#gArr)"/>
+            <line id="m34" class="msg-anim" x1="345" y1="200" x2="200" y2="260" marker-end="url(#gArr)" style="animation-delay:0.3s"/>
+
+            <line id="m05" class="msg-anim" x1="200" y1="150" x2="60" y2="200" marker-end="url(#gArr)"/>
+
+            <!-- Nodes -->
+            <g class="g-node" id="node0" onclick="selectGatherNode(0)">
+              <circle cx="200" cy="150" r="26"/>
+              <text x="200" y="155" text-anchor="middle">0</text>
+            </g>
+            <g class="g-node" id="node1" onclick="selectGatherNode(1)">
+              <circle cx="100" cy="80" r="22"/>
+              <text x="100" y="85" text-anchor="middle">1</text>
+            </g>
+            <g class="g-node" id="node2" onclick="selectGatherNode(2)">
+              <circle cx="300" cy="80" r="22"/>
+              <text x="300" y="85" text-anchor="middle">2</text>
+            </g>
+            <g class="g-node" id="node3" onclick="selectGatherNode(3)">
+              <circle cx="345" cy="200" r="22"/>
+              <text x="345" y="205" text-anchor="middle">3</text>
+            </g>
+            <g class="g-node" id="node4" onclick="selectGatherNode(4)">
+              <circle cx="200" cy="260" r="22"/>
+              <text x="200" y="265" text-anchor="middle">4</text>
+            </g>
+            <g class="g-node" id="node5" onclick="selectGatherNode(5)">
+              <circle cx="60" cy="200" r="22"/>
+              <text x="60" y="205" text-anchor="middle">5</text>
+            </g>
+          </svg>
+        </div>
+
+        <!-- RIGHT: messages panel -->
+        <div class="messages-panel">
+          <div class="panel-title">Mensagens Coletadas</div>
+          <div class="formula-block">
+            <span>M_v</span> = &#123; h<sub>u</sub> : u ∈ N(v) &#125;
+          </div>
+          <div id="msgList" style="display:flex;flex-direction:column;gap:0.5rem;flex:1;">
+            <div style="color:var(--text-dim);font-size:0.9rem;text-align:center;margin-top:1rem;">
+              ← Selecione um nó
+            </div>
+          </div>
+          <div id="msgSummary" style="background:var(--teal-lt);border:1.5px solid #5eead4;border-radius:var(--radius-sm);padding:0.6rem 0.8rem;font-size:0.88rem;color:var(--teal);display:none;">
+          </div>
+        </div>
+      </div>
+
+      <div class="highlight-box blue">
+        <span class="icon">📐</span>
+        <span>Na etapa Gather, o nó <strong>v</strong> coleta os vetores de features de todos os seus vizinhos imediatos N(v).</span>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide06.html'">← Anterior</button>
+      <div class="nav-dots" id="navDots"></div>
+      <button class="btn-nav btn-next" onclick="location.href='slide08.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    const gAdj = {
+      0: [1,2,3,4,5],
+      1: [0,2],
+      2: [0,1],
+      3: [0,4],
+      4: [0,3],
+      5: [0]
+    };
+    const gFeatures = {
+      0: '[0.8, 0.3]',
+      1: '[1.2, 0.5]',
+      2: '[0.4, 0.9]',
+      3: '[1.1, 0.2]',
+      4: '[0.6, 0.7]',
+      5: '[0.9, 1.0]'
+    };
+    // Message arrow IDs (from->to format)
+    const msgArrows = {
+      '0->1': 'm01', '2->1': 'm21',
+      '0->2': 'm02', '1->2': 'm12',
+      '0->3': 'm03', '4->3': 'm43',
+      '0->4': 'm04', '3->4': 'm34',
+      '0->5': 'm05',
+      '1->0': 'm10', '2->0': 'm20', '3->0': 'm30', '4->0': 'm40', '5->0': 'm50'
+    };
+
+    let selectedNode = null;
+
+    function selectGatherNode(n) {
+      // Reset all
+      for (let i = 0; i <= 5; i++) {
+        const nd = document.getElementById('node'+i);
+        nd.classList.remove('central','neighbor');
+      }
+      // Hide all msg arrows
+      Object.values(msgArrows).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('visible');
+      });
+
+      if (selectedNode === n) { selectedNode = null; clearMsgList(); return; }
+      selectedNode = n;
+
+      document.getElementById('node'+n).classList.add('central');
+      const nbrs = gAdj[n];
+      nbrs.forEach(nb => {
+        document.getElementById('node'+nb).classList.add('neighbor');
+        const key = nb+'->'+n;
+        const el = document.getElementById(msgArrows[key]);
+        if (el) el.classList.add('visible');
+      });
+
+      // Update messages panel
+      const msgList = document.getElementById('msgList');
+      msgList.innerHTML = '';
+      nbrs.forEach((nb, i) => {
+        const div = document.createElement('div');
+        div.className = 'msg-entry';
+        div.innerHTML = `<span class="msg-from">h_${nb}</span><span class="msg-arrow">→</span><span class="msg-val">${gFeatures[nb]}</span>`;
+        div.style.transitionDelay = (i * 0.08) + 's';
+        msgList.appendChild(div);
+        requestAnimationFrame(() => requestAnimationFrame(() => div.classList.add('visible')));
+      });
+
+      const summary = document.getElementById('msgSummary');
+      summary.style.display = 'block';
+      summary.innerHTML = `<strong>Nó ${n}</strong> coletou <strong>${nbrs.length}</strong> mensagem(ns) de N(${n}) = {${nbrs.join(', ')}}`;
+    }
+
+    function clearMsgList() {
+      document.getElementById('msgList').innerHTML = '<div style="color:var(--text-dim);font-size:0.9rem;text-align:center;margin-top:1rem;">← Selecione um nó</div>';
+      document.getElementById('msgSummary').style.display = 'none';
+    }
+
+    (function(){
+      const container = document.getElementById('navDots');
+      const CURRENT = 7;
+      const TOTAL = 20;
+      for (let i = 1; i <= TOTAL; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'dot' + (i === CURRENT ? ' active' : '');
+        dot.title = 'Slide ' + i;
+        dot.style.cursor = 'pointer';
+        dot.addEventListener('click', () => { location.href = 'slide' + String(i).padStart(2,'0') + '.html'; });
+        container.appendChild(dot);
+      }
+    })();
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') location.href = 'slide08.html';
+      if (e.key === 'ArrowLeft'  || e.key === 'PageUp')   location.href = 'slide06.html';
+    });
+  </script>
+</body>
+</html>

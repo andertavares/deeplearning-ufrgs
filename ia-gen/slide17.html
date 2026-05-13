@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 17 – GAN: o fluxo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .gan-flow { display: flex; flex-direction: column; gap: 0.5rem; width: 100%; }
+    .gan-row { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; justify-content: center; }
+    .gan-box {
+      padding: 0.6rem 0.8rem; border-radius: var(--radius-sm);
+      font-size: 0.85rem; font-weight: 600; text-align: center;
+      background: var(--bg3); border: 1.5px solid var(--border2);
+      min-width: 80px; transition: all 0.3s;
+    }
+    .gan-box.lit-gen  { background: var(--teal-lt); border-color: var(--teal); color: var(--teal); transform: scale(1.06); }
+    .gan-box.lit-disc { background: var(--cyan-lt);  border-color: var(--cyan);  color: var(--cyan);  transform: scale(1.06); }
+    .gan-box.lit-real { background: var(--blue-lt);  border-color: var(--blue);  color: var(--blue);  transform: scale(1.06); }
+    .gan-arrow { font-size: 1.1rem; color: var(--text-dim); transition: color 0.3s; }
+    .gan-arrow.lit { color: var(--teal); }
+    .path-sep { text-align: center; font-size: 0.78rem; color: var(--text-dim); padding: 2px 0; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">IA Generativa</span>
+      <span style="font-size:0.9rem;color:var(--text-muted);font-weight:500;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 8 · Slide 17 / 24</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">GAN: o fluxo</h1>
+      </div>
+
+      <div class="panel">
+        <div class="gan-flow">
+          <!-- Fake path -->
+          <div class="gan-row">
+            <div class="gan-box" id="gan-noise">🎲 Ruído<br/><small style="font-weight:400;color:var(--text-dim);">z ~ 𝒩(0,I)</small></div>
+            <span class="gan-arrow" id="ga1">→</span>
+            <div class="gan-box" id="gan-gen">Gerador<br/><small style="font-weight:400;color:var(--text-dim);">G(z)</small></div>
+            <span class="gan-arrow" id="ga2">→</span>
+            <div class="gan-box" id="gan-fake">🖼 Imagem falsa</div>
+            <span class="gan-arrow" id="ga3">→</span>
+            <div class="gan-box" id="gan-disc1">Discriminador<br/><small style="font-weight:400;color:var(--text-dim);">D(x)</small></div>
+            <span class="gan-arrow" id="ga3b">→</span>
+            <div class="gan-box" style="min-width:72px;text-align:center;">
+              Score:<br/><strong id="score-fake" style="font-size:1rem;">—</strong>
+            </div>
+          </div>
+          <div class="path-sep">── caminho real ──</div>
+          <!-- Real path -->
+          <div class="gan-row">
+            <div class="gan-box" id="gan-real">📷 Dado real</div>
+            <span class="gan-arrow" id="ga4">→</span>
+            <div class="gan-box" id="gan-disc2">Discriminador<br/><small style="font-weight:400;color:var(--text-dim);">D(x)</small></div>
+            <span class="gan-arrow" id="ga5">→</span>
+            <div class="gan-box" style="min-width:72px;text-align:center;">
+              Score:<br/><strong id="score-real" style="font-size:1rem;">—</strong>
+            </div>
+          </div>
+        </div>
+        <div style="text-align:center;margin-top:0.6rem;">
+          <button class="btn-step" onclick="animateGanFlow()">▶ Animar fluxo</button>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide16.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide18.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    function resetFlow() {
+      ['gan-noise','gan-gen','gan-fake','gan-disc1','gan-real','gan-disc2']
+        .forEach(id => { const el = document.getElementById(id); if (el) el.className = 'gan-box'; });
+      ['ga1','ga2','ga3','ga3b','ga4','ga5']
+        .forEach(id => { const el = document.getElementById(id); if (el) el.className = 'gan-arrow'; });
+      document.getElementById('score-fake').textContent = '—';
+      document.getElementById('score-fake').style.color = '';
+      document.getElementById('score-real').textContent = '—';
+      document.getElementById('score-real').style.color = '';
+    }
+    let running = false;
+    function animateGanFlow() {
+      if (running) return;
+      running = true;
+      resetFlow();
+      const steps = [
+        () => document.getElementById('gan-noise').classList.add('lit-gen'),
+        () => { document.getElementById('gan-gen').classList.add('lit-gen'); document.getElementById('ga1').classList.add('lit'); },
+        () => { document.getElementById('gan-fake').classList.add('lit-gen'); document.getElementById('ga2').classList.add('lit'); },
+        () => { document.getElementById('gan-disc1').classList.add('lit-disc'); document.getElementById('ga3').classList.add('lit'); },
+        () => { const el = document.getElementById('score-fake'); el.textContent = '0.15'; el.style.color = '#b91c1c'; document.getElementById('ga3b').classList.add('lit'); },
+        () => { document.getElementById('gan-real').classList.add('lit-real'); document.getElementById('ga4').classList.add('lit'); },
+        () => { document.getElementById('gan-disc2').classList.add('lit-disc'); document.getElementById('ga5').classList.add('lit'); },
+        () => { const el = document.getElementById('score-real'); el.textContent = '0.92'; el.style.color = '#0d6e6e'; running = false; },
+      ];
+      steps.forEach((fn, i) => setTimeout(fn, i * 600));
+    }
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') location.href = 'slide18.html';
+      if (e.key === 'ArrowLeft'  || e.key === 'PageUp')   location.href = 'slide16.html';
+    });
+  </script>
+</body>
+</html>

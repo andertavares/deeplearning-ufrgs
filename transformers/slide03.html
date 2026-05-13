@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 3 – Texto como Sequência e Limitações das RNNs</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ---- Pipeline sequential display ---- */
+    .seq-pipeline {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .seq-row {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .seq-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      width: 80px;
+      flex-shrink: 0;
+      text-align: right;
+    }
+    .seq-cells {
+      display: flex;
+      gap: 0.35rem;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+    }
+    .seq-cell {
+      min-width: 52px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.82rem;
+      font-weight: 600;
+      border: 2px solid var(--border2);
+      background: var(--bg3);
+      color: var(--text-muted);
+      transition: all 0.25s;
+      white-space: nowrap;
+      padding: 0 0.4rem;
+    }
+    .seq-cell.token-cell {
+      background: var(--bg2);
+      border-color: var(--teal);
+      color: var(--teal);
+    }
+    .seq-cell.id-cell {
+      background: var(--blue-lt);
+      border-color: var(--blue);
+      color: var(--blue);
+    }
+    .seq-cell.emb-cell {
+      background: var(--purple-lt);
+      border-color: var(--purple);
+      color: var(--purple);
+      font-size: 0.7rem;
+    }
+    .seq-cell.active {
+      transform: scale(1.12);
+      box-shadow: 0 4px 16px rgba(13,110,110,0.2);
+    }
+    .seq-cell.token-cell.active  { background: var(--teal);   color: #fff; border-color: var(--teal); }
+    .seq-cell.id-cell.active     { background: var(--blue);   color: #fff; border-color: var(--blue); }
+    .seq-cell.emb-cell.active    { background: var(--purple); color: #fff; border-color: var(--purple); }
+    .seq-cell.lstm-cell.active   { background: var(--emerald); color: #fff; border-color: var(--emerald); }
+    .seq-cell.lstm-cell {
+      background: var(--emerald-lt);
+      border-color: var(--emerald);
+      color: var(--emerald);
+      font-size: 0.75rem;
+    }
+
+    /* ---- Arrow between rows ---- */
+    .row-arrow {
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 1rem;
+      padding-left: 80px;
+      line-height: 1;
+    }
+
+    /* ---- (clock styles removed) ---- */
+
+    /* ---- Side-by-side comparison (unused, kept minimal) ---- */
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <!-- Header -->
+    <header class="slide-header">
+      <span class="course-tag">Transformers</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 3 · Slide 3 / 3</span>
+    </header>
+
+    <!-- Content -->
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Texto como Sequência</h1>
+        <p class="slide-subtitle">Processamento token a token nas RNNs e embeddings estáticos</p>
+      </div>
+
+      <div class="content-split">
+        <!-- Left: step-by-step pipeline -->
+        <div class="panel panel-left">
+          <h2 class="panel-title">Pipeline: frase → RNN</h2>
+
+          <!-- Phrase selector -->
+          <div style="display:flex;flex-direction:column;gap:0.35rem;">
+            <div style="font-size:0.8rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.07em;">Frase:</div>
+            <div class="toggle-group" id="phrase-toggle">
+              <button class="btn-toggle active" onclick="setPipelinePhrase(0)">Ela saiu só</button>
+              <button class="btn-toggle" onclick="setPipelinePhrase(1)">Só ela saiu</button>
+            </div>
+          </div>
+
+          <!-- Pipeline display -->
+          <div class="seq-pipeline" id="seq-pipeline">
+            <!-- injected by JS -->
+          </div>
+
+          <!-- Controls -->
+          <div style="display:flex;gap:0.6rem;align-items:center;flex-wrap:wrap;">
+            <button class="btn-step" id="btn-step" onclick="stepLSTM()">▶ Processar token</button>
+            <button class="btn-step" onclick="resetLSTM()" style="background:var(--bg3);color:var(--text);border:1.5px solid var(--border2);">↺ Reiniciar</button>
+          </div>
+
+          <!-- Key observations -->
+          <div class="concept-cards" style="gap:0.5rem;">
+            <div class="concept-card" style="--delay:0.05s">
+              <div class="card-icon">⏳</div>
+              <div class="card-text">
+                <strong>RNN: dependência temporal</strong>
+                <p>h<sub>t</sub> depende de h<sub>t-1</sub>. O processamento é <em>inerentemente sequencial</em> — não paralelizável.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.15s">
+              <div class="card-icon">📉</div>
+              <div class="card-text">
+                <strong>Gargalo em sequências longas</strong>
+                <p>O contexto distante precisa "atravessar" muitos passos, sendo comprimido no vetor h<sub>t</sub>. Informação se perde.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="insight-box" style="margin-top:auto;">
+            <div class="i-icon">🎯</div>
+            <div class="i-text">
+              "A <strong>ordem existe</strong> e o modelo acumula contexto, mas o processamento é
+              <strong>sequencial</strong>. Além disso, os embeddings de entrada são <strong>estáticos</strong> — não há modelagem explícita de <strong>embeddings contextuais</strong>, onde o significado de uma palavra depende do contexto em que aparece."
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Embeddings Estáticos -->
+        <div class="panel panel-right">
+          <h2 class="panel-title">Embeddings Estáticos</h2>
+
+          <!-- Token ID explanation -->
+          <div style="background:var(--blue-lt);border:1.5px solid var(--blue);border-radius:var(--radius-sm);padding:0.6rem 0.85rem;font-size:0.83rem;color:var(--text-muted);line-height:1.55;">
+            <strong style="color:var(--blue);">IDs de tokens</strong> — cada palavra é mapeada para um índice inteiro no vocabulário do modelo. Ex.: "Ela" → 42, "saiu" → 98, "só" → 17. Esses IDs são a entrada real da rede: números, não texto.
+          </div>
+
+          <div style="font-size:0.85rem;color:var(--text-muted);line-height:1.55;">
+            Modelos como <strong>Word2Vec</strong> (2013) e <strong>GloVe</strong> (2014) aprendem vetores densos para cada palavra a partir de co-ocorrências em grandes corpora. Cada palavra recebe <em>um único vetor</em>, independente do contexto.
+          </div>
+
+          <div class="concept-cards" style="gap:0.5rem;">
+            <div class="concept-card" style="--delay:0.05s">
+              <div class="card-icon">📐</div>
+              <div class="card-text">
+                <strong>Aritmética de vetores</strong>
+                <p>Os vetores capturam relações semânticas: <code>rei - homem + mulher ≈ rainha</code>. Direções no espaço codificam analogias.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.15s">
+              <div class="card-icon">🔒</div>
+              <div class="card-text">
+                <strong>Limitação: sem contexto</strong>
+                <p>"banco" (assento) e "banco" (financeiro) compartilham o <em>mesmo vetor</em>. O significado não muda conforme a frase.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cartesian map -->
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:0.4rem;">
+            <div style="font-size:0.8rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.07em;">Mapa de Embeddings 2D</div>
+            <canvas id="embedding-map" style="width:100%;max-width:420px;aspect-ratio:1;border:1.5px solid var(--border2);border-radius:var(--radius-sm);background:var(--bg3);"></canvas>
+            <div style="font-size:0.75rem;color:var(--text-dim);text-align:center;">
+              As setas mostram: <span style="color:var(--blue);font-weight:600;">rei − homem</span> ≈ <span style="color:var(--purple);font-weight:600;">rainha − mulher</span> (direção "realeza")
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Navigation -->
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide02.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot active"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide04.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    // ---- Data ----
+    const PHRASES = [
+      { tokens: ['Ela', 'saiu', 'só'], ids: [42, 98, 17] },
+      { tokens: ['Só', 'ela', 'saiu'], ids: [17, 42, 98] },
+    ];
+
+    // 2D integer embeddings (consistent with slides 4+)
+    const EMB = {
+      'Ela':  [ 1,  2],
+      'ela':  [ 1,  2],
+      'saiu': [ 3, -1],
+      'só':   [-1,  2],
+      'Só':   [-1,  2],
+    };
+
+    let phraseIdx = 0;
+    let lstmStep  = -1;
+
+    // ---- Pipeline rendering ----
+    function renderPipeline() {
+      const phrase = PHRASES[phraseIdx];
+      const container = document.getElementById('seq-pipeline');
+
+      const rows = [
+        { label: 'Tokens',      cells: phrase.tokens, cls: 'token-cell' },
+        null, // arrow
+        { label: 'IDs',         cells: phrase.ids,    cls: 'id-cell'    },
+        null,
+        { label: 'Embeddings',  cells: phrase.tokens.map(tok => { const v = EMB[tok]; return `[${v[0]}, ${v[1]}]`; }), cls: 'emb-cell' },
+        null,
+        { label: 'RNN',         cells: phrase.tokens.map((_, i) => `h₍${i+1}₎`),  cls: 'lstm-cell' },
+      ];
+
+      container.innerHTML = '';
+      rows.forEach((row, ri) => {
+        if (row === null) {
+          const arrowEl = document.createElement('div');
+          arrowEl.className = 'row-arrow';
+          arrowEl.textContent = '↓';
+          container.appendChild(arrowEl);
+          return;
+        }
+        const rowEl = document.createElement('div');
+        rowEl.className = 'seq-row';
+
+        const labelEl = document.createElement('div');
+        labelEl.className = 'seq-label';
+        labelEl.textContent = row.label;
+        rowEl.appendChild(labelEl);
+
+        const cellsEl = document.createElement('div');
+        cellsEl.className = 'seq-cells';
+        cellsEl.id = 'cells-' + row.cls.split('-')[0];
+
+        row.cells.forEach((val, ci) => {
+          const cell = document.createElement('div');
+          cell.className = 'seq-cell ' + row.cls;
+          cell.id = `cell-${row.cls.split('-')[0]}-${ci}`;
+          cell.textContent = val;
+          // Highlight the active token column across all pipeline rows:
+          // ci < lstmStep  → already processed (full opacity)
+          // ci === lstmStep → currently active (highlighted)
+          // ci > lstmStep  → not yet processed (faded)
+          if (lstmStep >= 0) {
+            if (ci < lstmStep) cell.style.opacity = '1';
+            else if (ci === lstmStep) {
+              cell.classList.add('active');
+            } else {
+              cell.style.opacity = '0.4';
+            }
+          } else {
+            cell.style.opacity = '0.4';
+          }
+          cellsEl.appendChild(cell);
+        });
+
+        rowEl.appendChild(cellsEl);
+        container.appendChild(rowEl);
+      });
+    }
+
+    // ---- RNN step-by-step ----
+    function stepLSTM() {
+      const n = PHRASES[phraseIdx].tokens.length;
+      if (lstmStep < n - 1) {
+        lstmStep++;
+        renderPipeline();
+        if (lstmStep === n - 1) {
+          document.getElementById('btn-step').disabled = true;
+        }
+      }
+    }
+
+    function resetLSTM() {
+      lstmStep = -1;
+      document.getElementById('btn-step').disabled = false;
+      renderPipeline();
+    }
+
+    function setPipelinePhrase(idx) {
+      phraseIdx = idx;
+      document.querySelectorAll('#phrase-toggle .btn-toggle').forEach((btn, i) => {
+        btn.classList.toggle('active', i === idx);
+      });
+      resetLSTM();
+    }
+
+    // ---- Init ----
+    renderPipeline();
+
+    // ---- Embedding Map (Canvas) ----
+    function drawEmbeddingMap() {
+      const canvas = document.getElementById('embedding-map');
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+      const W = rect.width, H = rect.height;
+      const pad = 45;
+
+      // Points (normalized 0-1 coords, will be mapped to canvas)
+      const points = {
+        homem:  { x: 0.25, y: 0.65, label: 'homem',  color: '#1d4ed8' },
+        mulher: { x: 0.60, y: 0.65, label: 'mulher', color: '#7c3aed' },
+        rei:    { x: 0.25, y: 0.25, label: 'rei',    color: '#1d4ed8' },
+        rainha: { x: 0.60, y: 0.25, label: 'rainha', color: '#7c3aed' },
+      };
+
+      function tx(nx) { return pad + nx * (W - 2 * pad); }
+      function ty(ny) { return pad + ny * (H - 2 * pad); }
+
+      // Background grid
+      ctx.strokeStyle = '#d1d9e8';
+      ctx.lineWidth = 0.5;
+      for (let i = 0; i <= 4; i++) {
+        const gx = pad + (i / 4) * (W - 2 * pad);
+        const gy = pad + (i / 4) * (H - 2 * pad);
+        ctx.beginPath(); ctx.moveTo(gx, pad); ctx.lineTo(gx, H - pad); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(pad, gy); ctx.lineTo(W - pad, gy); ctx.stroke();
+      }
+
+      // Axes
+      ctx.strokeStyle = '#6b7fa3';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(pad, H - pad); ctx.lineTo(W - pad, H - pad); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(pad, H - pad); ctx.lineTo(pad, pad); ctx.stroke();
+
+      // Axis labels
+      ctx.fillStyle = '#6b7fa3';
+      ctx.font = '500 12px Inter';
+      ctx.textAlign = 'center';
+      ctx.fillText('dimensão 1', W / 2, H - 8);
+      ctx.save();
+      ctx.translate(14, H / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText('dimensão 2', 0, 0);
+      ctx.restore();
+
+      // Arrow helper
+      function drawArrow(x1, y1, x2, y2, color, dashed) {
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.fillStyle = color;
+        ctx.lineWidth = 2;
+        if (dashed) ctx.setLineDash([6, 4]);
+        const angle = Math.atan2(y2 - y1, x2 - x1);
+        const headLen = 10;
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.beginPath();
+        ctx.moveTo(x2, y2);
+        ctx.lineTo(x2 - headLen * Math.cos(angle - 0.35), y2 - headLen * Math.sin(angle - 0.35));
+        ctx.lineTo(x2 - headLen * Math.cos(angle + 0.35), y2 - headLen * Math.sin(angle + 0.35));
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // Gender arrows (horizontal): homem→mulher, rei→rainha
+      drawArrow(tx(0.27), ty(0.65), tx(0.58), ty(0.65), '#0d6e6e', true);
+      drawArrow(tx(0.27), ty(0.25), tx(0.58), ty(0.25), '#0d6e6e', true);
+
+      // Royalty arrows (vertical): homem→rei, mulher→rainha
+      drawArrow(tx(0.25), ty(0.63), tx(0.25), ty(0.27), '#c2410c', true);
+      drawArrow(tx(0.60), ty(0.63), tx(0.60), ty(0.27), '#c2410c', true);
+
+      // Points
+      Object.values(points).forEach(p => {
+        const cx = tx(p.x), cy = ty(p.y);
+        ctx.beginPath();
+        ctx.arc(cx, cy, 7, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.fillStyle = '#0f1724';
+        ctx.font = '700 14px Inter';
+        ctx.textAlign = 'center';
+        ctx.fillText(p.label, cx, cy - 14);
+      });
+
+      // Legend arrows
+      const ly = H - pad + 28;
+      ctx.font = '600 11px Inter';
+      // Gender direction
+      drawArrow(pad, ly, pad + 30, ly, '#0d6e6e', false);
+      ctx.fillStyle = '#0d6e6e';
+      ctx.textAlign = 'left';
+      ctx.fillText('direção "gênero"', pad + 36, ly + 4);
+      // Royalty direction
+      const lx2 = W / 2 + 10;
+      drawArrow(lx2, ly, lx2, ly - 20, '#c2410c', false);
+      ctx.fillStyle = '#c2410c';
+      ctx.textAlign = 'left';
+      ctx.fillText('direção "realeza"', lx2 + 10, ly + 4);
+    }
+
+    // Draw on load and resize
+    window.addEventListener('load', drawEmbeddingMap);
+    window.addEventListener('resize', drawEmbeddingMap);
+  </script>
+</body>
+</html>

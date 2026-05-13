@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 5 – Entrada do Transformer como Matriz de Tokens</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ---- Token chips (large, interactive) ---- */
+    .token-seq {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .tok-chip {
+      padding: 0.35rem 0.9rem;
+      border-radius: 8px;
+      font-family: 'Fira Code', monospace;
+      font-size: 1.05rem;
+      font-weight: 700;
+      background: var(--bg3);
+      border: 2px solid var(--border2);
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.2s;
+      user-select: none;
+    }
+    .tok-chip:hover, .tok-chip.hl {
+      background: var(--teal-lt);
+      border-color: var(--teal);
+      color: var(--teal);
+      transform: translateY(-3px);
+      box-shadow: 0 4px 12px rgba(13,110,110,0.18);
+    }
+    .tok-chip.hl {
+      background: var(--teal);
+      color: #fff;
+    }
+
+    /* ---- Arrow between phrase and matrix ---- */
+    .section-arrow {
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 1.4rem;
+      line-height: 1;
+      margin: 0.2rem 0;
+    }
+
+    /* ---- Embedding matrix E ---- */
+    .emb-matrix-wrap {
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+    }
+    .emb-bracket {
+      display: flex;
+      align-items: stretch;
+      flex-direction: column;
+      width: 10px;
+      flex-shrink: 0;
+    }
+    .emb-bracket-left {
+      border-left: 3px solid var(--text-muted);
+      border-top: 3px solid var(--text-muted);
+      border-bottom: 3px solid var(--text-muted);
+      border-radius: 4px 0 0 4px;
+    }
+    .emb-bracket-right {
+      border-right: 3px solid var(--text-muted);
+      border-top: 3px solid var(--text-muted);
+      border-bottom: 3px solid var(--text-muted);
+      border-radius: 0 4px 4px 0;
+    }
+    .emb-matrix-inner {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      padding: 0.4rem 0.5rem;
+      background: var(--bg2);
+      border-top: 1.5px solid var(--border2);
+      border-bottom: 1.5px solid var(--border2);
+    }
+    .emb-col-header {
+      display: flex;
+      gap: 0.3rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border2);
+      margin-bottom: 0.15rem;
+    }
+    .emb-col-spacer { width: 3rem; flex-shrink: 0; }
+    .emb-col-lbl {
+      flex: 1;
+      text-align: right;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.75rem;
+      color: var(--cyan);
+      font-weight: 700;
+    }
+    .emb-row {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.3rem 0.2rem;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .emb-row:hover, .emb-row.hl {
+      background: var(--teal-lt);
+      transform: translateX(3px);
+    }
+    .emb-row-lbl {
+      width: 3rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.9rem;
+      color: var(--text-dim);
+      font-weight: 600;
+      flex-shrink: 0;
+      text-align: right;
+    }
+    .emb-row.hl .emb-row-lbl { color: var(--teal); }
+    .emb-cell {
+      flex: 1;
+      text-align: right;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.88rem;
+      font-weight: 500;
+      padding: 0 0.15rem;
+      border-radius: 3px;
+    }
+    .emb-cell.pos { color: var(--teal); }
+    .emb-cell.neg { color: var(--orange); }
+    .emb-cell.hl-cell {
+      background: rgba(13,110,110,0.12);
+    }
+
+    /* ---- Matrix label (E =) ---- */
+    .mat-equation-label {
+      font-family: 'Fira Code', monospace;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.3rem;
+    }
+    .mat-name {
+      font-style: italic;
+      color: var(--teal);
+    }
+
+    /* ---- Hover hint ---- */
+    .hover-hint {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.8rem;
+      background: var(--blue-lt);
+      border: 1.5px solid #93c5fd;
+      border-radius: var(--radius-sm);
+      font-size: 0.82rem;
+      color: var(--blue);
+    }
+
+    /* ---- Phrase order note ---- */
+    .order-note {
+      background: var(--yellow-lt);
+      border: 1.5px solid #fde047;
+      border-radius: var(--radius-sm);
+      padding: 0.6rem 0.9rem;
+      font-size: 0.88rem;
+      color: var(--yellow);
+      line-height: 1.5;
+    }
+
+    /* ---- Fade-in animation ---- */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in { animation: fadeIn 0.3s ease both; }
+
+    /* ---- Row animation on phrase change ---- */
+    @keyframes rowUpdate {
+      0%   { opacity: 0.3; transform: translateX(-8px); }
+      100% { opacity: 1;   transform: translateX(0); }
+    }
+    .row-update { animation: rowUpdate 0.35s ease both; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <!-- Header -->
+    <header class="slide-header">
+      <span class="course-tag">Transformers</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 5 · Slide 5 / 6</span>
+    </header>
+
+    <!-- Content -->
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Sequência → Matriz de Tokens</h1>
+        <p class="slide-subtitle">O Transformer enxerga a frase inteira de uma vez — como uma matriz</p>
+      </div>
+
+      <div class="content-split">
+        <!-- Left: token sequence → matrix with hover -->
+        <div class="panel panel-left">
+          <h2 class="panel-title">Frase → Matriz de Embeddings</h2>
+
+          <!-- Phrase toggle -->
+          <div style="display:flex;flex-direction:column;gap:0.4rem;">
+            <div style="font-size:0.8rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.07em;">Frase de entrada:</div>
+            <div class="toggle-group" id="phrase-toggle">
+              <button class="btn-toggle active" onclick="setPhrase(0)">Ela saiu só</button>
+              <button class="btn-toggle" onclick="setPhrase(1)">Só ela saiu</button>
+              <button class="btn-toggle" onclick="setPhrase(2)">Ela só saiu</button>
+            </div>
+          </div>
+
+          <!-- Token chips -->
+          <div>
+            <div style="font-size:0.78rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.4rem;">Tokens:</div>
+            <div class="token-seq" id="token-seq"></div>
+          </div>
+
+          <!-- Downward arrow -->
+          <div class="section-arrow">↓</div>
+
+          <!-- Embedding matrix E -->
+          <div>
+            <div class="mat-equation-label">
+              <span class="mat-name">E</span>
+              <span style="color:var(--text-dim);font-size:1.1rem;font-weight:400;">=</span>
+            </div>
+            <div class="emb-matrix-wrap" id="emb-matrix-wrap"></div>
+          </div>
+
+          <!-- Hover hint -->
+          <div class="hover-hint">
+            💡 Passe o mouse sobre um token <em>ou</em> uma linha da matriz para destacar a correspondência.
+          </div>
+        </div>
+
+        <!-- Right: explanation + concepts -->
+        <div class="panel panel-right">
+          <h2 class="panel-title">O que é esta matriz?</h2>
+
+          <div class="concept-cards">
+            <div class="concept-card" style="--delay:0.05s">
+              <div class="card-icon">📐</div>
+              <div class="card-text">
+                <strong>Cada linha = um token</strong>
+                <p>A linha <em>i</em> da matriz E contém o vetor de embedding do <em>i</em>-ésimo token da frase.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.15s">
+              <div class="card-icon">📏</div>
+              <div class="card-text">
+                <strong>Cada coluna = uma dimensão</strong>
+                <p>As colunas d₁…d₂ representam as dimensões do espaço de embedding (na prática, centenas a milhares).</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.25s">
+              <div class="card-icon">🔀</div>
+              <div class="card-text">
+                <strong>A ordem das linhas importa</strong>
+                <p>Mudar a frase reordena as linhas da matriz. Experimente alternar entre as frases e observe como a matriz muda.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="order-note">
+            <strong>Atenção:</strong> neste ponto, a matriz E contém apenas os vetores léxicos — a identidade de cada token.
+            A <em>posição</em> ainda não está codificada aqui. Isso será feito no próximo slide.
+          </div>
+
+          <div class="insight-box" style="margin-top:auto;">
+            <div class="i-icon">🎓</div>
+            <div class="i-text">
+              "A primeira ideia importante é: o Transformer enxerga a sequência inteira como uma <strong>matriz</strong>.
+              Cada linha representa um token; cada coluna, uma dimensão do embedding."
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Navigation -->
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide04.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide06.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    // Nota: na prática, embeddings têm centenas de dimensões (ex.: 768 ou 1024)
+    const EMB = {
+      'Ela':  [1,  2],
+      'ela':  [1,  2],
+      'saiu': [3, -1],
+      'só':   [-1, 2],
+      'Só':   [-1, 2],
+    };
+
+    const PHRASES = [
+      { label: 'Ela saiu só',  tokens: ['Ela', 'saiu', 'só']  },
+      { label: 'Só ela saiu',  tokens: ['Só', 'ela', 'saiu']  },
+      { label: 'Ela só saiu',  tokens: ['Ela', 'só', 'saiu']  },
+    ];
+
+    const COLS = ['d₁','d₂'];
+    let currentPhrase = 0;
+    let activeRow = null;
+
+    // ---- Render token sequence ----
+    function renderTokens(phraseIdx) {
+      const container = document.getElementById('token-seq');
+      container.innerHTML = '';
+      PHRASES[phraseIdx].tokens.forEach((tok, i) => {
+        const chip = document.createElement('span');
+        chip.className = 'tok-chip';
+        chip.id = 'tok-' + i;
+        chip.textContent = tok;
+        chip.addEventListener('mouseenter', () => highlightRow(i));
+        chip.addEventListener('mouseleave', () => clearHighlight());
+        chip.addEventListener('click', () => toggleRowHighlight(i));
+        container.appendChild(chip);
+      });
+    }
+
+    // ---- Render embedding matrix ----
+    function renderMatrix(phraseIdx, animate) {
+      const tokens = PHRASES[phraseIdx].tokens;
+      const wrap = document.getElementById('emb-matrix-wrap');
+
+      let html = '';
+      // Left bracket
+      html += '<div class="emb-bracket emb-bracket-left"></div>';
+      // Inner
+      html += '<div class="emb-matrix-inner"><div class="emb-col-header"><div class="emb-col-spacer"></div>';
+      COLS.forEach(c => { html += `<div class="emb-col-lbl">${c}</div>`; });
+      html += '</div>';
+
+      tokens.forEach((tok, i) => {
+        const vals = EMB[tok];
+        const animCls = animate ? 'row-update' : '';
+        const delaySt = animate ? `animation-delay:${i * 0.07}s` : '';
+        html += `<div class="emb-row ${animCls}" id="row-${i}" style="${delaySt}" data-row="${i}">`;
+        html += `<div class="emb-row-lbl">${tok.toLowerCase()}</div>`;
+        vals.forEach(v => {
+          const cls = v >= 0 ? 'pos' : 'neg';
+          html += `<div class="emb-cell ${cls}">${v >= 0 ? ' ' : ''}${v.toFixed(0)}</div>`;
+        });
+        html += '</div>';
+      });
+
+      html += '</div>';
+      // Right bracket
+      html += '<div class="emb-bracket emb-bracket-right"></div>';
+      wrap.innerHTML = html;
+
+      // Attach hover events to rows
+      tokens.forEach((_, i) => {
+        const row = document.getElementById('row-' + i);
+        if (row) {
+          row.addEventListener('mouseenter', () => highlightRow(i));
+          row.addEventListener('mouseleave', () => clearHighlight());
+          row.addEventListener('click', () => toggleRowHighlight(i));
+        }
+      });
+    }
+
+    // ---- Highlight linking token ↔ matrix row ----
+    function highlightRow(rowIdx) {
+      // Highlight matrix row
+      document.querySelectorAll('.emb-row').forEach((r, i) => {
+        r.classList.toggle('hl', i === rowIdx);
+      });
+      // Highlight token chip
+      document.querySelectorAll('.tok-chip').forEach((c, i) => {
+        c.classList.toggle('hl', i === rowIdx);
+      });
+    }
+
+    function clearHighlight() {
+      if (activeRow !== null) {
+        // Keep active row highlighted if one was clicked
+        document.querySelectorAll('.emb-row').forEach((r, i) => {
+          r.classList.toggle('hl', i === activeRow);
+        });
+        document.querySelectorAll('.tok-chip').forEach((c, i) => {
+          c.classList.toggle('hl', i === activeRow);
+        });
+      } else {
+        document.querySelectorAll('.emb-row').forEach(r => r.classList.remove('hl'));
+        document.querySelectorAll('.tok-chip').forEach(c => c.classList.remove('hl'));
+      }
+    }
+
+    function toggleRowHighlight(rowIdx) {
+      if (activeRow === rowIdx) {
+        activeRow = null;
+        clearHighlight();
+      } else {
+        activeRow = rowIdx;
+        highlightRow(rowIdx);
+      }
+    }
+
+    // ---- Phrase toggle ----
+    function setPhrase(idx) {
+      const prev = currentPhrase;
+      currentPhrase = idx;
+      activeRow = null;
+
+      document.querySelectorAll('#phrase-toggle .btn-toggle').forEach((btn, i) => {
+        btn.classList.toggle('active', i === idx);
+      });
+
+      renderTokens(idx);
+      renderMatrix(idx, idx !== prev);
+    }
+
+    // ---- Init ----
+    renderTokens(0);
+    renderMatrix(0, false);
+  </script>
+</body>
+</html>

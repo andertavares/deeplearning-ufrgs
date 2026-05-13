@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 12 – Desenrolando a RNN no Tempo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .unfold-svg { width: 100%; display: block; }
+    .svg-sublabel {
+      font-size: 0.78rem; font-weight: 600; text-align: center;
+      color: var(--text-dim); font-family: 'Fira Code', monospace; margin-top: 0.3rem;
+    }
+    .svg-wrapper2 {
+      background: var(--bg3); border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm); padding: 0.7rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Redes Neurais Recorrentes</span>
+      <span class="prof-tag" style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 6 · Slide 1 / 1</span>
+    </header>
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Desenrolando a RNN no Tempo</h1>
+        <p class="slide-subtitle">Unfold revela a dependência temporal sem criar nova arquitetura</p>
+      </div>
+      <div class="content-split">
+        <!-- LEFT PANEL -->
+        <div class="panel panel-left">
+          <h2 class="panel-title">⏱️ RNN Desenrolada — série [102, 105, 98]</h2>
+          <div class="svg-wrapper2">
+            <svg id="unfold-svg" class="unfold-svg" viewBox="0 0 560 205" xmlns="http://www.w3.org/2000/svg"></svg>
+            <div class="svg-sublabel">pesos U, V, W compartilhados — mesma célula em t=1, 2, 3</div>
+          </div>
+        </div>
+        <!-- RIGHT PANEL -->
+        <div class="panel panel-right">
+          <h2 class="panel-title">🔍 O Que o Unfold Revela</h2>
+          <div class="concept-cards">
+            <div class="concept-card" style="--delay:0s">
+              <span class="card-icon">🔄</span>
+              <div class="card-text"><strong>Unfold não cria nova arquitetura</strong><p>Apenas revela a dependência temporal explicitamente, expandindo o laço de recorrência.</p></div>
+            </div>
+            <div class="concept-card" style="--delay:0.08s">
+              <span class="card-icon">↔️</span>
+              <div class="card-text"><strong>Esquerda para a direita</strong><p>O forward pass percorre da esquerda para a direita. Cada estado depende do anterior.</p></div>
+            </div>
+            <div class="concept-card" style="--delay:0.16s">
+              <span class="card-icon">🔗</span>
+              <div class="card-text"><strong>Mesma célula, todo instante</strong><p>Os blocos em t-1, t, t+1 são a mesma célula — compartilham os mesmos parâmetros.</p></div>
+            </div>
+          </div>
+          <div class="insight-box" style="margin-top:auto">
+            <span class="i-icon">💡</span>
+            <div class="i-text"><strong>Uma RNN é como um pequeno programa com memória</strong> que roda repetidamente para cada elemento da sequência.</div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide11.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide13.html'">Próximo →</button>
+    </nav>
+  </div>
+  <script>
+    const xVals = ['102', '105', '98'];
+    const hVals = ['h₀', 'h₁', 'h₂', 'h₃'];
+    const oVals = ['o₁', 'o₂', 'o₃'];
+
+    function drawUnfold() {
+      const svg = document.getElementById('unfold-svg');
+      const T = 3;
+
+      // Layout constants
+      const cellW = 72, cellH = 56, cellY = 82;
+      const centers = [105, 280, 455];
+      const cy = cellY + cellH / 2;  // 110
+      const cellBottom = cellY + cellH; // 138
+
+      const teal  = '#0d6e6e', lblTeal  = '#2dd4bf';
+      const blue  = '#1d4ed8', lblBlue  = '#60a5fa';
+      const green = '#16a34a', lblGreen = '#4ade80';
+      const orange= '#ea580c', lblOrng  = '#fb923c';
+
+      let s = `<defs>
+        <marker id="uaT" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="${teal}"/></marker>
+        <marker id="uaB" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="${blue}"/></marker>
+        <marker id="uaG" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="${green}"/></marker>
+        <marker id="uaO" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="${orange}"/></marker>
+      </defs>`;
+
+      // ── h₀ entering from the left (dashed, initialized to zero) ────────
+      const c0L = centers[0] - cellW / 2; // 69
+      s += `<line x1="10" y1="${cy}" x2="${c0L - 1}" y2="${cy}" stroke="${orange}" stroke-width="1.8" stroke-dasharray="4,2" marker-end="url(#uaO)"/>`;
+      s += `<text x="10" y="${cy - 7}" fill="${lblOrng}" font-size="9" font-family="Fira Code,monospace">${hVals[0]} = 0</text>`;
+      // V badge on h₀ arrow
+      const v0x = Math.round((10 + c0L) / 2);
+      s += `<rect x="${v0x - 9}" y="${cy + 3}" width="18" height="14" rx="4" fill="#7c2d12"/>`;
+      s += `<text x="${v0x}" y="${cy + 14}" text-anchor="middle" fill="#fdba74" font-size="10" font-family="Fira Code,monospace" font-weight="700">V</text>`;
+
+      for (let i = 0; i < T; i++) {
+        const cx    = centers[i];
+        const cxL   = cx - cellW / 2;  // left edge
+        const cxR   = cx + cellW / 2;  // right edge
+
+        // ── Cell box ──────────────────────────────────────────────
+        s += `<rect x="${cxL}" y="${cellY}" width="${cellW}" height="${cellH}" rx="9" fill="#1e293b" stroke="${teal}" stroke-width="2"/>`;
+        s += `<text x="${cx}" y="${cellY + 21}" text-anchor="middle" fill="white" font-size="11" font-family="Fira Code,monospace" font-weight="700">RNN</text>`;
+        s += `<text x="${cx}" y="${cellY + 42}" text-anchor="middle" fill="#5eead4" font-size="16" font-family="Inter,sans-serif">φ</text>`;
+
+        // t= label above cell
+        s += `<text x="${cx}" y="${cellY - 8}" text-anchor="middle" fill="#94a3b8" font-size="9" font-family="Inter,sans-serif">t=${i+1}</text>`;
+
+        // ── Input arrow xₜ → cell (from below) ────────────────────────
+        s += `<line x1="${cx}" y1="182" x2="${cx}" y2="${cellBottom + 1}" stroke="${blue}" stroke-width="1.8" marker-end="url(#uaB)"/>`;
+        // U badge at midpoint
+        const uy = Math.round((182 + cellBottom) / 2);
+        s += `<rect x="${cx - 9}" y="${uy - 9}" width="18" height="14" rx="4" fill="#1e3a8a"/>`;
+        s += `<text x="${cx}" y="${uy + 2}" text-anchor="middle" fill="#93c5fd" font-size="10" font-family="Fira Code,monospace" font-weight="700">U</text>`;
+        // x value label
+        s += `<text x="${cx}" y="195" text-anchor="middle" fill="${lblBlue}" font-size="10" font-family="Fira Code,monospace">${xVals[i]}</text>`;
+
+        // ── Output arrow cell → oₜ (going up) ──────────────────────
+        s += `<line x1="${cx}" y1="${cellY}" x2="${cx}" y2="26" stroke="${green}" stroke-width="1.8" marker-end="url(#uaG)"/>`;
+        // W badge at midpoint
+        const wy = Math.round((cellY + 26) / 2);
+        s += `<rect x="${cx - 9}" y="${wy - 9}" width="18" height="14" rx="4" fill="#14532d"/>`;
+        s += `<text x="${cx}" y="${wy + 2}" text-anchor="middle" fill="#86efac" font-size="10" font-family="Fira Code,monospace" font-weight="700">W</text>`;
+        // o label
+        s += `<text x="${cx}" y="18" text-anchor="middle" fill="${lblGreen}" font-size="10" font-family="Fira Code,monospace">${oVals[i]}</text>`;
+
+        // ── h arrow exiting this cell ────────────────────────────────
+        if (i < T - 1) {
+          const nextL = centers[i + 1] - cellW / 2;
+          s += `<line x1="${cxR}" y1="${cy}" x2="${nextL - 1}" y2="${cy}" stroke="${teal}" stroke-width="2" marker-end="url(#uaT)"/>`;
+          const hmx = Math.round((cxR + nextL) / 2);
+          // h label above arrow
+          s += `<text x="${hmx}" y="${cy - 8}" text-anchor="middle" fill="${lblTeal}" font-size="9" font-family="Fira Code,monospace">${hVals[i + 1]}</text>`;
+          // V badge on this h-arrow (below arrow)
+          s += `<rect x="${hmx - 9}" y="${cy + 3}" width="18" height="14" rx="4" fill="#7c2d12"/>`;
+          s += `<text x="${hmx}" y="${cy + 14}" text-anchor="middle" fill="#fdba74" font-size="10" font-family="Fira Code,monospace" font-weight="700">V</text>`;
+        } else {
+          // last cell: h₃ exits right
+          s += `<line x1="${cxR}" y1="${cy}" x2="${cxR + 42}" y2="${cy}" stroke="${teal}" stroke-width="1.8" marker-end="url(#uaT)"/>`;
+          s += `<text x="${cxR + 50}" y="${cy + 4}" fill="${lblTeal}" font-size="9" font-family="Fira Code,monospace">${hVals[T]}</text>`;
+        }
+      }
+
+      svg.innerHTML = s;
+    }
+
+    drawUnfold();
+  </script>
+</body>
+</html>

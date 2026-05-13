@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 10 – Empilhando Camadas</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .layers-layout {
+      display: grid;
+      grid-template-columns: 1.6fr 1fr;
+      gap: 1.2rem;
+      flex: 1;
+    }
+    .graph-panel {
+      background: var(--bg2);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+      box-shadow: var(--shadow);
+    }
+    .info-panel {
+      background: var(--bg2);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      box-shadow: var(--shadow);
+    }
+
+    /* Slider */
+    .slider-wrap {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .layer-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 8px;
+      border-radius: 4px;
+      background: var(--border2);
+      flex: 1;
+      cursor: pointer;
+      outline: none;
+    }
+    .layer-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: var(--teal);
+      cursor: pointer;
+      border: 2px solid #fff;
+      box-shadow: 0 0 0 3px rgba(13,110,110,0.25);
+    }
+    .layer-slider::-moz-range-thumb {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: var(--teal);
+      cursor: pointer;
+      border: 2px solid #fff;
+    }
+    .slider-val {
+      font-family:'Fira Code',monospace;
+      font-weight:700;
+      font-size:1rem;
+      color:var(--teal);
+      min-width:70px;
+    }
+
+    /* Graph SVG nodes */
+    .rf-node { transition: fill 0.4s, stroke 0.4s, stroke-width 0.4s; cursor: default; }
+    .rf-edge { stroke: var(--border); stroke-width: 2; transition: stroke 0.3s, stroke-width 0.3s; }
+    .rf-edge.hop1 { stroke: #0d6e6e; stroke-width: 3; }
+    .rf-edge.hop2 { stroke: #1d4ed8; stroke-width: 2.5; stroke-dasharray: 5 3; }
+    .rf-edge.hop3 { stroke: #7c3aed; stroke-width: 2; stroke-dasharray: 4 4; }
+
+    /* Receptive field legend */
+    .rf-legend {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .rf-entry {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      padding: 0.5rem 0.7rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.88rem;
+      font-weight: 600;
+      border: 1.5px solid transparent;
+      opacity: 0.35;
+      transition: opacity 0.4s, border-color 0.3s, background 0.3s;
+    }
+    .rf-entry.visible { opacity: 1; }
+    .rf-entry.center { background:#fff7ed; border-color:#f97316; }
+    .rf-entry.hop1   { background:#ccfbf1; border-color:#0d6e6e; }
+    .rf-entry.hop2   { background:#dbeafe; border-color:#1d4ed8; }
+    .rf-entry.hop3   { background:#ede9fe; border-color:#7c3aed; }
+    .rf-dot {
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .rf-dot.center { background:#f97316; }
+    .rf-dot.hop1   { background:#0d6e6e; }
+    .rf-dot.hop2   { background:#1d4ed8; }
+    .rf-dot.hop3   { background:#7c3aed; }
+
+    /* Depth info box */
+    .depth-info {
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0.7rem 0.9rem;
+      font-size: 0.9rem;
+      color: var(--text);
+      line-height: 1.6;
+      transition: background 0.3s, border-color 0.3s;
+      min-height: 90px;
+    }
+    .depth-info strong { color: var(--teal); }
+    .depth-info.d1 { background:#f0fdf4; border-color:#0d6e6e; }
+    .depth-info.d2 { background:#eff6ff; border-color:#3b82f6; }
+    .depth-info.d3 { background:#f5f3ff; border-color:#7c3aed; }
+
+    /* RF size visual */
+    .rf-size-wrap { display: flex; gap: 0.5rem; align-items: center; }
+    .rf-size-bar {
+      height: 22px;
+      border-radius: 999px;
+      transition: width 0.5s cubic-bezier(0.34,1.2,0.64,1), background 0.4s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family:'Fira Code',monospace;
+      font-size:0.78rem;
+      font-weight:700;
+      color:#fff;
+      min-width:32px;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">GNNs</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Slide 10 / 20</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Empilhando Camadas</h1>
+        <p class="slide-subtitle">Bloco 2 — Receptive Field</p>
+      </div>
+
+      <!-- Slider -->
+      <div style="background:var(--bg2);border:1.5px solid var(--border2);border-radius:var(--radius);padding:0.8rem 1.2rem;box-shadow:var(--shadow);">
+        <div style="font-size:0.9rem;font-weight:600;color:var(--text-muted);margin-bottom:0.5rem;">Número de camadas GNN:</div>
+        <div class="slider-wrap">
+          <span style="font-size:0.85rem;color:var(--text-dim);font-weight:600;min-width:50px;">k = 1</span>
+          <input type="range" min="1" max="3" value="1" class="layer-slider" id="layerSlider" oninput="setLayers(this.value)"/>
+          <span style="font-size:0.85rem;color:var(--text-dim);font-weight:600;min-width:50px;">k = 3</span>
+          <span class="slider-val" id="sliderVal">k = 1</span>
+        </div>
+        <div style="display:flex;justify-content:center;gap:0.7rem;margin-top:0.5rem;">
+          <button class="btn-toggle active" id="btnL1" onclick="setLayersBtn(1)">1 Camada</button>
+          <button class="btn-toggle" id="btnL2" onclick="setLayersBtn(2)">2 Camadas</button>
+          <button class="btn-toggle" id="btnL3" onclick="setLayersBtn(3)">3 Camadas</button>
+        </div>
+      </div>
+
+      <div class="layers-layout">
+        <!-- LEFT: graph SVG -->
+        <div class="graph-panel">
+          <div class="panel-title">Receptive Field do Nó Central</div>
+          <svg viewBox="0 0 440 280" style="width:100%;" id="rfSvg">
+            <defs>
+              <marker id="rfArr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                <path d="M0,0 L6,3 L0,6 Z" fill="#0d6e6e"/>
+              </marker>
+            </defs>
+            <!-- Edges -->
+            <!-- Center (0) to hop-1: 1,2,3,4 -->
+            <line id="rfE01" class="rf-edge" x1="220" y1="140" x2="130" y2="80"/>
+            <line id="rfE02" class="rf-edge" x1="220" y1="140" x2="310" y2="80"/>
+            <line id="rfE03" class="rf-edge" x1="220" y1="140" x2="310" y2="200"/>
+            <line id="rfE04" class="rf-edge" x1="220" y1="140" x2="130" y2="200"/>
+            <!-- Hop-1 to hop-2 -->
+            <line id="rfE15" class="rf-edge" x1="130" y1="80" x2="60" y2="40"/>
+            <line id="rfE16" class="rf-edge" x1="130" y1="80" x2="60" y2="120"/>
+            <line id="rfE27" class="rf-edge" x1="310" y1="80" x2="380" y2="40"/>
+            <line id="rfE28" class="rf-edge" x1="310" y1="80" x2="380" y2="120"/>
+            <line id="rfE39" class="rf-edge" x1="310" y1="200" x2="380" y2="160"/>
+            <line id="rfE3A" class="rf-edge" x1="310" y1="200" x2="380" y2="240"/>
+            <line id="rfE4B" class="rf-edge" x1="130" y1="200" x2="60" y2="160"/>
+            <line id="rfE4C" class="rf-edge" x1="130" y1="200" x2="60" y2="240"/>
+            <!-- Hop-2 to hop-3 (one extra per corner) -->
+            <line id="rfE5D" class="rf-edge" x1="60" y1="40" x2="20" y2="20"/>
+            <line id="rfE7E" class="rf-edge" x1="380" y1="40" x2="420" y2="20"/>
+            <line id="rfE9F" class="rf-edge" x1="380" y1="160" x2="420" y2="180"/>
+            <line id="rfEBG" class="rf-edge" x1="60" y1="160" x2="20" y2="180"/>
+
+            <!-- Hop-3 nodes (outermost) -->
+            <circle id="rfN_D" class="rf-node" cx="20" cy="20" r="10" fill="#e5e7eb" stroke="#9ca3af" stroke-width="1.5"/>
+            <circle id="rfN_E" class="rf-node" cx="420" cy="20" r="10" fill="#e5e7eb" stroke="#9ca3af" stroke-width="1.5"/>
+            <circle id="rfN_F" class="rf-node" cx="420" cy="180" r="10" fill="#e5e7eb" stroke="#9ca3af" stroke-width="1.5"/>
+            <circle id="rfN_G" class="rf-node" cx="20" cy="180" r="10" fill="#e5e7eb" stroke="#9ca3af" stroke-width="1.5"/>
+
+            <!-- Hop-2 nodes -->
+            <circle id="rfN5" class="rf-node" cx="60" cy="40" r="14" fill="#e5e7eb" stroke="#9ca3af" stroke-width="1.5"/>
+            <text x="60" y="45" text-anchor="middle" font-size="9" fill="#9ca3af" font-weight="700">5</text>
+            <circle id="rfN6" class="rf-node" cx="60" cy="120" r="14" fill="#e5e7eb" stroke="#9ca3af" stroke-width="1.5"/>
+            <text x="60" y="125" text-anchor="middle" font-size="9" fill="#9ca3af" font-weight="700">6</text>
+            <circle id="rfN7" class="rf-node" cx="380" cy="40" r="14" fill="#e5e7eb" stroke="#9ca3af" stroke-width="1.5"/>
+            <text x="380" y="45" text-anchor="middle" font-size="9" fill="#9ca3af" font-weight="700">7</text>
+            <circle id="rfN8" class="rf-node" cx="380" cy="120" r="14" fill="#e5e7eb" stroke="#9ca3af" stroke-width="1.5"/>
+            <text x="380" y="125" text-anchor="middle" font-size="9" fill="#9ca3af" font-weight="700">8</text>
+            <circle id="rfN9" class="rf-node" cx="380" cy="160" r="14" fill="#e5e7eb" stroke="#9ca3af" stroke-width="1.5"/>
+            <text x="380" y="165" text-anchor="middle" font-size="9" fill="#9ca3af" font-weight="700">9</text>
+            <circle id="rfNA" class="rf-node" cx="380" cy="240" r="14" fill="#e5e7eb" stroke="#9ca3af" stroke-width="1.5"/>
+            <text x="380" y="245" text-anchor="middle" font-size="9" fill="#9ca3af" font-weight="700">10</text>
+            <circle id="rfNB" class="rf-node" cx="60" cy="160" r="14" fill="#e5e7eb" stroke="#9ca3af" stroke-width="1.5"/>
+            <text x="60" y="165" text-anchor="middle" font-size="9" fill="#9ca3af" font-weight="700">11</text>
+            <circle id="rfNC" class="rf-node" cx="60" cy="240" r="14" fill="#e5e7eb" stroke="#9ca3af" stroke-width="1.5"/>
+            <text x="60" y="245" text-anchor="middle" font-size="9" fill="#9ca3af" font-weight="700">12</text>
+
+            <!-- Hop-1 nodes -->
+            <circle id="rfN1" class="rf-node" cx="130" cy="80" r="18" fill="#e5e7eb" stroke="#9ca3af" stroke-width="2"/>
+            <text x="130" y="85" text-anchor="middle" font-size="11" fill="#9ca3af" font-weight="700">1</text>
+            <circle id="rfN2" class="rf-node" cx="310" cy="80" r="18" fill="#e5e7eb" stroke="#9ca3af" stroke-width="2"/>
+            <text x="310" y="85" text-anchor="middle" font-size="11" fill="#9ca3af" font-weight="700">2</text>
+            <circle id="rfN3" class="rf-node" cx="310" cy="200" r="18" fill="#e5e7eb" stroke="#9ca3af" stroke-width="2"/>
+            <text x="310" y="205" text-anchor="middle" font-size="11" fill="#9ca3af" font-weight="700">3</text>
+            <circle id="rfN4" class="rf-node" cx="130" cy="200" r="18" fill="#e5e7eb" stroke="#9ca3af" stroke-width="2"/>
+            <text x="130" y="205" text-anchor="middle" font-size="11" fill="#9ca3af" font-weight="700">4</text>
+
+            <!-- Center node (node 0) -->
+            <circle id="rfN0" class="rf-node" cx="220" cy="140" r="28" fill="#fed7aa" stroke="#f97316" stroke-width="3"/>
+            <text x="220" y="134" text-anchor="middle" font-size="12" fill="#c2410c" font-weight="800">nó 0</text>
+            <text x="220" y="148" text-anchor="middle" font-size="10" fill="#c2410c" font-weight="600">central</text>
+          </svg>
+        </div>
+
+        <!-- RIGHT: info panel -->
+        <div class="info-panel">
+          <div class="panel-title">Receptive Field</div>
+
+          <div class="rf-legend">
+            <div class="rf-entry center visible" id="rfCenter">
+              <div class="rf-dot center"></div>
+              <span>Nó central (0)</span>
+            </div>
+            <div class="rf-entry hop1" id="rfHop1">
+              <div class="rf-dot hop1"></div>
+              <span>1 salto (vizinhos diretos)</span>
+            </div>
+            <div class="rf-entry hop2" id="rfHop2">
+              <div class="rf-dot hop2"></div>
+              <span>2 saltos (vizinhos dos vizinhos)</span>
+            </div>
+            <div class="rf-entry hop3" id="rfHop3">
+              <div class="rf-dot hop3"></div>
+              <span>3 saltos (3-hop)</span>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="depth-info d1" id="depthInfo">
+            <strong>1 camada:</strong> o nó 0 agrega informação apenas dos seus <strong>4 vizinhos diretos</strong>.<br>
+            Receptive field = 4 nós.
+          </div>
+
+          <div style="font-size:0.85rem;font-weight:600;color:var(--text-muted);">Tamanho do campo receptivo:</div>
+          <div class="rf-size-wrap">
+            <div class="rf-size-bar" id="rfBar" style="width:80px;background:#0d6e6e;">4 nós</div>
+          </div>
+
+          <div class="highlight-box teal" style="font-size:0.83rem;padding:0.6rem 0.8rem;">
+            <span class="icon">📏</span>
+            <span>Com <strong>k camadas</strong>, cada nó agrega informação de <strong>k saltos</strong> de distância.</span>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide09.html'">← Anterior</button>
+      <div class="nav-dots" id="navDots"></div>
+      <button class="btn-nav btn-next" onclick="location.href='slide11.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    const layerConfigs = {
+      1: {
+        // center: orange, hop1: teal, rest: grey
+        nodes: {
+          rfN0:  { fill:'#fed7aa', stroke:'#f97316', sw:3 },
+          rfN1:  { fill:'#ccfbf1', stroke:'#0d6e6e', sw:2.5 },
+          rfN2:  { fill:'#ccfbf1', stroke:'#0d6e6e', sw:2.5 },
+          rfN3:  { fill:'#ccfbf1', stroke:'#0d6e6e', sw:2.5 },
+          rfN4:  { fill:'#ccfbf1', stroke:'#0d6e6e', sw:2.5 },
+        },
+        edges: {
+          rfE01:'hop1', rfE02:'hop1', rfE03:'hop1', rfE04:'hop1'
+        },
+        depthClass: 'd1',
+        depthText: '<strong>1 camada:</strong> o nó 0 agrega informação apenas dos seus <strong>4 vizinhos diretos</strong>.<br>Receptive field = 4 nós.',
+        barW: '80px', barColor:'#0d6e6e', barText:'4 nós',
+        hops: [1,0,0]
+      },
+      2: {
+        nodes: {
+          rfN0:  { fill:'#fed7aa', stroke:'#f97316', sw:3 },
+          rfN1:  { fill:'#ccfbf1', stroke:'#0d6e6e', sw:2.5 },
+          rfN2:  { fill:'#ccfbf1', stroke:'#0d6e6e', sw:2.5 },
+          rfN3:  { fill:'#ccfbf1', stroke:'#0d6e6e', sw:2.5 },
+          rfN4:  { fill:'#ccfbf1', stroke:'#0d6e6e', sw:2.5 },
+          rfN5:  { fill:'#dbeafe', stroke:'#3b82f6', sw:2.5 },
+          rfN6:  { fill:'#dbeafe', stroke:'#3b82f6', sw:2.5 },
+          rfN7:  { fill:'#dbeafe', stroke:'#3b82f6', sw:2.5 },
+          rfN8:  { fill:'#dbeafe', stroke:'#3b82f6', sw:2.5 },
+          rfN9:  { fill:'#dbeafe', stroke:'#3b82f6', sw:2.5 },
+          rfNA:  { fill:'#dbeafe', stroke:'#3b82f6', sw:2.5 },
+          rfNB:  { fill:'#dbeafe', stroke:'#3b82f6', sw:2.5 },
+          rfNC:  { fill:'#dbeafe', stroke:'#3b82f6', sw:2.5 },
+        },
+        edges: {
+          rfE01:'hop1', rfE02:'hop1', rfE03:'hop1', rfE04:'hop1',
+          rfE15:'hop2', rfE16:'hop2', rfE27:'hop2', rfE28:'hop2',
+          rfE39:'hop2', rfE3A:'hop2', rfE4B:'hop2', rfE4C:'hop2'
+        },
+        depthClass: 'd2',
+        depthText: '<strong>2 camadas:</strong> o nó 0 agrega informação de <strong>2 saltos</strong> — vizinhos e seus vizinhos.<br>Receptive field = 12 nós.',
+        barW: '200px', barColor:'#3b82f6', barText:'12 nós',
+        hops: [1,1,0]
+      },
+      3: {
+        nodes: {
+          rfN0:  { fill:'#fed7aa', stroke:'#f97316', sw:3 },
+          rfN1:  { fill:'#ccfbf1', stroke:'#0d6e6e', sw:2.5 },
+          rfN2:  { fill:'#ccfbf1', stroke:'#0d6e6e', sw:2.5 },
+          rfN3:  { fill:'#ccfbf1', stroke:'#0d6e6e', sw:2.5 },
+          rfN4:  { fill:'#ccfbf1', stroke:'#0d6e6e', sw:2.5 },
+          rfN5:  { fill:'#dbeafe', stroke:'#3b82f6', sw:2.5 },
+          rfN6:  { fill:'#dbeafe', stroke:'#3b82f6', sw:2.5 },
+          rfN7:  { fill:'#dbeafe', stroke:'#3b82f6', sw:2.5 },
+          rfN8:  { fill:'#dbeafe', stroke:'#3b82f6', sw:2.5 },
+          rfN9:  { fill:'#dbeafe', stroke:'#3b82f6', sw:2.5 },
+          rfNA:  { fill:'#dbeafe', stroke:'#3b82f6', sw:2.5 },
+          rfNB:  { fill:'#dbeafe', stroke:'#3b82f6', sw:2.5 },
+          rfNC:  { fill:'#dbeafe', stroke:'#3b82f6', sw:2.5 },
+          rfN_D: { fill:'#ede9fe', stroke:'#7c3aed', sw:2 },
+          rfN_E: { fill:'#ede9fe', stroke:'#7c3aed', sw:2 },
+          rfN_F: { fill:'#ede9fe', stroke:'#7c3aed', sw:2 },
+          rfN_G: { fill:'#ede9fe', stroke:'#7c3aed', sw:2 },
+        },
+        edges: {
+          rfE01:'hop1', rfE02:'hop1', rfE03:'hop1', rfE04:'hop1',
+          rfE15:'hop2', rfE16:'hop2', rfE27:'hop2', rfE28:'hop2',
+          rfE39:'hop2', rfE3A:'hop2', rfE4B:'hop2', rfE4C:'hop2',
+          rfE5D:'hop3', rfE7E:'hop3', rfE9F:'hop3', rfEBG:'hop3'
+        },
+        depthClass: 'd3',
+        depthText: '<strong>3 camadas:</strong> o nó 0 enxerga <strong>3 saltos</strong> — campo receptivo se expande!<br>Receptive field = 16 nós.',
+        barW: '280px', barColor:'#7c3aed', barText:'16 nós',
+        hops: [1,1,1]
+      }
+    };
+
+    const allNodes = ['rfN0','rfN1','rfN2','rfN3','rfN4','rfN5','rfN6','rfN7','rfN8','rfN9','rfNA','rfNB','rfNC','rfN_D','rfN_E','rfN_F','rfN_G'];
+    const allEdges = ['rfE01','rfE02','rfE03','rfE04','rfE15','rfE16','rfE27','rfE28','rfE39','rfE3A','rfE4B','rfE4C','rfE5D','rfE7E','rfE9F','rfEBG'];
+    const defaultNodeStyle = { fill:'#e5e7eb', stroke:'#9ca3af', sw: 1.5 };
+
+    function setLayers(k) {
+      k = parseInt(k);
+      document.getElementById('layerSlider').value = k;
+      document.getElementById('sliderVal').textContent = 'k = ' + k;
+
+      // Update buttons
+      [1,2,3].forEach(n => {
+        document.getElementById('btnL'+n).classList.toggle('active', n===k);
+      });
+
+      const cfg = layerConfigs[k];
+
+      // Reset all nodes
+      allNodes.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const style = cfg.nodes[id] || defaultNodeStyle;
+        el.setAttribute('fill', style.fill);
+        el.setAttribute('stroke', style.stroke);
+        el.setAttribute('stroke-width', style.sw);
+      });
+
+      // Reset all edges
+      allEdges.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.className.baseVal = 'rf-edge ' + (cfg.edges[id] || '');
+      });
+
+      // Update depth info
+      const di = document.getElementById('depthInfo');
+      di.className = 'depth-info ' + cfg.depthClass;
+      di.innerHTML = cfg.depthText;
+
+      // Update bar
+      const bar = document.getElementById('rfBar');
+      bar.style.width = cfg.barW;
+      bar.style.background = cfg.barColor;
+      bar.textContent = cfg.barText;
+
+      // Update legend visibility
+      const hopIds = ['rfHop1','rfHop2','rfHop3'];
+      hopIds.forEach((id, i) => {
+        const el = document.getElementById(id);
+        el.classList.toggle('visible', cfg.hops[i] === 1);
+      });
+    }
+
+    function setLayersBtn(k) {
+      setLayers(k);
+    }
+
+    // Initialize
+    setLayers(1);
+
+    (function(){
+      const container = document.getElementById('navDots');
+      const CURRENT = 10;
+      const TOTAL = 20;
+      for (let i = 1; i <= TOTAL; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'dot' + (i === CURRENT ? ' active' : '');
+        dot.title = 'Slide ' + i;
+        dot.style.cursor = 'pointer';
+        dot.addEventListener('click', () => { location.href = 'slide' + String(i).padStart(2,'0') + '.html'; });
+        container.appendChild(dot);
+      }
+    })();
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') location.href = 'slide11.html';
+      if (e.key === 'ArrowLeft'  || e.key === 'PageUp')   location.href = 'slide09.html';
+    });
+  </script>
+</body>
+</html>

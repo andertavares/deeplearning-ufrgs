@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 01 – O que significa ser multimodal?</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .match-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+    .match-col-title { font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:var(--text-dim); margin-bottom:0.4rem; text-align:center; }
+    .match-items { display:flex; flex-direction:column; gap:0.5rem; }
+    .match-img-item { display:flex; flex-direction:column; align-items:center; gap:0.2rem; cursor:pointer; transition:transform 0.2s; }
+    .match-img-item:hover { transform:scale(1.04); }
+    .emoji-circle { width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.7rem;border:2.5px solid var(--border2);background:var(--bg3);transition:all 0.22s;user-select:none; }
+    .emoji-circle.selected { border-color:var(--blue);background:var(--blue-lt);box-shadow:0 0 0 3px #93c5fd55; }
+    .emoji-circle.matched-ok { border-color:var(--green);background:var(--green-lt); }
+    .emoji-circle.matched-err { border-color:var(--red);background:#fee2e2; }
+    .img-label { font-size:0.7rem;font-weight:600;color:var(--text-dim);text-align:center; }
+    .match-txt-item { background:var(--bg3);border:2px solid var(--border2);border-radius:var(--radius-sm);padding:0.5rem 0.8rem;font-size:0.88rem;font-weight:600;color:var(--text-muted);cursor:pointer;transition:all 0.2s;user-select:none; }
+    .match-txt-item:hover { border-color:var(--blue);color:var(--blue);background:var(--blue-lt); }
+    .match-txt-item.selected { border-color:var(--blue);background:var(--blue-lt);color:var(--blue); }
+    .match-txt-item.matched-ok { border-color:var(--green);background:var(--green-lt);color:var(--green); }
+    .match-txt-item.matched-err { border-color:var(--red);background:#fee2e2;color:var(--red); }
+    .score-row { display:flex;gap:0.35rem;align-items:center;justify-content:center;flex-wrap:wrap; }
+    .score-dot { width:12px;height:12px;border-radius:50%;border:2px solid var(--border2);background:var(--bg3);transition:all 0.3s; }
+    .score-dot.ok { background:var(--green);border-color:var(--green); }
+    .score-dot.err { background:var(--red);border-color:var(--red); }
+    .toggle-group { display:flex; gap:0.4rem; margin-bottom:0.8rem; }
+    .view-area { min-height: 280px; }
+    canvas { border-radius: var(--radius-sm); border: 1px solid var(--border2); display:block; }
+    .restart-btn { margin-top:0.5rem; font-size:0.8rem; padding:0.3rem 0.8rem; border:1.5px solid var(--border2); border-radius:var(--radius-sm); background:var(--bg3); color:var(--text-muted); cursor:pointer; transition:all 0.2s; }
+    .restart-btn:hover { border-color:var(--teal); color:var(--teal); }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Multimodal</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 1 · Slide 1 / 7</span>
+    </header>
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">O que significa ser multimodal?</h1>
+        <p class="slide-subtitle">Bloco 1 — O Problema · Quando encoders não se entendem</p>
+      </div>
+      <div class="content-split">
+        <!-- LEFT PANEL -->
+        <div class="panel">
+          <div class="panel-title">Modalidades e alinhamento</div>
+          <div class="concept-cards">
+            <div class="concept-card" style="--delay:0s">
+              <span class="card-icon">🗂️</span>
+              <div class="card-text">
+                <strong>Modalidades: texto, imagem, áudio, vídeo</strong>
+                <p>Cada modalidade é um tipo de dado com estrutura e representação diferente.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.1s">
+              <span class="card-icon">🔗</span>
+              <div class="card-text">
+                <strong>Foco: texto + imagem</strong>
+                <p>Queremos que a descrição de uma imagem e a imagem em si sejam semanticamente próximas.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.2s">
+              <span class="card-icon">⚡</span>
+              <div class="card-text">
+                <strong>O desafio central</strong>
+                <p>Arquiteturas que trabalham com cada modalidade geram representações em espaços não-relacionados.</p>
+              </div>
+            </div>
+          </div>
+          <div class="highlight-box yellow">
+            🧠 Para um humano é fácil associar imagem e descrição — para um modelo, é um grande desafio de aprendizado.
+          </div>
+        </div>
+        <!-- RIGHT PANEL -->
+        <div class="panel">
+          <div class="panel-title">Atividade: emparelhe imagem e texto</div>
+          <div class="toggle-group">
+            <button class="btn-toggle active" id="btnHuman" onclick="switchView('human')">👁️ O que o humano vê</button>
+            <button class="btn-toggle" id="btnEmbed" onclick="switchView('embed')">📊 Embeddings</button>
+          </div>
+          <div class="view-area">
+            <!-- VIEW 1: Matching game -->
+            <div id="viewHuman">
+              <div class="match-cols">
+                <div>
+                  <div class="match-col-title">Imagens</div>
+                  <div class="match-items" id="imgCol">
+                    <div class="match-img-item" onclick="selectImg(0)">
+                      <div class="emoji-circle" id="img0">🐕</div>
+                      <div class="img-label">Imagem 1</div>
+                    </div>
+                    <div class="match-img-item" onclick="selectImg(1)">
+                      <div class="emoji-circle" id="img1">🐶</div>
+                      <div class="img-label">Imagem 2</div>
+                    </div>
+                    <div class="match-img-item" onclick="selectImg(2)">
+                      <div class="emoji-circle" id="img2">🏖️</div>
+                      <div class="img-label">Imagem 3</div>
+                    </div>
+                    <div class="match-img-item" onclick="selectImg(3)">
+                      <div class="emoji-circle" id="img3">🌊</div>
+                      <div class="img-label">Imagem 4</div>
+                    </div>
+                    <div class="match-img-item" onclick="selectImg(4)">
+                      <div class="emoji-circle" id="img4">🌆</div>
+                      <div class="img-label">Imagem 5</div>
+                    </div>
+                    <div class="match-img-item" onclick="selectImg(5)">
+                      <div class="emoji-circle" id="img5">🏙️</div>
+                      <div class="img-label">Imagem 6</div>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <div class="match-col-title">Textos</div>
+                  <div class="match-items" id="txtCol">
+                    <div class="match-txt-item" id="t0" onclick="selectTxt(0)">cão</div>
+                    <div class="match-txt-item" id="t1" onclick="selectTxt(1)">cachorro</div>
+                    <div class="match-txt-item" id="t2" onclick="selectTxt(2)">praia</div>
+                    <div class="match-txt-item" id="t3" onclick="selectTxt(3)">água do mar</div>
+                    <div class="match-txt-item" id="t4" onclick="selectTxt(4)">cidade</div>
+                    <div class="match-txt-item" id="t5" onclick="selectTxt(5)">urbano</div>
+                  </div>
+                </div>
+              </div>
+              <div style="margin-top:0.7rem;text-align:center;">
+                <div class="score-row" id="scoreRow">
+                  <div class="score-dot" id="sd0"></div>
+                  <div class="score-dot" id="sd1"></div>
+                  <div class="score-dot" id="sd2"></div>
+                  <div class="score-dot" id="sd3"></div>
+                  <div class="score-dot" id="sd4"></div>
+                  <div class="score-dot" id="sd5"></div>
+                </div>
+                <button class="restart-btn" onclick="restartGame()">🔄 Reiniciar</button>
+              </div>
+            </div>
+            <!-- VIEW 2: Embeddings canvas -->
+            <div id="viewEmbed" style="display:none;">
+              <canvas id="embedCanvas" width="380" height="260"></canvas>
+              <div class="insight-box" style="margin-top:0.6rem;font-size:0.8rem;">
+                Com encoders não-relacionados, embeddings fazem sentido dentro de cada modalidade (cão perto de cachorro, 🐕 perto de 🐶) — mas imagens ficam distantes dos textos correspondentes.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" disabled>← Anterior</button>
+      <div class="nav-dots">
+        <div class="dot active" onclick="location.href='slide01.html'" title="Slide 1"></div>
+        <div class="dot" onclick="location.href='slide02.html'" title="Slide 2"></div>
+        <div class="dot" onclick="location.href='slide03.html'" title="Slide 3"></div>
+        <div class="dot" onclick="location.href='slide04.html'" title="Slide 4"></div>
+        <div class="dot" onclick="location.href='slide05.html'" title="Slide 5"></div>
+        <div class="dot" onclick="location.href='slide06.html'" title="Slide 6"></div>
+        <div class="dot" onclick="location.href='slide07.html'" title="Slide 7"></div>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide02.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    // Matching game state
+    let selectedImg = -1;
+    let matchedImgs = new Array(6).fill(null); // null, 'ok', 'err'
+    let matchedTxts = new Array(6).fill(null);
+    let scoreCount = 0;
+    let scoreIdx = 0;
+
+    function isCorrect(imgIdx, txtIdx) {
+      if (imgIdx <= 1 && txtIdx <= 1) return true;
+      if (imgIdx >= 2 && imgIdx <= 3 && txtIdx >= 2 && txtIdx <= 3) return true;
+      if (imgIdx >= 4 && txtIdx >= 4) return true;
+      return false;
+    }
+
+    function selectImg(idx) {
+      if (matchedImgs[idx] === 'ok') return;
+      // deselect previous
+      if (selectedImg >= 0) {
+        document.getElementById('img' + selectedImg).classList.remove('selected');
+      }
+      if (selectedImg === idx) { selectedImg = -1; return; }
+      selectedImg = idx;
+      document.getElementById('img' + idx).classList.add('selected');
+    }
+
+    function selectTxt(idx) {
+      if (selectedImg < 0) return;
+      if (matchedTxts[idx] === 'ok') return;
+      const imgEl = document.getElementById('img' + selectedImg);
+      const txtEl = document.getElementById('t' + idx);
+      if (isCorrect(selectedImg, idx)) {
+        imgEl.classList.remove('selected');
+        imgEl.classList.add('matched-ok');
+        txtEl.classList.add('matched-ok');
+        matchedImgs[selectedImg] = 'ok';
+        matchedTxts[idx] = 'ok';
+        updateScore('ok');
+      } else {
+        imgEl.classList.remove('selected');
+        imgEl.classList.add('matched-err');
+        txtEl.classList.add('matched-err');
+        updateScore('err');
+        setTimeout(() => {
+          imgEl.classList.remove('matched-err');
+          txtEl.classList.remove('matched-err');
+        }, 800);
+      }
+      selectedImg = -1;
+    }
+
+    function updateScore(result) {
+      if (scoreIdx < 6) {
+        document.getElementById('sd' + scoreIdx).classList.add(result);
+        scoreIdx++;
+      }
+    }
+
+    function restartGame() {
+      selectedImg = -1;
+      matchedImgs = new Array(6).fill(null);
+      matchedTxts = new Array(6).fill(null);
+      scoreIdx = 0;
+      for (let i = 0; i < 6; i++) {
+        const imgEl = document.getElementById('img' + i);
+        imgEl.className = 'emoji-circle';
+        const txtEl = document.getElementById('t' + i);
+        txtEl.className = 'match-txt-item';
+        document.getElementById('sd' + i).className = 'score-dot';
+      }
+    }
+
+    // View toggle
+    function switchView(view) {
+      if (view === 'human') {
+        document.getElementById('viewHuman').style.display = '';
+        document.getElementById('viewEmbed').style.display = 'none';
+        document.getElementById('btnHuman').classList.add('active');
+        document.getElementById('btnEmbed').classList.remove('active');
+      } else {
+        document.getElementById('viewHuman').style.display = 'none';
+        document.getElementById('viewEmbed').style.display = '';
+        document.getElementById('btnHuman').classList.remove('active');
+        document.getElementById('btnEmbed').classList.add('active');
+        drawEmbedCanvas();
+      }
+    }
+
+    // Canvas drawing
+    function drawEmbedCanvas() {
+      const canvas = document.getElementById('embedCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width, H = canvas.height;
+      ctx.clearRect(0, 0, W, H);
+
+      // Background
+      ctx.fillStyle = '#f8f9fb';
+      ctx.fillRect(0, 0, W, H);
+
+      // Title
+      ctx.fillStyle = '#6b7fa3';
+      ctx.font = '600 11px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Espaço de embeddings (encoders não-relacionados)', W/2, 14);
+
+      function cx(x) { return x * W; }
+      function cy(y) { return (1 - y) * H; }
+
+      // Data points
+      // Images (circles): blue=dog, teal=beach, orange=city
+      const imgPoints = [
+        { emoji: '🐕', x: 0.2, y: 0.8, color: '#1d4ed8' },
+        { emoji: '🐶', x: 0.25, y: 0.75, color: '#1d4ed8' },
+        { emoji: '🏖️', x: 0.75, y: 0.7, color: '#0d6e6e' },
+        { emoji: '🌊', x: 0.8, y: 0.75, color: '#0d6e6e' },
+        { emoji: '🌆', x: 0.5, y: 0.15, color: '#c2410c' },
+        { emoji: '🏙️', x: 0.55, y: 0.2, color: '#c2410c' },
+      ];
+      // Texts (squares)
+      const txtPoints = [
+        { label: 'cão', x: 0.72, y: 0.45, color: '#1d4ed8' },
+        { label: 'cachorro', x: 0.78, y: 0.5, color: '#1d4ed8' },
+        { label: 'praia', x: 0.6, y: 0.25, color: '#0d6e6e' },
+        { label: 'água do mar', x: 0.65, y: 0.3, color: '#0d6e6e' },
+        { label: 'cidade', x: 0.35, y: 0.35, color: '#c2410c' },
+        { label: 'urbano', x: 0.4, y: 0.4, color: '#c2410c' },
+      ];
+
+      // Draw dashed lines between same-concept image pairs
+      const imgPairs = [[0,1],[2,3],[4,5]];
+      const txtPairs = [[0,1],[2,3],[4,5]];
+      const pairColors = ['#1d4ed8','#0d6e6e','#c2410c'];
+
+      ctx.setLineDash([4, 4]);
+      ctx.lineWidth = 1.5;
+      imgPairs.forEach(([a, b], i) => {
+        ctx.strokeStyle = pairColors[i] + '88';
+        ctx.beginPath();
+        ctx.moveTo(cx(imgPoints[a].x), cy(imgPoints[a].y));
+        ctx.lineTo(cx(imgPoints[b].x), cy(imgPoints[b].y));
+        ctx.stroke();
+      });
+      txtPairs.forEach(([a, b], i) => {
+        ctx.strokeStyle = pairColors[i] + '88';
+        ctx.beginPath();
+        ctx.moveTo(cx(txtPoints[a].x), cy(txtPoints[a].y));
+        ctx.lineTo(cx(txtPoints[b].x), cy(txtPoints[b].y));
+        ctx.stroke();
+      });
+      ctx.setLineDash([]);
+
+      // Draw image circles
+      imgPoints.forEach(pt => {
+        const px = cx(pt.x), py = cy(pt.y);
+        ctx.beginPath();
+        ctx.arc(px, py, 16, 0, Math.PI * 2);
+        ctx.fillStyle = pt.color + '22';
+        ctx.fill();
+        ctx.strokeStyle = pt.color;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.font = '16px serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(pt.emoji, px, py);
+      });
+
+      // Draw text squares
+      txtPoints.forEach(pt => {
+        const px = cx(pt.x), py = cy(pt.y);
+        const s = 14;
+        ctx.fillStyle = pt.color + '22';
+        ctx.fillRect(px - s/2, py - s/2, s, s);
+        ctx.strokeStyle = pt.color;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(px - s/2, py - s/2, s, s);
+        ctx.fillStyle = pt.color;
+        ctx.font = '600 9px Inter, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(pt.label, px + s/2 + 3, py);
+      });
+
+      // Legend
+      ctx.fillStyle = '#6b7fa3';
+      ctx.font = '10px Inter, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      ctx.fillText('○ Imagem  □ Texto', 8, H - 18);
+      ctx.fillStyle = '#1d4ed8';
+      ctx.fillText('■ cão/cachorro', 8, H - 32);
+      ctx.fillStyle = '#0d6e6e';
+      ctx.fillText('■ praia/mar', 90, H - 32);
+      ctx.fillStyle = '#c2410c';
+      ctx.fillText('■ cidade', 170, H - 32);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      // ready
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 06 – Recuperação multimodal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    canvas { border-radius: var(--radius-sm); border: 1px solid var(--border2); display:block; cursor:pointer; }
+    .canvas-hint { font-size:0.75rem; color:var(--text-dim); text-align:center; margin-top:0.4rem; }
+    .result-info { min-height: 48px; margin-top:0.5rem; font-size:0.82rem; color:var(--text-muted); text-align:center; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Multimodal</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 4 · Slide 6 / 7</span>
+    </header>
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Recuperação multimodal</h1>
+        <p class="slide-subtitle">Bloco 4 — Retrieval · Busca cross-modal no espaço compartilhado</p>
+      </div>
+      <div class="content-split">
+        <!-- LEFT PANEL -->
+        <div class="panel">
+          <div class="panel-title">Mapa de embeddings</div>
+          <canvas id="retrievalCanvas" width="380" height="280"></canvas>
+          <div class="canvas-hint">Clique em qualquer item para buscar os mais similares</div>
+          <div class="result-info" id="resultInfo"></div>
+        </div>
+        <!-- RIGHT PANEL -->
+        <div class="panel">
+          <div class="panel-title">Busca por similaridade</div>
+          <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.8rem;">
+            Clique em qualquer imagem ou texto no mapa para ver os itens mais próximos — a busca funciona entre modalidades!
+          </p>
+          <div class="concept-cards">
+            <div class="concept-card" style="--delay:0s">
+              <span class="card-icon">🌐</span>
+              <div class="card-text">
+                <strong>Espaço compartilhado</strong>
+                <p>Com CLIP, imagens e textos vivem no mesmo espaço vetorial — podemos comparar diretamente.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.1s">
+              <span class="card-icon">🔍</span>
+              <div class="card-text">
+                <strong>Busca cross-modal</strong>
+                <p>Uma consulta de texto pode recuperar imagens, e vice-versa — sem precisar de tags manuais.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.2s">
+              <span class="card-icon">⚡</span>
+              <div class="card-text">
+                <strong>Indexação eficiente</strong>
+                <p>Na prática, usa-se FAISS ou ScaNN para busca aproximada em bilhões de vetores.</p>
+              </div>
+            </div>
+          </div>
+          <div class="highlight-box teal">
+            💡 A busca funciona no espaço compartilhado — texto e imagem são comparáveis diretamente.
+          </div>
+          <div class="insight-box" style="margin-top:0.6rem;">
+            📌 Demonstração simplificada em 2D — na prática, CLIP usa embeddings de 512 ou 768 dimensões.
+          </div>
+        </div>
+      </div>
+    </main>
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide05.html'">← Anterior</button>
+      <div class="nav-dots">
+        <div class="dot" onclick="location.href='slide01.html'" title="Slide 1"></div>
+        <div class="dot" onclick="location.href='slide02.html'" title="Slide 2"></div>
+        <div class="dot" onclick="location.href='slide03.html'" title="Slide 3"></div>
+        <div class="dot" onclick="location.href='slide04.html'" title="Slide 4"></div>
+        <div class="dot" onclick="location.href='slide05.html'" title="Slide 5"></div>
+        <div class="dot active" onclick="location.href='slide06.html'" title="Slide 6"></div>
+        <div class="dot" onclick="location.href='slide07.html'" title="Slide 7"></div>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide07.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    // All items in 2D space
+    const items = [
+      // Images (type:'img')
+      { type:'img', emoji:'🐕', label:'🐕', x:0.15, y:0.8,  color:'#1d4ed8' },
+      { type:'img', emoji:'🐶', label:'🐶', x:0.2,  y:0.75, color:'#1d4ed8' },
+      { type:'img', emoji:'🏖️', label:'🏖️', x:0.75, y:0.75, color:'#0d6e6e' },
+      { type:'img', emoji:'🌊', label:'🌊', x:0.8,  y:0.7,  color:'#0d6e6e' },
+      { type:'img', emoji:'🌆', label:'🌆', x:0.5,  y:0.2,  color:'#c2410c' },
+      { type:'img', emoji:'🌃', label:'🌃', x:0.55, y:0.15, color:'#c2410c' },
+      // Texts (type:'txt')
+      { type:'txt', label:'cachorro', x:0.22, y:0.85, color:'#1d4ed8' },
+      { type:'txt', label:'cão',      x:0.12, y:0.7,  color:'#1d4ed8' },
+      { type:'txt', label:'praia',    x:0.68, y:0.65, color:'#0d6e6e' },
+      { type:'txt', label:'oceano',   x:0.82, y:0.8,  color:'#0d6e6e' },
+      { type:'txt', label:'cidade',   x:0.42, y:0.25, color:'#c2410c' },
+      { type:'txt', label:'metrópole',x:0.58, y:0.22, color:'#c2410c' },
+    ];
+
+    let selectedIdx = -1;
+    const canvas = document.getElementById('retrievalCanvas');
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+
+    function cx(x) { return x * W; }
+    function cy(y) { return (1 - y) * H; }
+
+    function dist(a, b) {
+      const dx = a.x - b.x, dy = a.y - b.y;
+      return Math.sqrt(dx*dx + dy*dy);
+    }
+
+    function drawCanvas(selIdx, nearIdxs) {
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = '#f8f9fb';
+      ctx.fillRect(0, 0, W, H);
+
+      // Title
+      ctx.fillStyle = '#6b7fa3';
+      ctx.font = '600 10px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Espaço CLIP 2D — imagens e textos alinhados', W/2, 14);
+
+      items.forEach((item, i) => {
+        const px = cx(item.x), py = cy(item.y);
+        const isSelected = i === selIdx;
+        const rankIdx = nearIdxs ? nearIdxs.indexOf(i) : -1;
+
+        if (item.type === 'img') {
+          // Circle
+          ctx.beginPath();
+          ctx.arc(px, py, 14, 0, Math.PI * 2);
+          if (isSelected) {
+            ctx.fillStyle = '#fbbf24';
+            ctx.fill();
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+          } else if (rankIdx >= 0) {
+            ctx.fillStyle = item.color + '33';
+            ctx.fill();
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+          } else {
+            ctx.fillStyle = item.color + '22';
+            ctx.fill();
+            ctx.strokeStyle = item.color;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+          }
+          ctx.font = '14px serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(item.emoji, px, py);
+
+          if (rankIdx >= 0) {
+            ctx.fillStyle = '#f59e0b';
+            ctx.font = 'bold 10px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            ctx.fillText((rankIdx + 1) + '°', px, py - 16);
+          }
+        } else {
+          // Square for text
+          const s = 12;
+          if (isSelected) {
+            ctx.fillStyle = '#fbbf24';
+            ctx.fillRect(px - s/2, py - s/2, s, s);
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(px - s/2 - 1, py - s/2 - 1, s + 2, s + 2);
+          } else if (rankIdx >= 0) {
+            ctx.fillStyle = item.color + '33';
+            ctx.fillRect(px - s/2, py - s/2, s, s);
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 2.5;
+            ctx.strokeRect(px - s/2, py - s/2, s, s);
+          } else {
+            ctx.fillStyle = item.color + '22';
+            ctx.fillRect(px - s/2, py - s/2, s, s);
+            ctx.strokeStyle = item.color;
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(px - s/2, py - s/2, s, s);
+          }
+          ctx.fillStyle = (isSelected || rankIdx >= 0) ? '#b45309' : item.color;
+          ctx.font = '600 9px Inter, sans-serif';
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(item.label, px + s/2 + 3, py);
+
+          if (rankIdx >= 0) {
+            ctx.fillStyle = '#f59e0b';
+            ctx.font = 'bold 10px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            ctx.fillText((rankIdx + 1) + '°', px, py - 9);
+          }
+        }
+      });
+
+      // Legend
+      ctx.fillStyle = '#6b7fa3';
+      ctx.font = '10px Inter, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      ctx.fillText('○ Imagem  □ Texto', 8, H - 16);
+    }
+
+    canvas.addEventListener('click', function(e) {
+      const rect = canvas.getBoundingClientRect();
+      const mx = (e.clientX - rect.left) * (W / rect.width);
+      const my = (e.clientY - rect.top) * (H / rect.height);
+
+      // Convert click to normalized coords
+      const nx = mx / W;
+      const ny = 1 - my / H;
+
+      // Find nearest item
+      let bestDist = Infinity, bestIdx = -1;
+      items.forEach((item, i) => {
+        const d = Math.sqrt((item.x - nx)**2 + (item.y - ny)**2);
+        if (d < bestDist) { bestDist = d; bestIdx = i; }
+      });
+
+      if (bestDist > 0.15) {
+        // Too far, deselect
+        selectedIdx = -1;
+        drawCanvas(-1, null);
+        document.getElementById('resultInfo').textContent = '';
+        return;
+      }
+
+      selectedIdx = bestIdx;
+
+      // Compute distances to all other items
+      const dists = items.map((item, i) => ({
+        i, d: Math.sqrt((item.x - items[bestIdx].x)**2 + (item.y - items[bestIdx].y)**2)
+      })).filter(o => o.i !== bestIdx).sort((a, b) => a.d - b.d);
+
+      const top2 = [dists[0].i, dists[1].i];
+
+      drawCanvas(bestIdx, top2);
+
+      const sel = items[bestIdx];
+      const r1 = items[top2[0]], r2 = items[top2[1]];
+      document.getElementById('resultInfo').innerHTML =
+        `<strong>Selecionado:</strong> ${sel.type === 'img' ? sel.emoji : '"' + sel.label + '"'} &nbsp;|&nbsp; ` +
+        `<strong>1° mais próximo:</strong> ${r1.type === 'img' ? r1.emoji : '"' + r1.label + '"'} &nbsp; ` +
+        `<strong>2°:</strong> ${r2.type === 'img' ? r2.emoji : '"' + r2.label + '"'}`;
+    });
+
+    document.addEventListener('DOMContentLoaded', () => drawCanvas(-1, null));
+  </script>
+</body>
+</html>

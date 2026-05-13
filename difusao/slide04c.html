@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 04c – A U-Net como Removedor de Ruído: Inferência</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .step-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.7rem;
+      padding: 0.5rem 0.65rem;
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      font-size: 0.88rem;
+      animation: cardSlide 0.4s ease both;
+      animation-delay: var(--delay, 0s);
+    }
+    @keyframes cardSlide {
+      from { opacity: 0; transform: translateX(14px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    .step-num {
+      font-family: 'Fira Code', monospace;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--teal);
+      flex-shrink: 0;
+      min-width: 1.6rem;
+    }
+    .step-text strong { color: var(--text); font-size: 0.9rem; }
+    .step-text p { font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; margin-top: 0.1rem; }
+
+    .universe-box {
+      background: linear-gradient(135deg, #fef9c3, #fde68a33);
+      border: 1.5px solid #fde047;
+      border-radius: var(--radius-sm);
+      padding: 0.7rem 1rem;
+      font-size: 0.88rem;
+      color: var(--yellow);
+      line-height: 1.5;
+      display: flex;
+      gap: 0.6rem;
+      align-items: flex-start;
+    }
+
+    /* Denoising animation strip */
+    .denoise-strip {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0.65rem 0.8rem;
+      flex-shrink: 0;
+    }
+    .denoise-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.18rem;
+    }
+    canvas.ds {
+      display: block;
+      border-radius: 5px;
+      border: 1.5px solid var(--border2);
+      image-rendering: pixelated;
+    }
+    .ds-label {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.68rem;
+      color: var(--text-dim);
+      text-align: center;
+    }
+    .denoise-arrow {
+      font-size: 1.2rem;
+      color: var(--teal);
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+    .vs-compare {
+      background: var(--bg2);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0.55rem 0.9rem;
+      display: flex;
+      gap: 1.5rem;
+      align-items: flex-start;
+    }
+    .compare-col {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .compare-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+    }
+    .compare-row {
+      display: flex;
+      gap: 0.6rem;
+      align-items: flex-start;
+    }
+    .compare-badge {
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+    .badge-train  { background: var(--blue-lt);   color: var(--blue);   border: 1px solid var(--blue); }
+    .badge-infer  { background: var(--purple-lt);  color: var(--purple); border: 1px solid var(--purple); }
+    .compare-text { font-size: 0.82rem; color: var(--text-muted); line-height: 1.4; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Difusão</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 4 · Slide 3 / 3</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <div class="slide-title">A U-Net como Removedor de Ruído</div>
+        <div class="slide-subtitle">Bloco 4 — Inferência: Esculpindo Imagens do Caos</div>
+      </div>
+
+      <!-- Denoising animation strip -->
+      <div class="denoise-strip">
+        <div class="denoise-step">
+          <canvas id="ds0" class="ds" width="72" height="72"></canvas>
+          <div class="ds-label">x<sub>T</sub> (t=1000)</div>
+          <div class="ds-label" style="color:var(--text-dim);font-style:italic">ruído puro</div>
+        </div>
+        <div class="denoise-arrow">→</div>
+        <div class="denoise-step">
+          <canvas id="ds1" class="ds" width="72" height="72"></canvas>
+          <div class="ds-label">t=750</div>
+        </div>
+        <div class="denoise-arrow">→</div>
+        <div class="denoise-step">
+          <canvas id="ds2" class="ds" width="72" height="72"></canvas>
+          <div class="ds-label">t=500</div>
+        </div>
+        <div class="denoise-arrow">→</div>
+        <div class="denoise-step">
+          <canvas id="ds3" class="ds" width="72" height="72"></canvas>
+          <div class="ds-label">t=250</div>
+        </div>
+        <div class="denoise-arrow">→</div>
+        <div class="denoise-step">
+          <canvas id="ds4" class="ds" width="72" height="72"></canvas>
+          <div class="ds-label">t=100</div>
+        </div>
+        <div class="denoise-arrow">→</div>
+        <div class="denoise-step">
+          <canvas id="ds5" class="ds" width="72" height="72"></canvas>
+          <div class="ds-label">x<sub>0</sub> (t=0)</div>
+          <div class="ds-label" style="color:var(--teal);font-weight:700">imagem gerada</div>
+        </div>
+      </div>
+
+      <div class="content-split">
+
+        <!-- Left: Inference steps -->
+        <div class="panel">
+          <div class="panel-title">🚀 Inferência: Passo a Passo</div>
+          <div style="display:flex;flex-direction:column;gap:0.55rem;flex:1;">
+            <div class="step-row" style="border-color:var(--purple);--delay:0.05s">
+              <div class="step-num" style="color:var(--purple)">①</div>
+              <div class="step-text">
+                <strong>Ponto de partida: ruído puro</strong>
+                <p>Não há imagem inicial. Amostra-se x<sub>T</sub> ~ 𝒩(0, I) — puro ruído gaussiano sem estrutura alguma. Este "caos" é a semente de toda geração.</p>
+              </div>
+            </div>
+            <div class="step-row" style="border-color:var(--purple);--delay:0.12s">
+              <div class="step-num" style="color:var(--purple)">②</div>
+              <div class="step-text">
+                <strong>U-Net prevê e subtrai o ruído</strong>
+                <p>A cada passo <em>t</em> (de T até 1), a U-Net recebe x<sub>t</sub> e o tempo t, estima o ruído ε̂ presente, e o subtrai parcialmente:
+                x<sub>t−1</sub> = (x<sub>t</sub> − ε̂ · fator) + pequena amostragem aleatória.</p>
+              </div>
+            </div>
+            <div class="step-row" style="border-color:var(--purple);--delay:0.20s">
+              <div class="step-num" style="color:var(--purple)">③</div>
+              <div class="step-text">
+                <strong>~1000 passos: a imagem emerge</strong>
+                <p>Após ~1000 iterações, x<sub>0</sub> é uma imagem <em>coerente e detalhada</em>. Cada passo remove um pouco do caos — como um escultor retirando uma lasca de mármore de cada vez.</p>
+              </div>
+            </div>
+            <div class="step-row" style="border-color:var(--purple);--delay:0.28s">
+              <div class="step-num" style="color:var(--purple)">④</div>
+              <div class="step-text">
+                <strong>Novo início = nova imagem</strong>
+                <p>Amostrar um x<sub>T</sub> diferente gera uma imagem completamente diferente. A diversidade vem do ruído inicial — não de uma entrada controlada pelo usuário.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Comparison + Universe -->
+        <div class="panel">
+          <div class="panel-title">🔄 Treino vs. Inferência</div>
+          <div class="vs-compare">
+            <div class="compare-col" style="flex:1;">
+              <div class="compare-title" style="color:var(--blue);">🎓 Treinamento</div>
+              <div class="compare-row">
+                <span class="compare-badge badge-train">Entrada</span>
+                <span class="compare-text">x<sub>t</sub> (imagem ruidosa, conhecida) + t</span>
+              </div>
+              <div class="compare-row">
+                <span class="compare-badge badge-train">Alvo</span>
+                <span class="compare-text">ε (ruído que foi adicionado, conhecido)</span>
+              </div>
+              <div class="compare-row">
+                <span class="compare-badge badge-train">Loss</span>
+                <span class="compare-text">‖ε − ε̂‖² — minimizar diferença de ruídos</span>
+              </div>
+              <div class="compare-row">
+                <span class="compare-badge badge-train">Imagem</span>
+                <span class="compare-text">Vem do <strong>dataset</strong> — sempre real, com x₀ conhecida</span>
+              </div>
+            </div>
+            <div style="width:1px;background:var(--border2);flex-shrink:0;align-self:stretch;margin:0 0.3rem;"></div>
+            <div class="compare-col" style="flex:1;">
+              <div class="compare-title" style="color:var(--purple);">🚀 Inferência</div>
+              <div class="compare-row">
+                <span class="compare-badge badge-infer">Entrada</span>
+                <span class="compare-text">x<sub>T</sub> ~ 𝒩(0, I) + t (decrementando)</span>
+              </div>
+              <div class="compare-row">
+                <span class="compare-badge badge-infer">Alvo</span>
+                <span class="compare-text"><em>nenhum</em> — não há rótulo, só a rede prediz</span>
+              </div>
+              <div class="compare-row">
+                <span class="compare-badge badge-infer">Loss</span>
+                <span class="compare-text"><em>nenhuma</em> — pesos fixos, só forward pass</span>
+              </div>
+              <div class="compare-row">
+                <span class="compare-badge badge-infer">Imagem</span>
+                <span class="compare-text">Começa do <strong>ruído puro</strong> — x₀ nunca existiu antes</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="universe-box">
+            <span style="font-size:1.3rem;flex-shrink:0">🌌</span>
+            <span>A rede só aprendeu os <strong>padrões de ruído das imagens do seu dataset</strong>.
+              Na geração, a U-Net só consegue esculpir imagens que pertençam ao <strong>"universo" do que treinou</strong> —
+              rostos se treinou com rostos, paisagens se treinou com paisagens.
+              Não há como gerar algo além desse universo.</span>
+          </div>
+
+          <div class="highlight-box teal">
+            <span class="icon">🔑</span>
+            <span>A mesma U-Net, com os mesmos pesos, faz <strong>treino e inferência</strong>.
+              A diferença está apenas no <em>dado de entrada</em>: durante o treino, x<sub>t</sub> vem do dataset;
+              na inferência, x<sub>T</sub> é ruído aleatório.</span>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide04b.html'">← Anterior</button>
+      <div class="nav-dots">
+        <div class="dot active"></div>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide05.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    function mkRng(seed) {
+      let s = seed >>> 0;
+      return function () {
+        s = (Math.imul(1664525, s) + 1013904223) >>> 0;
+        return s / 4294967296;
+      };
+    }
+    const clamp = v => Math.max(0, Math.min(255, Math.round(v)));
+
+    // Draw a face image mixed with noise at alpha level (0=clean, 1=pure noise)
+    function drawNoisyFace(canvas, seed, alpha) {
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width, H = canvas.height;
+      const rng = mkRng(seed);
+      const img = ctx.createImageData(W, H);
+      const cx = W / 2, cy = H * 0.48;
+
+      for (let y = 0; y < H; y++) {
+        for (let x = 0; x < W; x++) {
+          const dx = x - cx, dy = y - cy;
+          let bR = 80 + (x / W) * 40, bG = 120 + (y / H) * 20, bB = 210;
+          if (Math.sqrt((dx * 0.88) ** 2 + dy ** 2) < W * 0.33) { bR = 238; bG = 185; bB = 145; }
+          if (Math.sqrt((x-W*0.37)**2+(y-H*0.41)**2) < W*0.065) { bR=35; bG=28; bB=28; }
+          if (Math.sqrt((x-W*0.63)**2+(y-H*0.41)**2) < W*0.065) { bR=35; bG=28; bB=28; }
+          const smD = Math.abs(Math.sqrt(dx**2+(y-H*0.42)**2)-W*0.185);
+          if (smD < 3 && y > H*0.54 && y < H*0.66) { bR=160; bG=65; bB=65; }
+          const nR = (rng()-0.5)*2*255*alpha;
+          const nG = (rng()-0.5)*2*255*alpha;
+          const nB = (rng()-0.5)*2*255*alpha;
+          const sig = 1 - alpha;
+          const i = (y * W + x) * 4;
+          img.data[i]   = clamp(bR*sig+nR);
+          img.data[i+1] = clamp(bG*sig+nG);
+          img.data[i+2] = clamp(bB*sig+nB);
+          img.data[i+3] = 255;
+        }
+      }
+      ctx.putImageData(img, 0, 0);
+    }
+
+    // Denoising sequence: from pure noise to clean face
+    const steps = [
+      { id: 'ds0', alpha: 1.00 },  // pure noise
+      { id: 'ds1', alpha: 0.78 },  // t=750
+      { id: 'ds2', alpha: 0.55 },  // t=500
+      { id: 'ds3', alpha: 0.32 },  // t=250
+      { id: 'ds4', alpha: 0.14 },  // t=100
+      { id: 'ds5', alpha: 0.00 },  // clean
+    ];
+    steps.forEach((s, i) => drawNoisyFace(document.getElementById(s.id), 7 + i * 13, s.alpha));
+  </script>
+</body>
+</html>

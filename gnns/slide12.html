@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 12 – Limitação do Pooling Uniforme</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .main-layout { display:grid; grid-template-columns:1.1fr 0.9fr; gap:1.2rem; flex:1; }
+    .bar-group { display:flex; flex-direction:column; gap:0.4rem; }
+    .bar-row { display:flex; align-items:center; gap:0.6rem; font-size:0.88rem; }
+    .bar-label { width:28px; font-family:'Fira Code',monospace; font-weight:700; color:var(--text); text-align:right; }
+    .bar-track { flex:1; height:18px; background:var(--bg3); border-radius:4px; overflow:hidden; border:1px solid var(--border2); }
+    .bar-fill { height:100%; border-radius:4px; transition:width 0.7s ease, background 0.5s; display:flex; align-items:center; justify-content:flex-end; padding-right:4px; font-size:0.7rem; font-weight:700; color:#fff; }
+    .bar-val { width:36px; font-family:'Fira Code',monospace; font-size:0.82rem; color:var(--text-dim); }
+    .result-row { display:flex; align-items:center; gap:0.6rem; padding:0.55rem 0.8rem;
+      background:var(--bg3); border-radius:var(--radius-sm); border:1.5px solid var(--border2);
+      font-family:'Fira Code',monospace; font-size:0.9rem; transition:all 0.5s; }
+    .result-row.highlight { background:var(--teal-lt); border-color:#5eead4; }
+    .edge-label { font-size:0.7rem; fill:#6b7fa3; font-family:'Fira Code',monospace; }
+    .mode-btns { display:flex; gap:0.5rem; margin-bottom:0.5rem; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">GNNs</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Slide 12 / 20</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Limitação do Pooling Uniforme</h1>
+        <p class="slide-subtitle">Bloco 3 — Motivação para Atenção</p>
+      </div>
+
+      <div class="main-layout">
+        <!-- Grafo SVG -->
+        <div class="panel">
+          <div class="panel-title">🕸️ Grafo com Pesos Iguais</div>
+          <div class="mode-btns">
+            <button class="btn-toggle active" id="btnUniform" onclick="setMode('uniform')">Pooling Uniforme</button>
+            <button class="btn-toggle" id="btnAttn" onclick="setMode('attention')">Com Atenção</button>
+          </div>
+
+          <svg viewBox="0 0 260 180" style="width:100%;max-height:180px;display:block;margin:0 auto;">
+            <!-- Arestas -->
+            <line x1="130" y1="90" x2="50"  y2="40"  stroke="#c7d0e0" stroke-width="2.5" id="edgeA"/>
+            <line x1="130" y1="90" x2="210" y2="40"  stroke="#c7d0e0" stroke-width="2.5" id="edgeB"/>
+            <line x1="130" y1="90" x2="50"  y2="150" stroke="#c7d0e0" stroke-width="2.5" id="edgeC"/>
+            <line x1="130" y1="90" x2="210" y2="150" stroke="#c7d0e0" stroke-width="2.5" id="edgeD"/>
+            <!-- Nós vizinhos -->
+            <circle cx="50"  cy="40"  r="22" fill="#fef3c7" stroke="#d97706" stroke-width="2.5" id="nodeA"/>
+            <circle cx="210" cy="40"  r="18" fill="#f0f2f6" stroke="#c7d0e0" stroke-width="2" id="nodeB"/>
+            <circle cx="50"  cy="150" r="18" fill="#f0f2f6" stroke="#c7d0e0" stroke-width="2" id="nodeC"/>
+            <circle cx="210" cy="150" r="18" fill="#f0f2f6" stroke="#c7d0e0" stroke-width="2" id="nodeD"/>
+            <!-- Nó central -->
+            <circle cx="130" cy="90" r="24" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="2.5"/>
+            <!-- Labels arestas -->
+            <text x="82"  y="58"  class="edge-label" id="wA" text-anchor="middle">1/4</text>
+            <text x="178" y="58"  class="edge-label" id="wB" text-anchor="middle">1/4</text>
+            <text x="82"  y="128" class="edge-label" id="wC" text-anchor="middle">1/4</text>
+            <text x="178" y="128" class="edge-label" id="wD" text-anchor="middle">1/4</text>
+            <!-- Labels nós -->
+            <text x="50"  y="44"  font-size="11" font-weight="700" fill="#92400e" text-anchor="middle">A</text>
+            <text x="210" y="44"  font-size="11" font-weight="700" fill="#3d4f6e" text-anchor="middle">B</text>
+            <text x="50"  y="154" font-size="11" font-weight="700" fill="#3d4f6e" text-anchor="middle">C</text>
+            <text x="210" y="154" font-size="11" font-weight="700" fill="#3d4f6e" text-anchor="middle">D</text>
+            <text x="130" y="94"  font-size="12" font-weight="700" fill="#0d6e6e" text-anchor="middle">v</text>
+          </svg>
+
+          <div style="font-size:0.82rem;color:var(--text-muted);text-align:center;">
+            A=[5,5] · B=[0,1] · C=[1,0] · D=[0,0]
+          </div>
+
+          <!-- Resultado -->
+          <div class="result-row" id="resultRow">
+            <span style="color:var(--text-dim);font-size:0.82rem;">Resultado h<sub>v</sub></span>
+            <span id="resultVal" style="font-weight:700;color:var(--teal);">[1.5, 1.5]</span>
+          </div>
+        </div>
+
+        <!-- Barras de contribuição -->
+        <div class="panel">
+          <div class="panel-title">📊 Contribuições dos Vizinhos</div>
+          <div class="bar-group" id="barGroup">
+            <div class="bar-row">
+              <span class="bar-label">A</span>
+              <div class="bar-track"><div class="bar-fill" id="barA" style="width:25%;background:#d97706;"></div></div>
+              <span class="bar-val" id="valA">0.25</span>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">B</span>
+              <div class="bar-track"><div class="bar-fill" id="barB" style="width:25%;background:#3b82f6;"></div></div>
+              <span class="bar-val" id="valB">0.25</span>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">C</span>
+              <div class="bar-track"><div class="bar-fill" id="barC" style="width:25%;background:#3b82f6;"></div></div>
+              <span class="bar-val" id="valC">0.25</span>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">D</span>
+              <div class="bar-track"><div class="bar-fill" id="barD" style="width:25%;background:#3b82f6;"></div></div>
+              <span class="bar-val" id="valD">0.25</span>
+            </div>
+          </div>
+
+          <div class="highlight-box yellow" id="modeMsg" style="margin-top:0.5rem;">
+            <span class="icon">⚠️</span>
+            <span>A informação importante de A <strong>se dilui</strong> — todos recebem peso igual 1/4.</span>
+          </div>
+
+          <div style="margin-top:0.5rem;">
+            <div style="font-size:0.8rem;color:var(--text-dim);margin-bottom:0.3rem;font-weight:600;">MÉDIA PONDERADA:</div>
+            <div style="font-family:'Fira Code',monospace;font-size:0.88rem;padding:0.5rem 0.8rem;background:var(--bg3);border-radius:var(--radius-sm);border:1px solid var(--border2);">
+              h<sub>v</sub> = <span id="formula">0.25·[5,5] + 0.25·[0,1] + 0.25·[1,0] + 0.25·[0,0]</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="insight-box">
+        <span class="i-icon">🎯</span>
+        <span class="i-text"><strong>Não todos os vizinhos são igualmente importantes!</strong> Precisamos de um mecanismo para aprender <em>quais vizinhos merecem mais atenção</em> — essa é a motivação para o GAT.</span>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide11.html'">← Anterior</button>
+      <div class="nav-dots" id="navDots"></div>
+      <button class="btn-nav btn-next" onclick="location.href='slide13.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    function setMode(mode) {
+      const isAttn = mode === 'attention';
+      document.getElementById('btnUniform').classList.toggle('active', !isAttn);
+      document.getElementById('btnAttn').classList.toggle('active', isAttn);
+
+      if (isAttn) {
+        // Atenção: A=0.70, B=0.10, C=0.10, D=0.10
+        setBar('barA','valA', 70, '0.70', '#0d6e6e');
+        setBar('barB','valB', 10, '0.10', '#3b82f6');
+        setBar('barC','valC', 10, '0.10', '#3b82f6');
+        setBar('barD','valD', 10, '0.10', '#3b82f6');
+        document.getElementById('wA').textContent = '0.70';
+        document.getElementById('wB').textContent = '0.10';
+        document.getElementById('wC').textContent = '0.10';
+        document.getElementById('wD').textContent = '0.10';
+        document.getElementById('nodeA').setAttribute('r','26');
+        document.getElementById('resultVal').textContent = '[3.6, 3.6]';
+        document.getElementById('resultRow').classList.add('highlight');
+        document.getElementById('modeMsg').className = 'highlight-box green';
+        document.getElementById('modeMsg').innerHTML = '<span class="icon">✅</span><span>Com atenção, A recebe peso 0.70 — a <strong>informação importante é preservada</strong>.</span>';
+        document.getElementById('formula').textContent = '0.70·[5,5] + 0.10·[0,1] + 0.10·[1,0] + 0.10·[0,0]';
+        document.getElementById('edgeA').setAttribute('stroke-width','5');
+      } else {
+        setBar('barA','valA', 25, '0.25', '#d97706');
+        setBar('barB','valB', 25, '0.25', '#3b82f6');
+        setBar('barC','valC', 25, '0.25', '#3b82f6');
+        setBar('barD','valD', 25, '0.25', '#3b82f6');
+        document.getElementById('wA').textContent = '1/4';
+        document.getElementById('wB').textContent = '1/4';
+        document.getElementById('wC').textContent = '1/4';
+        document.getElementById('wD').textContent = '1/4';
+        document.getElementById('nodeA').setAttribute('r','22');
+        document.getElementById('resultVal').textContent = '[1.5, 1.5]';
+        document.getElementById('resultRow').classList.remove('highlight');
+        document.getElementById('modeMsg').className = 'highlight-box yellow';
+        document.getElementById('modeMsg').innerHTML = '<span class="icon">⚠️</span><span>A informação importante de A <strong>se dilui</strong> — todos recebem peso igual 1/4.</span>';
+        document.getElementById('formula').textContent = '0.25·[5,5] + 0.25·[0,1] + 0.25·[1,0] + 0.25·[0,0]';
+        document.getElementById('edgeA').setAttribute('stroke-width','2.5');
+      }
+    }
+
+    function setBar(barId, valId, pct, txt, color) {
+      const bar = document.getElementById(barId);
+      bar.style.width = pct + '%';
+      bar.style.background = color;
+      document.getElementById(valId).textContent = txt;
+    }
+
+    (function(){
+      const container = document.getElementById('navDots');
+      const CURRENT = 12, TOTAL = 20;
+      for (let i = 1; i <= TOTAL; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'dot' + (i === CURRENT ? ' active' : '');
+        dot.title = 'Slide ' + i;
+        dot.style.cursor = 'pointer';
+        dot.addEventListener('click', () => { location.href = 'slide' + String(i).padStart(2,'0') + '.html'; });
+        container.appendChild(dot);
+      }
+    })();
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') location.href = 'slide13.html';
+      if (e.key === 'ArrowLeft'  || e.key === 'PageUp')   location.href = 'slide11.html';
+    });
+  </script>
+</body>
+</html>

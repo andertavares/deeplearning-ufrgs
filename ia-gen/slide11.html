@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 11 – Denoising: interativo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .slider-wrap label {
+      display: flex; justify-content: space-between; align-items: baseline;
+      font-size: 0.92rem; font-weight: 600; color: var(--text); margin-bottom: 0.5rem;
+    }
+    .slider-wrap input[type=range] { width: 100%; accent-color: var(--teal); }
+    .canvas-wrap { display: flex; flex-direction: column; align-items: center; gap: 0.4rem; }
+    canvas { image-rendering: pixelated; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+    @keyframes arrowBounce {
+      0%, 100% { transform: translateX(0); }
+      50%       { transform: translateX(4px); }
+    }
+    .anim-arrow { animation: arrowBounce 1.5s ease-in-out infinite; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">IA Generativa</span>
+      <span style="font-size:0.9rem;color:var(--text-muted);font-weight:500;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 5 · Slide 11 / 24</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Denoising: interativo</h1>
+        <p class="slide-subtitle">Arraste o slider para adicionar ruído e veja o denoising em ação</p>
+      </div>
+
+      <div class="panel" style="max-width:580px;margin:0 auto;">
+        <div class="slider-wrap">
+          <label>
+            <span>Nível de ruído</span>
+            <span id="noise-val" style="color:var(--red);font-family:'Fira Code',monospace;">30%</span>
+          </label>
+          <input type="range" id="noise-slider" min="0" max="100" value="30" oninput="updateDenoising()" />
+        </div>
+      </div>
+
+      <div style="display:flex;gap:1.4rem;align-items:center;flex-wrap:wrap;justify-content:center;flex:1;">
+        <div class="canvas-wrap">
+          <canvas id="noisy-canvas" width="160" height="160"></canvas>
+          <span style="font-size:0.82rem;color:var(--red);font-weight:600;">Entrada ruidosa</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:0.4rem;">
+          <div class="anim-arrow" style="font-size:1.6rem;color:var(--teal);">→</div>
+          <div style="font-size:0.75rem;background:var(--teal-lt);border:1px solid var(--teal);border-radius:6px;padding:0.4rem 0.7rem;color:var(--teal);font-weight:700;">Denoising AE</div>
+          <div class="anim-arrow" style="font-size:1.6rem;color:var(--teal);">→</div>
+        </div>
+        <div class="canvas-wrap">
+          <canvas id="clean-canvas" width="160" height="160"></canvas>
+          <span style="font-size:0.82rem;color:var(--teal);font-weight:600;">Saída reconstruída (limpa)</span>
+        </div>
+      </div>
+
+      <p style="font-size:0.82rem;color:var(--text-dim);text-align:center;">
+        O decoder aprendeu a reconstruir o padrão original independente do nível de ruído.
+      </p>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide10.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide12.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    const HEART = [
+      [0,1,1,0,0,1,1,0],
+      [1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1],
+      [0,1,1,1,1,1,1,0],
+      [0,0,1,1,1,1,0,0],
+      [0,0,0,1,1,0,0,0],
+      [0,0,0,0,0,0,0,0],
+    ];
+
+    function drawPixelArt(canvasId, pattern, noiseLevel, color) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const rows = pattern.length, cols = pattern[0].length;
+      const pw = canvas.width / cols, ph = canvas.height / rows;
+      ctx.fillStyle = '#f0f2f6';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          let val = pattern[r][c];
+          if (noiseLevel > 0 && Math.random() < noiseLevel) val = 1 - val;
+          ctx.fillStyle = val ? color : '#d1d9e8';
+          ctx.fillRect(c * pw + 1, r * ph + 1, pw - 2, ph - 2);
+        }
+      }
+    }
+
+    function updateDenoising() {
+      const noise = parseInt(document.getElementById('noise-slider').value) / 100;
+      document.getElementById('noise-val').textContent = Math.round(noise * 100) + '%';
+      drawPixelArt('noisy-canvas', HEART, noise, '#b91c1c');
+      drawPixelArt('clean-canvas', HEART, 0, '#0d6e6e');
+    }
+
+    updateDenoising();
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') location.href = 'slide12.html';
+      if (e.key === 'ArrowLeft'  || e.key === 'PageUp')   location.href = 'slide10.html';
+    });
+  </script>
+</body>
+</html>

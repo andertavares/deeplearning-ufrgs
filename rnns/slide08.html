@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 08 – A Limitação: Rede Sem Memória</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .svg-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-dim);
+      text-align: center;
+      margin-top: 0.3rem;
+      margin-bottom: 0.8rem;
+    }
+    .svg-wrapper {
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0.8rem;
+      margin-bottom: 0.7rem;
+    }
+    .window-slider-row {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      padding: 0.4rem 0;
+    }
+    .window-slider-row label {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+    #win-range { flex: 1; accent-color: var(--teal); cursor: pointer; }
+    #win-val {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--teal);
+      min-width: 1.2rem;
+      text-align: right;
+    }
+    .problem-badge {
+      display: inline-block;
+      padding: 0.2rem 0.7rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      background: #fee2e2;
+      border: 1px solid #fca5a5;
+      color: #b91c1c;
+      margin-left: 0.4rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Redes Neurais Recorrentes</span>
+      <span class="prof-tag" style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 4 · Slide 1 / 3</span>
+    </header>
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Feedforward com Janela de Contexto</h1>
+        <p class="slide-subtitle">Empacotar o histórico na entrada resolve o problema — mas cria novos</p>
+      </div>
+      <div class="content-split">
+        <!-- LEFT PANEL -->
+        <div class="panel panel-left">
+          <h2 class="panel-title">🪟 Ideia: Janela Deslizante</h2>
+
+          <div class="svg-wrapper">
+            <svg id="win-svg" width="100%" viewBox="0 0 300 95" xmlns="http://www.w3.org/2000/svg"></svg>
+            <div class="svg-label" id="win-label">janela de tamanho 3</div>
+          </div>
+
+          <div class="window-slider-row">
+            <label>Tamanho da janela:</label>
+            <input type="range" id="win-range" min="1" max="6" value="3" />
+            <span id="win-val">3</span>
+          </div>
+
+          <div class="highlight-box blue" style="font-size:0.88rem;">
+            <span class="icon">💡</span>
+            <span>Arraste o controle: com janela maior, capturamos mais histórico — mas o problema é que<strong> precisamos escolher antes de treinar</strong>.</span>
+          </div>
+        </div>
+        <!-- RIGHT PANEL -->
+        <div class="panel panel-right">
+          <h2 class="panel-title">⚠️ Problemas da Janela Fixa</h2>
+          <div class="concept-cards">
+            <div class="concept-card" style="--delay:0s">
+              <span class="card-icon">📐</span>
+              <div class="card-text">
+                <strong>Tamanho definido a priori <span class="problem-badge">problema central</span></strong>
+                <p>O tamanho da janela é um hiperparâmetro fixado <em>antes</em> do treinamento. Se a dependência relevante estiver fora da janela, a rede nunca a verá.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.08s">
+              <span class="card-icon">💥</span>
+              <div class="card-text">
+                <strong>Janela grande → mais parâmetros</strong>
+                <p>Dobrar o tamanho da janela dobra o número de entradas — e portanto os pesos da primeira camada crescem linearmente.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.16s">
+              <span class="card-icon">🤦</span>
+              <div class="card-text">
+                <strong>Dependências de longo alcance ignoradas</strong>
+                <p>Em linguagem, o sujeito de uma oração pode estar dezenas de palavras antes do verbo. Uma janela curta perde essa relação.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.24s">
+              <span class="card-icon">🔄</span>
+              <div class="card-text">
+                <strong>Sem compartilhamento de parâmetros no tempo</strong>
+                <p>A rede aprende pesos diferentes para cada posição da janela — não há generalização automática de padrões que se repetem em instantes diferentes.</p>
+              </div>
+            </div>
+          </div>
+          <div class="insight-box" style="margin-top:auto">
+            <span class="i-icon">🔑</span>
+            <div class="i-text"><strong>Queremos um modelo que decida sozinho</strong> quanto do passado preservar — sem necessidade de fixar a janela antes de ver os dados.</div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide07.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide09.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    const allLabels = ['x₀','x₁','x₂','x₃','x₄','x₅','x₆','x₇','x₈'];
+    const TOTAL = 8; // total points shown in timeline
+
+    function drawWindow(winSize) {
+      const svg = document.getElementById('win-svg');
+      const W = 300, H = 95;
+      const cols = TOTAL;
+      const gap = W / (cols + 1);
+      const cy = 38, r = 9;
+      const tsLabels = allLabels.slice(0, TOTAL);
+      // build polyline
+      const ys = [62,40,52,28,44,34,58,32];
+
+      let html = `<defs>
+        <marker id="aw" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#0d6e6e"/></marker>
+        <marker id="ag" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#555"/></marker>
+      </defs>`;
+
+      // polyline
+      const pts = tsLabels.map((_, i) => `${gap*(i+1)},${ys[i]}`).join(' ');
+      html += `<polyline points="${pts}" stroke="#444" stroke-width="1.5" fill="none"/>`;
+
+      const winStart = TOTAL - winSize;
+
+      // Window highlight rect
+      const rx1 = gap * (winStart + 1) - r - 4;
+      const rx2 = gap * TOTAL + r + 4;
+      html += `<rect x="${rx1}" y="${ys.slice(winStart).reduce((a,b)=>Math.min(a,b))-14}" 
+        width="${rx2 - rx1}" height="${ys.slice(winStart).reduce((a,b)=>Math.max(a,b)) - ys.slice(winStart).reduce((a,b)=>Math.min(a,b)) + 28}"
+        rx="6" fill="rgba(13,110,110,0.07)" stroke="#0d6e6e" stroke-width="1.5" stroke-dasharray="5,3"/>`;
+
+      // Points
+      tsLabels.forEach((lbl, i) => {
+        const x = gap * (i + 1);
+        const y = ys[i];
+        const inWin = i >= winStart;
+        html += `<circle cx="${x}" cy="${y}" r="${inWin ? r : 7}" fill="${inWin ? '#0d6e6e' : '#444'}" opacity="${inWin ? '0.9' : '0.3'}"/>`;
+        html += `<text x="${x}" y="${H - 5}" text-anchor="middle" font-size="9" fill="${inWin ? '#0d6e6e' : '#777'}" font-weight="${inWin ? '700' : '400'}" font-family="Fira Code,monospace">${lbl}</text>`;
+      });
+
+      // Arrow + label: feeds into network
+      const arrowX = gap * TOTAL + r + 6;
+      html += `<line x1="${arrowX}" y1="${ys[TOTAL-1]}" x2="${Math.min(arrowX+28, W-4)}" y2="${ys[TOTAL-1]}" stroke="#0d6e6e" stroke-width="2" marker-end="url(#aw)"/>`;
+      html += `<text x="${Math.min(arrowX+14, W-2)}" y="${ys[TOTAL-1]-6}" text-anchor="middle" font-size="8" fill="#0d6e6e" font-family="Inter,sans-serif">rede</text>`;
+
+      svg.innerHTML = html;
+      document.getElementById('win-label').textContent = `janela de tamanho ${winSize}`;
+    }
+
+    const range = document.getElementById('win-range');
+    const valEl = document.getElementById('win-val');
+    range.addEventListener('input', () => {
+      valEl.textContent = range.value;
+      drawWindow(parseInt(range.value));
+    });
+    drawWindow(3);
+  </script>
+</body>
+</html>

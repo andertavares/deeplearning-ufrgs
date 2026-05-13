@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 21 – Loss da GAN</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .gan-loss-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    .gan-loss-table th {
+      padding: 0.7rem 1rem; background: var(--bg3); color: var(--text-muted);
+      font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.07em;
+      font-weight: 700; border-bottom: 2px solid var(--border);
+      text-align: left;
+    }
+    .gan-loss-table td {
+      padding: 0.7rem 1rem; border-bottom: 1px solid var(--border2); vertical-align: middle;
+    }
+    .gan-loss-table tr:last-child td { border-bottom: none; }
+    .wants { font-weight: 700; font-family: 'Fira Code', monospace; font-size: 0.88rem; }
+    .wants-1 { color: var(--teal); }
+    .wants-0 { color: var(--red); }
+    .formula-box {
+      background: var(--bg3); border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm); padding: 0.9rem 1.2rem;
+      font-family: 'Fira Code', monospace; font-size: 0.9rem;
+      text-align: center; line-height: 1.8; color: var(--text);
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">IA Generativa</span>
+      <span style="font-size:0.9rem;color:var(--text-muted);font-weight:500;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 10 · Slide 21 / 24</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Loss da GAN</h1>
+        <p class="slide-subtitle">Cada rede tem um objetivo diferente — e oposto</p>
+      </div>
+
+      <div class="panel" style="padding:0;overflow:hidden;max-width:780px;margin:0 auto;">
+        <table class="gan-loss-table">
+          <thead>
+            <tr>
+              <th>Rede</th>
+              <th>Entrada real</th>
+              <th>Entrada falsa</th>
+              <th>Objetivo</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong style="color:var(--cyan);">Discriminador</strong></td>
+              <td class="wants wants-1">→ 1 ✔</td>
+              <td class="wants wants-0">→ 0 ✔</td>
+              <td style="font-size:0.82rem;color:var(--text-muted);">Maximizar acurácia de classificação</td>
+            </tr>
+            <tr>
+              <td><strong style="color:var(--teal);">Gerador</strong></td>
+              <td style="color:var(--text-dim);">—</td>
+              <td class="wants wants-1">→ 1 (enganar D)</td>
+              <td style="font-size:0.82rem;color:var(--text-muted);">Minimizar detecção pelo D</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="panel" style="max-width:700px;margin:0 auto;">
+        <p style="font-size:0.88rem;text-align:center;color:var(--text-muted);">Formulação minimax (Goodfellow et al.):</p>
+        <div class="formula-box" style="margin-top:0.6rem;">
+          min<sub>G</sub> max<sub>D</sub> 𝔼[log D(x)] + 𝔼[log(1 − D(G(z)))]
+        </div>
+      </div>
+
+      <div class="content-split-3" style="max-width:660px;margin:0 auto;">
+        <div class="panel" style="text-align:center;padding:0.85rem;border-color:var(--cyan);">
+          <div style="font-size:0.78rem;color:var(--text-dim);">D perfeito</div>
+          <div style="font-weight:800;color:var(--cyan);font-size:1rem;margin-top:0.3rem;font-family:'Fira Code',monospace;">D(real) = 1</div>
+        </div>
+        <div class="panel" style="text-align:center;padding:0.85rem;border-color:var(--yellow);">
+          <div style="font-size:0.78rem;color:var(--text-dim);">Equilíbrio Nash</div>
+          <div style="font-weight:800;color:var(--yellow);font-size:1rem;margin-top:0.3rem;font-family:'Fira Code',monospace;">D(G(z)) = 0.5</div>
+        </div>
+        <div class="panel" style="text-align:center;padding:0.85rem;border-color:var(--teal);">
+          <div style="font-size:0.78rem;color:var(--text-dim);">G perfeito</div>
+          <div style="font-weight:800;color:var(--teal);font-size:1rem;margin-top:0.3rem;font-family:'Fira Code',monospace;">D(G(z)) → 1</div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide20.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide22.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') location.href = 'slide22.html';
+      if (e.key === 'ArrowLeft'  || e.key === 'PageUp')   location.href = 'slide20.html';
+    });
+  </script>
+</body>
+</html>

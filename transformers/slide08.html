@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 8 – QKᵀ — Matriz de Alinhamento</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── shared mat table ── */
+    .mat-table {
+      font-family:'Fira Code',monospace;
+      font-size:0.95rem;
+      border-collapse:collapse;
+    }
+    .mat-table th {
+      color:var(--text-dim); font-weight:600; font-size:0.82rem;
+      padding:0.18rem 0.55rem; text-align:right;
+    }
+    .mat-table td {
+      padding:0.28rem 0.55rem; text-align:right; border-radius:3px; min-width:3.2rem;
+    }
+    .mat-table td.lbl-cell {
+      font-weight:600; color:var(--text-dim); text-align:left; min-width:2.8rem;
+    }
+    .mat-table tr.row-hl td   { background:var(--blue-lt) !important; }
+    .mat-table tr.col-hl td   { background:var(--purple-lt) !important; }
+    .mat-table tr.row-hl td.lbl-cell { color:var(--blue); }
+    .mat-table tr.col-hl td.lbl-cell { color:var(--purple); }
+    .bracket-wrap { display:flex; align-items:stretch; }
+    .bracket-l { border-left:3px solid; border-top:3px solid; border-bottom:3px solid; border-radius:4px 0 0 4px; width:7px; }
+    .bracket-r { border-right:3px solid; border-top:3px solid; border-bottom:3px solid; border-radius:0 4px 4px 0; width:7px; }
+    .bc-q { border-color:var(--blue); }
+    .bc-k { border-color:var(--purple); }
+    .bc-kt { border-color:var(--purple); }
+    .bc-s  { border-color:var(--teal); }
+    .mat-block { display:flex; flex-direction:column; align-items:flex-start; gap:0.22rem; }
+    .mat-label {
+      font-family:'Fira Code',monospace; font-size:0.82rem; font-weight:700;
+      padding:0.1rem 0.5rem; border-radius:6px;
+    }
+    .mat-lbl-q  { background:var(--blue-lt);   color:var(--blue);   }
+    .mat-lbl-k  { background:var(--purple-lt); color:var(--purple); }
+    .mat-lbl-kt { background:var(--purple-lt); color:var(--purple); }
+    .mat-lbl-s  { background:var(--teal-lt);   color:var(--teal);   }
+
+    /* ── step controls ── */
+    .step-bar {
+      display:flex; align-items:center; gap:0.8rem; flex-wrap:wrap;
+    }
+    .step-indicator {
+      font-size:0.8rem; font-weight:600; color:var(--text-muted);
+      font-family:'Fira Code',monospace;
+    }
+
+    /* ── main computation area (horizontal) ── */
+    .comp-row {
+      display:flex; align-items:center; gap:0.6rem; flex-wrap:nowrap;
+      overflow-x:auto; padding:0.3rem 0;
+    }
+    .comp-op {
+      font-family:'Fira Code',monospace; font-size:1.4rem; font-weight:700;
+      color:var(--text-dim); flex-shrink:0; align-self:center;
+    }
+    .comp-eq { color:var(--teal); }
+
+    /* ── heatmap (result QKᵀ) ── */
+    .heatmap-wrap { display:flex; flex-direction:column; align-items:flex-start; gap:0; }
+    .heatmap-row  { display:flex; align-items:center; }
+    .heatmap-row-lbl {
+      font-family:'Fira Code',monospace; font-size:0.8rem; font-weight:600;
+      color:var(--text-muted); width:2.8rem; text-align:right; padding-right:0.4rem;
+      flex-shrink:0; transition:color 0.15s;
+    }
+    .heatmap-row-lbl.hl { color:var(--blue); font-weight:700; }
+    .heatmap-col-lbl {
+      font-family:'Fira Code',monospace; font-size:0.76rem; font-weight:600;
+      color:var(--text-dim); text-align:center; transition:color 0.15s;
+    }
+    .heatmap-col-lbl.hl { color:var(--purple); font-weight:700; }
+    .hm-cell {
+      width:3.8rem; height:3rem; display:flex; align-items:center; justify-content:center;
+      font-family:'Fira Code',monospace; font-size:0.85rem; font-weight:600;
+      cursor:pointer; border:2px solid transparent; border-radius:6px;
+      transition:border-color 0.15s, transform 0.1s;
+    }
+    .hm-cell:hover { transform:scale(1.06); border-color:var(--text-muted) !important; }
+    .hm-cell.current  { border-color:var(--teal) !important; box-shadow:0 0 0 3px rgba(13,110,110,0.28); }
+    .hm-cell.selected { border-color:var(--teal) !important; box-shadow:0 0 0 2px rgba(13,110,110,0.25); animation:pulse 0.9s ease infinite alternate; }
+    @keyframes pulse { from { box-shadow:0 0 0 2px rgba(13,110,110,0.25); } to { box-shadow:0 0 0 4px rgba(13,110,110,0.45); } }
+
+    /* ── detail panel below ── */
+    .detail-row {
+      display:flex; gap:1rem; align-items:flex-start; flex-wrap:wrap;
+    }
+    .calc-block {
+      background:var(--bg3); border:1.5px solid var(--border2);
+      border-radius:var(--radius-sm); padding:0.7rem 0.9rem;
+      font-family:'Fira Code',monospace; font-size:0.86rem;
+      display:flex; flex-direction:column; gap:0.35rem; flex:1; min-width:200px;
+    }
+    .calc-row  { display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap; }
+    .calc-term { color:var(--text-muted); }
+    .calc-result-pos { color:var(--teal); font-weight:700; }
+    .calc-result-neg { color:var(--orange); font-weight:700; }
+
+    .interp-box {
+      padding:0.55rem 0.8rem; border-radius:var(--radius-sm);
+      font-size:0.86rem; font-weight:600; line-height:1.45; flex:1; min-width:160px;
+    }
+    .interp-pos { background:var(--teal-lt); border:1.5px solid #5eead4; color:var(--teal); }
+    .interp-neg { background:#fff7ed; border:1.5px solid #fed7aa; color:var(--orange); }
+
+    @keyframes fadeIn {
+      from { opacity:0; transform:translateY(4px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    .fade-in { animation:fadeIn 0.25s ease both; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Transformers</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 8 · Slide 8 / 11</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">QKᵀ — Matriz de Alinhamento</h1>
+        <p class="slide-subtitle">Cada entrada (i,j) é o produto interno entre qᵢ e kⱼ</p>
+      </div>
+
+      <!-- Controls row -->
+      <div class="panel" style="display:flex;gap:1.5rem;align-items:center;flex-wrap:wrap;padding:0.75rem 1rem;">
+        <div style="display:flex;flex-direction:column;gap:0.3rem;">
+          <div style="font-size:0.78rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.07em;">Frase:</div>
+          <div class="toggle-group" id="phrase-toggle">
+            <button class="btn-toggle active" onclick="setPhrase(0)">Ela saiu só</button>
+            <button class="btn-toggle" onclick="setPhrase(1)">Só ela saiu</button>
+            <button class="btn-toggle" onclick="setPhrase(2)">Ela só saiu</button>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.3rem;">
+          <div style="font-size:0.78rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.07em;">Passo:</div>
+          <div class="step-bar">
+            <button class="btn-step" id="btn-prev-step" onclick="prevStep()">← Anterior</button>
+            <span class="step-indicator" id="step-label">1 / 3</span>
+            <button class="btn-step" id="btn-next-step" onclick="nextStep()">Próximo →</button>
+          </div>
+        </div>
+        <div id="step-desc" style="font-size:0.88rem;color:var(--text-muted);flex:1;font-style:italic;"></div>
+      </div>
+
+      <!-- Main computation panel: Q · Kᵀ = S -->
+      <div class="panel" style="overflow-x:auto;">
+        <div class="comp-row" id="comp-row"></div>
+      </div>
+
+      <!-- Detail panel (shown when a cell is selected) -->
+      <div class="panel" id="detail-panel" style="display:none;">
+        <div id="detail-area" style="display:flex;flex-direction:column;gap:0.6rem;"></div>
+      </div>
+
+      <!-- Insight -->
+      <div class="insight-box">
+        <div class="i-icon">🎓</div>
+        <div class="i-text">
+          Transpor K alinha as colunas de K com as linhas de Q — cada célula (i,j) do resultado é o produto interno entre a <em>query</em> do token i e a <em>key</em> do token j: quanto token i "busca" o que token j "oferece".
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide07.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide09.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    const EMB_LEX = {
+      'Ela':  [1,  2], 'ela':  [1,  2],
+      'saiu': [3, -1],
+      'só':   [-1, 2], 'Só':   [-1, 2],
+    };
+    function round2(x) { return Math.round(x * 100) / 100; }
+    function computePE(pos) {
+      return [
+        Math.sin(pos / Math.pow(10000, 0/2)),
+        Math.cos(pos / Math.pow(10000, 0/2)),
+      ].map(v => round2(v));
+    }
+    const POS_ENC = [computePE(0), computePE(1), computePE(2)];
+    const WQ = [[1, 0], [0, 1]];
+    const WK = [[0, 1], [1, 0]];
+    const WV = [[1, 1], [0, 1]];
+
+    function getMatrices(tokens) {
+      const X = tokens.map((t,i) => EMB_LEX[t].map((v,j) => round2(v + POS_ENC[i][j])));
+      const Q = X.map(row => [0,1].map(j => round2(row.reduce((s,v,k)=>s+v*WQ[k][j],0))));
+      const K = X.map(row => [0,1].map(j => round2(row.reduce((s,v,k)=>s+v*WK[k][j],0))));
+      const V = X.map(row => [0,1].map(j => round2(row.reduce((s,v,k)=>s+v*WV[k][j],0))));
+      return {X, Q, K, V};
+    }
+    function transpose(M) {
+      const rows = M.length, cols = M[0].length;
+      return Array.from({length:cols}, (_,j) => Array.from({length:rows}, (_,i) => M[i][j]));
+    }
+    function matMul(A, B) {
+      return A.map(row =>
+        Array.from({length:B[0].length}, (_,j) =>
+          round2(row.reduce((s,v,k) => s + v * B[k][j], 0))
+        )
+      );
+    }
+
+    const PHRASES = [
+      ['Ela', 'saiu', 'só'],
+      ['Só',  'ela',  'saiu'],
+      ['Ela', 'só',   'saiu'],
+    ];
+
+    // 10 steps total: step 0 = transposition; steps 1-9 = cells (0,0)..(2,2) row-by-row
+    const TOTAL_STEPS = 11;
+    let currentPhrase = 0;
+    let currentStep   = 0;
+    let selectedCell  = null; // {i,j} click override (null = follow currentStep)
+
+    function sub(n) { return ['₁','₂','₃','₄','₅'][n-1] || String(n); }
+    function fmt(v)  { return (v >= 0 ? ' ' : '') + v.toFixed(1); }
+
+    // step 0 = Q·K; step 1 = Q·Kᵀ (no cells yet); steps 2-10 = cells (0,0)..(2,2)
+    function stepToCell(step, n) {
+      if (step <= 1) return null;
+      const idx = step - 2;
+      return { i: Math.floor(idx / n), j: idx % n };
+    }
+
+    // ── matrix builders ───────────────────────────────────────────────
+    function buildMatHTML(type, rowLabels, colLabels, data, hlRow) {
+      const bcCls = `bc-${type}`;
+      let html = `<div class="mat-block">`;
+      html += `<div class="mat-label mat-lbl-${type}">${type.toUpperCase()}</div>`;
+      html += `<div class="bracket-wrap"><div class="bracket-l ${bcCls}"></div>`;
+      html += `<table class="mat-table"><thead><tr><th></th>`;
+      colLabels.forEach(c => { html += `<th>${c}</th>`; });
+      html += `</tr></thead><tbody>`;
+      data.forEach((row, i) => {
+        const rowHl = (i === hlRow) ? 'row-hl' : '';
+        html += `<tr class="${rowHl}"><td class="lbl-cell">${rowLabels[i]}</td>`;
+        row.forEach(v => {
+          const color = v >= 0 ? '#0d6e6e' : '#c2410c';
+          html += `<td style="color:${color}">${fmt(v)}</td>`;
+        });
+        html += `</tr>`;
+      });
+      html += `</tbody></table><div class="bracket-r ${bcCls}"></div></div></div>`;
+      return html;
+    }
+
+    function buildMatHTKt(rowLabels, colLabels, data, hlColIdx) {
+      let html = `<div class="mat-block"><div class="mat-label mat-lbl-kt">Kᵀ</div>`;
+      html += `<div class="bracket-wrap"><div class="bracket-l bc-kt"></div>`;
+      html += `<table class="mat-table"><thead><tr><th></th>`;
+      colLabels.forEach((c, j) => {
+        const hl = (j === hlColIdx) ? 'style="color:var(--purple);font-weight:700;"' : '';
+        html += `<th ${hl}>${c}</th>`;
+      });
+      html += `</tr></thead><tbody>`;
+      data.forEach((row, i) => {
+        html += `<tr><td class="lbl-cell">${rowLabels[i]}</td>`;
+        row.forEach((v, j) => {
+          const isHl = (j === hlColIdx);
+          const color = v >= 0 ? '#0d6e6e' : '#c2410c';
+          html += `<td style="${isHl?'background:var(--purple-lt);font-weight:700;':''}color:${color}">${fmt(v)}</td>`;
+        });
+        html += `</tr>`;
+      });
+      html += `</tbody></table><div class="bracket-r bc-kt"></div></div></div>`;
+      return html;
+    }
+
+    function scoreToColor(val, minV, maxV) {
+      const t = Math.min(1, Math.max(0, (val - minV) / (maxV - minV + 0.001)));
+      if (t < 0.5) {
+        const f = t / 0.5;
+        return `rgb(${Math.round(254-f*14)},${Math.round(226-f*20)},${Math.round(226+f*10)})`;
+      } else {
+        const f = (t - 0.5) / 0.5;
+        return `rgb(${Math.round(240-f*89)},${Math.round(250-f*4)},${Math.round(236-f*10)})`;
+      }
+    }
+
+    function buildHeatmap(tokens, scores, revealedCount, activeI, activeJ, stepCell) {
+      const n = tokens.length;
+      const allVals = scores.flat();
+      const minV = Math.min(...allVals), maxV = Math.max(...allVals);
+      const si = (activeI !== null) ? activeI : -1;
+      const sj = (activeJ !== null) ? activeJ : -1;
+
+      let html = `<div class="mat-block"><div class="mat-label mat-lbl-s">QKᵀ</div>`;
+      html += `<div class="heatmap-wrap">`;
+      html += `<div class="heatmap-row"><div style="width:2.8rem;flex-shrink:0;"></div>`;
+      tokens.forEach((t, j) => {
+        const hl = (j === sj) ? 'hl' : '';
+        html += `<div class="heatmap-col-lbl ${hl}" style="width:3.8rem;text-align:center;">${t}</div>`;
+      });
+      html += `</div>`;
+      tokens.forEach((rowTok, i) => {
+        html += `<div class="heatmap-row"><div class="heatmap-row-lbl ${i===si?'hl':''}">${rowTok}</div>`;
+        tokens.forEach((_, j) => {
+          const linearIdx = i * n + j;
+          const isRevealed = linearIdx < revealedCount;
+          const isCurrent  = stepCell && stepCell.i === i && stepCell.j === j;
+          // a cell clicked by user (override) shows as selected only if it's not also current
+          const isSelected = (i === si && j === sj) && !isCurrent && isRevealed;
+          const val = scores[i][j];
+          const bg = isRevealed ? scoreToColor(val, minV, maxV) : 'var(--bg3)';
+          const textColor = isRevealed ? ((val < (minV+maxV)/2) ? '#7f1d1d' : '#064e3b') : 'transparent';
+          const cls = [isCurrent?'current':'', isSelected?'selected':''].join(' ').trim();
+          const handlers = isRevealed
+            ? `onmouseenter="hoverCell(${i},${j})" onmouseleave="unhoverCell()" onclick="clickCell(${i},${j})"`
+            : '';
+          html += `<div class="hm-cell ${cls}" style="background:${bg};color:${textColor};" ${handlers}>${val.toFixed(1)}</div>`;
+        });
+        html += `</div>`;
+      });
+      html += `</div></div>`;
+      return html;
+    }
+
+    // ── main render ───────────────────────────────────────────────────
+    function render() {
+      const tokens = PHRASES[currentPhrase];
+      const {Q, K} = getMatrices(tokens);
+      const Kt = transpose(K);
+      const S  = matMul(Q, Kt);
+      const n  = tokens.length;
+
+      const qRowLabels  = tokens.map(t => t.toLowerCase());
+      const ktRowLabels = ['d₁','d₂'];
+      const ktColLabels = tokens.map(t => t.toLowerCase());
+
+      const stepCell   = stepToCell(currentStep, n);
+      const activeCell = selectedCell || stepCell;
+      const si = activeCell ? activeCell.i : null;
+      const sj = activeCell ? activeCell.j : null;
+      // step 0: Q·K (no Kᵀ); step 1: Q·Kᵀ shown, 0 cells; step k≥2: k-1 cells revealed
+      const revealedCount = Math.max(0, currentStep - 1);
+
+      let html = '';
+
+      if (currentStep === 0) {
+        // Step 1: show Q · K (before transposition)
+        html += buildMatHTML('q', qRowLabels, ['d₁','d₂'], Q, null);
+        html += `<div class="comp-op">·</div>`;
+        html += buildMatHTML('k', qRowLabels, ['d₁','d₂'], K, null);
+        html += `<div class="comp-op comp-eq">=</div>`;
+        html += `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.35rem;padding:0.6rem 1.2rem;color:var(--text-dim);font-size:0.82rem;font-style:italic;background:var(--bg3);border-radius:var(--radius-sm);border:1.5px dashed var(--border2);align-self:center;">
+          <span style="font-size:1.6rem;opacity:0.3;">&#x22EF;</span>
+          <span style="text-align:center;">K precisa ser<br>transposta primeiro</span>
+        </div>`;
+      } else {
+        // Steps 2-10: Q · Kᵀ = S, revealing one cell per step
+        html += buildMatHTML('q', qRowLabels, ['d₁','d₂'], Q, si);
+        html += `<div class="comp-op">&middot;</div>`;
+        html += buildMatHTKt(ktRowLabels, ktColLabels, Kt, sj);
+        html += `<div class="comp-op comp-eq">=</div>`;
+        html += buildHeatmap(tokens, S, revealedCount, si, sj, stepCell);
+      }
+
+      document.getElementById('comp-row').innerHTML = `<div class="comp-row fade-in">${html}</div>`;
+
+      // Controls
+      document.getElementById('step-label').textContent = `${currentStep+1} / ${TOTAL_STEPS}`;
+      let desc;
+      if (currentStep === 0) {
+        desc = `Q (${n}×2) e K (${n}×2) geradas a partir de X. Para multiplicar, K precisa ser transposta — clique em 'Próximo'.`;
+      } else if (currentStep === 1) {
+        desc = `K virou Kᵀ (2×${n}): as linhas de K passaram a ser colunas. Clique em 'Próximo' para calcular a primeira célula de Q · Kᵀ.`;
+      } else {
+        const {i, j} = stepCell;
+        desc = `Célula (${i+1},${j+1}): q(${tokens[i].toLowerCase()}) · k(${tokens[j].toLowerCase()}) — linha ${i+1} de Q com coluna ${j+1} de Kᵀ.`;
+      }
+      document.getElementById('step-desc').textContent = desc;
+      document.getElementById('btn-prev-step').disabled = (currentStep === 0);
+      document.getElementById('btn-next-step').disabled = (currentStep === TOTAL_STEPS - 1);
+
+      renderDetail(tokens, Q, Kt, S, activeCell);
+    }
+
+    // ── hover / click ─────────────────────────────────────────────────
+    function hoverCell(i, j) {
+      document.querySelectorAll('.heatmap-row-lbl').forEach((el, idx) => el.classList.toggle('hl', idx === i));
+      document.querySelectorAll('.heatmap-col-lbl').forEach((el, idx) => el.classList.toggle('hl', idx === j));
+    }
+    function unhoverCell() {
+      const ref = selectedCell || stepToCell(currentStep, PHRASES[currentPhrase].length);
+      if (ref) hoverCell(ref.i, ref.j);
+      else document.querySelectorAll('.heatmap-row-lbl,.heatmap-col-lbl').forEach(el => el.classList.remove('hl'));
+    }
+    function clickCell(i, j) {
+      if (currentStep <= 1) return;
+      const n = PHRASES[currentPhrase].length;
+      // Only revealed cells (linearIdx < revealedCount) are clickable
+      if (i * n + j >= Math.max(0, currentStep - 1)) return;
+      selectedCell = (selectedCell && selectedCell.i===i && selectedCell.j===j) ? null : {i,j};
+      render();
+    }
+
+    // ── detail panel ──────────────────────────────────────────────────
+    function renderDetail(tokens, Q, Kt, S, activeCell) {
+      const panel = document.getElementById('detail-panel');
+      const area  = document.getElementById('detail-area');
+      if (!activeCell || currentStep <= 1) { panel.style.display = 'none'; return; }
+      panel.style.display = '';
+      const {i, j} = activeCell;
+      const qi     = Q[i];
+      const kj_col = Kt.map(row => row[j]); // col j of Kᵀ = row j of K
+      const terms  = qi.map((v,d) => round2(v * kj_col[d]));
+      const result = S[i][j];
+      const isPos  = result >= 0;
+      const resCls = isPos ? 'calc-result-pos' : 'calc-result-neg';
+      const termLines = qi.map((v,d) =>
+        `<div class="calc-row"><span class="calc-term">(${fmt(v)} × ${fmt(kj_col[d])}) = ${terms[d].toFixed(1)}</span></div>`
+      ).join('');
+
+      // Is this the step's own cell or a user-clicked older cell?
+      const stepCell = stepToCell(currentStep, tokens.length);
+      const isCurrentStepCell = stepCell && stepCell.i === i && stepCell.j === j;
+      const headerLabel = isCurrentStepCell
+        ? `Célula (${i+1},${j+1}) — calculando agora:`
+        : `Célula (${i+1},${j+1}) — revisitando:`;
+
+      area.innerHTML = `<div class="fade-in" style="display:flex;flex-direction:column;gap:0.55rem;">
+        <div style="font-size:0.84rem;font-weight:700;color:var(--text-muted);">
+          ${headerLabel}
+          <span style="color:var(--blue);">q${sub(i+1)}</span> · <span style="color:var(--purple);">k${sub(j+1)}</span>
+        </div>
+        <div class="detail-row">
+          <div class="calc-block">
+            <div class="calc-row"><span style="color:var(--blue);font-weight:700;min-width:3rem;">q${sub(i+1)} =</span>
+              <span style="color:var(--blue);">[${qi.map(fmt).join(',  ')}]</span></div>
+            <div class="calc-row"><span style="color:var(--purple);font-weight:700;min-width:3rem;">k${sub(j+1)} =</span>
+              <span style="color:var(--purple);">[${kj_col.map(fmt).join(',  ')}]</span></div>
+          </div>
+          <div class="calc-block">
+            <div style="font-size:0.76rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.1rem;">Cálculo por dimensão:</div>
+            ${termLines}
+            <div class="calc-row"><span class="calc-term">Soma = </span><span class="${resCls}">${result.toFixed(1)}</span></div>
+          </div>
+          <div class="interp-box ${isPos ? 'interp-pos' : 'interp-neg'}">
+            🎯 <strong>"${tokens[i]}"</strong> consulta <strong>"${tokens[j]}"</strong>
+            — score: <strong>${result.toFixed(1)}</strong>
+            ${isPos ? '<br>(alinhamento positivo ↑)' : '<br>(alinhamento negativo ↓)'}
+          </div>
+        </div>
+      </div>`;
+    }
+
+    // ── navigation ────────────────────────────────────────────────────
+    function nextStep() {
+      if (currentStep < TOTAL_STEPS - 1) { currentStep++; selectedCell = null; render(); }
+    }
+    function prevStep() {
+      if (currentStep > 0) { currentStep--; selectedCell = null; render(); }
+    }
+    function setPhrase(idx) {
+      currentPhrase = idx; currentStep = 0; selectedCell = null;
+      document.querySelectorAll('#phrase-toggle .btn-toggle').forEach((b,i) => b.classList.toggle('active', i===idx));
+      render();
+    }
+
+    // Init
+    render();
+  </script>
+</body>
+</html>

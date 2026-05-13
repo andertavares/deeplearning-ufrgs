@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 5 – A Ordem das Palavras Importa</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ---- Sentence demo ---- */
+    .sentence-area {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      flex: 1;
+    }
+    .sentence-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      padding: 0.8rem;
+      border-radius: var(--radius-sm);
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      min-height: 3rem;
+    }
+    .word-chip {
+      padding: 0.35rem 0.85rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      background: var(--bg2);
+      border: 1.5px solid var(--border2);
+      color: var(--text);
+      cursor: grab;
+      user-select: none;
+      transition: transform 0.15s, border-color 0.2s, box-shadow 0.2s;
+    }
+    .word-chip:active { cursor: grabbing; }
+    .word-chip:hover {
+      border-color: var(--teal);
+      box-shadow: 0 2px 8px rgba(13,110,110,0.15);
+      transform: translateY(-2px);
+    }
+    .word-chip.dragging { opacity: 0.4; }
+    .word-chip.drag-over { border-color: var(--teal); background: var(--teal-lt); }
+
+    .sentence-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-dim);
+      margin-bottom: 0.2rem;
+    }
+    .sentence-verdict {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 0.4rem 0.8rem;
+      border-radius: var(--radius-sm);
+      transition: all 0.3s;
+    }
+    .verdict-ok   { background: var(--green-lt);  color: var(--green); border: 1px solid #86efac; }
+    .verdict-bad  { background: #fee2e2;           color: var(--red);   border: 1px solid #fca5a5; }
+    .verdict-hmm  { background: var(--yellow-lt);  color: var(--yellow);border: 1px solid #fde047; }
+
+    .example-pair {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.7rem;
+    }
+    .example-sentence-box {
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0.8rem;
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+    .example-sentence-box .ex-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-dim);
+      display: block;
+      margin-bottom: 0.4rem;
+    }
+    .example-sentence-box.correct { border-color: var(--teal); }
+    .example-sentence-box.wrong   { border-color: var(--red); }
+    .ex-sent { color: var(--text); font-weight: 500; }
+    .ex-meaning { font-size: 0.82rem; color: var(--text-muted); margin-top: 0.4rem; font-style: italic; }
+
+    .btn-shuffle {
+      background: var(--teal);
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      padding: 0.5rem 1.4rem;
+      font-size: 0.92rem;
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.2s;
+      align-self: flex-start;
+    }
+    .btn-shuffle:hover { opacity: 0.85; transform: scale(1.03); }
+
+    .transition-box {
+      background: linear-gradient(135deg, var(--teal-lt), var(--blue-lt));
+      border: 1.5px solid rgba(13,110,110,0.35);
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+      display: flex;
+      gap: 0.8rem;
+      align-items: flex-start;
+      margin-top: auto;
+    }
+    .transition-box .t-icon { font-size: 1.4rem; flex-shrink: 0; }
+    .transition-box .t-text { font-size: 0.95rem; line-height: 1.6; color: var(--text); }
+    .transition-box .t-text em { color: var(--teal); font-style: normal; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <!-- Header -->
+    <header class="slide-header">
+      <span class="course-tag">Redes Neurais Recorrentes</span>
+      <span class="prof-tag" style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 2 · Slide 5 / 5</span>
+    </header>
+
+    <!-- Content -->
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">A Ordem das Palavras Importa</h1>
+        <p class="slide-subtitle">Em linguagem e vídeo, a sequência carrega o significado</p>
+      </div>
+
+      <div class="content-split">
+        <!-- Left: sentence shuffler -->
+        <div class="panel panel-left">
+          <h2 class="panel-title">🔤 Embaralhe as Palavras</h2>
+
+          <div class="sentence-area">
+            <div>
+              <div class="sentence-label">Ordem original</div>
+              <div class="sentence-row" id="original-row"></div>
+            </div>
+
+            <div>
+              <div class="sentence-label">Sua ordem (arraste para reordenar)</div>
+              <div class="sentence-row" id="shuffled-row"></div>
+            </div>
+
+            <button class="btn-shuffle" id="btn-new">🔀 Nova frase</button>
+
+            <div class="highlight-box blue" style="font-size:0.88rem;">
+              <span class="icon">💡</span>
+              <span>Arraste as palavras para reordenar. Veja como a ordem muda (ou inverte) o significado.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: examples + transition -->
+        <div class="panel panel-right">
+          <h2 class="panel-title">📌 Ordem = Semântica</h2>
+
+          <div class="example-pair">
+            <div class="example-sentence-box correct">
+              <span class="ex-label">Ordem A</span>
+              <div class="ex-sent">"Ela saiu só."</div>
+              <div class="ex-meaning">Ela saiu <em>sozinha</em>.</div>
+            </div>
+            <div class="example-sentence-box wrong">
+              <span class="ex-label">Ordem B</span>
+              <div class="ex-sent">"Só ela saiu."</div>
+              <div class="ex-meaning"><em>Apenas ela</em> saiu — sentido completamente diferente!</div>
+            </div>
+          </div>
+
+          <div class="concept-cards" style="margin-top:0.5rem;">
+            <div class="concept-card" style="--delay:0.05s">
+              <span class="card-icon">🎥</span>
+              <div class="card-text">
+                <strong>Vídeo: cada frame isolado é incompleto</strong>
+                <p>Uma foto de alguém com braço erguido pode ser "acenar" ou "pedir a palavra". Só a sequência de frames revela a ação.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.15s">
+              <span class="card-icon">🔤</span>
+              <div class="card-text">
+                <strong>Tradução: contexto define escolha</strong>
+                <p>"Bank" em inglês significa banco (financeiro) ou margem de rio. Só o contexto das palavras ao redor decide.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="transition-box">
+            <span class="t-icon">➡️</span>
+            <span class="t-text">
+              Então precisamos de modelos que não apenas leem a entrada atual,
+              mas também <em>preservam um resumo do passado</em> — isso é o que
+              as <em>Redes Neurais Recorrentes</em> fazem.
+            </span>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Navigation -->
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide04.html'">← Anterior</button>
+      <div class="nav-dots">
+        <div class="dot"></div><div class="dot"></div>
+        <div class="dot"></div><div class="dot"></div>
+        <div class="dot active"></div>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide06.html'">Próximo bloco →</button>
+    </nav>
+  </div>
+
+  <script>
+    const SENTENCES = [
+      {
+        words: ['Ela', 'saiu', 'só'],
+        correct: ['Ela', 'saiu', 'só'],
+        meaning: '"Ela saiu só" = sozinha; "Só ela saiu" = apenas ela'
+      },
+      {
+        words: ['Ela', 'não', 'foi', 'embora', 'ainda'],
+        correct: ['Ela', 'não', 'foi', 'embora', 'ainda'],
+        meaning: 'negação antes do verbo'
+      },
+      {
+        words: ['O', 'cachorro', 'mordeu', 'o', 'homem'],
+        correct: ['O', 'cachorro', 'mordeu', 'o', 'homem'],
+        meaning: 'agente: cachorro; paciente: homem'
+      },
+      {
+        words: ['Só', 'eu', 'não', 'fui', 'lá'],
+        correct: ['Só', 'eu', 'não', 'fui', 'lá'],
+        meaning: '"Só eu" = apenas eu — troque e mude o foco'
+      },
+      {
+        words: ['Vou', 'comer', 'mais', 'tarde', 'não'],
+        correct: ['Não', 'vou', 'comer', 'mais', 'tarde'],
+        meaning: 'negação muda o sentido completo'
+      },
+    ];
+
+    let currentSentence = null;
+    let currentOrder    = [];
+    let dragSrc = null;
+
+    const origRow    = document.getElementById('original-row');
+    const shuffRow   = document.getElementById('shuffled-row');
+    const btnNew     = document.getElementById('btn-new');
+
+    function shuffle(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function makeDraggable(chip, index) {
+      chip.setAttribute('draggable', true);
+
+      chip.addEventListener('dragstart', e => {
+        dragSrc = index;
+        chip.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      chip.addEventListener('dragend', () => chip.classList.remove('dragging'));
+      chip.addEventListener('dragover', e => {
+        e.preventDefault();
+        chip.classList.add('drag-over');
+      });
+      chip.addEventListener('dragleave', () => chip.classList.remove('drag-over'));
+      chip.addEventListener('drop', e => {
+        e.preventDefault();
+        chip.classList.remove('drag-over');
+        if (dragSrc !== null && dragSrc !== index) {
+          // swap
+          const tmp = currentOrder[dragSrc];
+          currentOrder[dragSrc] = currentOrder[index];
+          currentOrder[index]   = tmp;
+          renderShuffled();
+          checkAnswer();
+        }
+      });
+    }
+
+    function renderOriginal() {
+      origRow.innerHTML = '';
+      currentSentence.correct.forEach(w => {
+        const chip = document.createElement('span');
+        chip.className = 'word-chip';
+        chip.textContent = w;
+        origRow.appendChild(chip);
+      });
+    }
+
+    function renderShuffled() {
+      shuffRow.innerHTML = '';
+      currentOrder.forEach((w, i) => {
+        const chip = document.createElement('span');
+        chip.className = 'word-chip';
+        chip.textContent = w;
+        makeDraggable(chip, i);
+        shuffRow.appendChild(chip);
+      });
+    }
+
+    function checkAnswer() {}
+
+    function loadSentence(s) {
+      currentSentence = s;
+      // Always shuffle for the interactive row
+      do {
+        currentOrder = shuffle(s.words);
+      } while (currentOrder.every((w, i) => w === s.correct[i]));
+
+      renderOriginal();
+      renderShuffled();
+    }
+
+    let sentenceIdx = 0;
+    btnNew.addEventListener('click', () => {
+      sentenceIdx = (sentenceIdx + 1) % SENTENCES.length;
+      loadSentence(SENTENCES[sentenceIdx]);
+    });
+
+    loadSentence(SENTENCES[0]);
+  </script>
+</body>
+</html>

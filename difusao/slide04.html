@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 04 – A U-Net: Um Autoencoder com Memória</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .unet-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+    }
+    .unet-svg {
+      width: 100%;
+      height: 100%;
+    }
+    .content-split-unet {
+      display: grid;
+      grid-template-columns: 2fr 3fr;
+      gap: 1.4rem;
+      flex: 1;
+      overflow: visible;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Difusão</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 4 · Slide 1 / 3</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <div class="slide-title">A U-Net: Um Autoencoder com Memória</div>
+        <div class="slide-subtitle">Bloco 4 — A Arquitetura por Trás da Difusão</div>
+      </div>
+
+      <div class="content-split-unet">
+
+        <!-- Left: Explanation -->
+        <div class="panel">
+          <div class="panel-title">🏗️ Lendo o Diagrama</div>
+          <div class="concept-cards">
+            <div class="concept-card" style="--delay:0.05s">
+              <div class="card-icon">📐</div>
+              <div class="card-text">
+                <strong>O que é <span style="font-family:'Fira Code',monospace">256×256</span>?</strong>
+                <p>É a resolução espacial do <em>mapa de ativações</em> naquele nível — começa igual ao tamanho da imagem de entrada. A cada <strong>Pool↓</strong>, cai pela metade: 256 → 128 → 64 → 32 → 16.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.10s">
+              <div class="card-icon">🎛️</div>
+              <div class="card-text">
+                <strong>O que é <span style="font-family:'Fira Code',monospace">64ch</span>?</strong>
+                <p>Sim — são 64 filtros convolucionais. Cada filtro detecta um padrão diferente (bordas, texturas…). O encoder <em>dobra</em> os canais a cada nível enquanto reduz a resolução: 64 → 128 → 256 → 512 → 1024ch.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.15s">
+              <div class="card-icon">🗜️</div>
+              <div class="card-text">
+                <strong>Compressão do Gargalo</strong>
+                <p>Entrada: <span style="font-family:'Fira Code',monospace">256×256×3</span> = 196.608 valores. Gargalo: <span style="font-family:'Fira Code',monospace">16×16×1024</span> = 262.144 valores. Surpresa: o tensor do gargalo é <em>maior</em> em valores brutos! A compressão é <strong>espacial</strong> — cada célula 16×16 precisa capturar o contexto de uma região 16×16 da entrada.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.20s">
+              <div class="card-icon">🔄</div>
+              <div class="card-text">
+                <strong>Pool↓ vs Up↑ — Opostos</strong>
+                <p><strong>Pool↓</strong> (max/avg pooling) descarta pixels, reduzindo a resolução pela metade — operação <em>sem pesos</em>.<br>
+                <strong>UpConv</strong> (convolução transposta) faz o inverso: <em>aprende</em> a expandir, dobrando a resolução. Tem pesos treináveis — é como uma "deconvolução".</p>
+              </div>
+            </div>
+          </div>
+          <div class="highlight-box teal">
+            <span class="icon">🔤</span>
+            <span>O formato do diagrama lembra um <strong>U</strong> — daí o nome. É um autoencoder com atalhos (<em>skip connections</em>) entre os dois lados.</span>
+          </div>
+        </div>
+
+        <!-- Right: SVG Diagram -->
+        <div class="panel" style="align-items:center;gap:0.4rem;">
+          <div class="panel-title" style="width:100%">📐 Diagrama U-Net</div>
+          <div class="unet-wrap">
+            <svg class="unet-svg" viewBox="0 0 540 375" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arr" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto">
+                  <path d="M0,0.5 L7,3.5 L0,6.5 Z" fill="#6b7fa3"/>
+                </marker>
+                <marker id="arr-teal" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto">
+                  <path d="M0,0.5 L7,3.5 L0,6.5 Z" fill="#0d6e6e"/>
+                </marker>
+                <marker id="arr-skip" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto">
+                  <path d="M0,0.5 L7,3.5 L0,6.5 Z" fill="#c2410c"/>
+                </marker>
+              </defs>
+
+              <!-- ── Column labels ── -->
+              <text x="90" y="13" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#1d4ed8">ENCODER</text>
+              <text x="450" y="13" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#0d6e6e">DECODER</text>
+
+              <!-- ── Input / Output labels ── -->
+              <text x="90" y="24" text-anchor="middle" font-family="Inter,sans-serif" font-size="10" fill="#3d4f6e">🖼️ x_t (entrada ruidosa)</text>
+              <text x="90" y="36" text-anchor="middle" font-family="'Fira Code',monospace" font-size="9" fill="#6b7fa3">256×256×3 (RGB)</text>
+              <text x="450" y="30" text-anchor="middle" font-family="Inter,sans-serif" font-size="10" fill="#3d4f6e">🎯 ε̂ (ruído previsto)</text>
+
+              <!-- ── Encoder blocks (x=20..160, box h=42) ── -->
+              <!-- E0 y=47..89 -->
+              <rect x="20" y="47" width="140" height="42" rx="6" fill="#dbeafe" stroke="#1d4ed8" stroke-width="2"/>
+              <text x="90" y="65" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#1d4ed8">Enc 1 — Conv×2</text>
+              <text x="90" y="80" text-anchor="middle" font-family="'Fira Code',monospace" font-size="9" fill="#3d4f6e">256×256 · 64ch</text>
+
+              <!-- E0→E1 arrow -->
+              <line x1="90" y1="89" x2="90" y2="107" stroke="#6b7fa3" stroke-width="1.8" marker-end="url(#arr)"/>
+              <text x="74" y="101" font-family="'Fira Code',monospace" font-size="8" fill="#6b7fa3">Pool↓</text>
+
+              <!-- E1 y=109..151 -->
+              <rect x="20" y="109" width="140" height="42" rx="6" fill="#dbeafe" stroke="#1d4ed8" stroke-width="2"/>
+              <text x="90" y="127" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#1d4ed8">Enc 2 — Conv×2</text>
+              <text x="90" y="142" text-anchor="middle" font-family="'Fira Code',monospace" font-size="9" fill="#3d4f6e">128×128 · 128ch</text>
+
+              <!-- E1→E2 arrow -->
+              <line x1="90" y1="151" x2="90" y2="169" stroke="#6b7fa3" stroke-width="1.8" marker-end="url(#arr)"/>
+              <text x="74" y="163" font-family="'Fira Code',monospace" font-size="8" fill="#6b7fa3">Pool↓</text>
+
+              <!-- E2 y=171..213 -->
+              <rect x="20" y="171" width="140" height="42" rx="6" fill="#dbeafe" stroke="#1d4ed8" stroke-width="2"/>
+              <text x="90" y="189" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#1d4ed8">Enc 3 — Conv×2</text>
+              <text x="90" y="204" text-anchor="middle" font-family="'Fira Code',monospace" font-size="9" fill="#3d4f6e">64×64 · 256ch</text>
+
+              <!-- E2→E3 arrow -->
+              <line x1="90" y1="213" x2="90" y2="231" stroke="#6b7fa3" stroke-width="1.8" marker-end="url(#arr)"/>
+              <text x="74" y="225" font-family="'Fira Code',monospace" font-size="8" fill="#6b7fa3">Pool↓</text>
+
+              <!-- E3 y=233..275 -->
+              <rect x="20" y="233" width="140" height="42" rx="6" fill="#dbeafe" stroke="#1d4ed8" stroke-width="2"/>
+              <text x="90" y="251" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#1d4ed8">Enc 4 — Conv×2</text>
+              <text x="90" y="266" text-anchor="middle" font-family="'Fira Code',monospace" font-size="9" fill="#3d4f6e">32×32 · 512ch</text>
+
+              <!-- E3→Bottleneck path: down then right -->
+              <path d="M90,275 L90,316 L185,316" stroke="#6b7fa3" stroke-width="1.8" fill="none" marker-end="url(#arr)"/>
+
+              <!-- ── Bottleneck y=304..348, x=185..355 ── -->
+              <rect x="185" y="304" width="170" height="44" rx="8" fill="#ede9fe" stroke="#6d28d9" stroke-width="2.5"/>
+              <text x="270" y="323" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#6d28d9">Gargalo</text>
+              <text x="270" y="339" text-anchor="middle" font-family="'Fira Code',monospace" font-size="9" fill="#6d28d9">16×16 · 1024ch</text>
+
+              <!-- Bottleneck→D3 path: right then up -->
+              <path d="M355,316 L450,316 L450,275" stroke="#0d6e6e" stroke-width="1.8" fill="none" marker-end="url(#arr-teal)"/>
+
+              <!-- ── Decoder blocks — match encoder y positions ── -->
+              <!-- D3 y=233..275 -->
+              <rect x="380" y="233" width="140" height="42" rx="6" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="2"/>
+              <text x="450" y="251" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#0d6e6e">Dec 1 — UpConv</text>
+              <text x="450" y="266" text-anchor="middle" font-family="'Fira Code',monospace" font-size="9" fill="#3d4f6e">32×32 · 512ch</text>
+
+              <!-- D3→D2 arrow up -->
+              <line x1="450" y1="233" x2="450" y2="213" stroke="#0d6e6e" stroke-width="1.8" marker-end="url(#arr-teal)"/>
+              <text x="455" y="226" font-family="'Fira Code',monospace" font-size="8" fill="#0d6e6e">Up↑</text>
+
+              <!-- D2 y=171..213 -->
+              <rect x="380" y="171" width="140" height="42" rx="6" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="2"/>
+              <text x="450" y="189" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#0d6e6e">Dec 2 — UpConv</text>
+              <text x="450" y="204" text-anchor="middle" font-family="'Fira Code',monospace" font-size="9" fill="#3d4f6e">64×64 · 256ch</text>
+
+              <!-- D2→D1 arrow up -->
+              <line x1="450" y1="171" x2="450" y2="151" stroke="#0d6e6e" stroke-width="1.8" marker-end="url(#arr-teal)"/>
+              <text x="455" y="164" font-family="'Fira Code',monospace" font-size="8" fill="#0d6e6e">Up↑</text>
+
+              <!-- D1 y=109..151 -->
+              <rect x="380" y="109" width="140" height="42" rx="6" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="2"/>
+              <text x="450" y="127" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#0d6e6e">Dec 3 — UpConv</text>
+              <text x="450" y="142" text-anchor="middle" font-family="'Fira Code',monospace" font-size="9" fill="#3d4f6e">128×128 · 128ch</text>
+
+              <!-- D1→D0 arrow up -->
+              <line x1="450" y1="109" x2="450" y2="89" stroke="#0d6e6e" stroke-width="1.8" marker-end="url(#arr-teal)"/>
+              <text x="455" y="102" font-family="'Fira Code',monospace" font-size="8" fill="#0d6e6e">Up↑</text>
+
+              <!-- D0 y=47..89 -->
+              <rect x="380" y="47" width="140" height="42" rx="6" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="2"/>
+              <text x="450" y="65" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#0d6e6e">Dec 4 — UpConv</text>
+              <text x="450" y="80" text-anchor="middle" font-family="'Fira Code',monospace" font-size="9" fill="#3d4f6e">256×256 · 64ch</text>
+
+              <!-- ── Skip Connections (dashed orange) — match updated y-coords ── -->
+              <!-- L0: enc0 mid y=(47+89)/2=68 -->
+              <line x1="160" y1="68" x2="380" y2="68" stroke="#c2410c" stroke-width="1.8" stroke-dasharray="6 3" marker-end="url(#arr-skip)"/>
+              <!-- L1: enc1 mid y=(109+151)/2=130 -->
+              <line x1="160" y1="130" x2="380" y2="130" stroke="#c2410c" stroke-width="1.8" stroke-dasharray="6 3" marker-end="url(#arr-skip)"/>
+              <!-- L2: enc2 mid y=(171+213)/2=192 -->
+              <line x1="160" y1="192" x2="380" y2="192" stroke="#c2410c" stroke-width="1.8" stroke-dasharray="6 3" marker-end="url(#arr-skip)"/>
+              <!-- L3: enc3 mid y=(233+275)/2=254 -->
+              <line x1="160" y1="254" x2="380" y2="254" stroke="#c2410c" stroke-width="1.8" stroke-dasharray="6 3" marker-end="url(#arr-skip)"/>
+
+              <!-- ── Legend ── -->
+              <line x1="20" y1="363" x2="48" y2="363" stroke="#c2410c" stroke-width="1.8" stroke-dasharray="6 3"/>
+              <text x="54" y="367" font-family="Inter,sans-serif" font-size="9" fill="#c2410c" font-weight="700">Skip Connection</text>
+              <rect x="175" y="357" width="11" height="11" rx="2" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.5"/>
+              <text x="191" y="367" font-family="Inter,sans-serif" font-size="9" fill="#1d4ed8">Encoder</text>
+              <rect x="265" y="357" width="11" height="11" rx="2" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="1.5"/>
+              <text x="281" y="367" font-family="Inter,sans-serif" font-size="9" fill="#0d6e6e">Decoder</text>
+              <rect x="350" y="357" width="11" height="11" rx="2" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.5"/>
+              <text x="366" y="367" font-family="Inter,sans-serif" font-size="9" fill="#6d28d9">Gargalo</text>
+            </svg>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide03.html'">← Anterior</button>
+      <div class="nav-dots">
+        <div class="dot active"></div>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide04b.html'">Próximo →</button>
+    </nav>
+  </div>
+</body>
+</html>

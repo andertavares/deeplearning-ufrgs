@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 01 – Introdução aos Modelos de Difusão</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .arch-card {
+      background: var(--bg2);
+      border: 2px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 1.2rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+      box-shadow: var(--shadow);
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .arch-card:hover { border-color: var(--teal); transform: translateY(-3px); }
+    .arch-card.highlight { border-color: var(--teal); background: linear-gradient(135deg, #f0fdf9, #eff6ff); }
+    .arch-icon { font-size: 2.4rem; text-align: center; }
+    .arch-title { font-size: 1.1rem; font-weight: 800; text-align: center; color: var(--text); }
+    .arch-pipeline {
+      background: var(--bg3);
+      border-radius: var(--radius-sm);
+      padding: 0.55rem 0.7rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      text-align: center;
+      line-height: 1.6;
+    }
+    .arch-pro, .arch-con {
+      font-size: 0.85rem;
+      line-height: 1.45;
+      padding: 0.4rem 0.6rem;
+      border-radius: var(--radius-sm);
+    }
+    .arch-pro { background: var(--green-lt); color: var(--green); border-left: 3px solid #86efac; }
+    .arch-con { background: #fee2e2; color: var(--red); border-left: 3px solid #fca5a5; }
+    .arch-con.best { background: var(--teal-lt); color: var(--teal); border-left: 3px solid #5eead4; }
+    .arch-badge {
+      align-self: center;
+      padding: 0.2rem 0.8rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .badge-sota { background: var(--teal); color: #fff; }
+    .badge-classic { background: var(--bg3); color: var(--text-dim); border: 1px solid var(--border2); }
+    .term {
+      border-bottom: 1px dashed currentColor;
+      cursor: help;
+      position: relative;
+      white-space: nowrap;
+    }
+    .term .term-tooltip {
+      display: none;
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1e293b;
+      color: #f1f5f9;
+      font-size: 0.78rem;
+      font-weight: 400;
+      line-height: 1.5;
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      width: 220px;
+      white-space: normal;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+      z-index: 10;
+      pointer-events: none;
+    }
+    .term .term-tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 5px solid transparent;
+      border-top-color: #1e293b;
+    }
+    .term:hover .term-tooltip { display: block; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Difusão</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 1 · Slide 1 / 1</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <div class="slide-title">Introdução aos Modelos de Difusão</div>
+        <div class="slide-subtitle">Bloco 1 — Abertura e Contextualização</div>
+      </div>
+
+      <div class="content-split-3">
+
+        <!-- Autoencoders -->
+        <div class="arch-card">
+          <div class="arch-icon">🗜️</div>
+          <div class="arch-title">Autoencoders</div>
+          <span class="arch-badge badge-classic">Clássico</span>
+          <div class="arch-pipeline">
+            Compressor<br>↓<br>Representação Latente<br>↓<br>Reconstrução
+          </div>
+          <div class="arch-pro">✅ Aprendem representações compactas e significativas</div>
+          <div class="arch-con">⚠️ Geração limitada — interpolação no espaço latente produz resultados mediocres</div>
+        </div>
+
+        <!-- GANs -->
+        <div class="arch-card">
+          <div class="arch-icon">⚔️</div>
+          <div class="arch-title">GANs</div>
+          <span class="arch-badge badge-classic">Adversarial</span>
+          <div class="arch-pipeline">
+            Gerador<br>vs<br>Discriminador<br>↕ jogo adversarial
+          </div>
+          <div class="arch-pro">✅ Geração muito realista</div>
+          <div class="arch-con">❌ Treinamento instável — <span class="term">mode collapse<span class="term-tooltip">O gerador aprende a produzir apenas um subconjunto restrito de saídas que engana o discriminador, perdendo toda a diversidade dos dados reais.</span></span> e vanishing gradients</div>
+        </div>
+
+        <!-- Diffusion Models -->
+        <div class="arch-card highlight">
+          <div class="arch-icon">✨</div>
+          <div class="arch-title">Modelos de Difusão</div>
+          <span class="arch-badge badge-sota">Estado da Arte</span>
+          <div class="arch-pipeline">
+            Processo iterativo<br>↓<br>"Limpeza" do ruído<br>↓<br>Imagem gerada
+          </div>
+          <div class="arch-pro">✅ Estabilidade, diversidade e qualidade superiores</div>
+          <div class="arch-con best">🏆 Atual benchmark em geração de imagens, vídeos e áudio</div>
+        </div>
+
+      </div>
+
+      <div class="insight-box">
+        <span class="i-icon">💡</span>
+        <div class="i-text">
+          <strong>Modelos de Difusão</strong> resolvem os problemas de instabilidade das GANs e superam a capacidade
+          generativa dos Autoencoders, tornando-se o atual <strong>estado da arte</strong> para geração de imagens,
+          vídeos e áudio.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" disabled>← Anterior</button>
+      <div class="nav-dots">
+        <div class="dot active"></div>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide02.html'">Próximo →</button>
+    </nav>
+  </div>
+</body>
+</html>

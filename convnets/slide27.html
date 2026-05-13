@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 27 – Conexões Residuais</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── Layout ──────────────────────────────────────────────────────────── */
+    .res-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      flex: 1;
+    }
+
+    .res-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.3rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+      box-shadow: var(--shadow);
+      overflow-y: auto;
+    }
+
+    /* ── Canvas container ─────────────────────────────────────────────────── */
+    .canvas-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 0.25rem 0;
+    }
+
+    canvas { image-rendering: pixelated; display: block; }
+
+    /* ── Slider ───────────────────────────────────────────────────────────── */
+    .slider-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+
+    .slider-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .slider-val {
+      font-family: 'Fira Code', monospace;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--orange);
+      min-width: 60px;
+      text-align: right;
+    }
+
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      outline: none;
+      cursor: pointer;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--orange);
+      border: 2px solid white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+
+    input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+    /* ── Formula display ──────────────────────────────────────────────────── */
+    .formula-display {
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0.75rem 1rem;
+      font-family: 'Fira Code', monospace;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .fml-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.15rem 0;
+    }
+
+    .fml-label { color: var(--text-muted); font-size: 0.88rem; }
+    .fml-val   { font-weight: 700; font-size: 1rem; }
+
+    /* ── Gradient path cards ──────────────────────────────────────────────── */
+    .grad-paths {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .grad-path {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid;
+    }
+
+    .grad-path.long-path  { background: #fef2f2; border-color: #fca5a5; }
+    .grad-path.short-path { background: #dcfce7; border-color: #86efac; }
+
+    .gp-icon  { font-size: 1.4rem; flex-shrink: 0; margin-top: 0.1rem; }
+    .gp-body  { display: flex; flex-direction: column; gap: 0.25rem; flex: 1; }
+    .gp-title { font-size: 0.9rem; font-weight: 700; }
+    .gp-desc  { font-size: 0.82rem; color: var(--text-muted); line-height: 1.4; }
+
+    .gp-strength {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.3rem;
+    }
+
+    .gp-bar-bg {
+      flex: 1;
+      height: 11px;
+      background: var(--bg3);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .gp-bar-fill { height: 100%; border-radius: 6px; }
+    .gp-strength-label {
+      font-size: 0.72rem;
+      font-family: 'Fira Code', monospace;
+      color: var(--text-dim);
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Redes Convolucionais</span>
+      <span class="prof-tag" style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 9 · Slide 2 / 3</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Conexões Residuais: Atalhos para o Gradiente</h1>
+        <p class="slide-subtitle">saída = x + F(x) — a rede aprende o <em>resíduo</em>, não a transformação completa.</p>
+      </div>
+
+      <div class="res-layout">
+
+        <!-- ── Left: interactive residual block ─────────────────────────── -->
+        <div class="res-panel">
+          <div class="panel-title">Bloco Residual Interativo</div>
+
+          <div class="canvas-container">
+            <canvas id="cvResidual" width="280" height="318"></canvas>
+          </div>
+
+          <div class="slider-group">
+            <div class="slider-label-row">
+              <span>Intensidade de F(x)</span>
+              <span class="slider-val" id="fxLabel">+0.50</span>
+            </div>
+            <input type="range" id="sliderFx" min="-1.5" max="1.5" step="0.05" value="0.5"
+                   oninput="onSliderChange(this.value)" />
+            <div style="display:flex;justify-content:space-between;font-size:0.7rem;color:var(--text-dim);font-family:'Fira Code',monospace;">
+              <span>−1.5</span><span>0</span><span>+1.5</span>
+            </div>
+          </div>
+
+          <div class="formula-display">
+            <div class="fml-row">
+              <span class="fml-label">x (entrada)</span>
+              <span class="fml-val" id="dispX" style="color:var(--purple);">0.75</span>
+            </div>
+            <div style="height:1px;background:var(--border2);"></div>
+            <div class="fml-row">
+              <span class="fml-label">F(x) (caminho conv)</span>
+              <span class="fml-val" id="dispFx" style="color:var(--orange);">+0.50</span>
+            </div>
+            <div class="fml-row">
+              <span class="fml-label">x + F(x) (saída)</span>
+              <span class="fml-val" id="dispOut" style="color:var(--blue);">1.25</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Right: backprop insight ───────────────────────────────────── -->
+        <div class="res-panel">
+          <div class="panel-title">Backpropagation com Atalhos</div>
+
+          <div class="insight-box">
+            <span class="i-icon">💡</span>
+            <div class="i-text">
+              O gradiente tem <strong>dois caminhos</strong> para voltar:
+              pelo caminho longo (camadas) <em>e</em> pelo atalho (identidade).
+              O sinal sempre chega — mesmo em redes muito profundas.
+            </div>
+          </div>
+
+          <div class="grad-paths">
+            <div class="grad-path long-path">
+              <div class="gp-icon">🐌</div>
+              <div class="gp-body">
+                <div class="gp-title" style="color:var(--red);">Caminho longo (pelas camadas)</div>
+                <div class="gp-desc">
+                  O gradiente passa por cada camada e é multiplicado. Com muitas camadas,
+                  torna-se muito fraco.
+                </div>
+                <div class="gp-strength">
+                  <div class="gp-bar-bg">
+                    <div class="gp-bar-fill"
+                         style="width:22%;background:linear-gradient(90deg,#ef4444,#fca5a5);"></div>
+                  </div>
+                  <span class="gp-strength-label">≈ 0.03</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="grad-path short-path">
+              <div class="gp-icon">⚡</div>
+              <div class="gp-body">
+                <div class="gp-title" style="color:var(--green);">Caminho curto (identidade)</div>
+                <div class="gp-desc">
+                  O atalho transmite o gradiente diretamente, sem multiplicação adicional.
+                  O sinal chega forte.
+                </div>
+                <div class="gp-strength">
+                  <div class="gp-bar-bg">
+                    <div class="gp-bar-fill"
+                         style="width:95%;background:linear-gradient(90deg,#16a34a,#22c55e);"></div>
+                  </div>
+                  <span class="gp-strength-label">≈ 1.00</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="highlight-box purple">
+            <span class="icon">🔗</span>
+            <p>"O gradiente não precisa atravessar tudo —
+            ele pode <strong>'pular' camadas</strong>."</p>
+          </div>
+
+          <div class="concept-cards">
+            <div class="concept-card" style="--delay:0.05s;">
+              <div class="card-icon">✏️</div>
+              <div class="card-text">
+                <strong>Aprende o resíduo, não a transformação</strong>
+                <p>Em vez de aprender H(x) do zero, a rede aprende F(x) = H(x) − x.
+                Muito mais fácil quando H(x) ≈ x.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.15s;">
+              <div class="card-icon">🟰</div>
+              <div class="card-text">
+                <strong>Se nada precisar mudar, F(x) → 0</strong>
+                <p>A rede pode "passar x adiante" sem alteração — o atalho garante isso
+                naturalmente.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide26.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide28.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    const X_INPUT = 0.75;
+    let fxValue = 0.5;
+
+    /* ── Canvas setup ─────────────────────────────────────────────────── */
+    const cv  = document.getElementById('cvResidual');
+    const ctx = cv.getContext('2d');
+
+    /* ── Helpers ──────────────────────────────────────────────────────── */
+    function rrect(x, y, w, h, r, fill, stroke, lw) {
+      lw = lw || 2;
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+      ctx.fillStyle = fill;
+      ctx.fill();
+      ctx.strokeStyle = stroke;
+      ctx.lineWidth = lw;
+      ctx.stroke();
+    }
+
+    function ctext(str, x, y, size, color, weight) {
+      weight = weight || '600';
+      ctx.font = weight + ' ' + size + 'px Inter, sans-serif';
+      ctx.fillStyle = color;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(str, x, y);
+    }
+
+    function seg(x1, y1, x2, y2, color, dashed, lw) {
+      lw = lw || 2;
+      ctx.beginPath();
+      ctx.setLineDash(dashed ? [6, 4] : []);
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = lw;
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    function arrowDown(x, y, color) {
+      ctx.beginPath();
+      ctx.setLineDash([]);
+      ctx.moveTo(x, y);
+      ctx.lineTo(x - 6, y - 10);
+      ctx.lineTo(x + 6, y - 10);
+      ctx.closePath();
+      ctx.fillStyle = color;
+      ctx.fill();
+    }
+
+    function arrowRight(x, y, color) {
+      ctx.beginPath();
+      ctx.setLineDash([]);
+      ctx.moveTo(x, y);
+      ctx.lineTo(x - 10, y - 6);
+      ctx.lineTo(x - 10, y + 6);
+      ctx.closePath();
+      ctx.fillStyle = color;
+      ctx.fill();
+    }
+
+    function arrowLeft(x, y, color) {
+      ctx.beginPath();
+      ctx.setLineDash([]);
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + 10, y - 6);
+      ctx.lineTo(x + 10, y + 6);
+      ctx.closePath();
+      ctx.fillStyle = color;
+      ctx.fill();
+    }
+
+    /* ── Color pickers ────────────────────────────────────────────────── */
+    function colorForFx(fx) {
+      if (fx >  0.05) return { fill: '#fff7ed', border: '#fdba74', text: '#c2410c' };
+      if (fx < -0.05) return { fill: '#dbeafe', border: '#93c5fd', text: '#1d4ed8' };
+      return { fill: '#dcfce7', border: '#86efac', text: '#166534' };
+    }
+
+    function colorForOut(val) {
+      if (val > X_INPUT + 0.05) return { fill: '#dbeafe', border: '#93c5fd', text: '#1d4ed8' };
+      if (val < X_INPUT - 0.05) return { fill: '#fee2e2', border: '#fca5a5', text: '#b91c1c' };
+      return { fill: '#dcfce7', border: '#86efac', text: '#166534' };
+    }
+
+    /* ── Draw residual block ──────────────────────────────────────────── */
+    function drawBlock(fx) {
+      ctx.clearRect(0, 0, cv.width, cv.height);
+
+      const CX = 140;  // center x of canvas
+      // — Coordinates —
+      const inY    = 8;
+      const inH    = 36;
+      const forkY  = inY + inH;          // 44
+      const splitY = forkY + 16;         // 60  (horizontal fork line y)
+      const LX     = 75;                 // left-branch center x
+      const RX     = 210;                // right-branch (identity) x
+      const convY  = splitY + 20;        // 80  (top of conv box)
+      const convH  = 36;
+      const fxBY   = convY + convH + 16; // 132 (top of F(x) box)
+      const fxBH   = 36;
+      const sumY   = fxBY + fxBH + 36;  // 204 (center of sum circle)
+      const sumR   = 22;
+      const outY   = sumY + sumR + 14;   // 240 (top of output box)
+      const outH   = 36;
+      const BW     = 150;  // wide box width
+      const CW     = 110;  // conv box width
+
+      // ── Input box ──
+      rrect(CX - BW/2, inY, BW, inH, 8, '#ede9fe', '#5b21b6');
+      ctext('x = ' + X_INPUT.toFixed(2), CX, inY + inH/2, 13, '#5b21b6', '700');
+
+      // ── Vertical from input to fork-split ──
+      seg(CX, forkY, CX, splitY, '#94a3b8');
+
+      // ── Horizontal fork ──
+      seg(LX, splitY, RX, splitY, '#94a3b8');
+
+      // ── Left branch down to conv ──
+      seg(LX, splitY, LX, convY, '#94a3b8');
+
+      // ── Conv + ReLU box ──
+      rrect(LX - CW/2, convY, CW, convH, 7, '#dbeafe', '#1d4ed8');
+      ctext('Conv + ReLU', LX, convY + convH/2, 12, '#1d4ed8', '700');
+
+      // ── Arrow from conv to F(x) box ──
+      seg(LX, convY + convH, LX, fxBY, '#1d4ed8');
+      arrowDown(LX, fxBY, '#1d4ed8');
+
+      // ── F(x) value box ──
+      const fc = colorForFx(fx);
+      const fxStr = (fx >= 0 ? '+' : '') + fx.toFixed(2);
+      rrect(LX - CW/2, fxBY, CW, fxBH, 7, fc.fill, fc.border);
+      ctext('F(x) = ' + fxStr, LX, fxBY + fxBH/2, 13, fc.text, '700');
+
+      // ── F(x) path to sum circle (elbow) ──
+      seg(LX, fxBY + fxBH, LX, sumY, fc.text);           // vertical
+      seg(LX, sumY, CX - sumR, sumY, fc.text);             // horizontal
+      arrowRight(CX - sumR, sumY, fc.text);                 // arrow into circle
+
+      // ── Identity (dashed) vertical on right ──
+      seg(RX, splitY, RX, sumY, '#166534', true);
+
+      // ── Identity horizontal to sum circle ──
+      seg(RX, sumY, CX + sumR, sumY, '#166534');
+      arrowLeft(CX + sumR, sumY, '#166534');
+
+      // ── Identity label ──
+      ctx.save();
+      ctx.font = '500 11px Inter, sans-serif';
+      ctx.fillStyle = '#166534';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const midIdY = (splitY + sumY) / 2 - 6;
+      ctx.fillText('identidade', RX, midIdY);
+      ctx.fillText('(atalho)', RX, midIdY + 14);
+      ctx.restore();
+
+      // ── Sum circle ⊕ ──
+      ctx.beginPath();
+      ctx.arc(CX, sumY, sumR, 0, Math.PI * 2);
+      ctx.fillStyle = '#fff7ed';
+      ctx.fill();
+      ctx.strokeStyle = '#c2410c';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+      ctext('⊕', CX, sumY, 17, '#c2410c', '700');
+
+      // ── Arrow from sum to output ──
+      seg(CX, sumY + sumR, CX, outY, '#5b21b6');
+      arrowDown(CX, outY, '#5b21b6');
+
+      // ── Output box ──
+      const outVal = X_INPUT + fx;
+      const oc = colorForOut(outVal);
+      rrect(CX - BW/2, outY, BW, outH, 8, oc.fill, oc.border);
+      ctext('x + F(x) = ' + outVal.toFixed(2), CX, outY + outH/2, 13, oc.text, '700');
+    }
+
+    /* ── Slider callback ──────────────────────────────────────────────── */
+    function onSliderChange(val) {
+      fxValue = parseFloat(val);
+      const fxStr = (fxValue >= 0 ? '+' : '') + fxValue.toFixed(2);
+      document.getElementById('fxLabel').textContent = fxStr;
+      document.getElementById('dispFx').textContent = fxStr;
+
+      const outVal = X_INPUT + fxValue;
+      document.getElementById('dispOut').textContent = outVal.toFixed(2);
+
+      const outColor = outVal > X_INPUT + 0.05 ? '#1d4ed8'
+                     : outVal < X_INPUT - 0.05 ? '#b91c1c'
+                     : '#166534';
+      document.getElementById('dispOut').style.color = outColor;
+
+      drawBlock(fxValue);
+    }
+
+    /* ── Initial render ───────────────────────────────────────────────── */
+    drawBlock(fxValue);
+  </script>
+</body>
+</html>

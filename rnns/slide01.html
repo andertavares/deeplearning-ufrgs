@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 1 – Redes Feedforward: Entradas Independentes</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="slide-container">
+    <!-- Header -->
+    <header class="slide-header">
+      <span class="course-tag">Redes Neurais Recorrentes</span>
+      <span class="prof-tag" style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 1 · Slide 1 / 2</span>
+    </header>
+
+    <!-- Content -->
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Redes Feedforward: Entradas Independentes</h1>
+        <p class="slide-subtitle">Cada exemplo é processado isoladamente — sem memória do passado</p>
+      </div>
+
+      <div class="content-split">
+        <!-- Left: dataset + network diagram -->
+        <div class="panel panel-left">
+          <h2 class="panel-title">Diagnóstico de câncer de mama</h2>
+
+          <div style="display:flex;flex-direction:column;align-items:center;gap:0.7rem;">
+            <!-- Dataset table -->
+            <div class="data-table" style="grid-template-columns:1fr;">
+              <div class="table-header" style="grid-template-columns:1.2fr 1fr 1fr 1fr;">
+                <span>Paciente</span><span>Raio médio</span><span>Textura</span><span>Perímetro</span>
+              </div>
+              <div class="table-row" id="row-a" style="--delay:0s; grid-template-columns:1.2fr 1fr 1fr 1fr;">
+                <span style="color:var(--teal);font-weight:700;">P1</span><span>17.99</span><span>10.38</span><span>122.8</span>
+              </div>
+              <div class="table-row" id="row-b" style="--delay:0.1s; grid-template-columns:1.2fr 1fr 1fr 1fr;">
+                <span style="color:var(--teal);font-weight:700;">P2</span><span>20.57</span><span>17.77</span><span>132.9</span>
+              </div>
+              <div class="table-row" id="row-c" style="--delay:0.2s; grid-template-columns:1.2fr 1fr 1fr 1fr;">
+                <span style="color:var(--teal);font-weight:700;">P3</span><span>13.08</span><span>15.71</span><span>85.63</span>
+              </div>
+            </div>
+            <div class="data-label">cada linha = um caso independente</div>
+
+            <!-- Arrow -->
+            <div class="arrow-flow" style="margin:0.3rem 0;">
+              <svg viewBox="0 0 80 30" class="flow-arrow">
+                <defs>
+                  <marker id="ah-ff" markerWidth="6" markerHeight="4" refX="6" refY="2" orient="auto">
+                    <polygon points="0 0, 6 2, 0 4" fill="#5eead4"/>
+                  </marker>
+                </defs>
+                <line x1="5" y1="15" x2="65" y2="15" stroke="#5eead4" stroke-width="2.5"
+                      marker-end="url(#ah-ff)" stroke-dasharray="5,3" class="animated-dash"/>
+              </svg>
+              <span class="arrow-label">vetor numérico isolado</span>
+            </div>
+
+            <!-- Feedforward network SVG -->
+            <svg id="ff-svg" viewBox="0 0 240 180" class="network-svg" style="max-height:160px;"></svg>
+
+            <!-- Output -->
+            <div class="output-box">
+              <div class="output-pill positive">✓ Benigno</div>
+              <div class="output-pill negative">✗ Maligno</div>
+            </div>
+          </div>
+
+          <div class="highlight-box teal">
+            <span class="icon">➡️</span>
+            <p><strong>Feedforward</strong>: informação percorre a rede da entrada à saída, sem memória de exemplos anteriores.</p>
+          </div>
+        </div>
+
+        <!-- Right: key points -->
+        <div class="panel panel-right">
+          <h2 class="panel-title">Por que isso funciona aqui?</h2>
+
+          <div class="concept-cards">
+            <div class="concept-card" style="--delay:0.1s">
+              <div class="card-icon">🗂️</div>
+              <div class="card-text">
+                <strong>Cada instância é autocontida</strong>
+                <p>Todos os atributos do paciente P1 estão na sua própria linha. Não é necessário olhar P2 ou P3 para interpretá-la.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.25s">
+              <div class="card-icon">🔀</div>
+              <div class="card-text">
+                <strong>Ordem não importa</strong>
+                <p>Embaralhar as linhas do dataset não altera o significado de nenhum exemplo. A rede produziria os mesmos resultados.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.4s">
+              <div class="card-icon">🖼️</div>
+              <div class="card-text">
+                <strong>Valem também para imagens isoladas</strong>
+                <p>Em classificação de imagens, cada foto carrega toda a informação. CNNs também são redes feedforward.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="insight-box" style="margin-top:auto;">
+            <span class="i-icon">💡</span>
+            <div class="i-text">
+              Esse é o regime mais simples: <strong>cada amostra é processada isoladamente</strong>.
+              Funciona muito bem — exceto quando o significado do presente <em>depende do passado</em>.
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Navigation -->
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" disabled>← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide02.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    // Draw feedforward network
+    const svg = document.getElementById('ff-svg');
+    const layers = [4, 5, 5, 2];
+    const layerX = [30, 90, 160, 215];
+    const nodeColors = ['#5eead4', '#2dd4bf', '#0d9488', '#0d6e6e'];
+
+    const positions = layers.map((n, li) => {
+      const arr = [];
+      const spacing = 30;
+      const startY = 90 - ((n - 1) * spacing) / 2;
+      for (let i = 0; i < n; i++) {
+        arr.push({ x: layerX[li], y: startY + i * spacing });
+      }
+      return arr;
+    });
+
+    // Draw connections
+    for (let li = 0; li < positions.length - 1; li++) {
+      for (const from of positions[li]) {
+        for (const to of positions[li + 1]) {
+          const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          line.setAttribute('x1', from.x); line.setAttribute('y1', from.y);
+          line.setAttribute('x2', to.x);   line.setAttribute('y2', to.y);
+          line.setAttribute('stroke', '#334155');
+          line.setAttribute('stroke-width', '1');
+          svg.appendChild(line);
+        }
+      }
+    }
+
+    // Draw nodes
+    positions.forEach((layer, li) => {
+      layer.forEach((pos, ni) => {
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', pos.x); circle.setAttribute('cy', pos.y);
+        circle.setAttribute('r', '10');
+        circle.setAttribute('fill', '#1e293b');
+        circle.setAttribute('stroke', nodeColors[li]);
+        circle.setAttribute('stroke-width', '2.5');
+        circle.classList.add('node-pulse');
+        circle.style.animationDelay = `${li * 0.15 + ni * 0.07}s`;
+        svg.appendChild(circle);
+      });
+    });
+
+    // Layer labels
+    const labels = ['Entrada', 'Oculta', 'Oculta', 'Saída'];
+    layerX.forEach((x, i) => {
+      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      text.setAttribute('x', x); text.setAttribute('y', 172);
+      text.setAttribute('text-anchor', 'middle');
+      text.setAttribute('fill', '#94a3b8');
+      text.setAttribute('font-size', '9');
+      text.setAttribute('font-family', 'Inter, sans-serif');
+      text.textContent = labels[i];
+      svg.appendChild(text);
+    });
+
+    // Animate "active row" cycling through the table
+    const rowIds = ['row-a', 'row-b', 'row-c'];
+    let current = 0;
+
+    function highlightRow(idx) {
+      rowIds.forEach((id, i) => {
+        const el = document.getElementById(id);
+        el.style.background = i === idx ? 'var(--teal-lt)' : '';
+        el.style.fontWeight  = i === idx ? '700' : '';
+      });
+    }
+
+    setInterval(() => {
+      current = (current + 1) % rowIds.length;
+      highlightRow(current);
+    }, 1600);
+
+    highlightRow(0);
+  </script>
+</body>
+</html>

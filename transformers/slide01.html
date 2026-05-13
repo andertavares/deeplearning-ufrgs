@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 1 – Motivação: Tarefas de PLN</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ---- Task cards grid ---- */
+    .tasks-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.9rem;
+      flex: 1;
+    }
+    .task-card {
+      background: var(--bg3);
+      border: 2px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 1rem 1.1rem;
+      cursor: pointer;
+      transition: all 0.22s;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .task-card:hover {
+      border-color: var(--teal);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(13,110,110,0.12);
+    }
+    .task-card.active {
+      border-color: var(--teal);
+      background: var(--teal-lt);
+    }
+    .task-card .tc-icon { font-size: 1.8rem; }
+    .task-card .tc-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .task-card .tc-hint {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      font-weight: 500;
+    }
+    .task-card .tc-badge {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.6rem;
+      font-size: 0.65rem;
+      font-weight: 700;
+      background: var(--teal-lt);
+      border: 1px solid #5eead4;
+      color: var(--teal);
+      border-radius: 999px;
+      padding: 0.1rem 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .task-card.active .tc-badge {
+      background: var(--teal);
+      color: #fff;
+      border-color: var(--teal);
+    }
+
+    /* ---- Example panel ---- */
+    .example-panel {
+      background: var(--bg2);
+      border: 2px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.3rem;
+      min-height: 160px;
+      transition: all 0.25s;
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+    }
+    .example-panel.visible {
+      border-color: var(--teal);
+      background: linear-gradient(135deg, #f0fdfb, #eff6ff);
+    }
+    .example-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--teal);
+    }
+    .example-content {
+      font-size: 0.97rem;
+      color: var(--text);
+      line-height: 1.6;
+      flex: 1;
+    }
+    .example-placeholder {
+      color: var(--text-dim);
+      font-style: italic;
+      font-size: 0.92rem;
+    }
+
+    /* ---- Highlighted tokens in examples ---- */
+    .hl-token {
+      display: inline-block;
+      padding: 0.05rem 0.45rem;
+      border-radius: 4px;
+      font-weight: 700;
+      font-family: 'Fira Code', monospace;
+    }
+    .hl-red  { background: #fee2e2; color: var(--red); }
+    .hl-green{ background: var(--green-lt); color: var(--green); }
+    .hl-blue { background: var(--blue-lt); color: var(--blue); }
+    .hl-teal { background: var(--teal-lt); color: var(--teal); }
+    .hl-yellow{ background: var(--yellow-lt); color: var(--yellow); }
+
+    /* ---- Professor speech box ---- */
+    .speech-box {
+      background: linear-gradient(135deg, var(--teal-lt), var(--blue-lt));
+      border: 1.5px solid #5eead4;
+      border-radius: var(--radius);
+      padding: 1rem 1.3rem;
+      display: flex;
+      gap: 0.8rem;
+      align-items: flex-start;
+    }
+    .speech-box .sp-icon { font-size: 1.5rem; flex-shrink: 0; }
+    .speech-box .sp-text {
+      font-size: 0.93rem;
+      line-height: 1.65;
+      color: var(--text);
+      font-style: italic;
+    }
+    .speech-box .sp-text strong { color: var(--teal); font-style: normal; }
+
+    /* ---- Fade-in animation ---- */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in { animation: fadeIn 0.3s ease both; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <!-- Header -->
+    <header class="slide-header">
+      <span class="course-tag">Transformers</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 1 · Slide 1 / 1</span>
+    </header>
+
+    <!-- Content -->
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Motivação: Tarefas de PLN</h1>
+        <p class="slide-subtitle">Clique em cada tarefa para ver um mini-exemplo</p>
+      </div>
+
+      <div class="content-split">
+        <!-- Left: task cards + example -->
+        <div class="panel panel-left">
+          <h2 class="panel-title">Tarefas de Processamento de Linguagem Natural</h2>
+
+          <div class="tasks-grid">
+            <div class="task-card" id="card-spam" onclick="selectTask('spam')">
+              <div class="tc-badge">classificação</div>
+              <div class="tc-icon">📧</div>
+              <div class="tc-title">Detecção de Spam</div>
+              <div class="tc-hint">E-mail legítimo ou indesejado?</div>
+            </div>
+            <div class="task-card" id="card-sentiment" onclick="selectTask('sentiment')">
+              <div class="tc-badge">classificação</div>
+              <div class="tc-icon">😊</div>
+              <div class="tc-title">Análise de Sentimentos</div>
+              <div class="tc-hint">Positivo, negativo ou neutro?</div>
+            </div>
+            <div class="task-card" id="card-ner" onclick="selectTask('ner')">
+              <div class="tc-badge">rotulação</div>
+              <div class="tc-icon">🏷️</div>
+              <div class="tc-title">Reconhecimento de Entidades</div>
+              <div class="tc-hint">Pessoas, lugares, organizações…</div>
+            </div>
+            <div class="task-card" id="card-chatbot" onclick="selectTask('chatbot')">
+              <div class="tc-badge">geração</div>
+              <div class="tc-icon">🤖</div>
+              <div class="tc-title">Agente Conversacional</div>
+              <div class="tc-hint">Pergunta → Resposta coerente</div>
+            </div>
+          </div>
+
+          <!-- Example area -->
+          <div class="example-panel" id="example-panel">
+            <div class="example-title" id="example-title">— selecione uma tarefa acima —</div>
+            <div class="example-content" id="example-content">
+              <span class="example-placeholder">Clique em um dos cartões para ver como o modelo processa texto nessa tarefa.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: why this matters -->
+        <div class="panel panel-right">
+          <h2 class="panel-title">O Desafio Comum</h2>
+
+          <div class="concept-cards">
+            <div class="concept-card" style="--delay:0.05s">
+              <div class="card-icon">🔤</div>
+              <div class="card-text">
+                <strong>Texto é simbólico, não numérico</strong>
+                <p>Redes neurais operam sobre números. A primeira grande tarefa é converter palavras em vetores que a rede consiga usar.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.15s">
+              <div class="card-icon">🌐</div>
+              <div class="card-text">
+                <strong>O significado depende do contexto</strong>
+                <p>"Banco" pode ser um assento, uma instituição financeira ou a margem de um rio — o sentido só emerge no contexto.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.25s">
+              <div class="card-icon">📐</div>
+              <div class="card-text">
+                <strong>A ordem das palavras importa</strong>
+                <p>"Ela saiu só" e "Só ela saiu" têm as mesmas palavras, mas transmitem ideias diferentes. Representar a posição é fundamental.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.35s">
+              <div class="card-icon">🔗</div>
+              <div class="card-text">
+                <strong>Relações de longa distância</strong>
+                <p>A palavra que dá sentido a um verbo pode estar dezenas de tokens atrás na frase. O modelo precisa conectá-las.</p>
+              </div>
+            </div>
+          </div>
+
+
+        </div>
+      </div>
+    </main>
+
+    <!-- Navigation -->
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" disabled>← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide02.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    const EXAMPLES = {
+      spam: {
+        title: '📧 Detecção de Spam',
+        html: `
+          <div style="margin-bottom:0.6rem;">
+            <span style="font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-dim);">Assunto do e-mail:</span>
+          </div>
+          <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:0.7rem 1rem;font-family:'Fira Code',monospace;font-size:0.92rem;color:var(--text);margin-bottom:0.8rem;">
+            "Parabéns! Você foi selecionado. Clique e resgate seu
+            <span class="hl-token hl-red">prêmio</span> de
+            <span class="hl-token hl-red">R$1.000,00</span>
+            agora! Só hoje!"
+          </div>
+          <div style="display:flex;gap:0.6rem;align-items:center;">
+            <span style="font-size:0.85rem;color:var(--text-muted);">Decisão do modelo:</span>
+            <span class="output-pill negative" style="font-size:0.82rem;padding:0.2rem 0.85rem;">🚫 SPAM</span>
+          </div>
+          <div style="margin-top:0.6rem;font-size:0.83rem;color:var(--text-dim);">
+            Palavras como <span class="hl-token hl-red" style="font-size:0.78rem;">prêmio</span> e
+            <span class="hl-token hl-red" style="font-size:0.78rem;">resgate</span> são indícios fortes — mas
+            palavras ambíguas como <span class="hl-token hl-yellow" style="font-size:0.78rem;">banco</span> precisam de contexto.
+          </div>`
+      },
+      sentiment: {
+        title: '😊 Análise de Sentimentos',
+        html: `
+          <div style="display:flex;flex-direction:column;gap:0.7rem;">
+            <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:0.65rem 0.9rem;font-size:0.9rem;">
+              "O atendimento foi
+              <span class="hl-token hl-red">péssimo</span>
+              e a comida chegou
+              <span class="hl-token hl-red">fria</span>."
+              <span style="float:right;" class="output-pill negative" style="font-size:0.75rem;padding:0.15rem 0.7rem;">👎 Negativo</span>
+            </div>
+            <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:0.65rem 0.9rem;font-size:0.9rem;">
+              "Experiência
+              <span class="hl-token hl-green">incrível</span>!
+              Voltarei com
+              <span class="hl-token hl-green">certeza</span>."
+              <span style="float:right;" class="output-pill positive" style="font-size:0.75rem;padding:0.15rem 0.7rem;">👍 Positivo</span>
+            </div>
+            <div style="font-size:0.83rem;color:var(--text-dim);">
+              O modelo precisa entender negação:
+              <span class="hl-token hl-yellow" style="font-size:0.78rem;">não gostei</span>
+              ≠
+              <span class="hl-token hl-green" style="font-size:0.78rem;">gostei</span>.
+              Contexto importa.
+            </div>
+          </div>`
+      },
+      ner: {
+        title: '🏷️ Reconhecimento de Entidades Nomeadas',
+        html: `
+          <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:0.8rem 1rem;font-size:0.93rem;line-height:1.8;margin-bottom:0.6rem;">
+            "<span class="hl-token hl-blue">Lula</span>
+            se reuniu com
+            <span class="hl-token hl-green">Dilma</span>
+            em
+            <span class="hl-token hl-teal">Brasília</span>
+            para discutir projetos do
+            <span class="hl-token hl-yellow">Banco Nacional</span>."
+          </div>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+            <span style="display:flex;align-items:center;gap:0.3rem;font-size:0.8rem;">
+              <span class="hl-token hl-blue" style="font-size:0.75rem;">PES</span> Pessoa
+            </span>
+            <span style="display:flex;align-items:center;gap:0.3rem;font-size:0.8rem;">
+              <span class="hl-token hl-teal" style="font-size:0.75rem;">LOC</span> Local
+            </span>
+            <span style="display:flex;align-items:center;gap:0.3rem;font-size:0.8rem;">
+              <span class="hl-token hl-yellow" style="font-size:0.75rem;">ORG</span> Organização
+            </span>
+          </div>
+          <div style="margin-top:0.5rem;font-size:0.83rem;color:var(--text-dim);">
+            O modelo precisa entender que "Banco" aqui é uma organização, não um objeto.
+          </div>`
+      },
+      chatbot: {
+        title: '🤖 Agente Conversacional',
+        html: `
+          <div style="display:flex;flex-direction:column;gap:0.6rem;">
+            <div style="display:flex;gap:0.6rem;align-items:flex-start;">
+              <span style="font-size:1.2rem;flex-shrink:0;">👤</span>
+              <div style="background:var(--blue-lt);border:1.5px solid #93c5fd;border-radius:8px 8px 8px 2px;padding:0.6rem 0.9rem;font-size:0.88rem;color:var(--blue);flex:1;">
+                "Qual é a capital do Brasil?"
+              </div>
+            </div>
+            <div style="display:flex;gap:0.6rem;align-items:flex-start;justify-content:flex-end;">
+              <div style="background:var(--teal-lt);border:1.5px solid #5eead4;border-radius:8px 8px 2px 8px;padding:0.6rem 0.9rem;font-size:0.88rem;color:var(--teal);flex:1;text-align:right;">
+                "A capital do Brasil é <strong>Brasília</strong>, inaugurada em 1960."
+              </div>
+              <span style="font-size:1.2rem;flex-shrink:0;">🤖</span>
+            </div>
+            <div style="font-size:0.83rem;color:var(--text-dim);margin-top:0.3rem;">
+              O modelo aprende a <em>gerar</em> texto coerente com o contexto da conversa — não apenas classificar.
+              É necessário <strong>compreender</strong> a pergunta e <strong>produzir</strong> uma resposta adequada.
+            </div>
+          </div>`
+      }
+    };
+
+    let activeTask = null;
+
+    function selectTask(task) {
+      // Deactivate previous
+      if (activeTask) {
+        document.getElementById('card-' + activeTask).classList.remove('active');
+      }
+
+      if (activeTask === task) {
+        // Toggle off
+        activeTask = null;
+        const panel = document.getElementById('example-panel');
+        panel.classList.remove('visible');
+        document.getElementById('example-title').textContent = '— selecione uma tarefa acima —';
+        document.getElementById('example-content').innerHTML =
+          '<span class="example-placeholder">Clique em um dos cartões para ver como o modelo processa texto nessa tarefa.</span>';
+        return;
+      }
+
+      activeTask = task;
+      document.getElementById('card-' + task).classList.add('active');
+
+      const ex = EXAMPLES[task];
+      const panel = document.getElementById('example-panel');
+      panel.classList.add('visible');
+
+      const title = document.getElementById('example-title');
+      const content = document.getElementById('example-content');
+
+      title.textContent = ex.title;
+      content.innerHTML = '<div class="fade-in">' + ex.html + '</div>';
+    }
+  </script>
+</body>
+</html>

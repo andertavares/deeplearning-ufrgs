@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 1 – Aprendizado de Representações</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="slide-container">
+    <!-- Header -->
+    <header class="slide-header">
+      <span class="course-tag">Redes Convolucionais</span>
+      <span class="prof-tag" style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 1 · Slide 1 / 5</span>
+    </header>
+
+    <!-- Content -->
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Aprendizado de Representações</h1>
+        <p class="slide-subtitle">Onde o MLP brilha — e onde ele encontra seus limites</p>
+      </div>
+
+      <div class="content-split">
+        <!-- Left: MLP diagram -->
+        <div class="panel panel-left">
+          <h2 class="panel-title">MLP clássico</h2>
+          <div class="mlp-demo">
+            <div class="data-source">
+              <div class="data-table">
+                <div class="table-header">
+                  <span>Idade</span><span>Renda</span><span>Dívida</span>
+                </div>
+                <div class="table-row animated-row" style="--delay: 0s">
+                  <span>34</span><span>5200</span><span>1500</span>
+                </div>
+                <div class="table-row animated-row" style="--delay: 0.1s">
+                  <span>52</span><span>8900</span><span>300</span>
+                </div>
+                <div class="table-row animated-row" style="--delay: 0.2s">
+                  <span>28</span><span>3100</span><span>2200</span>
+                </div>
+              </div>
+              <div class="data-label">Dados Tabulares</div>
+            </div>
+
+            <div class="arrow-flow">
+              <svg viewBox="0 0 80 30" class="flow-arrow">
+                <defs>
+                  <marker id="arrowhead1" markerWidth="6" markerHeight="4" refX="6" refY="2" orient="auto">
+                    <polygon points="0 0, 6 2, 0 4" fill="#a78bfa"/>
+                  </marker>
+                </defs>
+                <line x1="5" y1="15" x2="65" y2="15" stroke="#a78bfa" stroke-width="2.5" marker-end="url(#arrowhead1)" stroke-dasharray="5,3" class="animated-dash"/>
+              </svg>
+              <span class="arrow-label">vetor numérico direto</span>
+            </div>
+
+            <div class="mlp-net">
+              <svg id="mlp-svg" viewBox="0 0 200 220" class="network-svg"></svg>
+            </div>
+
+            <div class="output-box">
+              <div class="output-pill positive">✓ Aprovado</div>
+              <div class="output-pill negative">✗ Reprovado</div>
+            </div>
+          </div>
+
+          <div class="highlight-box green">
+            <span class="icon">✅</span>
+            <p>Os dados <strong>já são um vetor</strong>. O MLP recebe e processa diretamente.</p>
+          </div>
+        </div>
+
+        <!-- Right: key insight -->
+        <div class="panel panel-right">
+          <h2 class="panel-title">Por que o MLP funciona aqui?</h2>
+
+          <div class="concept-cards">
+            <div class="concept-card" style="--delay:0.1s">
+              <div class="card-icon">🔢</div>
+              <div class="card-text">
+                <strong>Entrada numérica estruturada</strong>
+                <p>Cada feature já é um número com significado bem definido.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.25s">
+              <div class="card-icon">📐</div>
+              <div class="card-text">
+                <strong>Dimensão fixa e pequena</strong>
+                <p>Poucos atributos — uma camada densa consegue aprender bem.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.4s">
+              <div class="card-icon">🎯</div>
+              <div class="card-text">
+                <strong>Sem estrutura espacial</strong>
+                <p>A ordem das colunas não importa — não há relação de vizinhança entre features.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="question-block">
+            <div class="question-label">🤔 E quando a entrada não é um vetor?</div>
+            <div class="question-examples">
+              <span class="example-chip img">🖼️ Imagem</span>
+              <span class="example-chip txt">📝 Texto</span>
+              <span class="example-chip aud">🎵 Áudio</span>
+            </div>
+            <div class="question-hint">→ Próximo slide!</div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Navigation -->
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href=''">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide02.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    // Draw MLP network
+    const svg = document.getElementById('mlp-svg');
+    const layers = [3, 4, 4, 2];
+    const layerX = [30, 80, 140, 190];
+    const colors = ['#a78bfa', '#818cf8', '#6366f1', '#4f46e5'];
+
+    const positions = layers.map((n, li) => {
+      const arr = [];
+      for (let i = 0; i < n; i++) {
+        const y = 110 - ((n - 1) * 30) / 2 + i * 30;
+        arr.push({ x: layerX[li], y });
+      }
+      return arr;
+    });
+
+    // Draw connections
+    for (let li = 0; li < positions.length - 1; li++) {
+      for (const from of positions[li]) {
+        for (const to of positions[li + 1]) {
+          const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          line.setAttribute('x1', from.x); line.setAttribute('y1', from.y);
+          line.setAttribute('x2', to.x); line.setAttribute('y2', to.y);
+          line.setAttribute('stroke', '#334155'); line.setAttribute('stroke-width', '1');
+          svg.appendChild(line);
+        }
+      }
+    }
+
+    // Draw nodes
+    positions.forEach((layer, li) => {
+      layer.forEach((pos, ni) => {
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', pos.x); circle.setAttribute('cy', pos.y);
+        circle.setAttribute('r', '10');
+        circle.setAttribute('fill', '#1e293b');
+        circle.setAttribute('stroke', colors[li]);
+        circle.setAttribute('stroke-width', '2.5');
+        circle.classList.add('node-pulse');
+        circle.style.animationDelay = `${li * 0.15 + ni * 0.07}s`;
+        svg.appendChild(circle);
+      });
+    });
+
+    // Labels
+    const labels = ['Entrada', 'Oculta', 'Oculta', 'Saída'];
+    layerX.forEach((x, i) => {
+      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      text.setAttribute('x', x); text.setAttribute('y', 210);
+      text.setAttribute('text-anchor', 'middle');
+      text.setAttribute('fill', '#94a3b8');
+      text.setAttribute('font-size', '9');
+      text.setAttribute('font-family', 'Inter, sans-serif');
+      text.textContent = labels[i];
+      svg.appendChild(text);
+    });
+  </script>
+</body>
+</html>

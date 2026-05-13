@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 03 – O Processo de Destruição: Cadeia de Markov</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .noise-demo {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    canvas#noiseCanvas {
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border2);
+      display: block;
+    }
+    .btn-row {
+      display: flex;
+      gap: 0.6rem;
+      align-items: center;
+    }
+    .btn-reset {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.5rem 1.1rem;
+      border-radius: 999px;
+      background: var(--bg3);
+      color: var(--text-muted);
+      border: 1.5px solid var(--border2);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-reset:hover { background: var(--blue-lt); color: var(--blue); border-color: var(--blue); }
+    .step-info {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      text-align: center;
+    }
+    .progress-bar-wrap {
+      width: 100%;
+      height: 8px;
+      background: var(--bg3);
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid var(--border2);
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--teal), var(--blue));
+      border-radius: 999px;
+      transition: width 0.3s;
+    }
+    .formula-box {
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem 0.9rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85rem;
+      color: var(--cyan);
+      text-align: center;
+      line-height: 1.6;
+      width: 100%;
+    }
+    .formula-note {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      text-align: center;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Difusão</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 3 · Slide 1 / 1</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <div class="slide-title">O Processo de Destruição: Cadeia de Markov</div>
+        <div class="slide-subtitle">Bloco 3 — Forward Process</div>
+      </div>
+
+      <div class="content-split">
+
+        <!-- Left: Noise Demo -->
+        <div class="panel noise-demo">
+          <div class="panel-title">🐶 Demo Interativo — Forward Process</div>
+          <canvas id="noiseCanvas" width="280" height="280"></canvas>
+          <div class="step-info" id="stepInfo">Passo: 0 / 20</div>
+          <div class="progress-bar-wrap" style="width:100%">
+            <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+          </div>
+          <div class="slider-row" style="width:100%">
+            <div class="slider-label" style="display:flex;justify-content:space-between;font-size:0.85rem;font-weight:600;color:var(--text-muted)">
+              <span>Passos de Difusão (t)</span>
+              <span id="tValue">t = 0</span>
+            </div>
+            <input type="range" id="tSlider" min="0" max="10" value="0" style="width:100%;accent-color:var(--teal);cursor:pointer" oninput="onSlider()" />
+          </div>
+          <div class="formula-box">
+            q(x<sub>t</sub> | x<sub>t-1</sub>)
+          </div>
+          <div class="formula-note">Distribuição condicional no passo t</div>
+          <div class="formula-box" style="color:var(--teal);font-size:0.78rem;">
+            q(x<sub>t</sub> | x<sub>t-1</sub>) = 𝒩(x<sub>t</sub>; √(1−β<sub>t</sub>) · x<sub>t-1</sub>, β<sub>t</sub> · I)
+          </div>
+          <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:0.6rem 0.8rem;font-size:0.78rem;line-height:1.8;color:var(--text-muted);width:100%;box-sizing:border-box">
+            <div><span style="font-family:'Fira Code',monospace;color:var(--cyan)">q(·|·)</span> — distribuição condicional do <em>forward process</em>: dado o passo anterior, qual a distribuição do próximo?</div>
+            <div><span style="font-family:'Fira Code',monospace;color:var(--cyan)">β<sub>t</sub></span> — cronograma de ruído (<em>noise schedule</em>): escalar pequeno (0&lt;β&lt;1) que controla <strong>o quanto de ruído</strong> é adicionado em cada passo; cresce ao longo do tempo</div>
+            <div><span style="font-family:'Fira Code',monospace;color:var(--cyan)">x<sub>t</sub></span> — imagem no passo <em>t</em> (vetor de todos os pixels)</div>
+            <div><span style="font-family:'Fira Code',monospace;color:var(--cyan)">√(1−β<sub>t</sub>) · x<sub>t-1</sub></span> — média: imagem anterior ligeiramente atenuada
+              <div style="margin:0.25rem 0 0 0.8rem;font-style:italic;color:var(--text-dim)">Por quê atenuar? Se adicionarmos ruído sem reduzir o sinal, a variância cresce sem limite a cada passo. O fator √(1−β<sub>t</sub>) &lt; 1 <strong>compensa exatamente</strong> a variância do ruído adicionado, mantendo a variância total ≈ 1 ao longo de toda a cadeia — condição necessária para que x<sub>T</sub> convirja para N(0, I).</div>
+            </div>
+            <div><span style="font-family:'Fira Code',monospace;color:var(--cyan)">β<sub>t</sub> · I</span> — variância: <strong>I</strong> é a identidade — ruído gaussiano independente em <strong>cada pixel</strong></div>
+            <div style="margin-top:0.4rem;color:var(--text-dim);font-style:italic">Cada pixel é perturbado de forma independente. A imagem inteira é tratada como um vetor.</div>
+          </div>
+        </div>
+
+        <!-- Right: Concept Cards -->
+        <div class="panel">
+          <div class="panel-title">📚 Conceitos do Forward Process</div>
+          <div class="concept-cards">
+            <div class="concept-card" style="--delay:0.05s">
+              <div class="card-icon">🖼️</div>
+              <div class="card-text">
+                <strong>De pixels a ruído</strong>
+                <p>Trocamos "tinta" por pixels e "água" por ruído estático gaussiano. O resultado final após T passos é praticamente ruído puro N(0,I).</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.12s">
+              <div class="card-icon">🔗</div>
+              <div class="card-text">
+                <strong>Cadeia de Markov</strong>
+                <p>Uma sequência de estados onde <strong>cada estado depende apenas do anterior</strong>. Não há memória longa — só o estado imediato importa.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.20s">
+              <div class="card-icon">⏭️</div>
+              <div class="card-text">
+                <strong>Processo Forward</strong>
+                <p>A cada passo <em>t</em>, adicionamos uma pequena quantidade de ruído gaussiano — incremental e controlado pelo cronograma β<sub>t</sub>.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.28s">
+              <div class="card-icon">⚡</div>
+              <div class="card-text">
+                <strong>Atalho Matemático</strong>
+                <p>Usando α̅<sub>t</sub> = ∏ (1-β<sub>i</sub>), podemos ir diretamente de x₀ ao x<sub>t</sub> em qualquer passo: <span style="font-family:'Fira Code',monospace;font-size:0.8rem;">x_t = √α̅_t · x₀ + √(1-α̅_t) · ε</span></p>
+              </div>
+            </div>
+          </div>
+          <div class="highlight-box blue">
+            <span class="icon">🧠</span>
+            <span>A propriedade Markoviana é poderosa: para adicionar ruído no passo <em>t</em>, só precisamos olhar para <strong>x<sub>t-1</sub></strong> — não para toda a história anterior.</span>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide02.html'">← Anterior</button>
+      <div class="nav-dots">
+        <div class="dot active"></div>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide04.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('noiseCanvas');
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    const MAX_STEPS = 10;
+    const TOTAL_RECTS = 20000;
+
+    // Pre-generate noise rectangles so positions are stable across slider moves
+    const noiseRects = Array.from({ length: TOTAL_RECTS }, () => ({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      sz: 3 + Math.random() * 5,
+      r: Math.floor(Math.random() * 256),
+      g: Math.floor(Math.random() * 256),
+      b: Math.floor(Math.random() * 256),
+    }));
+
+    function drawDog() {
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = '#f8f9fb';
+      ctx.fillRect(0, 0, W, H);
+      ctx.font = '200px serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🐶', W / 2, H / 2 + 10);
+    }
+
+    function render(t) {
+      drawDog();
+      const density = t / MAX_STEPS;
+      const numRects = Math.floor(Math.pow(density, 1.8) * TOTAL_RECTS);
+      const alpha = Math.min(0.92, Math.pow(density, 1.6) * 0.92);
+      for (let i = 0; i < numRects; i++) {
+        const p = noiseRects[i];
+        ctx.fillStyle = `rgba(${p.r},${p.g},${p.b},${alpha})`;
+        ctx.fillRect(p.x, p.y, p.sz, p.sz);
+      }
+      const label = t === 0 ? 't=0: Imagem original (sem ruído)'
+        : t < 4  ? `t=${t}: Difusão iniciando…`
+        : t < 7  ? `t=${t}: Difundindo pelo meio…`
+        : t < 10 ? `t=${t}: Quase ruído puro`
+        :          't=10: Ruído total — N(0, I)';
+      document.getElementById('stepInfo').textContent = label;
+      document.getElementById('progressFill').style.width = `${density * 100}%`;
+      document.getElementById('tValue').textContent = `t = ${t}`;
+    }
+
+    function onSlider() {
+      render(parseInt(document.getElementById('tSlider').value));
+    }
+
+    // Init
+    render(0);
+  </script>
+</body>
+</html>

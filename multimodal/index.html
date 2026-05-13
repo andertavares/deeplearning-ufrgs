@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Multimodal — Índice dos Slides</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f8f9fb; --bg2: #ffffff; --bg3: #f0f2f6;
+      --border: #c7d0e0; --border2: #d1d9e8;
+      --text: #0f1724; --text-muted: #3d4f6e; --text-dim: #6b7fa3;
+      --teal: #0d6e6e; --teal-lt: #ccfbf1; --blue: #1d4ed8; --blue-lt: #dbeafe;
+      --green: #166534; --green-lt: #dcfce7;
+      --grad1: linear-gradient(135deg, #0d6e6e, #1d4ed8);
+      --shadow: 0 2px 12px rgba(15,23,36,0.10);
+      --radius: 14px;
+    }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 3rem 1.5rem;
+    }
+    .hero { text-align: center; margin-bottom: 3rem; }
+    .badge {
+      display: inline-block;
+      padding: 0.3rem 1rem;
+      border-radius: 999px;
+      background: rgba(13,110,110,0.08);
+      border: 1px solid rgba(13,110,110,0.25);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 1.2rem;
+    }
+    h1 {
+      font-size: 2.4rem;
+      font-weight: 800;
+      background: var(--grad1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.75rem;
+    }
+    .hero-sub { color: var(--text-muted); font-size: 1.05rem; max-width: 580px; margin: 0 auto; line-height: 1.6; }
+
+    .blocks { display: flex; flex-direction: column; gap: 2rem; max-width: 900px; width: 100%; }
+    .block-section { }
+    .block-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--teal);
+      margin-bottom: 1rem;
+      padding-left: 0.5rem;
+      border-left: 3px solid var(--teal);
+    }
+    .slides-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1rem;
+    }
+    .slide-link {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      padding: 1.1rem 1.25rem;
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 14px;
+      text-decoration: none;
+      color: var(--text);
+      transition: all 0.2s;
+      box-shadow: 0 1px 4px rgba(15,23,36,0.07);
+    }
+    .slide-link:hover {
+      border-color: var(--teal);
+      box-shadow: 0 4px 16px rgba(13,110,110,0.12);
+      transform: translateY(-2px);
+    }
+    .sl-num { font-size: 0.7rem; font-weight: 700; color: var(--text-dim); letter-spacing: 0.08em; text-transform: uppercase; }
+    .sl-icon { font-size: 1.8rem; }
+    .sl-title { font-size: 0.95rem; font-weight: 700; color: var(--text); }
+    .sl-desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; }
+    .sl-tag {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      background: var(--teal-lt);
+      color: var(--teal);
+      margin-top: auto;
+      align-self: flex-start;
+    }
+    footer {
+      margin-top: 3rem;
+      color: var(--text-dim);
+      font-size: 0.8rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="hero">
+    <div class="badge">Deep Learning · UFRGS</div>
+    <h1>Aprendizado Multimodal</h1>
+    <p class="hero-sub">CLIP, treino contrastivo, zero-shot e recuperação multimodal — como texto e imagem aprendem a se entender.</p>
+  </div>
+
+  <div class="blocks">
+    <!-- Bloco 1 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 1 — O Problema</div>
+      <div class="slides-grid">
+        <a href="slide01.html" class="slide-link">
+          <div class="sl-num">Slide 01</div>
+          <div class="sl-icon">❓</div>
+          <div class="sl-title">O que significa ser multimodal?</div>
+          <div class="sl-desc">Explore o desafio: quando encoders são treinados separadamente, imagens e textos ficam em espaços não-relacionados — mesmo referindo-se ao mesmo conceito.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Bloco 2 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 2 — CLIP</div>
+      <div class="slides-grid">
+        <a href="slide02.html" class="slide-link">
+          <div class="sl-num">Slide 02</div>
+          <div class="sl-icon">🌐</div>
+          <div class="sl-title">CLIP: um espaço compartilhado</div>
+          <div class="sl-desc">O CLIP mapeia imagens e textos para o mesmo espaço semântico usando milhões de pares da internet.</div>
+          <div class="sl-tag">conceito</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Bloco 3 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 3 — Treino Contrastivo</div>
+      <div class="slides-grid">
+        <a href="slide03.html" class="slide-link">
+          <div class="sl-num">Slide 03</div>
+          <div class="sl-icon">📊</div>
+          <div class="sl-title">A matriz de similaridade</div>
+          <div class="sl-desc">Matriz N×N com encoder de imagem e encoder de texto; cada célula é a similaridade de cosseno entre os embeddings.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide04.html" class="slide-link">
+          <div class="sl-num">Slide 04</div>
+          <div class="sl-icon">🎯</div>
+          <div class="sl-title">Perda contrastiva</div>
+          <div class="sl-desc">A função InfoNCE/NT-Xent: maximizar diagonal, minimizar fora dela — em ambas as direções ao mesmo tempo.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Bloco 4 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 4 — Aplicações</div>
+      <div class="slides-grid">
+        <a href="slide05.html" class="slide-link">
+          <div class="sl-num">Slide 05</div>
+          <div class="sl-icon">🎲</div>
+          <div class="sl-title">Classificação zero-shot</div>
+          <div class="sl-desc">Diagrama Radford-style: embedding de imagem comparado com embeddings de textos candidatos — sem treino específico para as classes.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide06.html" class="slide-link">
+          <div class="sl-num">Slide 06</div>
+          <div class="sl-icon">🔍</div>
+          <div class="sl-title">Recuperação multimodal</div>
+          <div class="sl-desc">Mapa cartesiano 2D: escolha uma imagem ou texto como consulta e veja os alvos mais próximos sendo recuperados.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Bloco 5 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 5 — Aplicações Avançadas</div>
+      <div class="slides-grid">
+        <a href="slide07.html" class="slide-link">
+          <div class="sl-num">Slide 07</div>
+          <div class="sl-icon">🚀</div>
+          <div class="sl-title">Aplicações multimodais</div>
+          <div class="sl-desc">Diagramas visuais de Captioning, VQA e Assistentes Multimodais — aplicações que constroem sobre o CLIP.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Prof. Anderson Rocha Tavares · UFRGS · Deep Learning
+  </footer>
+</body>
+</html>

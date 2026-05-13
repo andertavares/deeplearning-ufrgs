@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 4 – Séries Temporais: Tendência Exige Histórico</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ---- Time-series chart ---- */
+    #ts-canvas {
+      border: 2px solid var(--border2);
+      border-radius: var(--radius-sm);
+      background: #0f172a;
+      display: block;
+      width: 100%;
+      max-height: 240px;
+    }
+    .window-slider-row {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      padding: 0.4rem 0;
+    }
+    .window-slider-row label {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+    #window-range {
+      flex: 1;
+      accent-color: var(--teal);
+      cursor: pointer;
+    }
+    #window-val {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--teal);
+      min-width: 2.2rem;
+      text-align: right;
+    }
+    .trend-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 1rem;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      transition: all 0.3s;
+    }
+    .trend-badge.up   { background: var(--green-lt);  color: var(--green); border: 1.5px solid #86efac; }
+    .trend-badge.down { background: #fee2e2;           color: var(--red);   border: 1.5px solid #fca5a5; }
+    .trend-badge.flat { background: var(--yellow-lt);  color: var(--yellow);border: 1.5px solid #fde047; }
+    .trend-badge.unknown { background: var(--bg3); color: var(--text-dim); border: 1.5px solid var(--border2); }
+
+    .window-info {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      font-family: 'Fira Code', monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <!-- Header -->
+    <header class="slide-header">
+      <span class="course-tag">Redes Neurais Recorrentes</span>
+      <span class="prof-tag" style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 2 · Slide 4 / 5</span>
+    </header>
+
+    <!-- Content -->
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Tendência Exige Histórico</h1>
+        <p class="slide-subtitle">Um único valor hoje não é suficiente para falar em tendência</p>
+      </div>
+
+      <div class="content-split">
+        <!-- Left: interactive chart -->
+        <div class="panel panel-left">
+          <h2 class="panel-title">📈 Cotação do Bitcoin (simulada)</h2>
+
+          <canvas id="ts-canvas" height="240"></canvas>
+
+          <div class="window-slider-row">
+            <label>Janela de contexto:</label>
+            <input type="range" id="window-range" min="1" max="20" value="1" />
+            <span id="window-val">1 ponto</span>
+          </div>
+
+          <div class="window-info">
+            <span id="window-desc">Mostrando apenas o valor atual</span>
+            <span id="trend-badge-wrap">
+              <span class="trend-badge unknown" id="trend-badge">❓ tendência desconhecida</span>
+            </span>
+          </div>
+
+          <div class="highlight-box blue" style="font-size:0.88rem;margin-top:0.2rem;">
+            <span class="icon">💡</span>
+            <span>Mova o controle para ampliar a janela e observe quando a tendência fica clara.</span>
+          </div>
+        </div>
+
+        <!-- Right: explanation -->
+        <div class="panel panel-right">
+          <h2 class="panel-title">📌 Tendência é um conceito temporal</h2>
+
+          <div class="concept-cards">
+            <div class="concept-card" style="--delay:0.05s">
+              <span class="card-icon">📊</span>
+              <div class="card-text">
+                <strong>Um ponto = um instante congelado</strong>
+                <p>Saber que o Bitcoin vale R$&nbsp;X hoje não diz nada sobre alta ou baixa. Precisamos de vários pontos no tempo.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.15s">
+              <span class="card-icon">📉</span>
+              <div class="card-text">
+                <strong>Mais contexto = mais certeza</strong>
+                <p>Com uma janela de 5, 10 ou 20 pontos a direção da série fica evidente — e a previsão do próximo valor melhora significativamente.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.25s">
+              <span class="card-icon">🔁</span>
+              <div class="card-text">
+                <strong>Dependência temporal</strong>
+                <p>O valor de amanhã depende do de hoje, de ontem, da semana passada…  Essa dependência encadeada é o que define uma série temporal.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="insight-box" style="margin-top:auto;">
+            <span class="i-icon">🔑</span>
+            <span class="i-text">
+              <strong>Ponto-chave:</strong> o problema não é ter <em>muitos</em> dados —
+              é que há <em>dependência temporal</em> entre eles.
+              Um modelo sem memória ignora essa estrutura.
+            </span>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Navigation -->
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide03.html'">← Anterior</button>
+      <div class="nav-dots">
+        <div class="dot"></div><div class="dot"></div>
+        <div class="dot"></div><div class="dot active"></div>
+        <div class="dot"></div>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide05.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    /* ── Synthetic BTC-like price series ── */
+    function generateSeries(n, seed) {
+      let s = seed || 42;
+      function rng() { s = (s * 1664525 + 1013904223) & 0xffffffff; return (s >>> 0) / 0xffffffff; }
+      const prices = [100];
+      for (let i = 1; i < n; i++) {
+        const trend = Math.sin(i / 8) * 0.6 + Math.cos(i / 15) * 0.3;
+        const noise = (rng() - 0.5) * 3;
+        prices.push(Math.max(10, prices[i-1] + trend + noise));
+      }
+      return prices;
+    }
+
+    const TOTAL_POINTS = 50;
+    const FOCUS_IDX    = 35; // the "current" point we're trying to predict from
+    const series = generateSeries(TOTAL_POINTS + 5, 2024);
+
+    const TEAL  = '#0d9488';
+    const GOLD  = '#fbbf24';
+    const RED   = '#ef4444';
+    const GREEN = '#22c55e';
+    const DIM   = 'rgba(255,255,255,0.12)';
+
+    const canvas  = document.getElementById('ts-canvas');
+    const ctx     = canvas.getContext('2d');
+    const range   = document.getElementById('window-range');
+    const valEl   = document.getElementById('window-val');
+    const descEl  = document.getElementById('window-desc');
+    const badge   = document.getElementById('trend-badge');
+
+    function drawChart(windowSize) {
+      canvas.width  = canvas.offsetWidth || 560;
+      canvas.height = parseInt(canvas.getAttribute('height')) || 240;
+      const W = canvas.width, H = canvas.height;
+      const PAD = { top: 16, right: 20, bottom: 28, left: 44 };
+
+      // data window
+      const startIdx = Math.max(0, FOCUS_IDX - windowSize + 1);
+      const visible  = series.slice(startIdx, FOCUS_IDX + 1);
+      const allForScale = series.slice(0, FOCUS_IDX + 3);
+      const minV = Math.min(...allForScale) - 3;
+      const maxV = Math.max(...allForScale) + 3;
+
+      function xOf(i) { return PAD.left + (i / (TOTAL_POINTS - 1)) * (W - PAD.left - PAD.right); }
+      function yOf(v) { return PAD.top + (1 - (v - minV) / (maxV - minV)) * (H - PAD.top - PAD.bottom); }
+
+      ctx.clearRect(0, 0, W, H);
+
+      // grid
+      ctx.strokeStyle = DIM; ctx.lineWidth = 1;
+      for (let gy = 0; gy <= 4; gy++) {
+        const yy = PAD.top + gy * (H - PAD.top - PAD.bottom) / 4;
+        ctx.beginPath(); ctx.moveTo(PAD.left, yy); ctx.lineTo(W - PAD.right, yy); ctx.stroke();
+        const val = maxV - gy * (maxV - minV) / 4;
+        ctx.fillStyle = 'rgba(255,255,255,0.35)';
+        ctx.font = '10px Fira Code, monospace';
+        ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+        ctx.fillText(val.toFixed(0), PAD.left - 5, yy);
+      }
+
+      // full dimmed series
+      ctx.beginPath();
+      series.forEach((v, i) => {
+        if (i === 0) ctx.moveTo(xOf(i), yOf(v));
+        else ctx.lineTo(xOf(i), yOf(v));
+      });
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1.5; ctx.stroke();
+
+      // visible window highlight
+      if (windowSize > 1) {
+        const x0 = xOf(startIdx);
+        const x1 = xOf(FOCUS_IDX);
+        ctx.fillStyle = 'rgba(13,148,136,0.07)';
+        ctx.fillRect(x0, PAD.top, x1 - x0, H - PAD.top - PAD.bottom);
+        // left boundary
+        ctx.strokeStyle = 'rgba(13,148,136,0.4)';
+        ctx.setLineDash([4, 3]);
+        ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(x0, PAD.top); ctx.lineTo(x0, H - PAD.bottom); ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // highlighted window line
+      ctx.beginPath();
+      visible.forEach((v, i) => {
+        const gi = startIdx + i;
+        if (i === 0) ctx.moveTo(xOf(gi), yOf(v));
+        else ctx.lineTo(xOf(gi), yOf(v));
+      });
+      ctx.strokeStyle = TEAL; ctx.lineWidth = 2.5; ctx.stroke();
+
+      // next point (prediction target)
+      const nextVal = series[FOCUS_IDX + 1];
+      const nx = xOf(FOCUS_IDX + 1), ny = yOf(nextVal);
+      ctx.beginPath(); ctx.arc(nx, ny, 10, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(251,191,36,0.15)'; ctx.fill();
+      ctx.strokeStyle = 'rgba(251,191,36,0.4)'; ctx.lineWidth = 1.5;
+      ctx.setLineDash([3, 3]); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = GOLD; ctx.font = 'bold 14px Inter, sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('?', nx, ny);
+
+      // dots for visible window
+      visible.forEach((v, i) => {
+        const gi = startIdx + i;
+        const alpha = 0.3 + 0.7 * ((i + 1) / visible.length);
+        ctx.beginPath(); ctx.arc(xOf(gi), yOf(v), 4, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(13,148,136,${alpha})`; ctx.fill();
+      });
+
+      // current point (larger)
+      ctx.beginPath(); ctx.arc(xOf(FOCUS_IDX), yOf(series[FOCUS_IDX]), 7, 0, Math.PI * 2);
+      ctx.fillStyle = TEAL; ctx.fill();
+      ctx.strokeStyle = '#f8fafc'; ctx.lineWidth = 2; ctx.stroke();
+
+      // x-axis label
+      ctx.fillStyle = 'rgba(255,255,255,0.4)';
+      ctx.font = '10px Fira Code, monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      ctx.fillText('tempo →', W / 2, H - PAD.bottom + 6);
+    }
+
+    function computeTrend(windowSize) {
+      const startIdx = Math.max(0, FOCUS_IDX - windowSize + 1);
+      const visible  = series.slice(startIdx, FOCUS_IDX + 1);
+      if (visible.length < 2) return 'unknown';
+      const first = visible[0], last = visible[visible.length - 1];
+      const diff = last - first;
+      if (Math.abs(diff) < 1.5) return 'flat';
+      return diff > 0 ? 'up' : 'down';
+    }
+
+    function update() {
+      const w = parseInt(range.value);
+      valEl.textContent = w + (w === 1 ? ' ponto' : ' pontos');
+      drawChart(w);
+
+      const trend = computeTrend(w);
+      if (w === 1) {
+        descEl.textContent = 'Mostrando apenas o valor atual';
+        badge.className = 'trend-badge unknown';
+        badge.textContent = '❓ tendência desconhecida';
+      } else if (trend === 'up') {
+        descEl.textContent = `Janela de ${w} pontos — tendência visível`;
+        badge.className = 'trend-badge up';
+        badge.textContent = '↑ Alta';
+      } else if (trend === 'down') {
+        descEl.textContent = `Janela de ${w} pontos — tendência visível`;
+        badge.className = 'trend-badge down';
+        badge.textContent = '↓ Baixa';
+      } else {
+        descEl.textContent = `Janela de ${w} pontos — mercado lateral`;
+        badge.className = 'trend-badge flat';
+        badge.textContent = '→ Lateral';
+      }
+    }
+
+    range.addEventListener('input', update);
+    const ro = new ResizeObserver(() => update());
+    ro.observe(canvas);
+    update();
+  </script>
+</body>
+</html>

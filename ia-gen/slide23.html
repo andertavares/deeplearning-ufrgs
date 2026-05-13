@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 23 – Quando usar cada um?</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .feat-list { list-style: none; display: flex; flex-direction: column; gap: 0.55rem; padding: 0; margin: 0; }
+    .feat-item { display: flex; align-items: flex-start; gap: 0.7rem; font-size: 0.88rem; }
+    .feat-icon { font-size: 1.1rem; flex-shrink: 0; }
+    .feat-text { color: var(--text-muted); line-height: 1.4; }
+    .feat-text strong { color: var(--text); }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">IA Generativa</span>
+      <span style="font-size:0.9rem;color:var(--text-muted);font-weight:500;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 11 · Slide 23 / 24</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Quando usar cada um?</h1>
+      </div>
+
+      <div class="content-split" style="max-width:780px;margin:0 auto;align-items:stretch;">
+
+        <div class="panel" style="border-color:var(--teal);">
+          <div style="display:flex;align-items:center;gap:0.7rem;margin-bottom:1rem;">
+            <span style="font-size:1.8rem;">🗜</span>
+            <span style="font-size:1.1rem;font-weight:800;color:var(--teal);">Autoencoder</span>
+          </div>
+          <ul class="feat-list">
+            <li class="feat-item">
+              <span class="feat-icon">📦</span>
+              <span class="feat-text"><strong>Compressão:</strong> reduzir dimensionalidade de dados</span>
+            </li>
+            <li class="feat-item">
+              <span class="feat-icon">🧹</span>
+              <span class="feat-text"><strong>Denoising:</strong> remover ruído de sinais e imagens</span>
+            </li>
+            <li class="feat-item">
+              <span class="feat-icon">🔎</span>
+              <span class="feat-text"><strong>Anomalia:</strong> detectar exemplos incomuns no dataset</span>
+            </li>
+            <li class="feat-item">
+              <span class="feat-icon">🧠</span>
+              <span class="feat-text"><strong>Representação:</strong> features para downstream tasks</span>
+            </li>
+            <li class="feat-item">
+              <span class="feat-icon">⚡</span>
+              <span class="feat-text"><strong>Rápido:</strong> treino estável e determinístico</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="panel" style="border-color:var(--cyan);">
+          <div style="display:flex;align-items:center;gap:0.7rem;margin-bottom:1rem;">
+            <span style="font-size:1.8rem;">🎨</span>
+            <span style="font-size:1.1rem;font-weight:800;color:var(--cyan);">GAN</span>
+          </div>
+          <ul class="feat-list">
+            <li class="feat-item">
+              <span class="feat-icon">📸</span>
+              <span class="feat-text"><strong>Síntese:</strong> gerar imagens e áudio realistas</span>
+            </li>
+            <li class="feat-item">
+              <span class="feat-icon">🔄</span>
+              <span class="feat-text"><strong>Augmentation:</strong> ampliar dataset de treino</span>
+            </li>
+            <li class="feat-item">
+              <span class="feat-icon">🎭</span>
+              <span class="feat-text"><strong>Style transfer:</strong> mudar estilo visual de imagens</span>
+            </li>
+            <li class="feat-item">
+              <span class="feat-icon">🏥</span>
+              <span class="feat-text"><strong>Dados médicos:</strong> gerar amostras sintéticas balanceadas</span>
+            </li>
+            <li class="feat-item">
+              <span class="feat-icon">⚠️</span>
+              <span class="feat-text"><strong style="color:var(--yellow);">Atenção:</strong> treino pode ser instável e delicado</span>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide22.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide24.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') location.href = 'slide24.html';
+      if (e.key === 'ArrowLeft'  || e.key === 'PageUp')   location.href = 'slide22.html';
+    });
+  </script>
+</body>
+</html>

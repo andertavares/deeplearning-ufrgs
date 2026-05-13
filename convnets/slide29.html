@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 29 – Normalização de Dados Tabulares</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .norm-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      flex: 1;
+    }
+
+    .norm-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.3rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      box-shadow: var(--shadow);
+      overflow-y: auto;
+    }
+
+    .mode-tabs {
+      display: flex;
+      gap: 0.5rem;
+      background: var(--bg3);
+      border-radius: 999px;
+      padding: 4px;
+      border: 1px solid var(--border2);
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 0.4rem 0.8rem;
+      border-radius: 999px;
+      border: none;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.22s;
+      background: transparent;
+      color: var(--text-muted);
+    }
+
+    .tab-btn.active-raw  { background: #fee2e2; color: var(--red); }
+    .tab-btn.active-norm { background: var(--green-lt); color: var(--green); }
+
+    .feat-table {
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border2);
+      overflow: hidden;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.78rem;
+    }
+
+    .ft-head,
+    .ft-row {
+      display: grid;
+      grid-template-columns: 1.28fr 0.8fr 1.15fr 0.92fr;
+    }
+
+    .ft-head {
+      background: var(--bg3);
+      border-bottom: 1.5px solid var(--border2);
+    }
+
+    .ft-head-cell {
+      padding: 0.4rem 0.6rem;
+      font-weight: 700;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .ft-row {
+      border-bottom: 1px solid var(--border2);
+      transition: background 0.2s;
+    }
+
+    .ft-row:last-child { border-bottom: none; }
+    .ft-row:hover { background: var(--bg3); }
+
+    .ft-cell {
+      padding: 0.38rem 0.6rem;
+      color: var(--text-muted);
+    }
+
+    .ft-cell.label-col { color: var(--text); font-weight: 600; }
+    .ft-cell.raw  { color: #b91c1c; }
+    .ft-cell.norm { color: #166534; }
+
+    .target-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 86px;
+      padding: 0.18rem 0.45rem;
+      border-radius: 999px;
+      font-size: 0.67rem;
+      font-weight: 700;
+      border: 1.5px solid;
+    }
+
+    .target-badge.approved {
+      background: var(--green-lt);
+      border-color: #86efac;
+      color: var(--green);
+    }
+
+    .target-badge.rejected {
+      background: #fee2e2;
+      border-color: #fca5a5;
+      color: #b91c1c;
+    }
+
+    .scale-row {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .scale-pill {
+      padding: 0.22rem 0.7rem;
+      border-radius: 999px;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.72rem;
+      font-weight: 700;
+      border: 1.5px solid;
+    }
+
+    .scale-pill.age    { background: #fef9c3; border-color: #fde047; color: #854d0e; }
+    .scale-pill.salary { background: #fee2e2; border-color: #fca5a5; color: #b91c1c; }
+
+    .formula-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .f-step {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.4rem 0.7rem;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border2);
+      background: var(--bg3);
+      font-family: 'Fira Code', monospace;
+      font-size: 0.78rem;
+    }
+
+    .f-step.active { background: var(--purple-lt); border-color: #c4b5fd; }
+
+    .f-num {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--purple);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.68rem;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    .f-eq { color: var(--purple); font-weight: 700; }
+
+    .mlp-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    #mlp-canvas {
+      display: block;
+      border-radius: var(--radius-sm);
+      background: #f8f9fb;
+      border: 1.5px solid var(--border2);
+    }
+
+    .train-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+      align-items: center;
+    }
+
+    .train-btn {
+      border: 1.5px solid var(--border2);
+      background: var(--bg3);
+      color: var(--text);
+      padding: 0.48rem 0.82rem;
+      border-radius: 999px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.76rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease;
+    }
+
+    .train-btn:hover:not(:disabled) { transform: translateY(-1px); }
+    .train-btn:disabled { opacity: 0.58; cursor: not-allowed; transform: none; }
+    .train-btn.primary { background: var(--purple); border-color: var(--purple); color: #fff; }
+    .train-btn.ghost { background: transparent; }
+
+    .epoch-pill {
+      padding: 0.28rem 0.72rem;
+      border-radius: 999px;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.72rem;
+      font-weight: 700;
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      color: var(--text-muted);
+    }
+
+    .train-note {
+      padding: 0.55rem 0.75rem;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border2);
+      background: var(--bg3);
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
+
+    .grad-section {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .grad-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .grad-label {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.72rem;
+      font-weight: 700;
+      width: 62px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .grad-track {
+      flex: 1;
+      height: 14px;
+      background: var(--bg3);
+      border-radius: 7px;
+      border: 1px solid var(--border2);
+      overflow: hidden;
+    }
+
+    .grad-fill {
+      height: 100%;
+      border-radius: 7px;
+      transition: width 0.35s ease, background 0.35s ease;
+    }
+
+    .grad-val {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.72rem;
+      font-weight: 700;
+      min-width: 52px;
+      text-align: right;
+    }
+
+    .instab-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      font-family: 'Fira Code', monospace;
+      transition: all 0.4s;
+    }
+
+    .instab-badge.bad  { background: #fee2e2; color: #b91c1c; border: 1.5px solid #fca5a5; }
+    .instab-badge.good { background: var(--green-lt); color: var(--green); border: 1.5px solid #86efac; }
+
+    .metric-row {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-top: 0.1rem;
+    }
+
+    .metric-item {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.76rem;
+      color: var(--text-muted);
+    }
+
+    .metric-item strong {
+      font-size: 0.78rem;
+      margin-left: 0.15rem;
+    }
+
+    .weights-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.45rem;
+    }
+
+    .weight-chip {
+      border: 1.5px solid var(--border2);
+      background: var(--bg3);
+      border-radius: var(--radius-sm);
+      padding: 0.45rem 0.6rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+
+    .weight-chip-label {
+      font-size: 0.67rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 700;
+    }
+
+    .weight-chip-val {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.79rem;
+      font-weight: 700;
+    }
+
+    .history-log {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      max-height: 176px;
+      overflow-y: auto;
+    }
+
+    .history-line {
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border2);
+      padding: 0.42rem 0.58rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.22rem;
+    }
+
+    .history-line.raw {
+      background: #fff7ed;
+      border-color: #fca5a5;
+    }
+
+    .history-line.norm {
+      background: #f0fdf4;
+      border-color: #86efac;
+    }
+
+    .history-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      flex-wrap: wrap;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.68rem;
+      font-weight: 700;
+    }
+
+    .history-snapshot {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .pred-box {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+
+    .pred-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .pred-sample-label {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      width: 72px;
+      flex-shrink: 0;
+    }
+
+    .pred-bar-track {
+      flex: 1;
+      height: 20px;
+      background: var(--bg3);
+      border-radius: 4px;
+      border: 1px solid var(--border2);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .pred-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.28s ease, background 0.28s ease;
+      display: flex;
+      align-items: center;
+      padding-left: 6px;
+    }
+
+    .pred-val {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.68rem;
+      font-weight: 700;
+    }
+
+    .pred-num {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.72rem;
+      font-weight: 700;
+      min-width: 36px;
+      text-align: right;
+    }
+
+    .true-label {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.68rem;
+      color: var(--text-dim);
+      min-width: 42px;
+    }
+
+    .roadmap {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      overflow-x: auto;
+      padding: 0.2rem 0;
+    }
+
+    .rm-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.3rem;
+      min-width: 60px;
+    }
+
+    .rm-box {
+      padding: 0.35rem 0.3rem;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid;
+      font-size: 0.63rem;
+      font-weight: 700;
+      text-align: center;
+      width: 56px;
+    }
+
+    .rm-box.done { background: var(--green-lt); border-color: #86efac; color: var(--green); }
+    .rm-box.curr { background: var(--purple-lt); border-color: #c4b5fd; color: var(--purple); }
+    .rm-label    { font-size: 0.58rem; color: var(--text-dim); font-family: 'Fira Code', monospace; text-align: center; }
+    .rm-arrow    { font-size: 0.9rem; color: var(--text-dim); flex-shrink: 0; margin: 0 0.05rem; padding-bottom: 1rem; }
+
+    .lr-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .lr-label {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .lr-val {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.72rem;
+      font-weight: 700;
+      min-width: 62px;
+      text-align: right;
+    }
+
+    #lrSlider {
+      flex: 1;
+      cursor: pointer;
+      accent-color: var(--purple);
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Redes Convolucionais</span>
+      <span class="prof-tag" style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 10 · Slide 1 / 5</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Normalização de Dados Tabulares 📏</h1>
+        <p class="slide-subtitle">Sem camada oculta, cada peso conecta diretamente uma feature à saída — fica óbvio por que a escala do salário domina o treino sem normalização.</p>
+      </div>
+
+      <div class="norm-layout">
+        <div class="norm-panel">
+          <div class="panel-title">Dataset: Crédito aprovado ou reprovado</div>
+
+          <div class="mode-tabs">
+            <button class="tab-btn active-raw" id="tabRaw" onclick="setMode('raw')">⚠️ Sem Normalizar</button>
+            <button class="tab-btn" id="tabNorm" onclick="setMode('norm')">✅ Normalizado (Z-score)</button>
+          </div>
+
+          <div class="feat-table">
+            <div class="ft-head">
+              <div class="ft-head-cell" style="color:var(--text-muted);">Amostra</div>
+              <div class="ft-head-cell" id="hAge" style="color:var(--yellow);">Idade</div>
+              <div class="ft-head-cell" id="hSalary" style="color:var(--red);">Salário (R$)</div>
+              <div class="ft-head-cell" style="color:var(--text-muted);">Crédito</div>
+            </div>
+            <div id="tableBody"></div>
+          </div>
+
+          <div id="scalePills" class="scale-row">
+            <span class="scale-pill age">Idade: 24–61</span>
+            <span class="scale-pill salary">Salário: 1800–12500</span>
+          </div>
+
+          <div class="highlight-box yellow" id="explainBox">
+            <span class="icon">⚠️</span>
+            <p>
+              <strong>Mesmo com só duas features, a escala ainda importa.</strong>
+              O salário injeta gradientes muito maiores e faz os pesos da primeira camada saltarem de época em época.
+            </p>
+          </div>
+
+          <div id="formulaSteps" style="display:none">
+            <div class="panel-title" style="margin-top:0;">Fórmula Z-score aplicada às entradas</div>
+            <div class="formula-steps">
+              <div class="f-step active">
+                <div class="f-num">1</div>
+                <div><span class="f-eq">μ</span> = média da coluna</div>
+              </div>
+              <div class="f-step active">
+                <div class="f-num">2</div>
+                <div><span class="f-eq">σ</span> = desvio padrão</div>
+              </div>
+              <div class="f-step active">
+                <div><span class="f-eq">x̂ = (x − μ) / σ</span> &nbsp;→ mesma ordem de grandeza</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel-title" style="margin-top:auto;">Onde estamos na aula</div>
+          <div class="roadmap">
+            <div class="rm-step">
+              <div class="rm-box done">✅ CNNs</div>
+              <div class="rm-label">Bl. 1–6</div>
+            </div>
+            <div class="rm-arrow">→</div>
+            <div class="rm-step">
+              <div class="rm-box done">✅ Backp.</div>
+              <div class="rm-label">Bl. 7–8</div>
+            </div>
+            <div class="rm-arrow">→</div>
+            <div class="rm-step">
+              <div class="rm-box done">✅ Skip</div>
+              <div class="rm-label">Bl. 9</div>
+            </div>
+            <div class="rm-arrow">→</div>
+            <div class="rm-step">
+              <div class="rm-box curr">📏 Norm.</div>
+              <div class="rm-label">Bl. 10</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="norm-panel">
+          <div class="panel-title">Regressão logística 2 → 1 (sem camada oculta)</div>
+
+          <div class="mlp-wrap">
+            <canvas id="mlp-canvas" width="360" height="170"></canvas>
+          </div>
+
+          <div class="train-toolbar">
+            <button class="train-btn primary" id="trainBtn" onclick="startTraining(12)">Treinar 12 épocas</button>
+            <button class="train-btn" id="stepBtn" onclick="trainOneEpoch()">Treinar 1 época</button>
+            <button class="train-btn ghost" id="resetBtn" onclick="resetCurrentMode()">Resetar</button>
+            <span class="epoch-pill" id="epochBadge">época 0</span>
+          </div>
+
+          <div class="lr-row">
+            <span class="lr-label">η (taxa aprendizado):</span>
+            <input type="range" id="lrSlider" min="0" max="100" step="1" oninput="onLrChange(this.value)" />
+            <span class="lr-val" id="lrVal">1.20e-5</span>
+          </div>
+
+          <div class="train-note" id="trainNote">
+            Clique em treinar para acompanhar, época por época, como os pesos mudam. Sem normalização, os pesos ligados a salário tendem a oscilar muito mais.
+          </div>
+
+          <div class="panel-title" style="margin-top:0.1rem;">
+            Gradientes médios nas entradas
+            <span class="instab-badge bad" id="instabBadge">⚡ instável</span>
+          </div>
+          <div class="grad-section">
+            <div class="grad-row">
+              <span class="grad-label" style="color:var(--yellow);">Idade</span>
+              <div class="grad-track"><div class="grad-fill" id="gfAge" style="width:4%;background:#854d0e;"></div></div>
+              <span class="grad-val" id="gvAge" style="color:#854d0e;">0.000</span>
+            </div>
+            <div class="grad-row">
+              <span class="grad-label" style="color:var(--red);">Salário</span>
+              <div class="grad-track"><div class="grad-fill" id="gfSalary" style="width:96%;background:#b91c1c;"></div></div>
+              <span class="grad-val" id="gvSalary" style="color:#b91c1c;">0.000</span>
+            </div>
+          </div>
+
+          <div class="metric-row">
+            <div class="metric-item">Loss atual:<strong id="lossVal" style="color:#b91c1c;">0.000</strong></div>
+            <div class="metric-item">Maior |Δw|:<strong id="deltaVal" style="color:#b91c1c;">0.000</strong></div>
+            <div class="metric-item">Var(pred):<strong id="varVal" style="color:#b91c1c;">0.000</strong></div>
+          </div>
+
+          <div class="panel-title" style="margin-top:0.1rem;">Pesos atuais</div>
+          <div class="weights-grid" id="weightsGrid"></div>
+
+          <div class="panel-title" style="margin-top:0.1rem;">Predições do MLP</div>
+          <div class="pred-box" id="predBox"></div>
+
+          <div class="panel-title" style="margin-top:0.1rem;">Mudanças por época</div>
+          <div class="history-log" id="historyLog"></div>
+
+          <div class="highlight-box green" id="insightBox" style="display:none;">
+            <span class="icon">✅</span>
+            <p>
+              Após o Z-score, <strong>idade e salário passam a contribuir em magnitudes parecidas</strong>.
+              O treino fica mais suave e os pesos deixam de dar saltos violentos.
+            </p>
+          </div>
+          <div class="highlight-box yellow" id="insightBoxRaw">
+            <span class="icon">⚠️</span>
+            <p>
+              Sem normalização, os pesos ligados a <strong>salário</strong> recebem as maiores correções.
+              O resultado é um histórico de épocas com mudanças bruscas e pouca estabilidade.
+            </p>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide28.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide30.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    const RAW = [
+      { label: 'Pessoa A', age: 24, salary: 1800,  y: 0 },
+      { label: 'Pessoa B', age: 31, salary: 4200,  y: 0 },
+      { label: 'Pessoa C', age: 37, salary: 8200,  y: 1 },
+      { label: 'Pessoa D', age: 52, salary: 12500, y: 1 },
+      { label: 'Pessoa E', age: 61, salary: 6500,  y: 1 },
+      { label: 'Pessoa F', age: 27, salary: 9600,  y: 0 },
+    ];
+
+    function mean(arr) {
+      return arr.reduce((sum, value) => sum + value, 0) / arr.length;
+    }
+
+    function std(arr, avg) {
+      return Math.sqrt(arr.reduce((sum, value) => sum + (value - avg) ** 2, 0) / arr.length);
+    }
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function sigmoid(value) {
+      return 1 / (1 + Math.exp(-value));
+    }
+
+    function copyModel(m) { return { W: m.W.slice(), b: m.b }; }
+
+    const ages = RAW.map(sample => sample.age);
+    const salaries = RAW.map(sample => sample.salary);
+    const muAge = mean(ages);
+    const muSalary = mean(salaries);
+    const sigmaAge = std(ages, muAge);
+    const sigmaSalary = std(salaries, muSalary);
+
+    const NORM = RAW.map(sample => ({
+      label: sample.label,
+      age: +((sample.age - muAge) / sigmaAge).toFixed(2),
+      salary: +((sample.salary - muSalary) / sigmaSalary).toFixed(2),
+      y: sample.y,
+    }));
+
+    const MODE_CONFIG = {
+      raw:  { learningRate: 0.000012, clip: 18, weightCap: 0.5,  biasCap: 2.5, wScale: 0.0001, jitter: 0.22, historyClass: 'raw',  lrMinExp: -7, lrMaxExp: -3 },
+      norm: { learningRate: 0.09,     clip: 4,  weightCap: 2.0,  biasCap: 2.5, wScale: 0.5,    jitter: 0.03, historyClass: 'norm', lrMinExp: -3, lrMaxExp:  0 },
+    };
+
+    const BASE_W = [0.5, -0.9];
+    const BASE_B  = 0.1;
+
+    let currentMode = 'raw';
+    let trainingTimer = null;
+    let isTraining = false;
+
+    function createInitialModel(mode) {
+      const c = MODE_CONFIG[mode];
+      return {
+        W: BASE_W.map(w => +(w * c.wScale).toFixed(6)),
+        b: BASE_B,
+      };
+    }
+
+    function createModeState(mode) {
+      const state = { mode, model: createInitialModel(mode), epoch: 0,
+        learningRate: MODE_CONFIG[mode].learningRate,
+        lastDelta: 0, loss: 0, variance: 0, grads: [0, 0], predictions: [], history: [] };
+      evaluateState(state);
+      return state;
+    }
+
+    const modeStates = { raw: createModeState('raw'), norm: createModeState('norm') };
+
+    function getDataset(mode) {
+      return mode === 'raw' ? RAW : NORM;
+    }
+
+    function forward(inputs, model) {
+      const logit = clamp(model.W[0] * inputs[0] + model.W[1] * inputs[1] + model.b, -12, 12);
+      return { logit, prob: sigmoid(logit) };
+    }
+
+    function computeGradients(model, inputs, target, mode) {
+      const c = MODE_CONFIG[mode];
+      const { prob } = forward(inputs, model);
+      const dLogit = prob - target;
+      return {
+        W: inputs.map((x, i) => {
+          const sc = (mode === 'raw' && i === 1) ? c.clip * 6 : c.clip;
+          return clamp(dLogit * x, -sc, sc);
+        }),
+        b: clamp(dLogit, -c.clip, c.clip),
+      };
+    }
+
+    function applyGradients(model, grad, mode, jitterSeed, lr) {
+      const c = MODE_CONFIG[mode];
+      const jitter = 1 + c.jitter * Math.sin(jitterSeed);
+      model.W = model.W.map((w, i) => clamp(w - lr * grad.W[i] * jitter, -c.weightCap, c.weightCap));
+      model.b = clamp(model.b - lr * grad.b * jitter, -c.biasCap, c.biasCap);
+    }
+
+    function getEpochOrder(epoch) {
+      const base = [0, 3, 1, 4, 2, 5];
+      return epoch % 2 === 0 ? base : base.slice().reverse();
+    }
+
+    function trainEpoch(state) {
+      const prev = copyModel(state.model);
+      const data = getDataset(state.mode);
+
+      if (state.mode === 'raw') {
+        getEpochOrder(state.epoch).forEach((idx, step) => {
+          const s = data[idx];
+          const g = computeGradients(state.model, [s.age, s.salary], s.y, state.mode);
+          applyGradients(state.model, g, state.mode, (state.epoch + 1) * 2.1 + (step + 1) * 1.3, state.learningRate);
+        });
+      } else {
+        const total = { W: [0, 0], b: 0 };
+        data.forEach(s => {
+          const g = computeGradients(state.model, [s.age, s.salary], s.y, state.mode);
+          total.W[0] += g.W[0];
+          total.W[1] += g.W[1];
+          total.b    += g.b;
+        });
+        total.W = total.W.map(v => v / data.length);
+        total.b /= data.length;
+        applyGradients(state.model, total, state.mode, (state.epoch + 1) * 1.15, state.learningRate);
+      }
+
+      state.epoch    += 1;
+      state.lastDelta = maxModelDelta(prev, state.model);
+      evaluateState(state);
+      state.history.unshift({
+        epoch: state.epoch, loss: state.loss, delta: state.lastDelta,
+        snapshot: snapshotModel(state.model),
+      });
+      state.history = state.history.slice(0, 8);
+    }
+
+    function maxModelDelta(prev, curr) {
+      const deltas = prev.W.map((v, i) => Math.abs(curr.W[i] - v));
+      deltas.push(Math.abs(curr.b - prev.b));
+      return Math.max(...deltas, 0);
+    }
+
+    function snapshotModel(model) {
+      return `w_idade ${formatSigned(model.W[0])} · w_salário ${formatSigned(model.W[1])} · bias ${formatSigned(model.b)}`;
+    }
+
+    function estimateInputGradients(model, data) {
+      const totals = [0, 0];
+      data.forEach(s => {
+        const inputs = [s.age, s.salary];
+        const { prob } = forward(inputs, model);
+        inputs.forEach((x, i) => { totals[i] += Math.abs((prob - s.y) * x); });
+      });
+      return totals.map(v => v / data.length);
+    }
+
+    function evaluateState(state) {
+      const data = getDataset(state.mode);
+      const preds = data.map(s => {
+        const { prob } = forward([s.age, s.salary], state.model);
+        return { label: s.label, y: s.y, prob };
+      });
+      const pm = preds.reduce((s, p) => s + p.prob, 0) / preds.length;
+      state.predictions = preds;
+      state.variance = preds.reduce((s, p) => s + (p.prob - pm) ** 2, 0) / preds.length;
+      state.loss = preds.reduce((s, p) =>
+        s - (p.y * Math.log(p.prob + 1e-9) + (1 - p.y) * Math.log(1 - p.prob + 1e-9)), 0
+      ) / preds.length;
+      state.grads = estimateInputGradients(state.model, data);
+    }
+
+    function formatSigned(value) {
+      const clipped = Math.abs(value) < 0.0005 ? 0 : value;
+      return `${clipped >= 0 ? '+' : ''}${clipped.toFixed(3)}`;
+    }
+
+    function buildTable(mode) {
+      const data = mode === 'raw' ? RAW : NORM;
+      const cls = mode === 'raw' ? 'raw' : 'norm';
+      const body = document.getElementById('tableBody');
+      body.innerHTML = '';
+
+      data.forEach((row, index) => {
+        const target = RAW[index].y === 1
+          ? '<span class="target-badge approved">Aprovado</span>'
+          : '<span class="target-badge rejected">Reprovado</span>';
+
+        const line = document.createElement('div');
+        line.className = 'ft-row';
+        line.innerHTML = `
+          <div class="ft-cell label-col">${row.label}</div>
+          <div class="ft-cell ${cls}">${mode === 'raw' ? row.age : row.age.toFixed(2)}</div>
+          <div class="ft-cell ${cls}">${mode === 'raw' ? row.salary.toLocaleString('pt-BR') : row.salary.toFixed(2)}</div>
+          <div class="ft-cell">${target}</div>
+        `;
+        body.appendChild(line);
+      });
+    }
+
+    function updateGradientBars(state) {
+      const gradients = state.grads;
+      const maxGrad = Math.max(...gradients, 1e-6);
+      const agePct = Math.round((gradients[0] / maxGrad) * 100);
+      const salaryPct = Math.round((gradients[1] / maxGrad) * 100);
+      const balanced = maxGrad / Math.max(Math.min(...gradients), 1e-6) < 4;
+
+      const ageFill = document.getElementById('gfAge');
+      const salaryFill = document.getElementById('gfSalary');
+      const ageValue = document.getElementById('gvAge');
+      const salaryValue = document.getElementById('gvSalary');
+      const badge = document.getElementById('instabBadge');
+
+      ageFill.style.width = `${agePct}%`;
+      salaryFill.style.width = `${salaryPct}%`;
+
+      if (state.mode === 'raw') {
+        ageFill.style.background = '#854d0e';
+        salaryFill.style.background = '#b91c1c';
+        ageValue.style.color = '#854d0e';
+        salaryValue.style.color = '#b91c1c';
+        badge.className = 'instab-badge bad';
+        badge.textContent = `⚡ salário ${Math.max(1, Math.round(gradients[1] / Math.max(gradients[0], 1e-6)))}× maior`;
+      } else {
+        ageFill.style.background = '#166534';
+        salaryFill.style.background = '#166534';
+        ageValue.style.color = '#166534';
+        salaryValue.style.color = '#166534';
+        badge.className = balanced ? 'instab-badge good' : 'instab-badge bad';
+        badge.textContent = balanced ? '✅ equilibrado' : '⚠️ ainda ajustando';
+      }
+
+      ageValue.textContent = gradients[0].toFixed(3);
+      salaryValue.textContent = gradients[1].toFixed(3);
+    }
+
+    function updateMetrics(state) {
+      const accent = state.mode === 'raw' ? '#b91c1c' : 'var(--green)';
+      const lossEl = document.getElementById('lossVal');
+      const deltaEl = document.getElementById('deltaVal');
+      const varEl = document.getElementById('varVal');
+
+      lossEl.textContent = state.loss.toFixed(3);
+      deltaEl.textContent = state.lastDelta.toFixed(3);
+      varEl.textContent = state.variance.toFixed(4);
+
+      lossEl.style.color = accent;
+      deltaEl.style.color = accent;
+      varEl.style.color = accent;
+    }
+
+    function updateWeights(state) {
+      const grid   = document.getElementById('weightsGrid');
+      const accent = state.mode === 'raw' ? '#b91c1c' : '#166534';
+      const rows = [
+        ['w_idade',   state.model.W[0]],
+        ['w_salário', state.model.W[1]],
+        ['bias',      state.model.b],
+      ];
+      grid.innerHTML = rows.map(([label, v]) => `
+        <div class="weight-chip">
+          <span class="weight-chip-label">${label}</span>
+          <span class="weight-chip-val" style="color:${accent};">${formatSigned(v)}</span>
+        </div>
+      `).join('');
+    }
+
+    function updatePredictions(state) {
+      const container = document.getElementById('predBox');
+      container.innerHTML = '';
+
+      state.predictions.forEach(prediction => {
+        const isCorrect = (prediction.prob >= 0.5 && prediction.y === 1) || (prediction.prob < 0.5 && prediction.y === 0);
+        const barColor = isCorrect
+          ? (state.mode === 'norm' ? '#166534' : '#c2410c')
+          : '#b91c1c';
+        const bgColor = isCorrect
+          ? (state.mode === 'norm' ? '#dcfce7' : '#fff7ed')
+          : '#fee2e2';
+
+        const row = document.createElement('div');
+        row.className = 'pred-row';
+        row.innerHTML = `
+          <span class="pred-sample-label">${prediction.label}</span>
+          <div class="pred-bar-track">
+            <div class="pred-bar-fill" style="width:${Math.round(prediction.prob * 100)}%;background:${bgColor};">
+              <span class="pred-val" style="color:${barColor};">${(prediction.prob * 100).toFixed(1)}%</span>
+            </div>
+          </div>
+          <span class="pred-num" style="color:${barColor};">${prediction.prob.toFixed(3)}</span>
+          <span class="true-label">y=${prediction.y}</span>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function updateHistory(state) {
+      const history = document.getElementById('historyLog');
+      if (state.history.length === 0) {
+        history.innerHTML = `
+          <div class="history-line ${MODE_CONFIG[state.mode].historyClass}">
+            <div class="history-meta">época 0 · pesos iniciais</div>
+            <div class="history-snapshot">${snapshotModel(state.model)}</div>
+          </div>
+        `;
+        return;
+      }
+
+      history.innerHTML = state.history.map(entry => `
+        <div class="history-line ${MODE_CONFIG[state.mode].historyClass}">
+          <div class="history-meta">
+            <span>E${String(entry.epoch).padStart(2, '0')}</span>
+            <span>loss ${entry.loss.toFixed(3)}</span>
+            <span>Δmax ${entry.delta.toFixed(3)}</span>
+          </div>
+          <div class="history-snapshot">${entry.snapshot}</div>
+        </div>
+      `).join('');
+    }
+
+    function lrToSlider(lr, mode) {
+      const c = MODE_CONFIG[mode];
+      return Math.round(((Math.log10(lr) - c.lrMinExp) / (c.lrMaxExp - c.lrMinExp)) * 100);
+    }
+
+    function sliderToLr(val, mode) {
+      const c = MODE_CONFIG[mode];
+      return Math.pow(10, c.lrMinExp + (c.lrMaxExp - c.lrMinExp) * Number(val) / 100);
+    }
+
+    function formatLr(lr) {
+      return lr < 0.001 ? lr.toExponential(2) : lr.toFixed(4);
+    }
+
+    function onLrChange(val) {
+      const lr = sliderToLr(val, currentMode);
+      modeStates[currentMode].learningRate = lr;
+      const el = document.getElementById('lrVal');
+      el.textContent = formatLr(lr);
+      el.style.color = currentMode === 'raw' ? '#b91c1c' : '#166534';
+    }
+
+    function updateLrSlider(state) {
+      const slider = document.getElementById('lrSlider');
+      const el     = document.getElementById('lrVal');
+      slider.value   = lrToSlider(state.learningRate, state.mode);
+      el.textContent = formatLr(state.learningRate);
+      el.style.color = state.mode === 'raw' ? '#b91c1c' : '#166534';
+    }
+
+    function drawMLP(state) {
+      const canvas = document.getElementById('mlp-canvas');
+      const ctx    = canvas.getContext('2d');
+      const W = canvas.width, H = canvas.height;
+      ctx.clearRect(0, 0, W, H);
+
+      const radius  = 18;
+      const inputX  = 90;
+      const outputX = 270;
+      const inputYs = [H / 2 - 32, H / 2 + 32];
+      const outputY = H / 2;
+
+      const wAbs = state.model.W.map(Math.abs);
+      const maxW = Math.max(...wAbs, 0.001);
+
+      // Draw weighted edges with weight label at midpoint
+      state.model.W.forEach((w, i) => {
+        const strength = wAbs[i] / maxW;
+        ctx.beginPath();
+        ctx.moveTo(inputX + radius, inputYs[i]);
+        ctx.lineTo(outputX - radius, outputY);
+        ctx.lineWidth   = 1.5 + strength * 5;
+        ctx.strokeStyle = w >= 0
+          ? (state.mode === 'raw' ? '#c2410caa' : '#166834bb')
+          : '#5b21b6aa';
+        ctx.stroke();
+
+        const mx = (inputX + radius + outputX - radius) / 2;
+        const my = (inputYs[i] + outputY) / 2;
+        const txt = formatSigned(w);
+        ctx.font = 'bold 9px Fira Code, monospace';
+        const tw = ctx.measureText(txt).width + 6;
+        ctx.fillStyle = 'rgba(255,255,255,0.85)';
+        ctx.fillRect(mx - tw / 2, my - 8, tw, 16);
+        ctx.fillStyle    = w >= 0
+          ? (state.mode === 'raw' ? '#c2410c' : '#166534')
+          : '#5b21b6';
+        ctx.textAlign    = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(txt, mx, my);
+      });
+
+      // Input nodes
+      [
+        { fill: '#fef9c3', stroke: '#fde047', label: 'Idade'   },
+        { fill: '#fee2e2', stroke: '#fca5a5', label: 'Salário' },
+      ].forEach((node, i) => {
+        ctx.beginPath();
+        ctx.arc(inputX, inputYs[i], radius, 0, Math.PI * 2);
+        ctx.fillStyle   = node.fill;
+        ctx.strokeStyle = node.stroke;
+        ctx.lineWidth   = 2;
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle    = '#334155';
+        ctx.font         = '700 9px Fira Code, monospace';
+        ctx.textAlign    = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(node.label, inputX, inputYs[i]);
+      });
+
+      // Output node
+      ctx.beginPath();
+      ctx.arc(outputX, outputY, radius, 0, Math.PI * 2);
+      ctx.fillStyle   = state.mode === 'raw' ? '#fff7ed' : '#f0fdf4';
+      ctx.strokeStyle = state.mode === 'raw' ? '#fb923c' : '#22c55e';
+      ctx.lineWidth   = 2;
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle    = '#334155';
+      ctx.font         = '700 8px Inter, sans-serif';
+      ctx.textAlign    = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('crédito', outputX, outputY);
+
+      // Layer labels
+      [['Entrada', inputX], ['Saída', outputX]].forEach(([label, x]) => {
+        ctx.fillStyle    = '#6b7fa3';
+        ctx.font         = '600 9px Inter, sans-serif';
+        ctx.textAlign    = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillText(label, x, H - 14);
+      });
+
+      // Top caption
+      ctx.fillStyle = state.mode === 'raw' ? '#b91c1c' : '#166534';
+      ctx.font      = '700 10px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(
+        state.mode === 'raw' ? 'Treino errático: salário domina os gradientes' : 'Treino estável: ambos os pesos evoluem juntos',
+        W / 2, 10
+      );
+    }
+
+    function updateNarrative(state) {
+      const explainBox = document.getElementById('explainBox');
+      const trainNote  = document.getElementById('trainNote');
+      if (state.mode === 'raw') {
+        explainBox.className = 'highlight-box yellow';
+        explainBox.innerHTML = '<span class="icon">⚠️</span><p><strong>Sem Z-score, salário domina.</strong> Como os valores brutos chegam a 12 500, o gradiente ∂L/∂w_salário é centenas de vezes maior que ∂L/∂w_idade, e o modelo fica instável.</p>';
+        trainNote.textContent = isTraining
+          ? 'Treinando sem normalização: w_salário muda muito mais do que w_idade a cada época.'
+          : 'Clique em treinar e observe como w_salário oscila enquanto w_idade quase não muda.';
+      } else {
+        explainBox.className = 'highlight-box green';
+        explainBox.innerHTML = '<span class="icon">✅</span><p><strong>Após o Z-score, ambas as features ficam na mesma escala.</strong> Os gradientes ∂L/∂w_idade e ∂L/∂w_salário passam a ter magnitudes comparáveis, e o treino converge de forma mais suave.</p>';
+        trainNote.textContent = isTraining
+          ? 'Treinando com Z-score: as duas atualizações de peso ficam equilibradas.'
+          : 'Compare o histórico com o modo bruto. Aqui os dois pesos variam de forma proporcional.';
+      }
+    }
+
+    function updateModeChrome(mode) {
+      const tabRaw = document.getElementById('tabRaw');
+      const tabNorm = document.getElementById('tabNorm');
+      tabRaw.className = 'tab-btn' + (mode === 'raw' ? ' active-raw' : '');
+      tabNorm.className = 'tab-btn' + (mode === 'norm' ? ' active-norm' : '');
+
+      document.getElementById('hAge').style.color = mode === 'raw' ? 'var(--yellow)' : 'var(--green)';
+      document.getElementById('hSalary').style.color = mode === 'raw' ? 'var(--red)' : 'var(--green)';
+      document.getElementById('scalePills').style.display = mode === 'raw' ? 'flex' : 'none';
+      document.getElementById('formulaSteps').style.display = mode === 'norm' ? 'block' : 'none';
+      document.getElementById('insightBox').style.display = mode === 'norm' ? 'block' : 'none';
+      document.getElementById('insightBoxRaw').style.display = mode === 'raw' ? 'block' : 'none';
+    }
+
+    function updateControls(state) {
+      document.getElementById('epochBadge').textContent = `época ${state.epoch}`;
+      document.getElementById('trainBtn').disabled = isTraining;
+      document.getElementById('stepBtn').disabled = isTraining;
+      document.getElementById('resetBtn').disabled = isTraining;
+    }
+
+    function render() {
+      const state = modeStates[currentMode];
+      buildTable(currentMode);
+      updateModeChrome(currentMode);
+      updateControls(state);
+      updateNarrative(state);
+      updateLrSlider(state);
+      updateGradientBars(state);
+      updateMetrics(state);
+      updateWeights(state);
+      updatePredictions(state);
+      updateHistory(state);
+      drawMLP(state);
+    }
+
+    function stopTraining() {
+      if (trainingTimer) {
+        clearTimeout(trainingTimer);
+        trainingTimer = null;
+      }
+      isTraining = false;
+    }
+
+    function runTraining(remainingEpochs, modeAtStart) {
+      if (remainingEpochs <= 0 || currentMode !== modeAtStart) {
+        stopTraining();
+        render();
+        return;
+      }
+
+      const state = modeStates[modeAtStart];
+      trainEpoch(state);
+      render();
+      trainingTimer = setTimeout(() => runTraining(remainingEpochs - 1, modeAtStart), 320);
+    }
+
+    function startTraining(totalEpochs) {
+      if (isTraining) {
+        return;
+      }
+      isTraining = true;
+      render();
+      runTraining(totalEpochs, currentMode);
+    }
+
+    function trainOneEpoch() {
+      if (isTraining) {
+        return;
+      }
+      trainEpoch(modeStates[currentMode]);
+      render();
+    }
+
+    function resetCurrentMode() {
+      stopTraining();
+      modeStates[currentMode] = createModeState(currentMode);
+      render();
+    }
+
+    function setMode(mode) {
+      stopTraining();
+      currentMode = mode;
+      render();
+    }
+
+    render();
+  </script>
+</body>
+</html>

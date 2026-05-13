@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 18 – O jogo entre as redes</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .cycle-row {
+      display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+      justify-content: center; font-size: 0.88rem; padding: 0.6rem 0;
+    }
+    @keyframes arrowBounce {
+      0%, 100% { transform: translateX(0); }
+      50%       { transform: translateX(4px); }
+    }
+    .anim-arrow { animation: arrowBounce 1.5s ease-in-out infinite; font-size: 1.1rem; color: var(--text-dim); }
+    .feat-list { list-style: none; display: flex; flex-direction: column; gap: 0.4rem; }
+    .feat-list li { font-size: 0.83rem; color: var(--text-muted); }
+    .feat-list li::before { content: '• '; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">IA Generativa</span>
+      <span style="font-size:0.9rem;color:var(--text-muted);font-weight:500;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 9 · Slide 18 / 24</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">O jogo entre as redes</h1>
+      </div>
+
+      <div class="content-split" style="max-width:720px;margin:0 auto;align-items:stretch;">
+        <div class="panel" style="text-align:center;border-color:var(--teal);">
+          <div style="font-size:2rem;margin-bottom:0.5rem;">🖨</div>
+          <div style="font-size:1rem;font-weight:800;color:var(--teal);margin-bottom:0.6rem;">Gerador = Falsificador</div>
+          <ul class="feat-list" style="text-align:left;">
+            <li>Aprende a criar notas falsas</li>
+            <li>Melhora para <em>enganar</em> o perito</li>
+            <li>Nunca vê os dados reais diretamente</li>
+          </ul>
+        </div>
+        <div class="panel" style="text-align:center;border-color:var(--cyan);">
+          <div style="font-size:2rem;margin-bottom:0.5rem;">🔬</div>
+          <div style="font-size:1rem;font-weight:800;color:var(--cyan);margin-bottom:0.6rem;">Discriminador = Perito</div>
+          <ul class="feat-list" style="text-align:left;">
+            <li>Aprende a detectar fraudes</li>
+            <li>Melhora com exemplos reais e falsos</li>
+            <li>Pressiona o gerador a evoluir</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="panel" style="max-width:700px;margin:0 auto;">
+        <div class="cycle-row">
+          <span style="color:var(--teal);font-weight:700;">G melhora</span>
+          <span class="anim-arrow">→</span>
+          <span style="color:var(--cyan);font-weight:700;">D precisa melhorar</span>
+          <span class="anim-arrow">→</span>
+          <span style="color:var(--teal);font-weight:700;">G precisa melhorar mais</span>
+          <span class="anim-arrow">→</span>
+          <span style="color:var(--yellow);font-weight:700;">Equilíbrio</span>
+        </div>
+      </div>
+
+      <div class="insight-box" style="max-width:680px;margin:0 auto;">
+        <span class="i-icon">⚖️</span>
+        <div class="i-text">
+          <strong>Equilíbrio de Nash</strong> — o treino converge quando D não consegue mais
+          distinguir real de falso, acertando apenas ~50% das vezes.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide17.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide19.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') location.href = 'slide19.html';
+      if (e.key === 'ArrowLeft'  || e.key === 'PageUp')   location.href = 'slide17.html';
+    });
+  </script>
+</body>
+</html>

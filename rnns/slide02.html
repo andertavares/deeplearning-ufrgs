@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 2 – Embaralhe as Linhas</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ---- Shuffle table ---- */
+    #shuffle-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.9rem;
+    }
+    #shuffle-table thead tr {
+      background: var(--bg3);
+    }
+    #shuffle-table th {
+      color: var(--cyan);
+      font-weight: 700;
+      padding: 0.45rem 0.7rem;
+      border-bottom: 2px solid var(--border2);
+      text-align: left;
+      font-size: 0.82rem;
+      letter-spacing: 0.04em;
+    }
+    .shuffle-row {
+      transition: background 0.25s, transform 0.2s;
+      cursor: grab;
+      user-select: none;
+    }
+    .shuffle-row:active { cursor: grabbing; }
+    .shuffle-row td {
+      padding: 0.45rem 0.7rem;
+      border-bottom: 1px solid var(--border2);
+      color: var(--text-muted);
+    }
+    .shuffle-row td:first-child {
+      font-weight: 700;
+      color: var(--teal);
+    }
+    .shuffle-row.dragging {
+      opacity: 0.45;
+      background: var(--teal-lt);
+    }
+    .shuffle-row.drag-over {
+      border-top: 3px solid var(--teal);
+    }
+    .shuffle-row.highlighted {
+      background: var(--teal-lt);
+      transform: scale(1.01);
+    }
+
+    /* ---- Order badge ---- */
+    .order-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: var(--teal-lt);
+      border: 1.5px solid #5eead4;
+      color: var(--teal);
+      font-size: 0.75rem;
+      font-weight: 700;
+      font-family: 'Fira Code', monospace;
+      margin-right: 0.35rem;
+    }
+
+    /* ---- Network animation area ---- */
+    #net-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.8rem;
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius-sm);
+    }
+    #active-row-display {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85rem;
+      color: var(--teal);
+      background: var(--teal-lt);
+      border: 1.5px solid #5eead4;
+      border-radius: var(--radius-sm);
+      padding: 0.35rem 1rem;
+      text-align: center;
+      min-height: 1.8rem;
+      transition: all 0.3s;
+    }
+    #net-svg { width: 100%; max-height: 120px; }
+
+    /* ---- Shuffle button ---- */
+    .shuffle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.55rem 1.4rem;
+      border-radius: 999px;
+      background: var(--teal);
+      color: #fff;
+      border: none;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.97rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .shuffle-btn:hover { background: #0a5454; transform: scale(1.03); }
+    .shuffle-btn:active { transform: scale(0.98); }
+
+    /* ---- Result unchanged notice ---- */
+    #unchanged-notice {
+      display: none;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.65rem 1.1rem;
+      background: var(--green-lt);
+      border: 1.5px solid #86efac;
+      border-radius: var(--radius-sm);
+      color: var(--green);
+      font-size: 0.92rem;
+      font-weight: 600;
+      animation: popIn 0.35s ease;
+    }
+    @keyframes popIn {
+      from { transform: scale(0.92); opacity: 0; }
+      to   { transform: scale(1);    opacity: 1; }
+    }
+
+    /* ---- Transition box ---- */
+    .transition-box {
+      background: linear-gradient(135deg, var(--teal-lt), var(--blue-lt));
+      border: 2px dashed var(--teal);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.4rem;
+      display: flex;
+      gap: 0.9rem;
+      align-items: flex-start;
+    }
+    .transition-box .t-icon { font-size: 1.7rem; flex-shrink: 0; }
+    .transition-box .t-text {
+      font-size: 1rem;
+      line-height: 1.65;
+      color: var(--text);
+      font-style: italic;
+    }
+    .transition-box .t-text strong { color: var(--teal); font-style: normal; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <!-- Header -->
+    <header class="slide-header">
+      <span class="course-tag">Redes Neurais Recorrentes</span>
+      <span class="prof-tag" style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 1 · Slide 2 / 2</span>
+    </header>
+
+    <!-- Content -->
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Experimente: Embaralhe as Linhas</h1>
+        <p class="slide-subtitle">Reordene os pacientes e observe que cada diagnóstico não muda</p>
+      </div>
+
+      <div class="content-split">
+        <!-- Left: interactive shuffle table + network -->
+        <div class="panel panel-left">
+          <h2 class="panel-title">Tabela interativa — arraste as linhas</h2>
+
+          <div style="overflow-x:auto;">
+            <table id="shuffle-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Paciente</th>
+                  <th>Raio médio</th>
+                  <th>Textura</th>
+                  <th>Perímetro</th>
+                  <th>Diagnóstico</th>
+                </tr>
+              </thead>
+              <tbody id="shuffle-body">
+                <!-- Rows injected by JS -->
+              </tbody>
+            </table>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:0.8rem;flex-wrap:wrap;">
+            <button class="shuffle-btn" id="shuffle-btn">🔀 Embaralhar</button>
+            <div id="unchanged-notice">
+              ✅ Os diagnósticos continuam os mesmos!
+            </div>
+          </div>
+
+          <!-- Network processing area -->
+          <div id="net-area">
+            <div class="data-label">Rede processando:</div>
+            <div id="active-row-display">—</div>
+            <svg id="net-svg" viewBox="0 0 300 110"></svg>
+            <div class="data-label" id="net-output" style="color:var(--green);font-weight:700;min-height:1.2rem;"></div>
+          </div>
+        </div>
+
+        <!-- Right: key observations -->
+        <div class="panel panel-right">
+          <h2 class="panel-title">O que observamos?</h2>
+
+          <div class="concept-cards">
+            <div class="concept-card" style="--delay:0.1s">
+              <div class="card-icon">🔢</div>
+              <div class="card-text">
+                <strong>Cada linha é autocontida</strong>
+                <p>Raio, textura e perímetro de P1 não dependem de P2 nem de P3. Todos os atributos necessários estão na própria linha.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.25s">
+              <div class="card-icon">🔀</div>
+              <div class="card-text">
+                <strong>Embaralhar não altera o resultado</strong>
+                <p>Independentemente da ordem em que a rede processa os exemplos, o diagnóstico de cada paciente permanece idêntico.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.4s">
+              <div class="card-icon">⏩</div>
+              <div class="card-text">
+                <strong>Sem memória necessária</strong>
+                <p>A rede não precisa "lembrar" o que processou antes. Cada forward pass é independente e completo.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Transition -->
+          <div class="transition-box" style="margin-top:auto;">
+            <div class="t-icon">🔭</div>
+            <div class="t-text">
+              "Mas <strong>nem todo dado vem nesse formato</strong>.
+              Em muitos problemas — fala, séries financeiras, vídeo —
+              o <strong>significado do presente depende do que veio antes</strong>."
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Navigation -->
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide01.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide03.html'">Próximo bloco →</button>
+    </nav>
+  </div>
+
+  <script>
+    // ---- Dataset ----
+    const PATIENTS = [
+      { id: 'P1', raio: '17.99', textura: '10.38', perimetro: '122.8', diag: 'Maligno',  diagClass: 'negative' },
+      { id: 'P2', raio: '20.57', textura: '17.77', perimetro: '132.9', diag: 'Maligno',  diagClass: 'negative' },
+      { id: 'P3', raio: '13.08', textura: '15.71', perimetro: '85.63', diag: 'Benigno',  diagClass: 'positive' },
+      { id: 'P4', raio: '9.504', textura: '12.44', perimetro: '60.34', diag: 'Benigno',  diagClass: 'positive' },
+      { id: 'P5', raio: '15.34', textura: '14.26', perimetro: '102.5', diag: 'Maligno',  diagClass: 'negative' },
+    ];
+
+    let order = [0, 1, 2, 3, 4];
+    let shuffleCount = 0;
+
+    const tbody = document.getElementById('shuffle-body');
+
+    function renderTable() {
+      tbody.innerHTML = '';
+      order.forEach((idx, pos) => {
+        const p = PATIENTS[idx];
+        const tr = document.createElement('tr');
+        tr.className = 'shuffle-row';
+        tr.dataset.idx = idx;
+        tr.draggable = true;
+        tr.innerHTML = `
+          <td><span class="order-badge">${pos + 1}</span></td>
+          <td>${p.id}</td>
+          <td>${p.raio}</td>
+          <td>${p.textura}</td>
+          <td>${p.perimetro}</td>
+          <td>
+            <span class="output-pill ${p.diagClass}" style="font-size:0.78rem;padding:0.2rem 0.75rem;">
+              ${p.diag}
+            </span>
+          </td>`;
+        tbody.appendChild(tr);
+      });
+      addDragHandlers();
+    }
+
+    // ---- Drag-and-drop ----
+    let dragSrc = null;
+
+    function addDragHandlers() {
+      const rows = tbody.querySelectorAll('.shuffle-row');
+      rows.forEach(row => {
+        row.addEventListener('dragstart', e => {
+          dragSrc = row;
+          setTimeout(() => row.classList.add('dragging'), 0);
+          e.dataTransfer.effectAllowed = 'move';
+        });
+        row.addEventListener('dragend', () => {
+          row.classList.remove('dragging');
+          tbody.querySelectorAll('.shuffle-row').forEach(r => r.classList.remove('drag-over'));
+        });
+        row.addEventListener('dragover', e => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          tbody.querySelectorAll('.shuffle-row').forEach(r => r.classList.remove('drag-over'));
+          if (row !== dragSrc) row.classList.add('drag-over');
+        });
+        row.addEventListener('drop', e => {
+          e.preventDefault();
+          if (dragSrc && dragSrc !== row) {
+            const srcIdx = parseInt(dragSrc.dataset.idx);
+            const dstIdx = parseInt(row.dataset.idx);
+            const srcPos = order.indexOf(srcIdx);
+            const dstPos = order.indexOf(dstIdx);
+            order.splice(srcPos, 1);
+            order.splice(dstPos, 0, srcIdx);
+            renderTable();
+            showUnchanged();
+          }
+        });
+      });
+    }
+
+    // ---- Shuffle button ----
+    document.getElementById('shuffle-btn').addEventListener('click', () => {
+      // Fisher-Yates shuffle
+      const a = [...order];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      order = a;
+      shuffleCount++;
+      renderTable();
+      showUnchanged();
+    });
+
+    function showUnchanged() {
+      const notice = document.getElementById('unchanged-notice');
+      notice.style.display = 'flex';
+      clearTimeout(notice._hideTimer);
+      notice._hideTimer = setTimeout(() => { notice.style.display = 'none'; }, 3000);
+    }
+
+    // ---- Network animation ----
+    const netSvg = document.getElementById('net-svg');
+    const netLayers = [3, 4, 4, 1];
+    const netLayerX = [30, 100, 200, 270];
+    const netNodeColor = ['#5eead4', '#2dd4bf', '#0d9488', '#065f46'];
+    const netPositions = netLayers.map((n, li) => {
+      const arr = [];
+      const spacing = 24;
+      const startY = 55 - ((n - 1) * spacing) / 2;
+      for (let i = 0; i < n; i++) arr.push({ x: netLayerX[li], y: startY + i * spacing });
+      return arr;
+    });
+
+    // Draw static connections
+    for (let li = 0; li < netPositions.length - 1; li++) {
+      for (const from of netPositions[li]) {
+        for (const to of netPositions[li + 1]) {
+          const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          line.setAttribute('x1', from.x); line.setAttribute('y1', from.y);
+          line.setAttribute('x2', to.x);   line.setAttribute('y2', to.y);
+          line.setAttribute('stroke', '#334155'); line.setAttribute('stroke-width', '1');
+          netSvg.appendChild(line);
+        }
+      }
+    }
+
+    // Draw nodes (store references to animate)
+    const allNodes = [];
+    netPositions.forEach((layer, li) => {
+      layer.forEach((pos, ni) => {
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', pos.x); circle.setAttribute('cy', pos.y);
+        circle.setAttribute('r', '9');
+        circle.setAttribute('fill', '#1e293b');
+        circle.setAttribute('stroke', netNodeColor[li]);
+        circle.setAttribute('stroke-width', '2.5');
+        netSvg.appendChild(circle);
+        allNodes.push({ el: circle, li });
+      });
+    });
+
+    // Labels
+    const netLabels = ['Entrada', 'Oculta', 'Oculta', 'Saída'];
+    netLayerX.forEach((x, i) => {
+      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      text.setAttribute('x', x); text.setAttribute('y', 102);
+      text.setAttribute('text-anchor', 'middle');
+      text.setAttribute('fill', '#94a3b8');
+      text.setAttribute('font-size', '8');
+      text.setAttribute('font-family', 'Inter, sans-serif');
+      text.textContent = netLabels[i];
+      netSvg.appendChild(text);
+    });
+
+    // Animate network cycling through rows in current order
+    let animIdx = 0;
+    const activeDisplay = document.getElementById('active-row-display');
+    const netOutput = document.getElementById('net-output');
+
+    function pulseLayer(li) {
+      allNodes.forEach(n => {
+        if (n.li === li) {
+          n.el.setAttribute('fill', netNodeColor[li] + '80');
+          setTimeout(() => n.el.setAttribute('fill', '#1e293b'), 400);
+        }
+      });
+    }
+
+    function animateNet(p) {
+      activeDisplay.textContent = `[${p.raio}, ${p.textura}, ${p.perimetro}]  ← ${p.id}`;
+      netOutput.textContent = '';
+      let li = 0;
+      const step = () => {
+        if (li < netLayers.length) {
+          pulseLayer(li);
+          li++;
+          setTimeout(step, 220);
+        } else {
+          netOutput.textContent = `→ ${p.diag}`;
+          netOutput.style.color = p.diagClass === 'positive' ? 'var(--green)' : 'var(--red)';
+        }
+      };
+      step();
+    }
+
+    function nextAnim() {
+      const idx = order[animIdx % order.length];
+      animateNet(PATIENTS[idx]);
+      animIdx++;
+    }
+
+    renderTable();
+    nextAnim();
+    setInterval(nextAnim, 2200);
+  </script>
+</body>
+</html>

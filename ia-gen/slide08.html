@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 08 – O que o espaço latente captura</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .latent-diagram {
+      display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+      justify-content: center; padding: 0.5rem 0;
+    }
+    .feat-bar-list { display: flex; flex-direction: column; gap: 0.6rem; min-width: 200px; }
+    .feat-bar-row { display: flex; align-items: center; gap: 0.6rem; }
+    .feat-label { min-width: 90px; font-size: 0.82rem; color: var(--text-muted); }
+    .feat-bar-bg {
+      flex: 1; height: 10px; background: var(--bg3); border-radius: 5px;
+      overflow: hidden; border: 1px solid var(--border2);
+    }
+    .feat-bar-fill { height: 100%; border-radius: 5px; transition: width 0.6s; }
+    .feat-val { min-width: 32px; font-size: 0.78rem; color: var(--text-dim); font-family: 'Fira Code', monospace; }
+    .z-box {
+      background: var(--cyan-lt); border: 2px solid var(--cyan);
+      border-radius: var(--radius-sm); padding: 1rem 1.2rem;
+      text-align: center; min-width: 72px;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">IA Generativa</span>
+      <span style="font-size:0.9rem;color:var(--text-muted);font-weight:500;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 4 · Slide 8 / 24</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">O que o espaço latente captura</h1>
+        <p class="slide-subtitle">O vetor latente codifica as <em>características essenciais</em> dos dados</p>
+      </div>
+
+      <div class="panel" style="max-width:720px;margin:0 auto;">
+        <div class="latent-diagram">
+          <div style="font-size:3.2rem;">🧑</div>
+          <div style="font-size:1.3rem;color:var(--teal);font-weight:900;">→</div>
+          <div class="feat-bar-list">
+            <div class="feat-bar-row">
+              <span class="feat-label">Idade</span>
+              <div class="feat-bar-bg"><div class="feat-bar-fill" style="width:65%;background:var(--teal);"></div></div>
+              <span class="feat-val">0.65</span>
+            </div>
+            <div class="feat-bar-row">
+              <span class="feat-label">Expressão</span>
+              <div class="feat-bar-bg"><div class="feat-bar-fill" style="width:30%;background:var(--cyan);"></div></div>
+              <span class="feat-val">0.30</span>
+            </div>
+            <div class="feat-bar-row">
+              <span class="feat-label">Iluminação</span>
+              <div class="feat-bar-bg"><div class="feat-bar-fill" style="width:80%;background:var(--yellow);"></div></div>
+              <span class="feat-val">0.80</span>
+            </div>
+            <div class="feat-bar-row">
+              <span class="feat-label">Pose</span>
+              <div class="feat-bar-bg"><div class="feat-bar-fill" style="width:45%;background:var(--red);"></div></div>
+              <span class="feat-val">0.45</span>
+            </div>
+            <div class="feat-bar-row">
+              <span class="feat-label">...</span>
+              <div class="feat-bar-bg"><div class="feat-bar-fill" style="width:55%;background:var(--text-dim);"></div></div>
+              <span class="feat-val">...</span>
+            </div>
+          </div>
+          <div style="font-size:1.3rem;color:var(--cyan);font-weight:900;">→</div>
+          <div class="z-box">
+            <div style="font-weight:800;color:var(--cyan);font-size:1.4rem;">z</div>
+            <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.2rem;">vetor<br/>latente</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="insight-box" style="max-width:680px;margin:0 auto;">
+        <span class="i-icon">💡</span>
+        <div class="i-text">
+          As dimensões latentes <strong>não são definidas manualmente</strong> —
+          a rede as descobre sozinha durante o treino, emergindo representações semânticas úteis.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide07.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide09.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') location.href = 'slide09.html';
+      if (e.key === 'ArrowLeft'  || e.key === 'PageUp')   location.href = 'slide07.html';
+    });
+  </script>
+</body>
+</html>

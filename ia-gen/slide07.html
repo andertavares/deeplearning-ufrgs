@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 07 – Comparando dimensões latentes</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .slider-wrap label {
+      display: flex; justify-content: space-between; align-items: baseline;
+      font-size: 0.92rem; font-weight: 600; color: var(--text); margin-bottom: 0.5rem;
+    }
+    .slider-wrap input[type=range] { width: 100%; accent-color: var(--teal); }
+    .bn-row {
+      display: flex; align-items: center; justify-content: center;
+      gap: 0.6rem; margin: 1rem 0 0.5rem;
+    }
+    .bn-block {
+      border-radius: var(--radius-sm); display: flex; align-items: center;
+      justify-content: center; font-weight: 700; font-size: 0.9rem;
+      transition: width 0.4s, height 0.4s;
+    }
+    .bn-enc, .bn-dec {
+      background: var(--teal-lt); border: 2px solid var(--teal); color: var(--teal);
+      width: 110px; height: 80px;
+    }
+    .bn-lat {
+      background: var(--cyan-lt); border: 2px solid var(--cyan); color: var(--cyan);
+      text-align: center; font-family: 'Fira Code', monospace;
+    }
+    .bn-arrow { font-size: 1.3rem; color: var(--teal); font-weight: 900; }
+    .bn-label {
+      text-align: center; font-size: 0.88rem; font-weight: 600;
+      padding: 0.5rem; border-radius: var(--radius-sm);
+      background: var(--bg3); color: var(--teal);
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">IA Generativa</span>
+      <span style="font-size:0.9rem;color:var(--text-muted);font-weight:500;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 3 · Slide 7 / 24</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Comparando dimensões latentes</h1>
+      </div>
+
+      <div class="panel" style="max-width:680px;margin:0 auto;">
+        <div class="slider-wrap">
+          <label>
+            <span>Dimensão do espaço latente</span>
+            <span id="latent-val" style="color:var(--teal);font-family:'Fira Code',monospace;">32</span>
+          </label>
+          <input type="range" id="latent-slider" min="2" max="128" value="32" oninput="updateBottleneck()" />
+          <div style="display:flex;justify-content:space-between;font-size:0.78rem;color:var(--text-dim);margin-top:0.3rem;">
+            <span>2 (muito pequeno)</span>
+            <span>128 (muito grande)</span>
+          </div>
+        </div>
+
+        <div class="bn-row">
+          <div class="bn-block bn-enc" id="bn-enc">Encoder</div>
+          <span class="bn-arrow">⟶</span>
+          <div class="bn-block bn-lat" id="bn-lat" style="width:50px;height:55px;font-size:0.85rem;">32d</div>
+          <span class="bn-arrow">⟶</span>
+          <div class="bn-block bn-dec" id="bn-dec">Decoder</div>
+        </div>
+
+        <div class="bn-label" id="bn-label">⚖ Latente médio → equilíbrio</div>
+      </div>
+
+      <div class="content-split" style="max-width:680px;margin:0 auto;">
+        <div class="highlight-box yellow">
+          <span class="icon">⚠️</span>
+          <div>
+            <strong>Latente largo → memoriza</strong><br/>
+            <span style="font-size:0.88rem;">Pode memorizar o conjunto de treino sem generalizar</span>
+          </div>
+        </div>
+        <div class="highlight-box teal">
+          <span class="icon">✅</span>
+          <div>
+            <strong>Latente estreito → generaliza</strong><br/>
+            <span style="font-size:0.88rem;">Força aprendizado de características essenciais</span>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide06.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide08.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    function updateBottleneck() {
+      const val = parseInt(document.getElementById('latent-slider').value);
+      document.getElementById('latent-val').textContent = val;
+      const bottleW = Math.max(28, Math.round((val / 128) * 105));
+      const bottleH = Math.max(34, Math.round((val / 128) * 80) + 28);
+      const lat = document.getElementById('bn-lat');
+      lat.style.width  = bottleW + 'px';
+      lat.style.height = bottleH + 'px';
+      lat.textContent  = val + 'd';
+      const lbl = document.getElementById('bn-label');
+      if (val <= 16) {
+        lbl.style.color = 'var(--teal)';
+        lbl.textContent = '✔ Latente pequeno → aprende representações gerais';
+      } else if (val <= 48) {
+        lbl.style.color = 'var(--yellow)';
+        lbl.textContent = '⚖ Latente médio → equilíbrio';
+      } else {
+        lbl.style.color = 'var(--red)';
+        lbl.textContent = '⚠ Latente grande → tende a memorizar';
+      }
+    }
+    updateBottleneck();
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') location.href = 'slide08.html';
+      if (e.key === 'ArrowLeft'  || e.key === 'PageUp')   location.href = 'slide06.html';
+    });
+  </script>
+</body>
+</html>

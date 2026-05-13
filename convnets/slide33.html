@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 33 – Síntese: BatchNorm e Técnicas de Estabilização</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── Layout ──────────────────────────────────────────────────────────── */
+    .syn-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      flex: 1;
+    }
+
+    .syn-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.3rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+      box-shadow: var(--shadow);
+      overflow-y: auto;
+    }
+
+    /* ── Pipeline animation ───────────────────────────────────────────────── */
+    .pipeline {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .pipe-step {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.6rem 0.9rem;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border2);
+      background: var(--bg3);
+      animation: rowFade 0.4s ease both;
+      animation-delay: var(--delay, 0s);
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .pipe-step:hover { border-color: var(--purple); transform: translateX(4px); }
+
+    .pipe-icon  { font-size: 1.3rem; flex-shrink: 0; }
+    .pipe-body  { display: flex; flex-direction: column; gap: 0.15rem; flex: 1; }
+    .pipe-title { font-size: 0.88rem; font-weight: 700; color: var(--text); }
+    .pipe-desc  { font-size: 0.78rem; color: var(--text-muted); line-height: 1.35; }
+
+    .pipe-badge {
+      padding: 0.2rem 0.65rem;
+      border-radius: 999px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .badge-primary   { background: var(--purple-lt); color: var(--purple); border: 1.5px solid #c4b5fd; }
+    .badge-secondary { background: var(--bg3); color: var(--text-muted); border: 1.5px solid var(--border2); }
+
+    /* ── Compare table ────────────────────────────────────────────────────── */
+    .compare-table {
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+
+    .ct-header {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr 1fr;
+      background: var(--bg3);
+      border-bottom: 1.5px solid var(--border2);
+    }
+
+    .ct-col-h {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .ct-col-h.problem { color: var(--text-muted); }
+    .ct-col-h.res     { color: var(--orange); }
+    .ct-col-h.bn      { color: var(--purple); }
+
+    .ct-row {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr 1fr;
+      border-bottom: 1px solid var(--border2);
+      animation: rowFade 0.4s ease both;
+      animation-delay: var(--delay, 0s);
+    }
+
+    .ct-row:last-child { border-bottom: none; }
+
+    .ct-cell {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+      line-height: 1.4;
+    }
+
+    .ct-cell.problem { color: var(--text-muted); font-weight: 600; }
+    .ct-cell.res     { color: var(--orange); font-weight: 600; }
+    .ct-cell.bn      { color: var(--purple); font-weight: 600; }
+
+    /* ── PyTorch code block ───────────────────────────────────────────────── */
+    .code-block {
+      background: #1e1e2e;
+      border: 1.5px solid #313244;
+      border-radius: var(--radius-sm);
+      padding: 0.75rem 0.95rem;
+      overflow-x: auto;
+      position: relative;
+    }
+
+    .code-block-title {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #6c7086;
+      margin-bottom: 0.5rem;
+      font-family: 'Fira Code', monospace;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .code-block pre {
+      margin: 0;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.76rem;
+      line-height: 1.6;
+      color: #cdd6f4;
+      white-space: pre;
+    }
+
+    /* Minimal token colours (Catppuccin-ish) */
+    .kw  { color: #cba6f7; }   /* keyword: class, def, import, return */
+    .fn  { color: #89b4fa; }   /* function / method name */
+    .cls { color: #89dceb; }   /* class name */
+    .cm  { color: #6c7086; font-style: italic; }   /* comment */
+    .st  { color: #a6e3a1; }   /* string */
+    .nm  { color: #fab387; }   /* number / kwarg values */
+    .op  { color: #94e2d5; }   /* operator / punctuation highlight */
+    .bn  { color: #f38ba8; }   /* BatchNorm highlight */
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Redes Convolucionais</span>
+      <span class="prof-tag" style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 10 · Slide 5 / 5</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Síntese: BatchNorm na Prática</h1>
+        <p class="slide-subtitle">Efeitos práticos, onde a camada fica na rede e comparação com Residual.</p>
+      </div>
+
+      <div class="syn-layout">
+
+        <!-- ── Left: effects + formula ──────────────────────────────────── -->
+        <div class="syn-panel">
+          <div class="panel-title">Efeitos Práticos</div>
+
+          <div class="pipeline">
+            <div class="pipe-step" style="--delay:0.05s;">
+              <div class="pipe-icon">🚀</div>
+              <div class="pipe-body">
+                <div class="pipe-title">Acelera o treinamento</div>
+                <div class="pipe-desc">Permite taxas de aprendizado maiores; a rede converge em muito menos épocas.</div>
+              </div>
+              <span class="pipe-badge badge-primary">principal</span>
+            </div>
+            <div class="pipe-step" style="--delay:0.12s;">
+              <div class="pipe-icon">🛡️</div>
+              <div class="pipe-body">
+                <div class="pipe-title">Regulariza a rede</div>
+                <div class="pipe-desc">O ruído estatístico do batch tem efeito similar ao dropout — reduz overfitting.</div>
+              </div>
+              <span class="pipe-badge badge-secondary">secundário</span>
+            </div>
+            <div class="pipe-step" style="--delay:0.2s;">
+              <div class="pipe-icon">⚖️</div>
+              <div class="pipe-body">
+                <div class="pipe-title">Reduz sensibilidade à inicialização</div>
+                <div class="pipe-desc">Pesos iniciais têm muito menos impacto — inicializar mal a rede deixa de ser crítico.</div>
+              </div>
+              <span class="pipe-badge badge-secondary">bônus</span>
+            </div>
+            <div class="pipe-step" style="--delay:0.28s;">
+              <div class="pipe-icon">🏗️</div>
+              <div class="pipe-body">
+                <div class="pipe-title">Posição na rede: após Conv, antes da ativação</div>
+                <div class="pipe-desc">Conv → <strong>BatchNorm</strong> → ReLU → MaxPool — normaliza antes de introduzir não-linearidade.</div>
+              </div>
+              <span class="pipe-badge badge-primary">padrão</span>
+            </div>
+          </div>
+
+          <!-- PyTorch BatchNorm2d (Conv) -->
+          <!-- PyTorch BatchNorm1d (MLP / features) -->
+          <div class="code-block">
+            <div class="code-block-title">🐍 pytorch — mlp + batchnorm (features)</div>
+            <pre><span class="kw">class</span> <span class="cls">MLP</span>(nn.Module):
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="nm">self</span>):
+        <span class="kw">super</span>().<span class="fn">__init__</span>()
+        <span class="nm">self</span>.fc1 <span class="op">=</span> nn.<span class="fn">Linear</span>(<span class="nm">2</span>, <span class="nm">16</span>)
+        <span class="nm">self</span>.bn1 <span class="op">=</span> nn.<span class="bn">BatchNorm1d</span>(<span class="nm">16</span>)  <span class="cm"># normaliza as 16 saídas</span>
+        <span class="nm">self</span>.relu <span class="op">=</span> nn.<span class="fn">ReLU</span>()
+        <span class="nm">self</span>.fc2 <span class="op">=</span> nn.<span class="fn">Linear</span>(<span class="nm">16</span>, <span class="nm">1</span>)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="nm">self</span>, x):
+        x <span class="op">=</span> <span class="nm">self</span>.<span class="fn">fc1</span>(x)
+        x <span class="op">=</span> <span class="nm">self</span>.<span class="fn">bn1</span>(x)
+        x <span class="op">=</span> <span class="nm">self</span>.<span class="fn">relu</span>(x)
+        <span class="kw">return</span> <span class="nm">self</span>.<span class="fn">fc2</span>(x)  <span class="cm"># logit final</span></pre>
+          </div>
+
+          <!-- PyTorch BatchNorm2d (Conv) -->
+          <div class="code-block">
+            <div class="code-block-title">🐍 pytorch — conv + batchnorm (imagens)</div>
+            <pre><span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+
+      <span class="kw">class</span> <span class="cls">ConvBlock</span>(nn.Module):
+        <span class="kw">def</span> <span class="fn">__init__</span>(<span class="nm">self</span>, in_ch, out_ch):
+          <span class="kw">super</span>().<span class="fn">__init__</span>()
+          <span class="nm">self</span>.conv <span class="op">=</span> nn.<span class="fn">Conv2d</span>(in_ch, out_ch, <span class="nm">3</span>, padding<span class="op">=</span><span class="nm">1</span>)
+          <span class="nm">self</span>.bn   <span class="op">=</span> nn.<span class="bn">BatchNorm2d</span>(out_ch)  <span class="cm"># γ e β por canal</span>
+          <span class="nm">self</span>.relu <span class="op">=</span> nn.<span class="fn">ReLU</span>()
+          <span class="nm">self</span>.pool <span class="op">=</span> nn.<span class="fn">MaxPool2d</span>(<span class="nm">2</span>)
+
+        <span class="kw">def</span> <span class="fn">forward</span>(<span class="nm">self</span>, x):
+          x <span class="op">=</span> <span class="nm">self</span>.<span class="fn">conv</span>(x)
+          x <span class="op">=</span> <span class="nm">self</span>.<span class="fn">bn</span>(x)
+          x <span class="op">=</span> <span class="nm">self</span>.<span class="fn">relu</span>(x)
+          x <span class="op">=</span> <span class="nm">self</span>.<span class="fn">pool</span>(x)
+          <span class="kw">return</span> x  <span class="cm"># Conv → BN → ReLU → MaxPool</span></pre>
+          </div>
+        </div>
+
+        <!-- ── Right: compare table + summary ───────────────────────────── -->
+        <div class="syn-panel">
+          <div class="panel-title">Comparação: Residual vs BatchNorm</div>
+
+          <div class="compare-table">
+            <div class="ct-header">
+              <div class="ct-col-h problem">Problema</div>
+              <div class="ct-col-h res">🔗 Residual</div>
+              <div class="ct-col-h bn">📊 BatchNorm</div>
+            </div>
+            <div class="ct-row" style="--delay:0.05s;">
+              <div class="ct-cell problem">Vanishing gradient</div>
+              <div class="ct-cell res">✅ Mitiga</div>
+              <div class="ct-cell bn">❌ Não</div>
+            </div>
+            <div class="ct-row" style="--delay:0.1s;">
+              <div class="ct-cell problem">Instabilidade das ativações</div>
+              <div class="ct-cell res">❌ Não</div>
+              <div class="ct-cell bn">✅ Mitiga</div>
+            </div>
+            <div class="ct-row" style="--delay:0.15s;">
+              <div class="ct-cell problem">Treinamento lento</div>
+              <div class="ct-cell res">⚡ Ajuda</div>
+              <div class="ct-cell bn">✅ Ajuda muito</div>
+            </div>
+            <div class="ct-row" style="--delay:0.2s;">
+              <div class="ct-cell problem">Overfitting</div>
+              <div class="ct-cell res">— Neutro</div>
+              <div class="ct-cell bn">🛡️ Reduz</div>
+            </div>
+            <div class="ct-row" style="--delay:0.25s;">
+              <div class="ct-cell problem">Redes muito profundas</div>
+              <div class="ct-cell res">✅ Essencial</div>
+              <div class="ct-cell bn">⚡ Ajuda</div>
+            </div>
+          </div>
+
+          <div class="highlight-box green">
+            <span class="icon">🏆</span>
+            <p>
+              As duas técnicas são <strong>complementares</strong>: arquiteturas
+              modernas (ex.: ResNet) combinam <strong>skip connections</strong>
+              e <strong>BatchNorm</strong> para obter o melhor dos dois mundos.
+            </p>
+          </div>
+
+          <div class="concept-cards">
+            <div class="concept-card" style="--delay:0.05s;">
+              <div class="card-icon">🔗</div>
+              <div class="card-text">
+                <strong>Residual → gradiente fraco</strong>
+                <p>Skip connections garantem caminho direto para o gradiente —
+                mitiga o vanishing gradient em redes profundas.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.15s;">
+              <div class="card-icon">📊</div>
+              <div class="card-text">
+                <strong>BatchNorm → instabilidade das ativações</strong>
+                <p>Normalização de batch garante que cada camada receba
+                ativações estáveis — acelera o treinamento.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide32.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot active"></span>
+      </div>
+      <button class="btn-nav btn-next" disabled>Fim do Bloco 10</button>
+    </nav>
+  </div>
+</body>
+</html>

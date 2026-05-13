@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 2 – Bag-of-Words e TF-IDF</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ---- Dataset card list ---- */
+    .dataset-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .doc-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: var(--radius-sm);
+      border: 2px solid var(--border2);
+      background: var(--bg3);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .doc-row:hover { border-color: var(--teal); transform: translateX(3px); }
+    .doc-row.row-hl-teal  { border-color: var(--teal); background: var(--teal-lt); }
+    .doc-row.row-hl-blue  { border-color: var(--blue); background: var(--blue-lt); }
+    .doc-id {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      width: 22px;
+      flex-shrink: 0;
+    }
+    .doc-text {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.88rem;
+      color: var(--text);
+      flex: 1;
+    }
+    .doc-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.15rem 0.55rem;
+      border-radius: 999px;
+      flex-shrink: 0;
+    }
+    .doc-label.spam {
+      background: #fee2e2;
+      color: var(--red);
+      border: 1.5px solid #fca5a5;
+    }
+    .doc-label.ham {
+      background: var(--green-lt);
+      color: var(--green);
+      border: 1.5px solid #86efac;
+    }
+
+    /* ---- Vocab chips ---- */
+    .vocab-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+    }
+    .vocab-chip {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.2rem 0.6rem;
+      border-radius: 5px;
+      background: var(--bg2);
+      border: 1.5px solid var(--border2);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .vocab-chip:hover            { border-color: var(--teal); color: var(--teal); background: var(--teal-lt); }
+    .vocab-chip.chip-hl-teal     { border-color: var(--teal); color: var(--teal); background: var(--teal-lt); }
+    .vocab-chip.chip-hl-blue     { border-color: var(--blue); color: var(--blue); background: var(--blue-lt); }
+
+    /* ---- Matrix ---- */
+    .matrix-wrap {
+      overflow-x: auto;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border2);
+    }
+    .matrix-table {
+      border-collapse: collapse;
+      width: 100%;
+      min-width: 520px;
+    }
+    .matrix-table th,
+    .matrix-table td {
+      padding: 0;
+      border: 1px solid #e2e8f0;
+      text-align: center;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.83rem;
+    }
+    .col-head {
+      background: var(--bg3);
+      font-size: 0.73rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      padding: 0.38rem 0.45rem;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: background 0.18s, color 0.18s;
+    }
+    .col-head:hover              { background: var(--teal-lt) !important; color: var(--teal) !important; }
+    .col-head.col-hl-teal        { background: var(--teal-lt) !important; color: var(--teal) !important; }
+    .col-head.col-hl-blue        { background: var(--blue-lt) !important; color: var(--blue) !important; }
+    .row-head-cell {
+      text-align: left;
+      padding: 0.38rem 0.65rem;
+      white-space: nowrap;
+      cursor: pointer;
+      background: var(--bg3);
+      border-right: 2px solid var(--border2);
+      min-width: 130px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      transition: background 0.18s;
+    }
+    .row-head-cell:hover { background: var(--teal-lt) !important; }
+    .mat-cell {
+      width: 50px;
+      height: 36px;
+      cursor: pointer;
+      transition: filter 0.2s;
+      position: relative;
+    }
+    .mat-cell:hover { outline: 2px solid var(--teal); outline-offset: -2px; z-index: 2; }
+    .mat-cell-inner {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    .zero-cell  { color: #cbd5e1; }
+    .nonzero-cell { color: #0f1724; }
+
+    /* ---- Cell info ---- */
+    .cell-info {
+      border-radius: var(--radius-sm);
+      padding: 0.65rem 1rem;
+      font-size: 0.87rem;
+      line-height: 1.6;
+      min-height: 48px;
+      transition: all 0.2s;
+    }
+    .cell-info.empty   { background: var(--bg3); border: 1.5px solid var(--border2); color: var(--text-dim); font-style: italic; }
+    .cell-info.bow     { background: var(--teal-lt); border: 1.5px solid #5eead4; color: var(--teal); }
+    .cell-info.tfidf   { background: var(--blue-lt); border: 1.5px solid #93c5fd; color: var(--blue); }
+
+    /* ---- IDF legend ---- */
+    .idf-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
+      gap: 0.3rem;
+    }
+    .idf-item {
+      background: var(--bg2);
+      border: 1.5px solid #e0d7fa;
+      border-radius: 6px;
+      padding: 0.28rem 0.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.1rem;
+    }
+    .idf-word { font-family: 'Fira Code', monospace; font-size: 0.74rem; font-weight: 700; color: var(--text-muted); }
+    .idf-val  { font-family: 'Fira Code', monospace; font-size: 0.74rem; color: var(--purple); font-weight: 600; }
+
+    @media (max-width: 900px) {
+      .two-col { grid-template-columns: 1fr !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <!-- Header -->
+    <header class="slide-header">
+      <span class="course-tag">Transformers</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 2 · Slide 2 / 3</span>
+    </header>
+
+    <!-- Content -->
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Bag-of-Words e TF-IDF</h1>
+        <p class="slide-subtitle">De um dataset de assuntos de e-mail à matriz documento–palavra</p>
+      </div>
+
+      <!-- Two-column layout: dataset+vocab (left) | matrix+info (right) -->
+      <div class="two-col" style="display:grid;grid-template-columns:1fr 2fr;gap:1.1rem;flex:1;">
+
+        <!-- ======= LEFT ======= -->
+        <div style="display:flex;flex-direction:column;gap:0.8rem;">
+
+          <!-- Dataset -->
+          <div class="panel" style="gap:0.55rem;flex:0 0 auto;">
+            <h2 class="panel-title">Dataset — assuntos de e-mail</h2>
+            <div class="dataset-list" id="dataset-list"></div>
+            <div style="font-size:0.77rem;color:var(--text-dim);line-height:1.5;">
+              Pré-processamento: minúsculas, sem pontuação, sem stopwords.
+              Clique num documento para destacá-lo na matriz.
+            </div>
+          </div>
+
+          <!-- Vocabulary -->
+          <div class="panel" style="gap:0.5rem;flex:0 0 auto;">
+            <h2 class="panel-title">Vocabulário extraído</h2>
+            <div class="vocab-chips" id="vocab-chips"></div>
+            <div style="font-size:0.77rem;color:var(--text-dim);line-height:1.5;">
+              <strong id="vocab-count"></strong> palavras únicas — cada uma vira uma coluna.
+              Clique para destacar a coluna na matriz.
+            </div>
+          </div>
+
+          <!-- IDF values (only shown in TF-IDF view) -->
+          <div class="panel" id="idf-panel" style="gap:0.5rem;flex:0 0 auto;display:none;">
+            <h2 class="panel-title">IDF por palavra</h2>
+            <div style="font-size:0.77rem;color:var(--text-dim);line-height:1.45;">
+              IDF = ln(N / df) &nbsp;— &nbsp;palavras raras têm IDF maior e recebem mais peso.
+            </div>
+            <div class="idf-grid" id="idf-grid"></div>
+          </div>
+        </div>
+
+        <!-- ======= RIGHT ======= -->
+        <div class="panel" style="gap:0.75rem;">
+          <!-- Toggle + title row -->
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;">
+            <h2 class="panel-title" style="border:none;padding:0;margin:0;">Matriz documento–palavra</h2>
+            <div class="toggle-group">
+              <button class="btn-toggle active" id="btn-bow"   onclick="setView('bow')">Contagens (BoW)</button>
+              <button class="btn-toggle"        id="btn-tfidf" onclick="setView('tfidf')">TF-IDF</button>
+            </div>
+          </div>
+
+          <!-- Matrix -->
+          <div class="matrix-wrap">
+            <table class="matrix-table" id="matrix-table"></table>
+          </div>
+
+          <!-- Cell info -->
+          <div class="cell-info empty" id="cell-info">
+            Passe o mouse ou clique em uma célula para ver o cálculo detalhado.
+          </div>
+
+          <!-- Insight -->
+          <div class="insight-box" style="margin-top:auto;">
+            <div class="i-icon">⚠️</div>
+            <div class="i-text">
+              <strong>BoW ignora a ordem das palavras:</strong>
+              "ganhe prêmio agora" e "agora prêmio ganhe" produzem o mesmo vetor.
+              <strong>TF-IDF</strong> pondera pela raridade da palavra na coleção,
+              mas o problema de ordem <strong>permanece</strong>.
+            </div>
+          </div>
+        </div>
+
+      </div><!-- end two-col -->
+    </main>
+
+    <!-- Navigation -->
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide01.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide03.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    // =========================================================
+    //  Dataset
+    // =========================================================
+    const DOCS = [
+      { id: 'D1', label: 'SPAM', text: 'ganhe prêmio agora',    tokens: ['ganhe', 'prêmio', 'agora']     },
+      { id: 'D2', label: 'HAM',  text: 'reunião amanhã cedo',   tokens: ['reunião', 'amanhã', 'cedo']    },
+      { id: 'D3', label: 'SPAM', text: 'promoção grátis ganhe', tokens: ['promoção', 'grátis', 'ganhe']  },
+      { id: 'D4', label: 'HAM',  text: 'agenda reunião amanhã', tokens: ['agenda', 'reunião', 'amanhã']  },
+      { id: 'D5', label: 'SPAM', text: 'ganhe prêmio grátis',   tokens: ['ganhe', 'prêmio', 'grátis']   },
+    ];
+
+    // Vocabulary: unique tokens sorted alphabetically
+    const VOCAB = [...new Set(DOCS.flatMap(d => d.tokens))].sort((a, b) => a.localeCompare(b, 'pt'));
+
+    // BoW matrix [doc][vocab]
+    const BOW = DOCS.map(doc =>
+      VOCAB.map(w => doc.tokens.filter(t => t === w).length)
+    );
+
+    // IDF = ln(N / df)
+    const N = DOCS.length;
+    const IDF = VOCAB.map((_, j) => {
+      const df = BOW.filter(row => row[j] > 0).length;
+      return df > 0 ? Math.log(N / df) : 0;
+    });
+
+    // TF-IDF matrix
+    const TFIDF = DOCS.map((doc, i) =>
+      VOCAB.map((_, j) => (BOW[i][j] / doc.tokens.length) * IDF[j])
+    );
+
+    // =========================================================
+    //  State
+    // =========================================================
+    let currentView = 'bow';
+    let activeDoc   = null;   // row index or null
+    let activeCol   = null;   // vocab index or null
+    let stickyInfo  = false;
+
+    // =========================================================
+    //  Helpers: colour
+    // =========================================================
+    function cellBg(val, maxVal, isBow) {
+      if (val === 0) return 'background:#f1f5f9;';
+      const alpha = 0.12 + 0.65 * (val / maxVal);
+      return isBow
+        ? `background:rgba(13,110,110,${alpha.toFixed(2)});`
+        : `background:rgba(29,78,216,${alpha.toFixed(2)});`;
+    }
+
+    // =========================================================
+    //  Render: dataset
+    // =========================================================
+    function renderDataset() {
+      document.getElementById('dataset-list').innerHTML = DOCS.map((doc, i) => `
+        <div class="doc-row" id="doc-row-${i}" onclick="toggleDoc(${i})">
+          <span class="doc-id">${doc.id}</span>
+          <span class="doc-text">"${doc.text}"</span>
+          <span class="doc-label ${doc.label.toLowerCase()}">${doc.label === 'SPAM' ? '🚫 SPAM' : '✅ HAM'}</span>
+        </div>
+      `).join('');
+    }
+
+    // =========================================================
+    //  Render: vocabulary chips
+    // =========================================================
+    function renderVocab() {
+      document.getElementById('vocab-count').textContent = VOCAB.length;
+      document.getElementById('vocab-chips').innerHTML = VOCAB.map((w, j) => `
+        <span class="vocab-chip" id="chip-${j}" onclick="toggleCol(${j})">${w}</span>
+      `).join('');
+    }
+
+    // =========================================================
+    //  Render: IDF grid
+    // =========================================================
+    function renderIDF() {
+      document.getElementById('idf-grid').innerHTML = VOCAB.map((w, j) => `
+        <div class="idf-item">
+          <span class="idf-word">${w}</span>
+          <span class="idf-val">${IDF[j].toFixed(2)}</span>
+        </div>
+      `).join('');
+    }
+
+    // =========================================================
+    //  Render: matrix
+    // =========================================================
+    function renderMatrix() {
+      const matrix = currentView === 'bow' ? BOW : TFIDF;
+      const isBow  = currentView === 'bow';
+      const maxVal = Math.max(...matrix.flat().filter(v => v > 0), 0.001);
+
+      let html = '<thead><tr>';
+      html += `<th class="col-head" style="text-align:left;min-width:130px;border-right:2px solid #c7d0e0;">Doc</th>`;
+      VOCAB.forEach((w, j) => {
+        const hl = j === activeCol ? (isBow ? ' col-hl-teal' : ' col-hl-blue') : '';
+        html += `<th class="col-head${hl}" onclick="toggleCol(${j})">${w}</th>`;
+      });
+      html += `<th class="col-head" style="min-width:58px;">Classe</th>`;
+      html += '</tr></thead><tbody>';
+
+      DOCS.forEach((doc, i) => {
+        const rowHl  = i === activeDoc;
+        const rowBg  = rowHl ? (isBow ? 'background:rgba(13,110,110,0.06);' : 'background:rgba(29,78,216,0.06);') : '';
+        html += `<tr>`;
+
+        // Row header
+        html += `<td class="row-head-cell" style="${rowBg}${rowHl && isBow ? 'border-left:3px solid var(--teal);' : rowHl ? 'border-left:3px solid var(--blue);' : ''}"
+          onclick="toggleDoc(${i})">
+          <span style="font-family:'Fira Code',monospace;font-weight:700;">${doc.id}</span>
+          <span style="font-size:0.7rem;color:var(--text-dim);font-family:'Inter',sans-serif;font-weight:400;"> "${doc.text}"</span>
+        </td>`;
+
+        // Data cells
+        VOCAB.forEach((_, j) => {
+          const val  = matrix[i][j];
+          const bg   = cellBg(val, maxVal, isBow);
+          const dim  = (rowHl || j === activeCol) && val > 0 ? 'filter:brightness(0.82);' : '';
+          const disp = val === 0 ? '·' : (isBow ? val : val.toFixed(2));
+          const cls  = val === 0 ? 'zero-cell' : 'nonzero-cell';
+          html += `<td class="mat-cell" style="${bg}${rowBg}"
+            onmouseenter="showCellInfo(${i},${j})"
+            onmouseleave="clearCellInfo()"
+            onclick="showCellInfo(${i},${j},true)">
+            <div class="mat-cell-inner ${cls}" style="${dim}">${disp}</div>
+          </td>`;
+        });
+
+        // Class column
+        html += `<td style="padding:0.3rem 0.4rem;background:var(--bg3);border-left:2px solid #c7d0e0;${rowBg}">
+          <span class="doc-label ${doc.label.toLowerCase()}" style="font-size:0.68rem;">
+            ${doc.label === 'SPAM' ? '🚫 SPAM' : '✅ HAM'}
+          </span>
+        </td>`;
+
+        html += '</tr>';
+      });
+
+      html += '</tbody>';
+      document.getElementById('matrix-table').innerHTML = html;
+    }
+
+    // =========================================================
+    //  View toggle
+    // =========================================================
+    function setView(v) {
+      currentView = v;
+      document.getElementById('btn-bow').classList.toggle('active', v === 'bow');
+      document.getElementById('btn-tfidf').classList.toggle('active', v === 'tfidf');
+      document.getElementById('idf-panel').style.display = v === 'tfidf' ? '' : 'none';
+      // Re-apply chip highlight class for new view
+      VOCAB.forEach((_, j) => {
+        const chip = document.getElementById('chip-' + j);
+        if (!chip) return;
+        chip.classList.remove('chip-hl-teal', 'chip-hl-blue');
+        if (j === activeCol) chip.classList.add(v === 'bow' ? 'chip-hl-teal' : 'chip-hl-blue');
+      });
+      renderMatrix();
+      resetCellInfo();
+    }
+
+    // =========================================================
+    //  Highlight doc row / vocab col
+    // =========================================================
+    function toggleDoc(i) {
+      activeDoc = (activeDoc === i) ? null : i;
+      DOCS.forEach((_, idx) => {
+        const row = document.getElementById('doc-row-' + idx);
+        if (!row) return;
+        row.classList.remove('row-hl-teal', 'row-hl-blue');
+        if (idx === activeDoc)
+          row.classList.add(currentView === 'bow' ? 'row-hl-teal' : 'row-hl-blue');
+      });
+      renderMatrix();
+    }
+
+    function toggleCol(j) {
+      activeCol = (activeCol === j) ? null : j;
+      VOCAB.forEach((_, idx) => {
+        const chip = document.getElementById('chip-' + idx);
+        if (!chip) return;
+        chip.classList.remove('chip-hl-teal', 'chip-hl-blue');
+        if (idx === activeCol)
+          chip.classList.add(currentView === 'bow' ? 'chip-hl-teal' : 'chip-hl-blue');
+      });
+      renderMatrix();
+    }
+
+    // =========================================================
+    //  Cell info
+    // =========================================================
+    function showCellInfo(i, j, sticky = false) {
+      if (stickyInfo && !sticky) return;
+      stickyInfo = sticky;
+
+      const doc   = DOCS[i];
+      const word  = VOCAB[j];
+      const bow   = BOW[i][j];
+      const idf   = IDF[j];
+      const tfidf = TFIDF[i][j];
+      const tf    = bow / doc.tokens.length;
+      const df    = BOW.filter(row => row[j] > 0).length;
+      const isBow = currentView === 'bow';
+      const el    = document.getElementById('cell-info');
+
+      el.className = `cell-info ${isBow ? 'bow' : 'tfidf'}`;
+
+      if (isBow) {
+        if (bow === 0) {
+          el.innerHTML = `<strong>"${word}"</strong> não aparece em <strong>${doc.id}</strong> ("${doc.text}") → contagem = <strong>0</strong>`;
+        } else {
+          el.innerHTML = `<strong>"${word}"</strong> aparece <strong>${bow}×</strong> em <strong>${doc.id}</strong>
+            ("${doc.text}") → entrada BoW = <strong>${bow}</strong>`;
+        }
+      } else {
+        if (bow === 0) {
+          el.innerHTML = `<strong>"${word}"</strong> não aparece em <strong>${doc.id}</strong>
+            → TF = 0 → TF-IDF = <strong>0</strong>`;
+        } else {
+          el.innerHTML = `
+            <strong>TF</strong> = ${bow}/${doc.tokens.length} = <strong>${tf.toFixed(3)}</strong>
+            &nbsp;&nbsp;·&nbsp;&nbsp;
+            <strong>IDF</strong> = ln(${N}/${df}) = <strong>${idf.toFixed(3)}</strong>
+            &nbsp;&nbsp;·&nbsp;&nbsp;
+            <strong>TF-IDF</strong> = ${tf.toFixed(3)} × ${idf.toFixed(3)} = <strong>${tfidf.toFixed(3)}</strong>
+            <span style="font-size:0.77rem;color:inherit;opacity:0.7;margin-left:0.6rem;">
+              [${doc.id} · "${word}"]
+            </span>`;
+        }
+      }
+    }
+
+    function clearCellInfo() {
+      if (stickyInfo) return;
+      resetCellInfo();
+    }
+
+    function resetCellInfo() {
+      stickyInfo = false;
+      const el = document.getElementById('cell-info');
+      el.className = 'cell-info empty';
+      el.textContent = 'Passe o mouse ou clique em uma célula para ver o cálculo detalhado.';
+    }
+
+    // Click outside matrix clears sticky
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.mat-cell') && !e.target.closest('.matrix-wrap')) {
+        stickyInfo = false;
+      }
+    });
+
+    // =========================================================
+    //  Init
+    // =========================================================
+    renderDataset();
+    renderVocab();
+    renderIDF();
+    renderMatrix();
+  </script>
+</body>
+</html>

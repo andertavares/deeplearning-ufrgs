@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 02 – De predição para representação</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .flow-row { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; justify-content: center; margin: 0.7rem 0; }
+    .flow-box {
+      padding: 0.65rem 0.9rem; border-radius: var(--radius-sm);
+      background: var(--bg3); border: 1.5px solid var(--border2);
+      font-size: 0.9rem; font-weight: 600; text-align: center;
+      transition: border-color 0.3s, background 0.3s, transform 0.3s;
+      min-width: 80px;
+    }
+    .flow-box.lit-pred { border-color: var(--teal); background: var(--teal-lt); color: var(--teal); transform: scale(1.07); }
+    .flow-box.lit-gen  { border-color: var(--cyan);  background: var(--cyan-lt);  color: var(--cyan);  transform: scale(1.07); }
+    .flow-arrow { font-size: 1.3rem; color: var(--text-dim); }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">IA Generativa</span>
+      <span style="font-size:0.9rem;color:var(--text-muted);font-weight:500;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 1 · Slide 2 / 24</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">De predição para representação</h1>
+        <p class="slide-subtitle">Duas formas de usar uma rede neural — clique para explorar cada paradigma</p>
+      </div>
+
+      <div class="content-split" style="align-items:stretch;">
+
+        <div class="panel" id="panel-pred">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--teal);">Predição</span>
+            <button class="btn-step" style="font-size:0.85rem;padding:0.4rem 1rem;" onclick="showFlow('pred')">Ver fluxo</button>
+          </div>
+          <div class="flow-row">
+            <div class="flow-box" id="fp1">Entrada<br/><small style="color:var(--text-dim);font-weight:400;">imagem</small></div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-box" id="fp2">Rede<br/><small style="color:var(--text-dim);font-weight:400;">CNN/MLP</small></div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-box" id="fp3">Rótulo<br/><small style="color:var(--text-dim);font-weight:400;">classe</small></div>
+          </div>
+          <p style="font-size:0.88rem;color:var(--text-muted);">"A imagem é um <strong>gato</strong>?"</p>
+          <div class="highlight-box teal">
+            <span class="icon">🎯</span>
+            <span>Objetivo: mapear entrada para uma <strong>categoria</strong> ou <strong>valor</strong> conhecido</span>
+          </div>
+        </div>
+
+        <div class="panel" id="panel-gen">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--cyan);">Geração</span>
+            <button class="btn-step" style="font-size:0.85rem;padding:0.4rem 1rem;background:var(--cyan);" onclick="showFlow('gen')">Ver fluxo</button>
+          </div>
+          <div class="flow-row">
+            <div class="flow-box" id="fg1">Entrada<br/><small style="color:var(--text-dim);font-weight:400;">imagem/ruído</small></div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-box" id="fg2">Rede<br/><small style="color:var(--text-dim);font-weight:400;">AE/GAN</small></div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-box" id="fg3">Novo dado<br/><small style="color:var(--text-dim);font-weight:400;">imagem nova</small></div>
+          </div>
+          <p style="font-size:0.88rem;color:var(--text-muted);">"Gere um <strong>novo gato</strong>."</p>
+          <div class="highlight-box blue">
+            <span class="icon">✨</span>
+            <span>Objetivo: aprender a <strong>distribuição</strong> dos dados e criar novos exemplos</span>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="insight-box">
+        <span class="i-icon">💡</span>
+        <div class="i-text">
+          A pergunta muda de <strong>"o que é isso?"</strong> para <strong>"como criar algo assim?"</strong>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide01.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide03.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    function showFlow(type) {
+      ['fp1','fp2','fp3'].forEach(id => document.getElementById(id).classList.remove('lit-pred','lit-gen'));
+      ['fg1','fg2','fg3'].forEach(id => document.getElementById(id).classList.remove('lit-pred','lit-gen'));
+      const cls = type === 'pred' ? 'lit-pred' : 'lit-gen';
+      const ids = type === 'pred' ? ['fp1','fp2','fp3'] : ['fg1','fg2','fg3'];
+      ids.forEach((id, i) => setTimeout(() => document.getElementById(id).classList.add(cls), i * 220));
+    }
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') location.href = 'slide03.html';
+      if (e.key === 'ArrowLeft'  || e.key === 'PageUp')   location.href = 'slide01.html';
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 16 – Fluxo Real de uma Célula LSTM</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── SVG transitions ── */
+    .svg-el { transition: stroke 0.3s, opacity 0.3s, stroke-width 0.3s, stroke-dasharray 0.4s; }
+
+    /* Default dim states — invisible so the base image shows through */
+    .ln-cell  { stroke: #1d4ed8; stroke-width: 3.5; opacity: 0; fill: none; }
+    .ln-ht    { stroke: #0d6e6e; stroke-width: 3;   opacity: 0; fill: none; }
+    .ln-xt    { stroke: #c2410c; stroke-width: 3;   opacity: 0; fill: none; }
+    .ln-inner { stroke: #94a3b8; stroke-width: 2.5; opacity: 0; fill: none; }
+
+    .g-circle  { fill: rgba(255,255,255,0.55); stroke: #94a3b8; stroke-width: 3;   opacity: 0; }
+    .op-circle { fill: rgba(255,255,255,0.55); stroke: #94a3b8; stroke-width: 2.5; opacity: 0; }
+    .gate-lbl  { font-family: 'Fira Code', monospace; fill: #6b7fa3;
+                 text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+    .track-lbl { font-family: 'Fira Code', monospace; font-weight: 700; opacity: 0.6; }
+
+    /* c_t output: dashed by default, solid in step 7 */
+    .ct-dashed { stroke-dasharray: 6 3; }
+    .ct-solid  { stroke-dasharray: none; opacity: 1 !important; }
+
+    /* Highlighted classes */
+    .hl-blue   { stroke: #1d4ed8 !important; stroke-width: 4 !important; opacity: 1 !important; }
+    .hl-teal   { stroke: #0d6e6e !important; stroke-width: 3.5 !important; opacity: 1 !important; }
+    .hl-orange { stroke: #c2410c !important; stroke-width: 3.5 !important; opacity: 1 !important; }
+    .hl-purple { stroke: #7c3aed !important; stroke-width: 3.5 !important; opacity: 1 !important; }
+
+    .hl-circle-blue   { stroke: #1d4ed8 !important; stroke-width: 4 !important; opacity: 1 !important; fill: rgba(29,78,216,0.15) !important; }
+    .hl-circle-teal   { stroke: #0d6e6e !important; stroke-width: 4 !important; opacity: 1 !important; fill: rgba(13,110,110,0.15) !important; }
+    .hl-circle-orange { stroke: #c2410c !important; stroke-width: 4 !important; opacity: 1 !important; fill: rgba(194,65,12,0.15) !important; }
+    .hl-circle-purple { stroke: #7c3aed !important; stroke-width: 4 !important; opacity: 1 !important; fill: rgba(124,58,237,0.15) !important; }
+    .hl-text-blue   { fill: #1d4ed8 !important; opacity: 1 !important; }
+    .hl-text-teal   { fill: #0d6e6e !important; opacity: 1 !important; }
+    .hl-text-orange { fill: #c2410c !important; opacity: 1 !important; }
+    .hl-text-purple { fill: #7c3aed !important; opacity: 1 !important; }
+
+    /* Wrap + svg */
+    .svg-wrap  { background: var(--bg3); border: 1.5px solid var(--border2);
+                 border-radius: var(--radius-sm); padding: 0.5rem; overflow: hidden; }
+    .lstm-svg  { width: 100%; display: block; }
+
+    /* Step counter pill */
+    .step-counter {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.82rem; font-weight: 700;
+      color: var(--text-dim);
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      border-radius: 999px;
+      padding: 0.22rem 0.8rem;
+    }
+
+    /* Buttons */
+    .btn-row { display: flex; gap: 0.6rem; align-items: center; }
+    .btn-step {
+      padding: 0.5rem 1.1rem;
+      border-radius: var(--radius-sm);
+      border: 2px solid var(--teal);
+      background: var(--teal-lt);
+      color: var(--teal);
+      font-family: 'Fira Code', monospace;
+      font-weight: 700; font-size: 0.9rem;
+      cursor: pointer; transition: background 0.2s;
+    }
+    .btn-step:hover { background: var(--teal); color: white; }
+    .btn-reset {
+      padding: 0.5rem 1rem;
+      border-radius: var(--radius-sm);
+      border: 2px solid var(--border2);
+      background: var(--bg3); color: var(--text-dim);
+      font-family: 'Fira Code', monospace;
+      font-weight: 700; font-size: 0.9rem; cursor: pointer;
+    }
+
+    /* Description panel below diagram */
+    .desc-panel {
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem 0.9rem;
+      font-size: 0.88rem;
+      color: var(--text);
+      min-height: 3rem;
+      line-height: 1.55;
+      transition: border-color 0.3s, background 0.3s;
+    }
+    .desc-panel strong  { color: var(--teal); }
+    .desc-panel.step-0  { border-color: var(--border2); }
+    .desc-panel.active  { border-color: var(--teal); background: var(--teal-lt); }
+
+    /* Equation boxes */
+    .eq-box {
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0.55rem 0.85rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85rem;
+      color: var(--teal);
+      font-weight: 600;
+      transition: border-color 0.3s, background 0.3s;
+    }
+    .eq-box.highlighted { border-color: var(--teal); background: var(--teal-lt); }
+    .eq-box .val { color: #c2410c; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Redes Neurais Recorrentes</span>
+      <span class="prof-tag" style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 9 · Slide 2 / 2</span>
+    </header>
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Fluxo Real de uma Célula LSTM</h1>
+        <p class="slide-subtitle">Passo a passo pelo cálculo das quatro portas com valores concretos</p>
+      </div>
+      <div class="content-split">
+
+        <!-- ══════════════ LEFT PANEL — LSTM diagram ══════════════ -->
+        <div class="panel panel-left">
+          <h2 class="panel-title">🧠 Célula LSTM — Passo a Passo</h2>
+
+          <!-- ── SVG DIAGRAM ── -->
+          <div class="svg-wrap">
+            <!--
+              ViewBox 570 × 390  (= 3× the 190×130 mm viewBox of lstm.svg)
+              Coordinates derived from the Inkscape lstm.svg element positions.
+              Background: lstm.svg embedded as <image>;
+              Overlay: transparent elements that highlight during animation steps.
+
+              Key pixel positions (3× scale factor):
+                Cell-state track  y = 93
+                  ×_f @ (176,93) r=14  |  + @ (297,93) r=14
+                Gate row:
+                  σ_f @ (177,161) r=18  |  σ_i @ (237,161) r=18
+                  tanh_c @ (297,161) r=18  |  σ_o @ (343,202) r=18
+                Intermed. ops:
+                  ×_ic @ (297,125) r=14  |  tanh_out @ (398,139) r=14  |  ×_out @ (399,203) r=14
+                h_{t-1} bus   y = 203  (x = 108 → 349)
+                x_t  bus       y = 260  (x = 177 → 343)
+            -->
+            <svg id="lstm-svg" class="lstm-svg" viewBox="0 0 570 390" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="mBlue"   markerWidth="4.5" markerHeight="3.5" refX="3.5" refY="1.75" orient="auto"><path d="M0,0 L4.5,1.75 L0,3.5 Z" fill="#1d4ed8"/></marker>
+                <marker id="mTeal"   markerWidth="4.5" markerHeight="3.5" refX="3.5" refY="1.75" orient="auto"><path d="M0,0 L4.5,1.75 L0,3.5 Z" fill="#0d6e6e"/></marker>
+                <marker id="mOrange" markerWidth="4.5" markerHeight="3.5" refX="3.5" refY="1.75" orient="auto"><path d="M0,0 L4.5,1.75 L0,3.5 Z" fill="#c2410c"/></marker>
+                <marker id="mPurple" markerWidth="4.5" markerHeight="3.5" refX="3.5" refY="1.75" orient="auto"><path d="M0,0 L4.5,1.75 L0,3.5 Z" fill="#7c3aed"/></marker>
+                <marker id="mGray"   markerWidth="4.5" markerHeight="3.5" refX="3.5" refY="1.75" orient="auto"><path d="M0,0 L4.5,1.75 L0,3.5 Z" fill="#94a3b8"/></marker>
+              </defs>
+
+              <!-- ── BACKGROUND: lstm.svg (Guillaume Chevalier, CC-BY 4.0) ── -->
+              <image href="../lstm.svg" x="0" y="0" width="570" height="390"/>
+
+              <!-- ═══════════════════════════════════════════════════════════════════
+                   ANIMATION OVERLAY — all elements invisible by default (opacity:0);
+                   hl-* classes make them visible + colored during animation steps.
+                   ═══════════════════════════════════════════════════════════════════ -->
+
+              <!-- ───────────── CELL STATE TRACK (blue, y=93) ───────────── -->
+              <!-- c_{t-1} → ×_f -->
+              <line id="line-ct-in" class="svg-el ln-cell" x1="84" y1="93" x2="163" y2="93" marker-end="url(#mGray)"/>
+              <!-- ×_f circle -->
+              <circle id="mult-forget" cx="176" cy="93" r="14" class="svg-el op-circle"/>
+              <!-- ×_f → + -->
+              <line id="line-ct-mid" class="svg-el ln-cell" x1="190" y1="93" x2="283" y2="93" marker-end="url(#mGray)"/>
+              <!-- + circle -->
+              <circle id="add-circle" cx="297" cy="93" r="14" class="svg-el op-circle"/>
+              <!-- + → c_t (dashed until step 7) -->
+              <line id="line-ct-out" class="svg-el ln-cell ct-dashed" x1="311" y1="93" x2="490" y2="93" marker-end="url(#mGray)"/>
+
+              <!-- ───────────── GATE CIRCLES ───────────── -->
+              <!-- σ_f (forget gate) -->
+              <circle id="gate-forget" cx="177" cy="161" r="18" class="svg-el g-circle"/>
+              <!-- σ_i (input gate) -->
+              <circle id="gate-input" cx="237" cy="161" r="18" class="svg-el g-circle"/>
+              <!-- tanh_c (candidate) -->
+              <circle id="gate-cand" cx="297" cy="161" r="18" class="svg-el g-circle"/>
+              <!-- σ_o (output gate) -->
+              <circle id="gate-output" cx="343" cy="202" r="18" class="svg-el g-circle"/>
+
+              <!-- ───────────── INTERMEDIATE OPERATIONS ───────────── -->
+              <!-- ×_ic : i_t ⊙ c̃_t -->
+              <circle id="mult-ic" cx="297" cy="125" r="14" class="svg-el op-circle"/>
+              <!-- tanh_out : tanh(c_t) -->
+              <circle id="tanh-out" cx="398" cy="139" r="14" class="svg-el op-circle"/>
+              <!-- ×_out : o_t ⊙ tanh(c_t) -->
+              <circle id="mult-out" cx="399" cy="203" r="14" class="svg-el op-circle"/>
+
+              <!-- ───────────── CONNECTIONS: GATES → CELL-STATE OPS ───────────── -->
+              <!-- σ_f straight up → ×_f -->
+              <line id="arrow-forget-up" class="svg-el ln-inner" x1="177" y1="143" x2="177" y2="107" marker-end="url(#mGray)"/>
+              <!-- σ_i → ×_ic (L-path: up then right) -->
+              <polyline id="arrow-input-to-ic" class="svg-el ln-inner" points="237,143 237,125 283,125" fill="none" marker-end="url(#mGray)"/>
+              <!-- tanh_c straight up → ×_ic -->
+              <line id="arrow-cand-to-ic" class="svg-el ln-inner" x1="297" y1="143" x2="297" y2="139" marker-end="url(#mGray)"/>
+              <!-- ×_ic straight up → + -->
+              <line id="arrow-ic-to-add" class="svg-el ln-inner" x1="297" y1="111" x2="297" y2="107" marker-end="url(#mGray)"/>
+              <!-- tap from cell track (x=398) down → tanh_out -->
+              <line id="arrow-ct-to-tanh" class="svg-el ln-cell" x1="398" y1="93" x2="398" y2="125" marker-end="url(#mGray)"/>
+              <!-- tanh_out down → ×_out -->
+              <line id="arrow-tanh-to-xout" class="svg-el ln-inner" x1="398" y1="153" x2="399" y2="189" marker-end="url(#mGray)"/>
+              <!-- σ_o → ×_out (horizontal from right side of σ_o) -->
+              <line id="arrow-output-to-xout" class="svg-el ln-inner" x1="361" y1="202" x2="385" y2="203" marker-end="url(#mGray)"/>
+              <!-- ×_out → h_t (exits rightward along h track) -->
+              <line id="arrow-xout-to-ht" class="svg-el ln-inner" x1="413" y1="203" x2="500" y2="203" marker-end="url(#mGray)"/>
+
+              <!-- ───────────── h_{t-1} BUS (teal, y=203) ───────────── -->
+              <!-- h bus from left edge to σ_o left boundary -->
+              <line id="ht-line" class="svg-el ln-ht" x1="108" y1="203" x2="325" y2="203"/>
+              <!-- branch arrows: h → each gate (vertical up from h-bus) -->
+              <line id="arrow-ht-to-forget" class="svg-el ln-ht" x1="177" y1="203" x2="177" y2="179" marker-end="url(#mGray)"/>
+              <line id="arrow-ht-to-input"  class="svg-el ln-ht" x1="237" y1="203" x2="237" y2="179" marker-end="url(#mGray)"/>
+              <line id="arrow-ht-to-cand"   class="svg-el ln-ht" x1="297" y1="203" x2="297" y2="179" marker-end="url(#mGray)"/>
+              <!-- σ_o is at (343,202) ≈ same y as h-bus; h enters σ_o from left — short diagonal -->
+              <line id="arrow-ht-to-output" class="svg-el ln-ht" x1="325" y1="203" x2="341" y2="202" marker-end="url(#mGray)"/>
+
+              <!-- ───────────── x_t BUS (orange, y=260) ───────────── -->
+              <!-- x_t entry from below left gate -->
+              <line id="xt-entry" class="svg-el ln-xt" x1="177" y1="278" x2="177" y2="265" marker-end="url(#mGray)"/>
+              <!-- x_t horizontal bus -->
+              <line id="xt-bus" class="svg-el ln-xt" x1="177" y1="260" x2="343" y2="260"/>
+              <!-- x_t → each gate (vertical up from x_t bus) -->
+              <line id="arrow-xt-to-forget" class="svg-el ln-xt" x1="181" y1="215" x2="181" y2="183" marker-end="url(#mGray)"/>
+              <line id="arrow-xt-to-input"  class="svg-el ln-xt" x1="237" y1="260" x2="237" y2="179" marker-end="url(#mGray)"/>
+              <line id="arrow-xt-to-cand"   class="svg-el ln-xt" x1="297" y1="260" x2="297" y2="179" marker-end="url(#mGray)"/>
+              <line id="arrow-xt-to-output" class="svg-el ln-xt" x1="343" y1="260" x2="343" y2="220" marker-end="url(#mGray)"/>
+            </svg>
+          </div><!-- end svg-wrap -->
+
+          <!-- ── CONTROLS ── -->
+          <div class="btn-row">
+            <button class="btn-step" onclick="nextStep()">Avançar Passo ▶</button>
+            <button class="btn-reset" onclick="resetSteps()">Reiniciar ↺</button>
+            <span class="step-counter" id="step-counter">0 / 7</span>
+          </div>
+
+          <!-- ── DYNAMIC DESCRIPTION BELOW CELL ── -->
+          <div class="desc-panel" id="desc-panel">
+            Clique em <em>Avançar Passo</em> para iniciar a animação da célula LSTM.
+          </div>
+
+        </div><!-- end panel-left -->
+
+        <!-- ══════════════ RIGHT PANEL — Equations ══════════════ -->
+        <div class="panel panel-right">
+          <h2 class="panel-title">📐 Equações e Ativações</h2>
+          <div class="eq-box" id="eq-forget">f&#x209C; = &sigma;(Wf &middot; [h&#x209C;&#x208B;&#x2081;, x&#x209C;] + bf) &nbsp;&nbsp;<span class="val">≈ 0.62</span></div>
+          <div class="eq-box" id="eq-input">i&#x209C; = &sigma;(Wi &middot; [h&#x209C;&#x208B;&#x2081;, x&#x209C;] + bi) &nbsp;&nbsp;<span class="val">≈ 0.73</span></div>
+          <div class="eq-box" id="eq-cand">c&#771;&#x209C; = tanh(Wc &middot; [h&#x209C;&#x208B;&#x2081;, x&#x209C;] + bc) &nbsp;<span class="val">≈ 0.46</span></div>
+          <div class="eq-box" id="eq-cell">c&#x209C; = f&#x209C; &odot; c&#x209C;&#x208B;&#x2081; + i&#x209C; &odot; c&#771;&#x209C; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="val">≈ 0.83</span></div>
+          <div class="eq-box" id="eq-output">o&#x209C; = &sigma;(Wo &middot; [h&#x209C;&#x208B;&#x2081;, x&#x209C;] + bo) &nbsp;&nbsp;<span class="val">≈ 0.68</span></div>
+          <div class="eq-box" id="eq-hidden">h&#x209C; = o&#x209C; &odot; tanh(c&#x209C;) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="val">≈ 0.48</span></div>
+          <div class="insight-box" style="margin-top:0.6rem;">
+            <span class="i-icon">💡</span>
+            <div class="i-text"><strong>c&#x209C; e h&#x209C; seguem para a próxima célula:</strong> c&#x209C; como memória de longo prazo e h&#x209C; como memória de curto prazo e saída.</div>
+          </div>
+        </div><!-- end panel-right -->
+
+      </div><!-- end content-split -->
+    </main>
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide15.html'">&#8592; Anterior</button>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide17.html'">Próximo &#8594;</button>
+    </nav>
+  </div><!-- end slide-container -->
+
+  <script>
+    // ── Helper: set marker-end on an SVG line element ──
+    function setMarker(id, markerName) {
+      var el = document.getElementById(id);
+      if (el) el.setAttribute('marker-end', 'url(#' + markerName + ')');
+    }
+
+    // ── All highlightable SVG IDs (lines, polylines, and circles) ──
+    const ALL_LINE_IDS = [
+      'line-ct-in', 'line-ct-mid', 'line-ct-out',
+      'arrow-forget-up', 'arrow-input-to-ic', 'arrow-cand-to-ic', 'arrow-ic-to-add',
+      'arrow-ct-to-tanh', 'arrow-tanh-to-xout', 'arrow-output-to-xout', 'arrow-xout-to-ht',
+      'ht-line',
+      'arrow-ht-to-forget', 'arrow-ht-to-input', 'arrow-ht-to-cand', 'arrow-ht-to-output',
+      'xt-entry', 'xt-bus',
+      'arrow-xt-to-forget', 'arrow-xt-to-input', 'arrow-xt-to-cand', 'arrow-xt-to-output'
+    ];
+    const ALL_CIRCLE_IDS = [
+      'mult-forget', 'add-circle',
+      'gate-forget', 'gate-input', 'gate-cand', 'gate-output',
+      'mult-ic', 'tanh-out', 'mult-out'
+    ];
+
+    // ── Step configuration ──
+    // Each step lists which ids to highlight and with which color class.
+    const STEPS = [
+      // Step 0: receive inputs
+      {
+        eq: null,
+        desc: 'A célula recebe três valores: <strong>x&#x209C; = 0.5</strong> (entrada atual, laranja), <strong>h&#x209C;&#x208B;&#x2081; = 0.3</strong> (estado oculto anterior, verde-azulado) e <strong>c&#x209C;&#x208B;&#x2081; = 0.8</strong> (estado de célula anterior, azul). Esses três sinais entrarão nas quatro portas.',
+        lines:   { teal: ['ht-line'],  blue: ['line-ct-in'] },
+        circles: {}
+      },
+      // Step 1: forget gate
+      {
+        eq: 'eq-forget',
+        desc: 'O <strong>forget gate</strong> (σ_f) recebe h&#x209C;&#x208B;&#x2081; (verde-azulado) e x&#x209C; (laranja) e calcula f&#x209C; ≈ <strong>0.62</strong>. A seta azul de c&#x209C;&#x208B;&#x2081; entra no ×_f junto com o resultado de σ_f — mas a seta de <em>saída</em> do ×_f (produto filtrado) ainda não é destacada neste passo.',
+        lines:   { blue: ['line-ct-in', 'arrow-forget-up'], teal: ['arrow-ht-to-forget'] },
+        circles: { 'gate-forget': 'teal', 'mult-forget': 'blue' }
+      },
+      // Step 2: input gate
+      {
+        eq: 'eq-input',
+        desc: 'O <strong>input gate</strong> (σ_i) recebe h&#x209C;&#x208B;&#x2081; e x&#x209C; e controla quanto da nova informação será escrita. Resultado: <strong>i&#x209C; ≈ 0.73</strong> — 73% da informação candidata passará para a memória.',
+        lines:   { teal: ['arrow-ht-to-input'], orange: ['arrow-xt-to-input'] },
+        circles: { 'gate-input': 'teal' }
+      },
+      // Step 3: candidate
+      {
+        eq: 'eq-cand',
+        desc: 'A camada candidata (tanh) recebe h&#x209C;&#x208B;&#x2081; e x&#x209C; e propõe um novo conteúdo para a memória. Resultado: <strong>c&#771;&#x209C; ≈ 0.46</strong> — é o "rascunho" a ser filtrado pelo input gate.',
+        lines:   { teal: ['arrow-ht-to-cand'], orange: ['arrow-xt-to-cand'] },
+        circles: { 'gate-cand': 'teal' }
+      },
+      // Step 4: update cell state
+      {
+        eq: 'eq-cell',
+        desc: 'O <strong>estado de célula</strong> é atualizado: c&#x209C; = f&#x209C; ⊙ c&#x209C;&#x208B;&#x2081; + i&#x209C; ⊙ c&#771;&#x209C; ≈ <strong>0.83</strong>. A seta <span style="color:#1d4ed8;font-weight:700">azul</span> representa o passado filtrado (0.62 × 0.8), a seta <span style="color:#7c3aed;font-weight:700">roxa</span> representa a nova informação filtrada (0.73 × 0.46).',
+        lines:   { blue: ['line-ct-mid'], purple: ['arrow-input-to-ic', 'arrow-cand-to-ic', 'arrow-ic-to-add'] },
+        circles: { 'mult-ic': 'purple', 'add-circle': 'blue' }
+      },
+      // Step 5: output gate
+      {
+        eq: 'eq-output',
+        desc: 'O <strong>output gate</strong> (σ_o) recebe h&#x209C;&#x208B;&#x2081; e x&#x209C; e decide o que do estado atualizado c&#x209C; será exposto como saída. Resultado: <strong>o&#x209C; ≈ 0.68</strong>.',
+        lines:   { teal: ['arrow-ht-to-output']}, //, orange: ['arrow-xt-to-output'] },
+        circles: { 'gate-output': 'teal' }
+      },
+      // Step 6: new hidden state
+      {
+        eq: 'eq-hidden',
+        desc: 'O <strong>novo estado oculto</strong> h&#x209C; = o&#x209C; ⊙ tanh(c&#x209C;) ≈ <strong>0.48</strong>. A saída de σ<sub>o</sub> tanh(c&#x209C;) para produzir h&#x209C;.',
+        lines:   { teal: ['arrow-output-to-xout', 'arrow-xout-to-ht'], blue: ['arrow-ct-to-tanh', 'arrow-tanh-to-xout'] },
+        circles: { 'tanh-out': 'blue', 'mult-out': 'teal' },
+        solidCt: true
+      }
+    ];
+
+    const TOTAL = STEPS.length;
+    let currentStep = -1;
+
+    function clearHighlights() {
+      // Reset all lines
+      ALL_LINE_IDS.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        el.classList.remove('hl-blue', 'hl-teal', 'hl-orange', 'hl-purple');
+        el.setAttribute('marker-end', 'url(#mGray)');
+      });
+      // Reset all circles
+      ALL_CIRCLE_IDS.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.classList.remove('hl-circle-blue', 'hl-circle-teal', 'hl-circle-orange', 'hl-circle-purple');
+      });
+      // Reset eq-boxes
+      document.querySelectorAll('.eq-box').forEach(function(el) { el.classList.remove('highlighted'); });
+      // Reset desc panel
+      document.getElementById('desc-panel').classList.remove('active');
+    }
+
+    function applyStep(idx) {
+      var step = STEPS[idx];
+      var markerMap = { blue: 'mBlue', teal: 'mTeal', orange: 'mOrange', purple: 'mPurple' };
+
+      // Highlight lines
+      Object.keys(step.lines).forEach(function(color) {
+        step.lines[color].forEach(function(id) {
+          var el = document.getElementById(id);
+          if (!el) return;
+          el.classList.add('hl-' + color);
+          if (markerMap[color]) el.setAttribute('marker-end', 'url(#' + markerMap[color] + ')');
+        });
+      });
+
+      // Highlight circles
+      Object.keys(step.circles).forEach(function(id) {
+        var color = step.circles[id];
+        var el = document.getElementById(id);
+        if (el) el.classList.add('hl-circle-' + color);
+      });
+
+      // Make c_t out solid in step 6 (index 6)
+      var ctOut = document.getElementById('line-ct-out');
+      if (step.solidCt) {
+        ctOut.classList.add('ct-solid');
+        ctOut.classList.remove('ct-dashed');
+        ctOut.classList.add('hl-blue');
+        ctOut.setAttribute('marker-end', 'url(#mBlue)');
+      } else {
+        ctOut.classList.remove('ct-solid', 'hl-blue');
+        ctOut.classList.add('ct-dashed');
+        ctOut.setAttribute('marker-end', 'url(#mGray)');
+      }
+
+      // Highlight equation
+      if (step.eq) document.getElementById(step.eq).classList.add('highlighted');
+
+      // Update description
+      var dp = document.getElementById('desc-panel');
+      dp.innerHTML = step.desc;
+      dp.classList.add('active');
+
+      // Update counter
+      document.getElementById('step-counter').textContent = (idx + 1) + ' / ' + TOTAL;
+    }
+
+    // ─── Controls ───────────────────────────────────────────────────────────
+    function nextStep() {
+      if (currentStep < TOTAL - 1) {
+        currentStep++;
+        clearHighlights();
+        applyStep(currentStep);
+      }
+    }
+
+    function resetSteps() {
+      currentStep = -1;
+      clearHighlights();
+      // Restore c_t out dashed
+      var ctOut = document.getElementById('line-ct-out');
+      ctOut.classList.add('ct-dashed');
+      ctOut.classList.remove('ct-solid', 'hl-blue');
+      ctOut.setAttribute('marker-end', 'url(#mGray)');
+      document.getElementById('desc-panel').innerHTML = 'Clique em <em>Avançar Passo</em> para iniciar a animação da célula LSTM.';
+      document.getElementById('step-counter').textContent = '0 / ' + TOTAL;
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 13 – Feed-forward, Residual e Normalização</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .slide-main { gap: 0.55rem; }
+
+    /* ── Pipeline column ── */
+    .pipeline-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      position: relative;
+    }
+    .pipe-block {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      padding: 0.72rem 1rem;
+      border-radius: var(--radius-sm);
+      border: 2.5px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s;
+      user-select: none;
+      position: relative;
+      z-index: 1;
+    }
+    .pipe-block:hover { transform: translateX(3px); }
+    .pipe-block.active {
+      box-shadow: 0 0 0 3px rgba(13,110,110,0.25), 0 4px 16px rgba(13,110,110,0.2);
+      transform: translateX(4px) scale(1.02);
+    }
+    .pipe-block.blue-block {
+      background: var(--blue-lt);
+      border-color: var(--blue);
+    }
+    .pipe-block.blue-block.active {
+      box-shadow: 0 0 0 3px rgba(29,78,216,0.25), 0 4px 16px rgba(29,78,216,0.22);
+    }
+    .pipe-block.green-block {
+      background: var(--green-lt);
+      border-color: var(--green);
+    }
+    .pipe-block.green-block.active {
+      box-shadow: 0 0 0 3px rgba(22,101,52,0.22), 0 4px 14px rgba(22,101,52,0.18);
+    }
+    .pipe-block.orange-block {
+      background: var(--yellow-lt);
+      border-color: var(--orange);
+    }
+    .pipe-block.orange-block.active {
+      box-shadow: 0 0 0 3px rgba(194,65,12,0.22), 0 4px 14px rgba(194,65,12,0.18);
+    }
+    .pipe-block.output-block {
+      background: linear-gradient(135deg, var(--teal-lt), var(--blue-lt));
+      border-color: var(--teal);
+    }
+    .pipe-block.output-block.active {
+      box-shadow: 0 0 0 3px rgba(13,110,110,0.28), 0 4px 16px rgba(13,110,110,0.22);
+    }
+    .pipe-block-icon { font-size: 1.35rem; flex-shrink: 0; }
+    .pipe-block-label {
+      font-weight: 700;
+      font-size: 0.97rem;
+      color: var(--text);
+      flex: 1;
+    }
+    .pipe-block-sub {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-family: 'Fira Code', monospace;
+    }
+    .pipe-connector {
+      width: 2px;
+      height: 18px;
+      background: var(--border2);
+      position: relative;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .pipe-connector::after {
+      content: '▼';
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      position: absolute;
+      bottom: -4px;
+    }
+    .pipe-connector.active-conn { background: var(--teal); }
+    .pipe-connector.active-conn::after { color: var(--teal); }
+
+    /* Residual skip arrow */
+    .residual-skip {
+      position: absolute;
+      right: -1.6rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      pointer-events: none;
+    }
+    .skip-line {
+      width: 2px;
+      background: var(--text-dim);
+      opacity: 0.45;
+      border-radius: 2px;
+    }
+    .skip-label {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.62rem;
+      color: var(--text-dim);
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      padding: 0.1rem 0;
+      opacity: 0.7;
+    }
+
+    /* ── Detail panel ── */
+    .detail-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      min-height: 22rem;
+      box-shadow: var(--shadow);
+      overflow-y: auto;
+    }
+    .detail-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+    }
+    .detail-body {
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: var(--text-muted);
+    }
+    .formula-box {
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0.65rem 1rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 1.02rem;
+      font-weight: 600;
+      color: var(--teal);
+      text-align: center;
+    }
+    .formula-box.blue { color: var(--blue); border-color: #93c5fd; background: var(--blue-lt); }
+    .formula-box.green { color: var(--green); border-color: #86efac; background: var(--green-lt); }
+    .formula-box.orange { color: var(--orange); border-color: #fdba74; background: var(--yellow-lt); }
+
+    /* Matrix table */
+    .mat-table {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.82rem;
+      border-collapse: collapse;
+      width: 100%;
+    }
+    .mat-table th {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      font-weight: 700;
+      padding: 0.12rem 0.5rem;
+      text-align: right;
+      border-bottom: 1.5px solid var(--border2);
+    }
+    .mat-table th.row-head { text-align: left; }
+    .mat-table td {
+      padding: 0.22rem 0.5rem;
+      text-align: right;
+      min-width: 3.5rem;
+      border-radius: 3px;
+      color: var(--text-muted);
+    }
+    .mat-table td.row-lbl {
+      text-align: left;
+      font-weight: 700;
+      color: var(--text-dim);
+    }
+    .mat-table tr.x-row td { background: var(--blue-lt); color: var(--blue); }
+    .mat-table tr.z-row td { background: #fff7ed; color: #9a3412; }
+    .mat-table tr.zx-row td { background: var(--green-lt); color: var(--green); font-weight: 700; }
+    .mat-table tr.x-row td.row-lbl,
+    .mat-table tr.z-row td.row-lbl,
+    .mat-table tr.zx-row td.row-lbl { background: transparent; }
+
+    .mat-group-hdr th {
+      padding-top: 0.5rem;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+    .mat-group-hdr.blue th { color: var(--blue); }
+    .mat-group-hdr.orange th { color: var(--orange); }
+    .mat-group-hdr.green th { color: var(--green); }
+
+    /* FFN token viz */
+    .ffn-viz {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      flex-wrap: wrap;
+    }
+    .ffn-vec {
+      display: flex;
+      flex-direction: column;
+      gap: 0.18rem;
+      align-items: center;
+    }
+    .ffn-vec-label {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      text-align: center;
+    }
+    .ffn-cell {
+      width: 2.6rem;
+      height: 1.65rem;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+    .ffn-arrow { font-size: 1.2rem; color: var(--text-dim); padding: 0 0.2rem; }
+    .ffn-cell.in-col  { background: #dbeafe; color: var(--blue); }
+    .ffn-cell.h-col   { background: var(--green-lt); color: var(--green); }
+    .ffn-cell.out-col { background: #fef3c7; color: #92400e; }
+
+    .hint-badge {
+      display: inline-block;
+      padding: 0.18rem 0.65rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+    .hint-badge.blue { background: var(--blue-lt); color: var(--blue); }
+    .hint-badge.green { background: var(--green-lt); color: var(--green); }
+    .hint-badge.orange { background: var(--yellow-lt); color: var(--orange); }
+
+    /* Step button row */
+    .step-btn-row {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+    }
+    .step-indicator {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.82rem;
+      color: var(--text-dim);
+    }
+  </style>
+</head>
+<body>
+<div class="slide-container">
+
+  <!-- ── Header ── -->
+  <header class="slide-header">
+    <span class="course-tag">Transformers</span>
+    <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">
+      Prof. Anderson Rocha Tavares
+    </span>
+    <span class="slide-counter">Bloco 13 · Slide 13 / 14</span>
+  </header>
+
+  <!-- ── Main ── -->
+  <main class="slide-main">
+
+    <!-- Title -->
+    <div class="title-block">
+      <h1 class="slide-title">Feed-forward, Residual e Normalização</h1>
+      <p class="slide-subtitle">O que acontece depois da atenção — completando uma camada do encoder</p>
+    </div>
+
+    <!-- Step controls -->
+    <div class="step-btn-row">
+      <button class="btn-step" id="btnStep" onclick="advanceStep()">▶ Executar passo</button>
+      <button class="btn-step" style="background:var(--text-dim);" onclick="resetSteps()">↺ Reiniciar</button>
+      <span class="step-indicator" id="stepIndicator">Clique em um bloco ou avance passo a passo</span>
+    </div>
+
+    <!-- Two-column layout -->
+    <div class="content-split" style="flex:1; min-height:0;">
+
+      <!-- LEFT — Pipeline diagram -->
+      <div class="panel" style="gap:0.5rem; overflow-y:auto; position:relative;">
+        <div class="panel-title">📐 Diagrama da Camada</div>
+
+        <!-- Input row -->
+        <div style="display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0.5rem;">
+          <span style="font-size:1rem;">📥</span>
+          <span style="font-family:'Fira Code',monospace;font-size:0.85rem;font-weight:700;color:var(--text-muted);">
+            X — embeddings + posição
+          </span>
+          <span style="margin-left:auto;font-family:'Fira Code',monospace;font-size:0.72rem;color:var(--text-dim);">
+            "Ela saiu só"
+          </span>
+        </div>
+
+        <div style="position:relative; padding-right:2rem;">
+          <div class="pipeline-col" id="pipelineCol">
+
+            <div class="pipe-connector" id="conn0"></div>
+
+            <!-- Block 0: MHA -->
+            <div class="pipe-block blue-block" id="block0" onclick="selectBlock(0)">
+              <span class="pipe-block-icon">🔷</span>
+              <div>
+                <div class="pipe-block-label">Multi-Head Attention</div>
+                <div class="pipe-block-sub">A = MultiHead(Q,K,V)</div>
+              </div>
+            </div>
+
+            <div class="pipe-connector" id="conn1"></div>
+
+            <!-- Block 1: Add & Norm 1 -->
+            <div class="pipe-block green-block" id="block1" onclick="selectBlock(1)">
+              <span class="pipe-block-icon">➕</span>
+              <div>
+                <div class="pipe-block-label">Add &amp; Norm <span style="font-size:0.75rem;opacity:0.7;">(1ª)</span></div>
+                <div class="pipe-block-sub">A' = LayerNorm(A + X)</div>
+              </div>
+            </div>
+
+            <div class="pipe-connector" id="conn2"></div>
+
+            <!-- Block 2: FFN -->
+            <div class="pipe-block orange-block" id="block2" onclick="selectBlock(2)">
+              <span class="pipe-block-icon">🔶</span>
+              <div>
+                <div class="pipe-block-label">Feed-Forward (FFN)</div>
+                <div class="pipe-block-sub">FFN(z) = max(0, z·W₁+b₁)·W₂+b₂</div>
+              </div>
+            </div>
+
+            <div class="pipe-connector" id="conn3"></div>
+
+            <!-- Block 3: Add & Norm 2 -->
+            <div class="pipe-block green-block" id="block3" onclick="selectBlock(3)">
+              <span class="pipe-block-icon">➕</span>
+              <div>
+                <div class="pipe-block-label">Add &amp; Norm <span style="font-size:0.75rem;opacity:0.7;">(2ª)</span></div>
+                <div class="pipe-block-sub">H = LayerNorm(FFN(A') + A')</div>
+              </div>
+            </div>
+
+            <div class="pipe-connector" id="conn4"></div>
+
+            <!-- Block 4: Output -->
+            <div class="pipe-block output-block" id="block4" onclick="selectBlock(4)">
+              <span class="pipe-block-icon">📤</span>
+              <div>
+                <div class="pipe-block-label">Output da Camada</div>
+                <div class="pipe-block-sub">H — representação refinada</div>
+              </div>
+            </div>
+
+          </div><!-- pipeline-col -->
+
+          <!-- Residual skip arrows (decorative) -->
+          <div style="position:absolute;right:0.1rem;top:2.2rem;height:5.1rem;display:flex;flex-direction:column;align-items:center;">
+            <div style="width:2px;flex:1;background:var(--blue);opacity:0.35;border-radius:2px;"></div>
+            <span style="font-family:'Fira Code',monospace;font-size:0.58rem;color:var(--blue);writing-mode:vertical-rl;transform:rotate(180deg);opacity:0.7;padding:0.1rem 0;">skip 1</span>
+          </div>
+          <div style="position:absolute;right:0.1rem;top:9.7rem;height:5.1rem;display:flex;flex-direction:column;align-items:center;">
+            <div style="width:2px;flex:1;background:var(--orange);opacity:0.35;border-radius:2px;"></div>
+            <span style="font-family:'Fira Code',monospace;font-size:0.58rem;color:var(--orange);writing-mode:vertical-rl;transform:rotate(180deg);opacity:0.7;padding:0.1rem 0;">skip 2</span>
+          </div>
+        </div>
+
+        <!-- Phrase chips -->
+        <div style="margin-top:0.3rem;">
+          <div style="font-size:0.75rem;color:var(--text-dim);margin-bottom:0.35rem;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;">
+            Frase de trabalho
+          </div>
+          <div class="token-row">
+            <span class="token">Ela</span>
+            <span class="token">saiu</span>
+            <span class="token">só</span>
+          </div>
+        </div>
+
+      </div><!-- left panel -->
+
+      <!-- RIGHT — Details panel -->
+      <div class="detail-panel" id="detailPanel">
+
+        <!-- Default state -->
+        <div id="detailDefault" style="display:flex;flex-direction:column;gap:0.6rem;">
+          <div class="detail-title" style="color:var(--text-dim);">
+            <span>👆</span> Selecione um bloco
+          </div>
+          <div class="detail-body">
+            Clique em qualquer bloco do diagrama à esquerda para ver os detalhes,
+            ou use o botão <strong>Executar passo</strong> para avançar sequencialmente.
+          </div>
+          <div class="highlight-box teal">
+            <span class="icon">💡</span>
+            <span>
+              Uma camada completa do encoder contém:
+              <strong>Multi-Head Attention → Add&amp;Norm → Feed-Forward → Add&amp;Norm</strong>.
+              Os blocos residuais permitem que o gradiente flua diretamente, facilitando o treinamento profundo.
+            </span>
+          </div>
+          <!-- Mini architecture overview -->
+          <div style="background:var(--bg3);border:1.5px solid var(--border2);border-radius:var(--radius-sm);padding:0.75rem 1rem;">
+            <div style="font-size:0.78rem;font-weight:700;color:var(--teal);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.07em;">Visão geral</div>
+            <div style="display:flex;flex-direction:column;gap:0.22rem;font-family:'Fira Code',monospace;font-size:0.82rem;color:var(--text-muted);">
+              <span>X &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→ <span style="color:var(--blue);">MHA</span> → A</span>
+              <span>A, X &nbsp;&nbsp;→ <span style="color:var(--green);">Add&amp;Norm₁</span> → A'</span>
+              <span>A' &nbsp;&nbsp;&nbsp;→ <span style="color:var(--orange);">FFN</span> → F</span>
+              <span>F, A' &nbsp;→ <span style="color:var(--green);">Add&amp;Norm₂</span> → <strong style="color:var(--teal);">H</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detail: MHA -->
+        <div id="detail0" style="display:none; flex-direction:column; gap:0.75rem;">
+          <div class="detail-title" style="color:var(--blue);">
+            🔷 Multi-Head Attention
+          </div>
+          <div class="detail-body">
+            Mistura informação <strong>entre tokens</strong>: cada posição pode "olhar" para todas as outras.
+            O resultado <strong>A</strong> tem as mesmas dimensões de <strong>X</strong> (d_model = 2 neste exemplo),
+            mas integra contexto de todas as posições via atenção multi-cabeça.
+          </div>
+          <div class="formula-box blue">A = MultiHead(Q, K, V) &nbsp;&nbsp; [n_tokens × d_model]</div>
+          <table class="mat-table">
+            <thead>
+              <tr><th class="row-head">token</th><th>d₁</th><th>d₂</th></tr>
+            </thead>
+            <tbody>
+              <tr class="mat-group-hdr blue"><th colspan="3">A — saída da atenção (aprox.)</th></tr>
+              <tr class="z-row"><td class="row-lbl">Ela</td><td>3.75</td><td>3.40</td></tr>
+              <tr class="z-row"><td class="row-lbl">saiu</td><td>0.97</td><td>3.92</td></tr>
+              <tr class="z-row"><td class="row-lbl">só</td><td>3.72</td><td>3.38</td></tr>
+            </tbody>
+          </table>
+          <div class="highlight-box blue">
+            <span class="icon">📌</span>
+            <span>Blocos 7–12 cobriram MHA em detalhes. Aqui partimos de A como entrada das etapas seguintes.</span>
+          </div>
+        </div>
+
+        <!-- Detail: Add & Norm 1 -->
+        <div id="detail1" style="display:none; flex-direction:column; gap:0.75rem;">
+          <div class="detail-title" style="color:var(--green);">
+            ➕ Add &amp; Norm — 1ª conexão residual
+          </div>
+          <div class="detail-body">
+            <strong>Residual (Add):</strong> soma A com a entrada original X.
+            Isso preserva o sinal original e garante que o gradiente possa fluir diretamente pela camada.<br><br>
+            <strong>LayerNorm:</strong> normaliza <em>cada vetor de token individualmente</em>.
+            Para o token i, calcula a média μ<sub>i</sub> e o desvio padrão σ<sub>i</sub> ao longo das
+            d<sub>model</sub> dimensões daquele único vetor — <strong>não</strong> ao longo do batch.
+            Resultado: <code style="font-family:'Fira Code',monospace;">z̃[i] = (z[i] − μᵢ) / σᵢ</code>.
+            Cada linha da matriz é normalizada de forma independente das demais.
+          </div>
+          <div class="formula-box green">A' = LayerNorm( A + X )</div>
+          <table class="mat-table">
+            <thead>
+              <tr><th class="row-head">token</th><th>d₁</th><th>d₂</th></tr>
+            </thead>
+            <tbody>
+              <tr class="mat-group-hdr blue"><th colspan="3">X — embedding + posição</th></tr>
+              <tr class="x-row"><td class="row-lbl">Ela</td><td>1.00</td><td>3.00</td></tr>
+              <tr class="x-row"><td class="row-lbl">saiu</td><td>3.84</td><td>−0.46</td></tr>
+              <tr class="x-row"><td class="row-lbl">só</td><td>−0.09</td><td>1.58</td></tr>
+              <tr class="mat-group-hdr orange"><th colspan="3">A — saída da atenção</th></tr>
+              <tr class="z-row"><td class="row-lbl">Ela</td><td>3.75</td><td>3.40</td></tr>
+              <tr class="z-row"><td class="row-lbl">saiu</td><td>0.97</td><td>3.92</td></tr>
+              <tr class="z-row"><td class="row-lbl">só</td><td>3.72</td><td>3.38</td></tr>
+              <tr class="mat-group-hdr green"><th colspan="3">A + X (antes do LayerNorm)</th></tr>
+              <tr class="zx-row"><td class="row-lbl">Ela</td><td>4.75</td><td>6.40</td></tr>
+              <tr class="zx-row"><td class="row-lbl">saiu</td><td>4.81</td><td>3.46</td></tr>
+              <tr class="zx-row"><td class="row-lbl">só</td><td>3.63</td><td>4.96</td></tr>
+            </tbody>
+          </table>
+          <div class="highlight-box green">
+            <span class="icon">🔀</span>
+            <span>O sinal de skip garante que, mesmo que a atenção não contribua, a informação original <strong>X</strong> ainda chega à próxima camada.</span>
+          </div>
+        </div>
+
+        <!-- Detail: FFN -->
+        <div id="detail2" style="display:none; flex-direction:column; gap:0.75rem;">
+          <div class="detail-title" style="color:var(--orange);">
+            🔶 Feed-Forward Network (FFN)
+          </div>
+          <div class="detail-body">
+            Processa <strong>cada token de forma independente</strong> — sem misturar informação entre posições.
+            É uma MLP de 2 camadas: expansão com ReLU, depois projeção de volta para d_model.
+            Dimensões: <strong>W₁ ∈ ℝ<sup>d × d_ff</sup></strong>, <strong>W₂ ∈ ℝ<sup>d_ff × d</sup></strong>, <strong>H ∈ ℝ<sup>n × d</sup></strong>.
+            Na prática d_ff = 4 × d (ex.: d=512 → d_ff=2048).
+          </div>
+          <div class="formula-box orange">FFN(z) = ReLU(W₁·z + b₁)·W₂ + b₂</div>
+          <!-- Toy FFN visualization -->
+          <div style="background:var(--bg3);border:1.5px solid var(--border2);border-radius:var(--radius-sm);padding:0.7rem 0.8rem;">
+            <div style="font-size:0.75rem;font-weight:700;color:var(--orange);margin-bottom:0.55rem;text-transform:uppercase;letter-spacing:0.07em;">
+              Token "Ela" — passo a passo
+            </div>
+            <div class="ffn-viz">
+              <!-- z input -->
+              <div class="ffn-vec">
+                <div class="ffn-vec-label">A' (d=2)</div>
+                <div class="ffn-cell in-col">−1.00</div>
+                <div class="ffn-cell in-col"> 1.00</div>
+              </div>
+              <div class="ffn-arrow">→<br><span style="font-size:0.62rem;color:var(--text-dim);">×W₁</span></div>
+              <!-- hidden -->
+              <div class="ffn-vec">
+                <div class="ffn-vec-label">h (d_ff=4)</div>
+                <div class="ffn-cell h-col">0.00</div>
+                <div class="ffn-cell h-col">2.00</div>
+                <div class="ffn-cell h-col">0.00</div>
+                <div class="ffn-cell h-col">2.00</div>
+              </div>
+              <div class="ffn-arrow">→<br><span style="font-size:0.62rem;color:var(--text-dim);">×W₂</span></div>
+              <!-- output -->
+              <div class="ffn-vec">
+                <div class="ffn-vec-label">f (d=2)</div>
+                <div class="ffn-cell out-col">0.00</div>
+                <div class="ffn-cell out-col">4.00</div>
+              </div>
+            </div>
+            <div style="margin-top:0.5rem;font-size:0.75rem;color:var(--text-dim);font-family:'Fira Code',monospace;">
+              Valores 0.00 = ReLU zerando ativações negativas
+            </div>
+          </div>
+          <div class="highlight-box yellow">
+            <span class="icon">⚡</span>
+            <span>A atenção mistura tokens. O FFN refina cada token individualmente.
+            Pesquisadores como Geva et al. (2021) mostram que as linhas de W₂ funcionam como
+            <strong>"memórias associativas"</strong>: cada neurônio oculto ativa para certos padrões de entrada
+            e projeta de volta um vetor de saída — como uma tabela de consulta aprendida.</span>
+          </div>
+        </div>
+
+        <!-- Detail: Add & Norm 2 -->
+        <div id="detail3" style="display:none; flex-direction:column; gap:0.75rem;">
+          <div class="detail-title" style="color:var(--green);">
+            ➕ Add &amp; Norm — 2ª conexão residual
+          </div>
+          <div class="detail-body">
+            Mesma estrutura da primeira: soma a saída do FFN com a entrada <strong>A'</strong>,
+            depois aplica LayerNorm. Garante que o gradiente flua diretamente pelo caminho de skip,
+            mesmo se o FFN não contribuir com informação nova.
+          </div>
+          <div class="formula-box green">H = LayerNorm( FFN(A') + A' )</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;">
+            <div class="highlight-box green">
+              <span class="icon">🔗</span>
+              <div>
+                <strong>Residual</strong><br>
+                <span style="font-size:0.88rem;">F + A' preserva A' mesmo que F seja ruim.</span>
+              </div>
+            </div>
+            <div class="highlight-box teal">
+              <span class="icon">📐</span>
+              <div>
+                <strong>LayerNorm</strong><br>
+                <span style="font-size:0.88rem;">Normaliza cada vetor de token independentemente.</span>
+              </div>
+            </div>
+          </div>
+          <table class="mat-table">
+            <thead>
+              <tr><th class="row-head">token</th><th>d₁</th><th>d₂</th></tr>
+            </thead>
+            <tbody>
+              <tr class="mat-group-hdr orange"><th colspan="3">FFN(A') — saída feed-forward</th></tr>
+              <tr class="z-row"><td class="row-lbl">Ela</td><td>0.00</td><td>4.00</td></tr>
+              <tr class="z-row"><td class="row-lbl">saiu</td><td>4.00</td><td>0.00</td></tr>
+              <tr class="z-row"><td class="row-lbl">só</td><td>0.00</td><td>4.00</td></tr>
+              <tr class="mat-group-hdr green"><th colspan="3">H = FFN(A') + A' (aprox., antes LayerNorm)</th></tr>
+              <tr class="zx-row"><td class="row-lbl">Ela</td><td>−1.00</td><td>5.00</td></tr>
+              <tr class="zx-row"><td class="row-lbl">saiu</td><td>5.00</td><td>−1.00</td></tr>
+              <tr class="zx-row"><td class="row-lbl">só</td><td>−1.00</td><td>5.00</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Detail: Output -->
+        <div id="detail4" style="display:none; flex-direction:column; gap:0.75rem;">
+          <div class="detail-title" style="color:var(--teal);">
+            📤 Saída da Camada do Encoder — matriz H
+          </div>
+          <div class="detail-body">
+            A matriz <strong>H</strong> é a saída de uma camada completa do encoder.
+            Cada linha é a representação refinada de um token após atenção + FFN + normalização.
+            Em um Transformer com <em>N</em> camadas, <strong>H</strong> alimenta a próxima camada como novo <strong>X</strong>.
+          </div>
+
+          <!-- H matrix computed from the running example -->
+          <div class="formula-box">H = LayerNorm( F + A' ) &nbsp;&nbsp; ∈ ℝ<sup>n × d</sup></div>
+          <table class="mat-table">
+            <thead>
+              <tr><th class="row-head">token</th><th>d₁</th><th>d₂</th><th style="text-align:left;padding-left:0.9rem;font-size:0.68rem;color:var(--text-dim);">como interpretar</th></tr>
+            </thead>
+            <tbody>
+              <tr class="mat-group-hdr green"><th colspan="4">H — LayerNorm(F + A') — saída final da camada</th></tr>
+              <tr class="zx-row">
+                <td class="row-lbl">Ela</td><td>−1.00</td><td>1.00</td>
+                <td style="text-align:left;padding-left:0.9rem;font-size:0.72rem;color:var(--green);background:var(--green-lt);">baixo/alto</td>
+              </tr>
+              <tr class="zx-row">
+                <td class="row-lbl">saiu</td><td>1.00</td><td>−1.00</td>
+                <td style="text-align:left;padding-left:0.9rem;font-size:0.72rem;color:var(--green);background:var(--green-lt);">alto/baixo</td>
+              </tr>
+              <tr class="zx-row">
+                <td class="row-lbl">só</td><td>−1.00</td><td>1.00</td>
+                <td style="text-align:left;padding-left:0.9rem;font-size:0.72rem;color:var(--green);background:var(--green-lt);">baixo/alto</td>
+              </tr>
+              <tr style="height:0.4rem;"></tr>
+              <tr>
+                <td class="row-lbl" style="font-size:0.72rem;color:var(--text-dim);">μ (mean pool)</td>
+                <td style="font-family:'Fira Code',monospace;font-size:0.8rem;color:var(--teal); font-weight:700;text-align:right;">−0.33</td>
+                <td style="font-family:'Fira Code',monospace;font-size:0.8rem;color:var(--teal); font-weight:700;text-align:right;">0.33</td>
+                <td style="text-align:left;padding-left:0.9rem;font-size:0.72rem;color:var(--teal);">vetor da frase</td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="font-size:0.72rem;color:var(--text-dim);font-family:'Fira Code',monospace;margin-top:-0.3rem;">
+            μᵢ para cada token = média das d dimensões; σᵢ = desvio padrão; resultado ∈ [−1, 1] aprox.
+          </div>
+
+          <!-- Classifier example -->
+          <div style="background:var(--bg3);border:1.5px solid var(--border2);border-radius:var(--radius-sm);padding:0.8rem 1rem;margin-top:0.2rem;">
+            <div style="font-size:0.75rem;font-weight:700;color:var(--teal);margin-bottom:0.6rem;text-transform:uppercase;letter-spacing:0.07em;">
+              🎭 Usando H num classificador de sentimentos
+            </div>
+            <!-- Step-by-step diagram -->
+            <div style="display:flex;flex-direction:column;gap:0.45rem;font-family:'Fira Code',monospace;font-size:0.82rem;">
+              <!-- Step 1 -->
+              <div style="display:flex;align-items:center;gap:0.6rem;">
+                <span style="background:var(--green-lt);color:var(--green);border-radius:4px;padding:0.1rem 0.5rem;font-size:0.72rem;font-weight:700;white-space:nowrap;">① H</span>
+                <span style="color:var(--text-muted);">matriz [3 × 2] — uma linha por token</span>
+              </div>
+              <!-- Arrow -->
+              <div style="padding-left:1rem;color:var(--text-dim);font-size:0.78rem;">↓ mean pooling (média das linhas)</div>
+              <!-- Step 2 -->
+              <div style="display:flex;align-items:center;gap:0.6rem;">
+                <span style="background:#dbeafe;color:var(--blue);border-radius:4px;padding:0.1rem 0.5rem;font-size:0.72rem;font-weight:700;white-space:nowrap;">② h̄</span>
+                <span style="color:var(--text-muted);">[−0.33, 0.33] — vetor único da frase</span>
+              </div>
+              <!-- Arrow -->
+              <div style="padding-left:1rem;color:var(--text-dim);font-size:0.78rem;">↓ camada linear: W<sub>cls</sub> ∈ ℝ<sup>2×2</sup>, b<sub>cls</sub></div>
+              <!-- Step 3 -->
+              <div style="display:flex;align-items:center;gap:0.6rem;">
+                <span style="background:var(--yellow-lt);color:var(--orange);border-radius:4px;padding:0.1rem 0.5rem;font-size:0.72rem;font-weight:700;white-space:nowrap;">③ logits</span>
+                <span style="color:var(--text-muted);">[−0.82, &nbsp;1.54] — negativo, positivo</span>
+              </div>
+              <!-- Arrow -->
+              <div style="padding-left:1rem;color:var(--text-dim);font-size:0.78rem;">↓ softmax</div>
+              <!-- Step 4 -->
+              <div style="display:flex;align-items:center;gap:0.6rem;">
+                <span style="background:#dcfce7;color:#166534;border-radius:4px;padding:0.1rem 0.5rem;font-size:0.72rem;font-weight:700;white-space:nowrap;">④ P</span>
+                <div style="display:flex;gap:0.8rem;align-items:center;">
+                  <span style="color:var(--text-muted);">negativo: <strong style="color:#dc2626;">18%</strong></span>
+                  <span style="color:var(--text-muted);">positivo: <strong style="color:#16a34a;">82%</strong></span>
+                  <span style="background:#16a34a;color:#fff;border-radius:999px;padding:0.05rem 0.6rem;font-size:0.72rem;font-weight:700;">→ POSITIVO</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.55rem;margin-top:0.1rem;">
+            <div class="concept-card" style="--delay:0s;flex-direction:column;align-items:flex-start;gap:0.25rem;">
+              <span style="font-size:1.1rem;">🔁</span>
+              <strong style="font-size:0.82rem;">N camadas</strong>
+              <p style="font-size:0.8rem;">H alimenta a próxima camada como novo X.</p>
+            </div>
+            <div class="concept-card" style="--delay:0.08s;flex-direction:column;align-items:flex-start;gap:0.25rem;">
+              <span style="font-size:1.1rem;">🌊</span>
+              <strong style="font-size:0.82rem;">Residuais</strong>
+              <p style="font-size:0.8rem;">Permitem treinar redes muito profundas.</p>
+            </div>
+          </div>
+
+          <!-- Encoder layer recap -->
+          <div style="background:var(--bg3);border:1.5px solid var(--border2);border-radius:var(--radius-sm);padding:0.7rem 1rem;">
+            <div style="font-size:0.75rem;font-weight:700;color:var(--teal);margin-bottom:0.4rem;text-transform:uppercase;letter-spacing:0.07em;">Encoder Layer completa</div>
+            <div style="font-family:'Fira Code',monospace;font-size:0.83rem;line-height:1.85;color:var(--text-muted);">
+              <span style="color:var(--blue);">A  = MultiHead(Q,K,V)</span><br>
+              <span style="color:var(--green);">A' = LayerNorm(A + X)</span><br>
+              <span style="color:var(--orange);">F  = FFN(A')</span><br>
+              <span style="color:var(--green);font-weight:700;">H  = LayerNorm(F + A') &nbsp;→ classificador</span>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- right panel -->
+    </div><!-- content-split -->
+
+    <!-- ── Insight Box ── -->
+    <div class="insight-box">
+      <span class="i-icon">🧠</span>
+      <p class="i-text">
+        A <strong>atenção</strong> mistura informação entre tokens. Depois, o <strong>feed-forward</strong>
+        refina cada representação individualmente, e as <strong>conexões residuais</strong> ajudam a
+        preservar e estabilizar o fluxo de informação — permitindo treinar redes com dezenas de camadas.
+      </p>
+    </div>
+
+  </main>
+
+  <!-- ── Navigation ── -->
+  <nav class="slide-nav">
+    <button class="btn-nav btn-prev" onclick="location.href='slide12.html'">← Anterior</button>
+    <div class="nav-dots" id="navDots"></div>
+    <button class="btn-nav btn-next" onclick="location.href='slide14.html'">Próximo →</button>
+  </nav>
+
+</div><!-- slide-container -->
+
+<script>
+  /* ── Nav dots ── */
+  (function () {
+    const container = document.getElementById('navDots');
+    const total = 14, active = 13;
+    for (let i = 1; i <= total; i++) {
+      const d = document.createElement('div');
+      d.className = 'dot' + (i === active ? ' active' : '');
+      d.title = 'Slide ' + i;
+      d.style.cursor = 'pointer';
+      d.onclick = () => {
+        if (i !== active) location.href = 'slide' + i + '.html';
+      };
+      container.appendChild(d);
+    }
+  })();
+
+  /* ── Block selection ── */
+  const BLOCKS = 5;
+  let currentBlock = -1;
+
+  const detailIds = ['detail0','detail1','detail2','detail3','detail4','detailDefault'];
+  const stepLabels = [
+    'Passo 1/4 — Multi-Head Attention',
+    'Passo 2/4 — Add & Norm (1ª)',
+    'Passo 3/4 — Feed-Forward Network',
+    'Passo 4/4 — Add & Norm (2ª)',
+    'Completo — Saída da camada'
+  ];
+
+  function showDetail(id) {
+    detailIds.forEach(d => {
+      const el = document.getElementById(d);
+      if (el) el.style.display = 'none';
+    });
+    const target = document.getElementById(id);
+    if (target) {
+      target.style.display = 'flex';
+      // Smooth fade-in
+      target.style.opacity = '0';
+      requestAnimationFrame(() => {
+        target.style.transition = 'opacity 0.25s';
+        target.style.opacity = '1';
+      });
+    }
+  }
+
+  function selectBlock(idx) {
+    // Remove active from all blocks
+    for (let i = 0; i < BLOCKS; i++) {
+      const b = document.getElementById('block' + i);
+      if (b) b.classList.remove('active');
+      const c = document.getElementById('conn' + i);
+      if (c) c.classList.remove('active-conn');
+    }
+    // Activate selected
+    const block = document.getElementById('block' + idx);
+    if (block) block.classList.add('active');
+    // Activate connectors up to idx
+    for (let i = 0; i <= idx; i++) {
+      const c = document.getElementById('conn' + i);
+      if (c) c.classList.add('active-conn');
+    }
+    currentBlock = idx;
+    showDetail('detail' + idx);
+    // Update step indicator
+    const ind = document.getElementById('stepIndicator');
+    if (ind) ind.textContent = stepLabels[idx] || '';
+  }
+
+  function advanceStep() {
+    const next = (currentBlock + 1) % BLOCKS;
+    selectBlock(next);
+  }
+
+  function resetSteps() {
+    for (let i = 0; i < BLOCKS; i++) {
+      const b = document.getElementById('block' + i);
+      if (b) b.classList.remove('active');
+      const c = document.getElementById('conn' + i);
+      if (c) c.classList.remove('active-conn');
+    }
+    currentBlock = -1;
+    showDetail('detailDefault');
+    const ind = document.getElementById('stepIndicator');
+    if (ind) ind.textContent = 'Clique em um bloco ou avance passo a passo';
+  }
+
+  // Init: show default
+  showDetail('detailDefault');
+</script>
+</body>
+</html>

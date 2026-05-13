@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 04 – Por que a posição dos patches importa?</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .face-grid {
+      display: grid;
+      gap: 1px;
+      width: 220px;
+      height: 220px;
+      background: #e11d48;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 1px;
+      flex-shrink: 0;
+    }
+    .face-cell {
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      font-family: 'Fira Code', monospace;
+      font-weight: 700;
+      color: rgba(255,255,255,0.8);
+      text-shadow: 0 1px 3px rgba(0,0,0,0.75);
+      transition: background 0.45s ease, transform 0.45s ease;
+      position: relative;
+      cursor: pointer;
+    }
+    .face-cell.selected {
+      outline: 2.5px solid #facc15;
+      outline-offset: -1px;
+      z-index: 1;
+    }
+    .pos-num {
+      position: absolute;
+      top: 2px;
+      left: 3px;
+      font-size: 0.58rem;
+      color: rgba(0,0,0,0.45);
+      font-family: 'Fira Code', monospace;
+    }
+    .grid-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .status-badge {
+      padding: 0.3rem 1rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      font-family: 'Fira Code', monospace;
+      transition: all 0.3s;
+    }
+    .status-badge.ordered { background: var(--green-lt); border: 1.5px solid #86efac; color: var(--green); }
+    .status-badge.scrambled { background: #fee2e2; border: 1.5px solid #fca5a5; color: var(--red); }
+
+    .eq-display {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      padding: 0.7rem;
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+    }
+    .eq-term {
+      padding: 0.4rem 0.8rem;
+      border-radius: 8px;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.88rem;
+      font-weight: 700;
+    }
+    .eq-term.patch-emb { background: var(--blue-lt); border: 1.5px solid #93c5fd; color: var(--blue); }
+    .eq-term.pos-emb   { background: var(--purple-lt); border: 1.5px solid #c4b5fd; color: var(--purple); }
+    .eq-term.final-emb { background: var(--teal-lt); border: 1.5px solid #5eead4; color: var(--teal); }
+    .eq-op { font-size: 1.3rem; font-weight: 700; color: var(--text-muted); }
+
+    .btn-restore-blue { background: var(--blue); }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">ViT</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 3 · Slide 1 / 1</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Por que a posição dos patches importa?</h1>
+        <p class="slide-subtitle">Bloco 3 — Posição</p>
+      </div>
+
+      <div class="content-split" style="align-items:start;">
+        <!-- Left: interactive grid -->
+        <div class="panel">
+          <span class="panel-title">Selecione um patch</span>
+
+          <div style="display:flex;gap:0.6rem;align-items:center;flex-wrap:wrap;">
+            <span style="font-size:0.9rem;font-weight:600;color:var(--text-muted);">Número de patches:</span>
+            <div class="toggle-group">
+              <button class="btn-toggle" id="pbtn-4" onclick="setGrid(4)">2×2</button>
+              <button class="btn-toggle active" id="pbtn-16" onclick="setGrid(16)">4×4</button>
+              <button class="btn-toggle" id="pbtn-64" onclick="setGrid(64)">8×8</button>
+              <button class="btn-toggle" id="pbtn-256" onclick="setGrid(256)">16×16</button>
+            </div>
+          </div>
+
+          <div class="grid-wrapper">
+            <div class="face-grid" id="face-grid"></div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="highlight-box yellow">
+            <span class="icon">⚠️</span>
+            <span>Sem posição: cada patch mantém <strong>conteúdo local</strong>, mas a imagem perde sua <strong>estrutura espacial</strong>.</span>
+          </div>
+
+          <div class="highlight-box green">
+            <span class="icon">✅</span>
+            <span>Precisamos de <strong>embedding posicional</strong> — assim como no Transformer de texto!</span>
+          </div>
+        </div>
+
+        <!-- Right: explanation + equation -->
+        <div class="panel">
+          <span class="panel-title">Embedding posicional</span>
+
+          <p style="font-size:0.88rem;font-weight:700;color:var(--text-muted);text-align:center;">Pipeline de embedding</p>
+          <p style="font-size:0.85rem;font-family:'Fira Code',monospace;color:#6b7fa3;text-align:center;font-weight:600;">achatar + projetar → somar posição</p>
+          <div id="mat-diagram" style="display:flex;flex-direction:column;align-items:flex-start;gap:0;"></div>
+          <p id="mat-label" style="font-size:0.72rem;font-family:'Fira Code',monospace;color:var(--text-dim);text-align:center;margin-top:0.1rem;"></p>
+
+          <div class="divider"></div>
+            <div class="concept-card" style="--delay:0.0s">
+              <span class="card-icon">📍</span>
+              <div class="card-text">
+                <strong>Patches sem posição</strong>
+                <p>O Transformer trata a sequência sem ordem implícita — patches poderiam estar em qualquer lugar.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.1s">
+              <span class="card-icon">🗺️</span>
+              <div class="card-text">
+                <strong>Codificando localização</strong>
+                <p>Cada posição recebe um vetor único somado ao patch embedding. O modelo aprende a interpretar essas posições.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.2s">
+              <span class="card-icon">📖</span>
+              <div class="card-text">
+                <strong>Aprendido em ViT</strong>
+                <p>No ViT original, os embeddings posicionais são <em>aprendidos</em> — não fixos como no Transformer de texto.</p>
+              </div>
+            </div>
+          </div>
+
+          
+
+          
+
+          
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide03.html'">← Anterior</button>
+      <div class="nav-dots">
+        <div class="dot active"></div>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide05.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    const GRID_PX = 220;
+    let N = 4;
+    let originalOrder = Array.from({length: N*N}, (_,i) => i);
+    let currentOrder = [...originalOrder];
+    let scrambled = false; // kept for currentOrder compatibility
+    let selectedPatch = 0;
+
+    /* ── Patch count selector ─────────────────────────── */
+    function setGrid(n) {
+      N = Math.round(Math.sqrt(n));
+      originalOrder = Array.from({length: N*N}, (_,i) => i);
+      currentOrder = [...originalOrder];
+      scrambled = false;
+      selectedPatch = 0;
+      ['4','16','64','256'].forEach(id => {
+        document.getElementById('pbtn-'+id).classList.remove('active');
+      });
+      document.getElementById('pbtn-'+n).classList.add('active');
+      buildGrid();
+      buildMatrixDiagram();
+    }
+
+    /* ── Grid build/render ────────────────────────────── */
+    function buildGrid() {
+      const grid = document.getElementById('face-grid');
+      grid.style.gridTemplateColumns = `repeat(${N}, 1fr)`;
+      grid.style.gridTemplateRows    = `repeat(${N}, 1fr)`;
+      grid.innerHTML = '';
+      for (let i = 0; i < N * N; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'face-cell';
+        cell.id = `fc-${i}`;
+        grid.appendChild(cell);
+      }
+      renderGrid();
+    }
+
+    function renderGrid() {
+      const cellPx = GRID_PX / N;
+      for (let slot = 0; slot < N * N; slot++) {
+        const patternIdx = currentOrder[slot];
+        const r = Math.floor(patternIdx / N);
+        const c = patternIdx % N;
+        const cell = document.getElementById(`fc-${slot}`);
+        cell.style.backgroundImage    = `url('illusion.png')`;
+        cell.style.backgroundSize     = `${GRID_PX}px ${GRID_PX}px`;
+        cell.style.backgroundPosition = `${-(c * cellPx)}px ${-(r * cellPx)}px`;
+        cell.innerHTML = N <= 8 ? `<span class="pos-num">${patternIdx + 1}</span>` : '';
+        cell.classList.toggle('selected', slot === selectedPatch);
+        cell.onclick = (s => () => { selectedPatch = s; renderGrid(); buildMatrixDiagram(); })(slot);
+      }
+    }
+
+    /* ── Seeded RNG ─────────────────────────────────── */
+    function seededRand(seed) {
+      // simple LCG
+      let s = seed;
+      return () => { s = (s * 1664525 + 1013904223) & 0xffffffff; return (s >>> 0) / 4294967296; };
+    }
+
+    /* ── Matrix pipeline diagram  (N_patches × d) ─── */
+    function buildMatrixDiagram() {
+      const D = 16;          // visual embedding dimension
+      const total = N * N;   // number of patches
+
+      const cw = 16;         // px per embedding dimension (wider = more readable)
+      const ch = Math.max(2, Math.min(14, Math.floor(150 / total)));
+      const matW = D * cw;
+      const matH = total * ch;
+
+      // per-row value generators
+      function patchRow(row) {
+        const r = seededRand(row * 997 + 42);
+        return Array.from({length: D}, () => r());
+      }
+      function posRow(row) {
+        // learned positional embeddings: random (not sinusoidal)
+        const r = seededRand(row * 1234567 + 999);
+        return Array.from({length: D}, () => r());
+      }
+      function finalRow(row) {
+        // average keeps intensity consistent: dim+dim=dim, bright+bright=bright
+        const p = patchRow(row), pos = posRow(row);
+        return p.map((v, i) => (v + pos[i]) / 2);
+      }
+
+      function makeMatSVG(rowFn, color) {
+        const ns = 'http://www.w3.org/2000/svg';
+        const svg = document.createElementNS(ns, 'svg');
+        svg.setAttribute('width',  matW);
+        svg.setAttribute('height', matH);
+        svg.style.cssText = 'display:block;border-radius:4px;';
+        const bg = document.createElementNS(ns, 'rect');
+        bg.setAttribute('width', matW); bg.setAttribute('height', matH);
+        bg.setAttribute('fill', '#f0f2f6');
+        svg.appendChild(bg);
+        for (let row = 0; row < total; row++) {
+          const vals = rowFn(row);
+          for (let col = 0; col < D; col++) {
+            const rect = document.createElementNS(ns, 'rect');
+            const gap = ch > 3 ? 1 : 0;
+            rect.setAttribute('x', col * cw + 0.5);
+            rect.setAttribute('y', row * ch + (gap ? 0.5 : 0));
+            rect.setAttribute('width',  cw - 1);
+            rect.setAttribute('height', ch - gap);
+            rect.setAttribute('rx', '1');
+            rect.setAttribute('fill', color);
+            rect.setAttribute('fill-opacity', (0.1 + vals[col] * 0.9).toFixed(2));
+            svg.appendChild(rect);
+          }
+        }
+        // highlight selected row
+        const hl = document.createElementNS(ns, 'rect');
+        hl.setAttribute('x', '0');
+        hl.setAttribute('y', selectedPatch * ch);
+        hl.setAttribute('width',  matW);
+        hl.setAttribute('height', Math.max(ch, 2));
+        hl.setAttribute('fill', '#facc15');
+        hl.setAttribute('fill-opacity', '0.38');
+        hl.setAttribute('stroke', '#facc15');
+        hl.setAttribute('stroke-width', ch >= 3 ? '1.5' : '0.75');
+        svg.appendChild(hl);
+        return svg;
+      }
+
+      function makeRow(op, rowFn, color, label) {
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 0;';
+        const opEl = document.createElement('span');
+        opEl.style.cssText = 'font-size:1.2rem;font-weight:700;color:#6b7fa3;width:18px;text-align:center;flex-shrink:0;font-family:monospace;align-self:center;';
+        opEl.textContent = op;
+        const lbl = document.createElement('span');
+        lbl.style.cssText = `font-size:0.7rem;font-family:'Fira Code',monospace;color:${color};font-weight:700;white-space:pre;align-self:center;`;
+        lbl.textContent = label;
+        row.appendChild(opEl);
+        row.appendChild(makeMatSVG(rowFn, color));
+        row.appendChild(lbl);
+        return row;
+      }
+
+      function makeDivider() {
+        const d = document.createElement('div');
+        d.style.cssText = `height:2px;background:linear-gradient(90deg,transparent,#c7d0e0 26px,#c7d0e0 ${matW + 14}px,transparent);margin:2px 0 2px 26px;`;
+        return d;
+      }
+
+      const container = document.getElementById('mat-diagram');
+      container.innerHTML = '';
+      container.appendChild(makeRow(' ', patchRow,  '#1d4ed8', `Patch Emb\n[${total}×${D}]`));
+      container.appendChild(makeRow('+', posRow,    '#6d28d9', `Pos Emb  \n[${total}×${D}]`));
+      container.appendChild(makeDivider());
+      container.appendChild(makeRow('=', finalRow,  '#0d6e6e', `Final Emb\n[${total}×${D}]`));
+
+      /*document.getElementById('mat-label').textContent =
+        `${total} patches × ${D}d  —  linha destacada: patch ${selectedPatch + 1}`;*/
+    }
+
+    setGrid(16);
+  </script>
+</body>
+</html>

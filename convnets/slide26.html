@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 26 – Por que Redes Profundas São Difíceis de Treinar</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── Layout ──────────────────────────────────────────────────────────── */
+    .deep-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      flex: 1;
+    }
+
+    .deep-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.3rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+      box-shadow: var(--shadow);
+      overflow-y: auto;
+    }
+
+    /* ── Gradient chain ───────────────────────────────────────────────────── */
+    .grad-bp-label {
+      font-size: 0.75rem;
+      font-family: 'Fira Code', monospace;
+      color: var(--red);
+      font-weight: 700;
+      text-align: right;
+      padding-right: 0.4rem;
+    }
+
+    .grad-chain {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-around;
+      gap: 0.25rem;
+      padding: 0.25rem 0;
+    }
+
+    .gc-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.3rem;
+      flex: 1;
+    }
+
+    .gc-box {
+      width: 100%;
+      padding: 0.38rem 0.25rem;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border2);
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-align: center;
+      background: var(--bg3);
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .gc-box.output-node {
+      background: #dcfce7;
+      border-color: #86efac;
+      color: var(--green);
+    }
+
+    .gc-bar-track {
+      width: 100%;
+      height: 60px;
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      border-radius: 5px;
+      overflow: hidden;
+      display: flex;
+      align-items: flex-end;
+    }
+
+    .gc-bar {
+      width: 100%;
+      height: 0%;
+      border-radius: 3px 3px 0 0;
+      transition: height 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .gc-val {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      min-height: 1.1em;
+      text-align: center;
+    }
+
+    /* ── Action button ────────────────────────────────────────────────────── */
+    .btn-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.5rem 1.2rem;
+      border-radius: 999px;
+      border: 1.5px solid var(--purple);
+      background: var(--purple-lt);
+      color: var(--purple);
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.2s;
+    }
+    .btn-action:hover { background: var(--purple); color: white; }
+    .btn-action:disabled { opacity: 0.5; pointer-events: none; }
+
+    /* ── Roadmap ──────────────────────────────────────────────────────────── */
+    .roadmap {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      overflow-x: auto;
+      padding: 0.2rem 0;
+    }
+
+    .rm-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.3rem;
+      min-width: 68px;
+    }
+
+    .rm-box {
+      padding: 0.38rem 0.4rem;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-align: center;
+      width: 64px;
+    }
+
+    .rm-box.done { background: var(--green-lt);  border-color: #86efac; color: var(--green); }
+    .rm-box.curr { background: var(--purple-lt); border-color: #c4b5fd; color: var(--purple); }
+    .rm-label    { font-size: 0.6rem; color: var(--text-dim); font-family: 'Fira Code', monospace; text-align: center; }
+    .rm-arrow    { font-size: 0.9rem; color: var(--text-dim); flex-shrink: 0; margin: 0 0.05rem; padding-bottom: 1rem; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Redes Convolucionais</span>
+      <span class="prof-tag" style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 9 · Slide 1 / 3</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Por que Redes Profundas São Difíceis de Treinar?</h1>
+        <p class="slide-subtitle">O gradiente enfraquece a cada camada — as primeiras camadas quase não aprendem.</p>
+      </div>
+
+      <div class="deep-layout">
+
+        <!-- ── Left: gradient decay visualization ───────────────────────── -->
+        <div class="deep-panel">
+          <div class="panel-title">O Problema: Vanishing Gradient</div>
+
+          <p style="font-size:0.9rem;color:var(--text-muted);line-height:1.5;">
+            Durante o backpropagation, o gradiente é <strong>multiplicado em cada camada</strong>
+            pela regra da cadeia. Com valores &lt; 1 repetidos, o produto converge para zero.
+          </p>
+
+          <div>
+            <div class="grad-bp-label">◄ Direção do Backpropagation</div>
+            <div class="grad-chain" id="gradChain">
+              <!-- built by JS -->
+            </div>
+          </div>
+
+          <div style="display:flex;justify-content:center;margin-top:0.15rem;">
+            <button class="btn-action" id="btnAnimate" onclick="animateGrad()">
+              ⬅️ Simular Backpropagation
+            </button>
+          </div>
+
+          <div class="highlight-box yellow">
+            <span class="icon">⚠️</span>
+            <p>As primeiras camadas quase não recebem sinal de gradiente — elas
+            <strong>param de aprender</strong>.</p>
+          </div>
+        </div>
+
+        <!-- ── Right: central message + concept cards + roadmap ─────────── -->
+        <div class="deep-panel">
+          <div class="panel-title">Mensagem Central</div>
+
+          <div class="insight-box">
+            <span class="i-icon">🎓</span>
+            <div class="i-text">
+              Em redes muito profundas, o gradiente <strong>enfraquece ao voltar</strong>.
+              Conexões residuais criam <strong>atalhos</strong> que preservam esse sinal.
+            </div>
+          </div>
+
+          <div class="concept-cards">
+            <div class="concept-card" style="--delay:0.05s;">
+              <div class="card-icon">📉</div>
+              <div class="card-text">
+                <strong>Gradiente × Gradiente × Gradiente…</strong>
+                <p>A regra da cadeia multiplica gradientes a cada camada. Com muitas camadas
+                e valores &lt; 1, o produto tende a zero.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.15s;">
+              <div class="card-icon">🧗</div>
+              <div class="card-text">
+                <strong>Profundidade traz expressividade</strong>
+                <p>Redes mais profundas podem aprender hierarquias de features mais ricas —
+                mas o treinamento fica instável sem cuidados especiais.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.25s;">
+              <div class="card-icon">🔗</div>
+              <div class="card-text">
+                <strong>Solução: atalhos no grafo</strong>
+                <p>Conexões diretas entre camadas permitem que o gradiente "pule" etapas e
+                chegue forte às primeiras camadas.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel-title" style="margin-top:0.1rem;">Onde estamos na aula</div>
+          <div class="roadmap">
+            <div class="rm-step">
+              <div class="rm-box done">✅ CNNs</div>
+              <div class="rm-label">Bl. 1–6</div>
+            </div>
+            <div class="rm-arrow">→</div>
+            <div class="rm-step">
+              <div class="rm-box done">✅ Backp.</div>
+              <div class="rm-label">Bl. 7</div>
+            </div>
+            <div class="rm-arrow">→</div>
+            <div class="rm-step">
+              <div class="rm-box done">✅ Limit.</div>
+              <div class="rm-label">Bl. 8</div>
+            </div>
+            <div class="rm-arrow">→</div>
+            <div class="rm-step">
+              <div class="rm-box curr">🔗 Skip</div>
+              <div class="rm-label">Bl. 9</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide25.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide27.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    const LAYERS = [
+      { label: 'Entrada',  strength: 0.03, color: '#ef4444' },
+      { label: 'Conv 1',   strength: 0.08, color: '#f97316' },
+      { label: 'Conv 2',   strength: 0.20, color: '#eab308' },
+      { label: 'Conv 3',   strength: 0.45, color: '#84cc16' },
+      { label: 'Conv 4',   strength: 0.75, color: '#22c55e' },
+      { label: 'Saída',    strength: 1.00, color: '#16a34a' },
+    ];
+
+    function buildChain() {
+      const chain = document.getElementById('gradChain');
+      chain.innerHTML = '';
+      LAYERS.forEach((l, i) => {
+        const step = document.createElement('div');
+        step.className = 'gc-step';
+
+        const box = document.createElement('div');
+        box.className = 'gc-box' + (i === LAYERS.length - 1 ? ' output-node' : '');
+        box.textContent = l.label;
+
+        const barTrack = document.createElement('div');
+        barTrack.className = 'gc-bar-track';
+
+        const bar = document.createElement('div');
+        bar.className = 'gc-bar';
+        bar.id = 'bar-' + i;
+        bar.style.background = l.color;
+        barTrack.appendChild(bar);
+
+        const val = document.createElement('div');
+        val.className = 'gc-val';
+        val.id = 'val-' + i;
+
+        step.appendChild(box);
+        step.appendChild(barTrack);
+        step.appendChild(val);
+        chain.appendChild(step);
+      });
+    }
+
+    let animating = false;
+
+    function animateGrad() {
+      if (animating) return;
+      animating = true;
+      const btn = document.getElementById('btnAnimate');
+      btn.disabled = true;
+
+      /* Reset bars */
+      LAYERS.forEach((_, i) => {
+        document.getElementById('bar-' + i).style.height = '0%';
+        document.getElementById('val-' + i).textContent = '';
+      });
+
+      /* Animate from output (rightmost) to input (leftmost) */
+      LAYERS.slice().reverse().forEach((l, revIdx) => {
+        const i = LAYERS.length - 1 - revIdx;
+        setTimeout(() => {
+          document.getElementById('bar-' + i).style.height = (l.strength * 100) + '%';
+          document.getElementById('val-' + i).textContent = l.strength.toFixed(2);
+          if (i === 0) {
+            setTimeout(() => {
+              btn.disabled = false;
+              btn.innerHTML = '🔄 Repetir';
+              animating = false;
+            }, 700);
+          }
+        }, revIdx * 320);
+      });
+    }
+
+    buildChain();
+  </script>
+</body>
+</html>

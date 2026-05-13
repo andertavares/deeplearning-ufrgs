@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 32 – Treino: Z-score Global vs Normalização por Lote</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .cmp-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      flex: 1;
+    }
+
+    .cmp-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.3rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      box-shadow: var(--shadow);
+      overflow-y: auto;
+    }
+
+    .mode-tabs {
+      display: flex;
+      gap: 0.5rem;
+      background: var(--bg3);
+      border-radius: 999px;
+      padding: 4px;
+      border: 1px solid var(--border2);
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 0.4rem 0.8rem;
+      border-radius: 999px;
+      border: none;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.22s;
+      background: transparent;
+      color: var(--text-muted);
+    }
+
+    .tab-btn.active-global { background: var(--green-lt); color: var(--green); }
+    .tab-btn.active-batch  { background: var(--purple-lt); color: var(--purple); }
+
+    .feat-table {
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border2);
+      overflow: hidden;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.78rem;
+    }
+
+    .ft-head,
+    .ft-row {
+      display: grid;
+      grid-template-columns: 1.28fr 0.8fr 1.15fr 0.92fr;
+    }
+
+    .ft-head {
+      background: var(--bg3);
+      border-bottom: 1.5px solid var(--border2);
+    }
+
+    .ft-head-cell {
+      padding: 0.4rem 0.6rem;
+      font-weight: 700;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .ft-row {
+      border-bottom: 1px solid var(--border2);
+      transition: background 0.2s;
+    }
+
+    .ft-row:last-child { border-bottom: none; }
+    .ft-row:hover { background: var(--bg3); }
+
+    .ft-cell {
+      padding: 0.38rem 0.6rem;
+      color: var(--text-muted);
+    }
+
+    .ft-cell.label-col { color: var(--text); font-weight: 600; }
+    .ft-cell.global    { color: #166534; }
+    .ft-cell.batch     { color: var(--purple); }
+
+    .target-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 86px;
+      padding: 0.18rem 0.45rem;
+      border-radius: 999px;
+      font-size: 0.67rem;
+      font-weight: 700;
+      border: 1.5px solid;
+    }
+
+    .target-badge.approved { background: var(--green-lt); border-color: #86efac; color: var(--green); }
+    .target-badge.rejected { background: #fee2e2; border-color: #fca5a5; color: #b91c1c; }
+
+    .ft-row.in-batch  { background: var(--purple-lt); }
+    .ft-row.out-batch { opacity: 0.45; }
+
+    .stats-row {
+      display: flex;
+      gap: 0.55rem;
+      flex-wrap: wrap;
+    }
+
+    .stat-pill {
+      padding: 0.22rem 0.7rem;
+      border-radius: 999px;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.72rem;
+      font-weight: 700;
+      border: 1.5px solid;
+    }
+
+    .stat-pill.global { background: var(--green-lt); border-color: #86efac; color: var(--green); }
+    .stat-pill.batch  { background: var(--purple-lt); border-color: #c4b5fd; color: var(--purple); }
+
+    .mlp-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    #mlp-canvas {
+      display: block;
+      border-radius: var(--radius-sm);
+      background: #f8f9fb;
+      border: 1.5px solid var(--border2);
+    }
+
+    .train-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+      align-items: center;
+    }
+
+    .train-btn {
+      border: 1.5px solid var(--border2);
+      background: var(--bg3);
+      color: var(--text);
+      padding: 0.48rem 0.82rem;
+      border-radius: 999px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.76rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease;
+    }
+
+    .train-btn:hover:not(:disabled) { transform: translateY(-1px); }
+    .train-btn:disabled { opacity: 0.58; cursor: not-allowed; transform: none; }
+    .train-btn.primary-global { background: var(--green); border-color: var(--green); color: #fff; }
+    .train-btn.primary-batch  { background: var(--purple); border-color: var(--purple); color: #fff; }
+    .train-btn.ghost { background: transparent; }
+
+    .epoch-pill {
+      padding: 0.28rem 0.72rem;
+      border-radius: 999px;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.72rem;
+      font-weight: 700;
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      color: var(--text-muted);
+    }
+
+    .lr-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .lr-label {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .lr-val {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.72rem;
+      font-weight: 700;
+      min-width: 62px;
+      text-align: right;
+    }
+
+    #lrSlider {
+      flex: 1;
+      cursor: pointer;
+      accent-color: var(--purple);
+    }
+
+    .grad-section { display: flex; flex-direction: column; gap: 0.4rem; }
+
+    .grad-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .grad-label {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.72rem;
+      font-weight: 700;
+      width: 62px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .grad-track {
+      flex: 1;
+      height: 14px;
+      background: var(--bg3);
+      border-radius: 7px;
+      border: 1px solid var(--border2);
+      overflow: hidden;
+    }
+
+    .grad-fill {
+      height: 100%;
+      border-radius: 7px;
+      transition: width 0.35s ease, background 0.35s ease;
+    }
+
+    .grad-val {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.72rem;
+      font-weight: 700;
+      min-width: 52px;
+      text-align: right;
+    }
+
+    .instab-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      font-family: 'Fira Code', monospace;
+      transition: all 0.4s;
+    }
+
+    .instab-badge.ok      { background: var(--green-lt); color: var(--green); border: 1.5px solid #86efac; }
+    .instab-badge.partial { background: #fef9c3; color: #854d0e; border: 1.5px solid #fde047; }
+
+    .metric-row {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-top: 0.1rem;
+    }
+
+    .metric-item {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.76rem;
+      color: var(--text-muted);
+    }
+
+    .metric-item strong { font-size: 0.78rem; margin-left: 0.15rem; }
+
+    .weights-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.45rem;
+    }
+
+    .weight-chip {
+      border: 1.5px solid var(--border2);
+      background: var(--bg3);
+      border-radius: var(--radius-sm);
+      padding: 0.45rem 0.6rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+
+
+    .weight-chip-label {
+      font-size: 0.67rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 700;
+    }
+
+    /* Não aplicar uppercase para chips de γ e β */
+    .weight-chip-label.bnm {
+      text-transform: none !important;
+      letter-spacing: 0.01em;
+    }
+
+    .weight-chip-val {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.79rem;
+      font-weight: 700;
+    }
+
+    .pred-box { display: flex; flex-direction: column; gap: 0.45rem; }
+
+    .pred-row { display: flex; align-items: center; gap: 0.6rem; }
+
+    .pred-sample-label {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      width: 72px;
+      flex-shrink: 0;
+    }
+
+    .pred-bar-track {
+      flex: 1;
+      height: 20px;
+      background: var(--bg3);
+      border-radius: 4px;
+      border: 1px solid var(--border2);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .pred-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.28s ease, background 0.28s ease;
+      display: flex;
+      align-items: center;
+      padding-left: 6px;
+    }
+
+    .pred-val { font-family: 'Fira Code', monospace; font-size: 0.68rem; font-weight: 700; }
+
+    .pred-num {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.72rem;
+      font-weight: 700;
+      min-width: 36px;
+      text-align: right;
+    }
+
+    .true-label {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.68rem;
+      color: var(--text-dim);
+      min-width: 42px;
+    }
+
+    .history-log {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      max-height: 176px;
+      overflow-y: auto;
+    }
+
+    .history-line {
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border2);
+      padding: 0.42rem 0.58rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.22rem;
+    }
+
+    .history-line.global { background: #f0fdf4; border-color: #86efac; }
+    .history-line.batch  { background: #f5f3ff; border-color: #c4b5fd; }
+
+    .history-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      flex-wrap: wrap;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.68rem;
+      font-weight: 700;
+    }
+
+    .history-snapshot {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .train-note {
+      padding: 0.55rem 0.75rem;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border2);
+      background: var(--bg3);
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
+
+    .batch-info-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+
+    .batch-nav-btn {
+      padding: 0.3rem 0.75rem;
+      border-radius: 999px;
+      border: 1.5px solid var(--border2);
+      background: var(--bg3);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.76rem;
+      font-weight: 700;
+      cursor: pointer;
+      color: var(--text);
+      transition: background 0.18s, border-color 0.18s;
+    }
+
+    .batch-nav-btn:hover:not(:disabled) { background: var(--purple-lt); border-color: #c4b5fd; }
+    .batch-nav-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .batch-counter {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: var(--purple);
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Redes Convolucionais</span>
+      <span class="prof-tag" style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 10 · Slide 4 / 5</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Treino: Z-score Global vs Normalização por Lote 🏋️</h1>
+        <p class="slide-subtitle">Mesma rede, mesmo dataset — <em>Z-score global</em> usa as estatísticas de todo o conjunto; <em>batch norm</em> recalcula a média e o desvio a cada mini-lote.</p>
+      </div>
+
+      <div class="cmp-layout">
+
+        <!-- Left panel: dataset + mode selector -->
+        <div class="cmp-panel">
+          <div class="panel-title">Dataset: Crédito aprovado ou reprovado</div>
+
+          <div class="mode-tabs">
+            <button class="tab-btn active-global" id="tabGlobal" onclick="setMode('global')">✅ Z-score Global</button>
+            <button class="tab-btn" id="tabBatch" onclick="setMode('batch')">📦 Batch Norm</button>
+          </div>
+
+          <div id="batchSizeRow" style="display:none;">
+            <div class="mode-tabs" style="max-width:240px;">
+              <button class="tab-btn active-batch" id="tabBatch2" onclick="setBatchSize(2)">Lote de 2</button>
+              <button class="tab-btn" id="tabBatch3" onclick="setBatchSize(3)">Lote de 3</button>
+            </div>
+          </div>
+
+          <div class="feat-table">
+            <div class="ft-head">
+              <div class="ft-head-cell" style="color:var(--text-muted);">Amostra</div>
+              <div class="ft-head-cell" id="tableHeadAge" style="color:var(--yellow);">x̂ Idade</div>
+              <div class="ft-head-cell" id="tableHeadSal" style="color:var(--red);">x̂ Salário</div>
+              <div class="ft-head-cell" style="color:var(--text-muted);">Crédito</div>
+            </div>
+            <div id="tableBody"></div>
+          </div>
+
+          <div id="batchNavRow" style="display:none;">
+            <div class="batch-info-bar">
+              <button class="batch-nav-btn" id="btnPrevBatch" onclick="prevBatch()">← Anterior</button>
+              <span class="batch-counter" id="batchCounter">Lote 1 / 3</span>
+              <button class="batch-nav-btn" id="btnNextBatch" onclick="nextBatch()">Próximo →</button>
+            </div>
+          </div>
+
+          <div id="statsGlobal" class="stats-row">
+            <span class="stat-pill global">μ_idade = <span id="muAge">0</span></span>
+            <span class="stat-pill global">σ_idade = <span id="sigAge">0</span></span>
+            <span class="stat-pill global">μ_sal = <span id="muSal">0</span></span>
+            <span class="stat-pill global">σ_sal = <span id="sigSal">0</span></span>
+          </div>
+
+          <div id="statsBatch" class="stats-row" style="display:none;">
+            <span class="stat-pill batch">μ_B_idade = <span id="muBAge">0</span></span>
+            <span class="stat-pill batch">σ_B_idade = <span id="sigBAge">0</span></span>
+            <span class="stat-pill batch">μ_B_sal = <span id="muBSal">0</span></span>
+            <span class="stat-pill batch">σ_B_sal = <span id="sigBSal">0</span></span>
+          </div>
+          <div id="statsBatchGB" class="stats-row" style="display:none;">
+            <span class="stat-pill batch">γ₀(idade) = <span id="pillGammaAge">1.00</span></span>
+            <span class="stat-pill batch">β₀(idade) = <span id="pillBetaAge">+0.00</span></span>
+            <span class="stat-pill batch">γ₁(sal.) = <span id="pillGammaSal">1.00</span></span>
+            <span class="stat-pill batch">β₁(sal.) = <span id="pillBetaSal">+0.00</span></span>
+          </div>
+
+          <div class="highlight-box green" id="modeInsight">
+            <span class="icon">✅</span>
+            <p id="modeInsightText">
+              Com Z-score global, cada feature é normalizada com a <strong>média e desvio do dataset inteiro</strong>.
+              As estatísticas são fixas durante todo o treino.
+            </p>
+          </div>
+        </div>
+
+        <!-- Right panel: training -->
+        <div class="cmp-panel">
+          <div class="panel-title" id="netTitle">Regressão logística 2 → 1 (Z-score Global)</div>
+
+          <div class="mlp-wrap">
+            <canvas id="mlp-canvas" width="360" height="170"></canvas>
+          </div>
+
+          <div class="train-toolbar">
+            <button class="train-btn primary-global" id="trainBtn" onclick="startTraining(12)">Treinar 12 épocas</button>
+            <button class="train-btn" id="stepBtn" onclick="trainOneEpoch()">Treinar 1 época</button>
+            <button class="train-btn ghost" id="resetBtn" onclick="resetCurrentMode()">Resetar</button>
+            <span class="epoch-pill" id="epochBadge">época 0</span>
+          </div>
+
+          <div class="lr-row">
+            <span class="lr-label">η (taxa aprendizado):</span>
+            <input type="range" id="lrSlider" min="0" max="100" step="1" oninput="onLrChange(this.value)" />
+            <span class="lr-val" id="lrVal">0.0900</span>
+          </div>
+
+          <div class="train-note" id="trainNote">
+            Escolha o tipo de normalização e clique em treinar para comparar a dinâmica das duas abordagens.
+          </div>
+
+          <div class="panel-title" style="margin-top:0.1rem;">
+            Gradientes médios nas entradas
+            <span class="instab-badge ok" id="instabBadge">✅ equilibrado</span>
+          </div>
+          <div class="grad-section">
+            <div class="grad-row">
+              <span class="grad-label" style="color:var(--yellow);">Idade</span>
+              <div class="grad-track"><div class="grad-fill" id="gfAge" style="width:50%;background:#166534;"></div></div>
+              <span class="grad-val" id="gvAge" style="color:#166534;">0.000</span>
+            </div>
+            <div class="grad-row">
+              <span class="grad-label" style="color:var(--red);">Salário</span>
+              <div class="grad-track"><div class="grad-fill" id="gfSalary" style="width:50%;background:#166534;"></div></div>
+              <span class="grad-val" id="gvSalary" style="color:#166534;">0.000</span>
+            </div>
+          </div>
+
+          <div class="metric-row">
+            <div class="metric-item">Loss atual:<strong id="lossVal" style="color:var(--green);">0.000</strong></div>
+            <div class="metric-item">Maior |Δw|:<strong id="deltaVal" style="color:var(--green);">0.000</strong></div>
+            <div class="metric-item">Var(pred):<strong id="varVal" style="color:var(--green);">0.000</strong></div>
+          </div>
+
+          <div class="panel-title" style="margin-top:0.1rem;" id="weightsTitle">Pesos atuais</div>
+          <div class="weights-grid" id="weightsGrid"></div>
+
+          <div class="panel-title" style="margin-top:0.1rem;">Predições do MLP</div>
+          <div class="pred-box" id="predBox"></div>
+
+          <div class="panel-title" style="margin-top:0.1rem;">Mudanças por época</div>
+          <div class="history-log" id="historyLog"></div>
+        </div>
+
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide31.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide33.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    /* ── Dataset ─────────────────────────────────────────────────────────── */
+    const RAW = [
+      { label: 'Pessoa A', age: 24, salary: 1800,  y: 0 },
+      { label: 'Pessoa B', age: 31, salary: 4200,  y: 0 },
+      { label: 'Pessoa C', age: 37, salary: 8200,  y: 1 },
+      { label: 'Pessoa D', age: 52, salary: 12500, y: 1 },
+      { label: 'Pessoa E', age: 61, salary: 6500,  y: 1 },
+      { label: 'Pessoa F', age: 27, salary: 9600,  y: 0 },
+    ];
+
+    /* ── Statistics helpers ──────────────────────────────────────────────── */
+    function mean(arr) { return arr.reduce((s, v) => s + v, 0) / arr.length; }
+    function std(arr, avg) {
+      return Math.sqrt(arr.reduce((s, v) => s + (v - avg) ** 2, 0) / arr.length);
+    }
+
+    /* ── Global Z-score ──────────────────────────────────────────────────── */
+    const ages     = RAW.map(d => d.age);
+    const salaries = RAW.map(d => d.salary);
+    const MU_AGE   = mean(ages);
+    const MU_SAL   = mean(salaries);
+    const SIG_AGE  = std(ages, MU_AGE);
+    const SIG_SAL  = std(salaries, MU_SAL);
+
+    const GLOBAL_NORM = RAW.map(d => ({
+      label:  d.label,
+      age:    (d.age    - MU_AGE) / SIG_AGE,
+      salary: (d.salary - MU_SAL) / SIG_SAL,
+      y:      d.y,
+    }));
+
+    /* ── Config ──────────────────────────────────────────────────────────── */
+    const MODE_CONFIG = {
+      global: { learningRate: 0.09, clip: 4, weightCap: 2.0, biasCap: 2.5,
+                wScale: 0.5, jitter: 0.03, lrMinExp: -3, lrMaxExp: 0,
+                histClass: 'global', accentColor: '#166534', primaryClass: 'primary-global' },
+      batch:  { learningRate: 0.09, clip: 4, weightCap: 2.0, biasCap: 2.5,
+                wScale: 0.5, jitter: 0.04, lrMinExp: -3, lrMaxExp: 0,
+                histClass: 'batch',  accentColor: '#5b21b6', primaryClass: 'primary-batch'  },
+    };
+
+    const BASE_W = [0.5, -0.9];
+    const BASE_B  = 0.1;
+
+    let currentMode  = 'global';
+    let batchSize    = 2;
+    let currentBatch = 0;
+    let trainingTimer = null;
+    let isTraining    = false;
+
+    function clamp(v, lo, hi)  { return Math.max(lo, Math.min(hi, v)); }
+    function sigmoid(v)         { return 1 / (1 + Math.exp(-v)); }
+    function copyModel(m) {
+      const copy = { W: m.W.slice(), b: m.b };
+      if (m.gamma !== undefined && m.beta !== undefined) { copy.gamma = m.gamma.slice(); copy.beta = m.beta.slice(); }
+      return copy;
+    }
+
+    /* ── Batch helpers ───────────────────────────────────────────────────── */
+    function getBatches(size) {
+      const out = [];
+      for (let i = 0; i < RAW.length; i += size) out.push(RAW.slice(i, i + size));
+      return out;
+    }
+
+    function batchNormalize(batch, gamma, beta) {
+      const bAges = batch.map(d => d.age);
+      const bSals = batch.map(d => d.salary);
+      const muBA  = mean(bAges);
+      const sigBA = std(bAges, muBA) || 1e-8;
+      const muBS  = mean(bSals);
+      const sigBS = std(bSals, muBS) || 1e-8;
+      const g = gamma || [1, 1];
+      const b = beta  || [0, 0];
+      return {
+        samples: batch.map(d => {
+          const normAge = (d.age    - muBA) / sigBA;
+          const normSal = (d.salary - muBS) / sigBS;
+          return {
+            label: d.label,
+            age:    g[0] * normAge + b[0],
+            salary: g[1] * normSal + b[1],
+            normAge, normSal,
+            y: d.y,
+          };
+        }),
+        muBA, sigBA, muBS, sigBS,
+      };
+    }
+
+    /* ── Model init ──────────────────────────────────────────────────────── */
+    function createInitialModel(mode) {
+      const c = MODE_CONFIG[mode];
+      const m = { W: BASE_W.map(w => +(w * c.wScale).toFixed(6)), b: BASE_B };
+      if (mode === 'batch') { m.gamma = [1.0, 1.0]; m.beta = [0.0, 0.0]; }
+      return m;
+    }
+
+    function createModeState(mode) {
+      const m = { mode, model: createInitialModel(mode), epoch: 0,
+        learningRate: MODE_CONFIG[mode].learningRate,
+        lastDelta: 0, loss: 0, variance: 0, grads: [0, 0],
+        predictions: [], history: [] };
+      evaluateState(m);
+      return m;
+    }
+
+    const modeStates = { global: createModeState('global'), batch: createModeState('batch') };
+
+    /* ── Forward & gradients ─────────────────────────────────────────────── */
+    function forward(inputs, model) {
+      const logit = clamp(model.W[0]*inputs[0] + model.W[1]*inputs[1] + model.b, -12, 12);
+      return { logit, prob: sigmoid(logit) };
+    }
+
+    function computeGradients(model, inputs, target, clip) {
+      const { prob } = forward(inputs, model);
+      const dL = prob - target;
+      return { W: inputs.map(x => clamp(dL * x, -clip, clip)), b: clamp(dL, -clip, clip) };
+    }
+
+    function applyGradients(model, grad, jitterSeed, lr, mode) {
+      const c = MODE_CONFIG[mode];
+      const j = 1 + c.jitter * Math.sin(jitterSeed);
+      model.W = model.W.map((w, i) => clamp(w - lr * grad.W[i] * j, -c.weightCap, c.weightCap));
+      model.b = clamp(model.b - lr * grad.b * j, -c.biasCap, c.biasCap);
+      if (model.gamma !== undefined && model.beta !== undefined && grad.gamma !== undefined && grad.beta !== undefined) {
+        model.gamma = model.gamma.map((g, i) => clamp(g - lr * grad.gamma[i] * j, 0.05, 5.0));
+        model.beta  = model.beta.map((b, i) => clamp(b - lr * grad.beta[i] * j, -3.0, 3.0));
+      }
+    }
+
+    /* ── Train one epoch ─────────────────────────────────────────────────── */
+    function trainEpoch(state) {
+      const prev = copyModel(state.model);
+      const c    = MODE_CONFIG[state.mode];
+
+      if (state.mode === 'global') {
+        const total = { W: [0, 0], b: 0 };
+        GLOBAL_NORM.forEach(s => {
+          const g = computeGradients(state.model, [s.age, s.salary], s.y, c.clip);
+          total.W[0] += g.W[0]; total.W[1] += g.W[1]; total.b += g.b;
+        });
+        total.W = total.W.map(v => v / GLOBAL_NORM.length);
+        total.b /= GLOBAL_NORM.length;
+        applyGradients(state.model, total, (state.epoch + 1) * 1.15, state.learningRate, state.mode);
+      } else {
+        getBatches(batchSize).forEach((batch, bi) => {
+          const { samples } = batchNormalize(batch, state.model.gamma, state.model.beta);
+          const total = { W: [0, 0], b: 0, gamma: [0, 0], beta: [0, 0] };
+          samples.forEach(s => {
+            const g = computeGradients(state.model, [s.age, s.salary], s.y, c.clip);
+            total.W[0] += g.W[0]; total.W[1] += g.W[1]; total.b += g.b;
+            /* γ/β gradients: ∂L/∂γ_i = δ·w_i·x̂_i ; ∂L/∂β_i = δ·w_i */
+            const { prob } = forward([s.age, s.salary], state.model);
+            const dL = prob - s.y;
+            total.gamma[0] += clamp(dL * state.model.W[0] * s.normAge, -c.clip, c.clip);
+            total.gamma[1] += clamp(dL * state.model.W[1] * s.normSal, -c.clip, c.clip);
+            total.beta[0]  += clamp(dL * state.model.W[0], -c.clip, c.clip);
+            total.beta[1]  += clamp(dL * state.model.W[1], -c.clip, c.clip);
+          });
+          total.W     = total.W.map(v => v / samples.length);
+          total.b    /= samples.length;
+          total.gamma = total.gamma.map(v => v / samples.length);
+          total.beta  = total.beta.map(v => v / samples.length);
+          applyGradients(state.model, total, (state.epoch+1)*2.1 + bi*1.3, state.learningRate, state.mode);
+        });
+      }
+
+      state.epoch    += 1;
+      state.lastDelta = maxModelDelta(prev, state.model);
+      evaluateState(state);
+      state.history.unshift({ epoch: state.epoch, loss: state.loss, delta: state.lastDelta, snapshot: snapshotModel(state.model) });
+      state.history = state.history.slice(0, 8);
+    }
+
+    function maxModelDelta(prev, curr) {
+      const d = prev.W.map((v, i) => Math.abs(curr.W[i] - v));
+      d.push(Math.abs(curr.b - prev.b));
+      if (curr.gamma !== undefined && curr.beta !== undefined) {
+        curr.gamma.forEach((g, i) => d.push(Math.abs(g - (prev.gamma !== undefined ? prev.gamma[i] : 1))));
+        curr.beta.forEach((b, i) => d.push(Math.abs(b - (prev.beta !== undefined ? prev.beta[i] : 0))));
+      }
+      return Math.max(...d, 0);
+    }
+
+    function snapshotModel(m) {
+      let snap = `w_idade ${fmtS(m.W[0])} · w_salário ${fmtS(m.W[1])} · bias ${fmtS(m.b)}`;
+      if (m.gamma !== undefined && m.beta !== undefined) snap += ` · γ=[${m.gamma.map(fmtS).join(',')}] β=[${m.beta.map(fmtS).join(',')}]`;
+      return snap;
+    }
+
+    function evaluateState(state) {
+      let data;
+      if (state.mode === 'batch') {
+        /* At inference: normalize all samples as one batch (running-stats proxy)
+           and apply current γ/β so predictions reflect the learned transformation */
+        data = batchNormalize(RAW, state.model.gamma, state.model.beta).samples;
+      } else {
+        data = GLOBAL_NORM;
+      }
+      const preds = data.map(s => {
+        const { prob } = forward([s.age, s.salary], state.model);
+        return { label: s.label, y: s.y, prob };
+      });
+      const pm = preds.reduce((s, p) => s + p.prob, 0) / preds.length;
+      state.predictions = preds;
+      state.variance    = preds.reduce((s, p) => s + (p.prob - pm) ** 2, 0) / preds.length;
+      state.loss        = preds.reduce((s, p) =>
+        s - (p.y * Math.log(p.prob + 1e-9) + (1 - p.y) * Math.log(1 - p.prob + 1e-9)), 0
+      ) / preds.length;
+      state.grads = estimateGrads(state.model, data);
+    }
+
+    function estimateGrads(model, data) {
+      const t = [0, 0];
+      data.forEach(s => {
+        const inp = [s.age, s.salary];
+        const { prob } = forward(inp, model);
+        inp.forEach((x, i) => { t[i] += Math.abs((prob - s.y) * x); });
+      });
+      return t.map(v => v / data.length);
+    }
+
+    /* ── Formatting ──────────────────────────────────────────────────────── */
+    function fmtS(v) { const c = Math.abs(v) < 0.0005 ? 0 : v; return `${c >= 0 ? '+' : ''}${c.toFixed(3)}`; }
+    function lrToSlider(lr, mode) { const c = MODE_CONFIG[mode]; return Math.round(((Math.log10(lr) - c.lrMinExp) / (c.lrMaxExp - c.lrMinExp)) * 100); }
+    function sliderToLr(val, mode) { const c = MODE_CONFIG[mode]; return Math.pow(10, c.lrMinExp + (c.lrMaxExp - c.lrMinExp) * Number(val) / 100); }
+    function formatLr(lr) { return lr < 0.001 ? lr.toExponential(2) : lr.toFixed(4); }
+
+    /* ── DOM updaters ────────────────────────────────────────────────────── */
+    function buildTable() {
+      const body = document.getElementById('tableBody');
+      body.innerHTML = '';
+      const batches    = getBatches(batchSize);
+      const inBatchSet = new Set();
+      let   bnMap      = {};
+
+      if (currentMode === 'batch') {
+        batches[currentBatch].forEach(d => inBatchSet.add(d.label));
+        /* pre-compute x_new = γ·x̂+β for current batch using current model γ/β */
+        const state = modeStates['batch'];
+        batchNormalize(batches[currentBatch], state.model.gamma, state.model.beta)
+          .samples.forEach(s => { bnMap[s.label] = s; });
+      }
+
+      /* update column header text */
+      const hAge = document.getElementById('tableHeadAge');
+      const hSal = document.getElementById('tableHeadSal');
+      if (hAge && hSal) {
+        hAge.textContent = currentMode === 'global' ? 'x̂ Idade'   : 'x_new Idade';
+        hSal.textContent = currentMode === 'global' ? 'x̂ Salário' : 'x_new Salário';
+      }
+
+      RAW.forEach((row, idx) => {
+        let dispAge = row.age.toString();
+        let dispSal = row.salary.toLocaleString('pt-BR');
+        let cellCls = '';
+
+        if (currentMode === 'global') {
+          dispAge = GLOBAL_NORM[idx].age.toFixed(2);
+          dispSal = GLOBAL_NORM[idx].salary.toFixed(2);
+          cellCls = 'global';
+        } else {
+          const bn = bnMap[row.label];
+          if (bn) {
+            /* in-batch: show x_new = γ·x̂+β */
+            dispAge = bn.age.toFixed(3);
+            dispSal = bn.salary.toFixed(3);
+          }
+          /* out-batch rows keep raw values; row CSS dims them */
+          cellCls = 'batch';
+        }
+
+        const target = row.y === 1
+          ? '<span class="target-badge approved">Aprovado</span>'
+          : '<span class="target-badge rejected">Reprovado</span>';
+
+        let rowCls = 'ft-row';
+        if (currentMode === 'batch') rowCls += inBatchSet.has(row.label) ? ' in-batch' : ' out-batch';
+
+        const line = document.createElement('div');
+        line.className = rowCls;
+        line.innerHTML = `
+          <div class="ft-cell label-col">${row.label}</div>
+          <div class="ft-cell ${cellCls}">${dispAge}</div>
+          <div class="ft-cell ${cellCls}">${dispSal}</div>
+          <div class="ft-cell">${target}</div>
+        `;
+        body.appendChild(line);
+      });
+    }
+
+    function fmt2s(v) { return (v >= 0 ? '+' : '') + v.toFixed(2); }
+
+    function updateStatsPills() {
+      document.getElementById('muAge').textContent  = MU_AGE.toFixed(1);
+      document.getElementById('sigAge').textContent = SIG_AGE.toFixed(1);
+      document.getElementById('muSal').textContent  = MU_SAL.toFixed(0);
+      document.getElementById('sigSal').textContent = SIG_SAL.toFixed(0);
+
+      if (currentMode === 'batch') {
+        const b    = getBatches(batchSize)[currentBatch];
+        const bA   = b.map(d => d.age);
+        const bS   = b.map(d => d.salary);
+        const muBA = mean(bA), sigBA = std(bA, mean(bA));
+        const muBS = mean(bS), sigBS = std(bS, mean(bS));
+        document.getElementById('muBAge').textContent  = muBA.toFixed(1);
+        document.getElementById('sigBAge').textContent = sigBA.toFixed(1);
+        document.getElementById('muBSal').textContent  = muBS.toFixed(0);
+        document.getElementById('sigBSal').textContent = sigBS.toFixed(0);
+
+        /* γ/β pills — show current learned values */
+        const state = modeStates['batch'];
+        if (state.model.gamma && state.model.beta) {
+          document.getElementById('pillGammaAge').textContent = state.model.gamma[0].toFixed(2);
+          document.getElementById('pillBetaAge').textContent  = fmt2s(state.model.beta[0]);
+          document.getElementById('pillGammaSal').textContent = state.model.gamma[1].toFixed(2);
+          document.getElementById('pillBetaSal').textContent  = fmt2s(state.model.beta[1]);
+        }
+      }
+    }
+
+    function updateModeChrome() {
+      const isGlobal = currentMode === 'global';
+      const c        = MODE_CONFIG[currentMode];
+
+      document.getElementById('tabGlobal').className = 'tab-btn' + (isGlobal ? ' active-global' : '');
+      document.getElementById('tabBatch').className  = 'tab-btn' + (!isGlobal ? ' active-batch' : '');
+      document.getElementById('batchSizeRow').style.display = isGlobal ? 'none' : '';
+      document.getElementById('batchNavRow').style.display  = isGlobal ? 'none' : '';
+      document.getElementById('statsGlobal').style.display   = isGlobal ? 'flex' : 'none';
+      document.getElementById('statsBatch').style.display    = isGlobal ? 'none' : 'flex';
+      document.getElementById('statsBatchGB').style.display  = isGlobal ? 'none' : 'flex';
+
+      if (!isGlobal) {
+        const total = getBatches(batchSize).length;
+        document.getElementById('batchCounter').textContent  = `Lote ${currentBatch + 1} / ${total}`;
+        document.getElementById('btnPrevBatch').disabled = currentBatch === 0;
+        document.getElementById('btnNextBatch').disabled = currentBatch >= total - 1;
+      }
+
+      document.getElementById('tabBatch2').className = 'tab-btn' + (batchSize === 2 ? ' active-batch' : '');
+      document.getElementById('tabBatch3').className = 'tab-btn' + (batchSize === 3 ? ' active-batch' : '');
+
+      const box = document.getElementById('modeInsight');
+      if (isGlobal) {
+        box.className = 'highlight-box green';
+        document.getElementById('modeInsightText').innerHTML =
+          'Com Z-score global, cada feature é normalizada com a <strong>média e desvio do dataset inteiro</strong>. As estatísticas são fixas durante todo o treino.';
+      } else {
+        box.className = 'highlight-box purple';
+        document.getElementById('modeInsightText').innerHTML =
+          'Com Batch Norm, a normalização usa a <strong>média e desvio do mini-lote atual</strong>. As mesmas amostras recebem valores diferentes dependendo de quais outras estão no lote!';
+      }
+
+      document.getElementById('netTitle').textContent = isGlobal
+        ? 'Regressão logística 2 → 1 (Z-score Global)'
+        : `Regressão logística 2 → 1 (Batch Norm, lote=${batchSize})`;
+
+      const weightsTitle = document.getElementById('weightsTitle');
+      if (weightsTitle) {
+        weightsTitle.textContent = isGlobal
+          ? 'Pesos atuais'
+          : 'Pesos e parâmetros BatchNorm (γ, β)';
+      }
+
+      const trainBtn = document.getElementById('trainBtn');
+      trainBtn.className = `train-btn ${c.primaryClass}`;
+    }
+
+    function updateGradientBars(state) {
+      const g    = state.grads;
+      const maxG = Math.max(...g, 1e-6);
+      const balanced = maxG / Math.max(Math.min(...g), 1e-6) < 4;
+      const accent   = MODE_CONFIG[state.mode].accentColor;
+
+      document.getElementById('gfAge').style.width         = `${Math.round((g[0]/maxG)*100)}%`;
+      document.getElementById('gfSalary').style.width      = `${Math.round((g[1]/maxG)*100)}%`;
+      document.getElementById('gfAge').style.background    = accent;
+      document.getElementById('gfSalary').style.background = accent;
+      document.getElementById('gvAge').style.color         = accent;
+      document.getElementById('gvSalary').style.color      = accent;
+      document.getElementById('gvAge').textContent         = g[0].toFixed(3);
+      document.getElementById('gvSalary').textContent      = g[1].toFixed(3);
+
+      const badge = document.getElementById('instabBadge');
+      badge.className   = balanced ? 'instab-badge ok' : 'instab-badge partial';
+      badge.textContent = balanced ? '✅ equilibrado' : '⚠️ ainda ajustando';
+    }
+
+    function updateMetrics(state) {
+      const accent = MODE_CONFIG[state.mode].accentColor;
+      ['lossVal','deltaVal','varVal'].forEach(id => document.getElementById(id).style.color = accent);
+      document.getElementById('lossVal').textContent  = state.loss.toFixed(3);
+      document.getElementById('deltaVal').textContent = state.lastDelta.toFixed(3);
+      document.getElementById('varVal').textContent   = state.variance.toFixed(4);
+    }
+
+    function updateWeights(state) {
+      const accent = MODE_CONFIG[state.mode].accentColor;
+      const chips = [
+        ['w_idade', state.model.W[0]], ['w_salário', state.model.W[1]], ['bias', state.model.b]
+      ];
+      if (state.mode === 'batch' && state.model.gamma !== undefined && state.model.beta !== undefined) {
+        chips.push(
+          ['γ_idade',   state.model.gamma[0]], ['γ_salário',   state.model.gamma[1]],
+          ['β_idade',   state.model.beta[0]],  ['β_salário',   state.model.beta[1]]
+        );
+      }
+      document.getElementById('weightsGrid').innerHTML = chips.map(([label, v]) => {
+        const isBN = label.startsWith('γ') || label.startsWith('β');
+        const border = isBN ? `border-color:${accent};border-width:1.5px;` : '';
+        const labelClass = isBN ? 'weight-chip-label bnm' : 'weight-chip-label';
+        return `
+          <div class="weight-chip" style="${border}">
+            <span class="${labelClass}">${label}</span>
+            <span class="weight-chip-val" style="color:${accent};">${fmtS(v)}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function updatePredictions(state) {
+      const container = document.getElementById('predBox');
+      const accent    = MODE_CONFIG[state.mode].accentColor;
+      container.innerHTML = '';
+      state.predictions.forEach(p => {
+        const correct  = (p.prob >= 0.5 && p.y === 1) || (p.prob < 0.5 && p.y === 0);
+        const barColor = correct ? accent : '#b91c1c';
+        const bgColor  = correct ? (currentMode === 'global' ? '#dcfce7' : '#f5f3ff') : '#fee2e2';
+        const row = document.createElement('div');
+        row.className = 'pred-row';
+        row.innerHTML = `
+          <span class="pred-sample-label">${p.label}</span>
+          <div class="pred-bar-track">
+            <div class="pred-bar-fill" style="width:${Math.round(p.prob*100)}%;background:${bgColor};">
+              <span class="pred-val" style="color:${barColor};">${(p.prob*100).toFixed(1)}%</span>
+            </div>
+          </div>
+          <span class="pred-num" style="color:${barColor};">${p.prob.toFixed(3)}</span>
+          <span class="true-label">y=${p.y}</span>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function updateHistory(state) {
+      const container = document.getElementById('historyLog');
+      const cls       = MODE_CONFIG[state.mode].histClass;
+      if (state.history.length === 0) {
+        container.innerHTML = `
+          <div class="history-line ${cls}">
+            <div class="history-meta">época 0 · pesos iniciais</div>
+            <div class="history-snapshot">${snapshotModel(state.model)}</div>
+          </div>`;
+        return;
+      }
+      container.innerHTML = state.history.map(e => `
+        <div class="history-line ${cls}">
+          <div class="history-meta">
+            <span>E${String(e.epoch).padStart(2,'0')}</span>
+            <span>loss ${e.loss.toFixed(3)}</span>
+            <span>Δmax ${e.delta.toFixed(3)}</span>
+          </div>
+          <div class="history-snapshot">${e.snapshot}</div>
+        </div>`).join('');
+    }
+
+    function updateLrSlider(state) {
+      const sl = document.getElementById('lrSlider');
+      const el = document.getElementById('lrVal');
+      sl.value   = lrToSlider(state.learningRate, state.mode);
+      el.textContent = formatLr(state.learningRate);
+      el.style.color = MODE_CONFIG[state.mode].accentColor;
+    }
+
+    function updateTrainNote() {
+      const note = document.getElementById('trainNote');
+      if (isTraining) {
+        note.textContent = currentMode === 'global'
+          ? 'Treinando com Z-score global: gradientes equilibrados a cada época.'
+          : `Treinando com Batch Norm (lote=${batchSize}): estatísticas mudam a cada mini-lote.`;
+      } else {
+        note.textContent = currentMode === 'global'
+          ? 'Z-score global: estatísticas fixas para todo o treino. Compare com Batch Norm!'
+          : `Batch Norm (lote=${batchSize}): cada mini-lote tem suas próprias estatísticas. Compare com Z-score Global!`;
+      }
+    }
+
+    function updateControls(state) {
+      document.getElementById('epochBadge').textContent = `época ${state.epoch}`;
+      document.getElementById('trainBtn').disabled  = isTraining;
+      document.getElementById('stepBtn').disabled   = isTraining;
+      document.getElementById('resetBtn').disabled  = isTraining;
+    }
+
+    /* ── MLP canvas ──────────────────────────────────────────────────────── */
+    function drawMLP(state) {
+      const canvas = document.getElementById('mlp-canvas');
+      const ctx    = canvas.getContext('2d');
+      const W = canvas.width, H = canvas.height;
+      ctx.clearRect(0, 0, W, H);
+
+      const accent = MODE_CONFIG[state.mode].accentColor;
+      const wAbs   = state.model.W.map(Math.abs);
+      const maxW   = Math.max(...wAbs, 0.001);
+
+      if (state.mode === 'batch') {
+        /* ── Batch mode: Entrada → [BatchNorm γ/β] → Neurônio ── */
+        const inputR  = 16, inputX = 52;
+        const bnX1 = 106, bnX2 = 232, bnY1 = 26, bnY2 = H - 26;
+        const bnW = bnX2 - bnX1, bnH = bnY2 - bnY1;
+        const outR = 18, outX  = 305, outY  = H / 2;
+        const inputYs = [H/2 - 30, H/2 + 30];
+        /* anchor points on BN block sides */
+        const bnInYs  = [bnY1 + bnH * 0.30, bnY1 + bnH * 0.70];
+        const bnOutYs = [bnY1 + bnH * 0.30, bnY1 + bnH * 0.70];
+
+        /* Connections input → BN block */
+        inputYs.forEach((iy, i) => {
+          ctx.beginPath();
+          ctx.moveTo(inputX + inputR, iy);
+          ctx.lineTo(bnX1, bnInYs[i]);
+          ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1.5; ctx.setLineDash([]);
+          ctx.stroke();
+        });
+
+        /* Connections BN block → output neuron with weight labels */
+        bnOutYs.forEach((by, i) => {
+          const strength = wAbs[i] / maxW;
+          ctx.beginPath();
+          ctx.moveTo(bnX2, by);
+          ctx.lineTo(outX - outR, outY);
+          ctx.strokeStyle = state.model.W[i] >= 0 ? accent + 'bb' : '#5b21b6aa';
+          ctx.lineWidth   = 1.5 + strength * 4;
+          ctx.setLineDash([]);
+          ctx.stroke();
+          /* weight label */
+          const mx = (bnX2 + outX - outR) / 2;
+          const my = (by + outY) / 2;
+          const txt = fmtS(state.model.W[i]);
+          ctx.font = 'bold 9px Fira Code, monospace';
+          const tw = ctx.measureText(txt).width + 6;
+          ctx.fillStyle = 'rgba(255,255,255,0.88)';
+          ctx.fillRect(mx - tw/2, my - 8, tw, 16);
+          ctx.fillStyle = state.model.W[i] >= 0 ? accent : '#5b21b6';
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText(txt, mx, my);
+        });
+
+        /* BatchNorm block rectangle */
+        ctx.fillStyle   = '#f5f3ff';
+        ctx.strokeStyle = '#a78bfa';
+        ctx.lineWidth   = 1.5;
+        ctx.setLineDash([4, 3]);
+        ctx.beginPath();
+        ctx.roundRect(bnX1, bnY1, bnW, bnH, 7);
+        ctx.fill(); ctx.stroke();
+        ctx.setLineDash([]);
+
+        /* BN block title */
+        ctx.fillStyle = '#5b21b6'; ctx.font = '700 9px Inter, sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        ctx.fillText('BatchNorm', bnX1 + bnW/2, bnY1 + 4);
+
+        /* γ/β per feature inside block */
+        const gamma  = state.model.gamma || [1, 1];
+        const beta   = state.model.beta  || [0, 0];
+        const fNames = ['Idade', 'Salário'];
+        bnInYs.forEach((ry, i) => {
+          /* feature name */
+          ctx.fillStyle = '#334155'; ctx.font = '600 8px Fira Code, monospace';
+          ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+          ctx.fillText(fNames[i] + ':', bnX1 + 6, ry - 6);
+          /* γ value */
+          ctx.fillStyle = accent;
+          ctx.fillText('γ = ' + gamma[i].toFixed(3), bnX1 + 6, ry + 5);
+          /* β value */
+          ctx.fillStyle = '#2563eb';
+          ctx.fillText('β = ' + fmt2s(beta[i]), bnX1 + bnW/2 + 2, ry + 5);
+        });
+
+        /* Input nodes */
+        [{ fill: '#fef9c3', stroke: '#fde047', label: 'Idade' },
+         { fill: '#fee2e2', stroke: '#fca5a5', label: 'Salário' }].forEach((node, i) => {
+          ctx.beginPath();
+          ctx.arc(inputX, inputYs[i], inputR, 0, Math.PI * 2);
+          ctx.fillStyle = node.fill; ctx.strokeStyle = node.stroke; ctx.lineWidth = 2;
+          ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#334155'; ctx.font = '700 8px Fira Code, monospace';
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText(node.label, inputX, inputYs[i]);
+        });
+
+        /* Output neuron */
+        ctx.beginPath();
+        ctx.arc(outX, outY, outR, 0, Math.PI * 2);
+        ctx.fillStyle = '#f5f3ff'; ctx.strokeStyle = '#a78bfa'; ctx.lineWidth = 2;
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#334155'; ctx.font = '700 8px Inter, sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText('crédito', outX, outY);
+
+        /* Layer labels */
+        [['Entrada', inputX], ['BN', bnX1 + bnW/2], ['Saída', outX]].forEach(([lbl, x]) => {
+          ctx.fillStyle = '#6b7fa3'; ctx.font = '600 9px Inter, sans-serif';
+          ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+          ctx.fillText(lbl, x, H - 14);
+        });
+
+        /* Title */
+        ctx.fillStyle = accent; ctx.font = '700 10px Inter, sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        ctx.fillText(`Batch Norm (lote=${batchSize}): γ e β atualizados por backprop`, W / 2, 4);
+
+      } else {
+        /* ── Global mode: Entrada → Neurônio ── */
+        const radius  = 18;
+        const inputX  = 90;
+        const outputX = 270;
+        const inputYs = [H/2 - 32, H/2 + 32];
+        const outputY = H / 2;
+
+        state.model.W.forEach((w, i) => {
+          const strength = wAbs[i] / maxW;
+          ctx.beginPath();
+          ctx.moveTo(inputX + radius, inputYs[i]);
+          ctx.lineTo(outputX - radius, outputY);
+          ctx.lineWidth   = 1.5 + strength * 5;
+          ctx.strokeStyle = w >= 0 ? accent + 'bb' : '#5b21b6aa';
+          ctx.setLineDash([]);
+          ctx.stroke();
+          const mx = (inputX + radius + outputX - radius) / 2;
+          const my = (inputYs[i] + outputY) / 2;
+          const txt = fmtS(w);
+          ctx.font = 'bold 9px Fira Code, monospace';
+          const tw = ctx.measureText(txt).width + 6;
+          ctx.fillStyle = 'rgba(255,255,255,0.85)';
+          ctx.fillRect(mx - tw/2, my - 8, tw, 16);
+          ctx.fillStyle    = w >= 0 ? accent : '#5b21b6';
+          ctx.textAlign    = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(txt, mx, my);
+        });
+
+        [{ fill: '#fef9c3', stroke: '#fde047', label: 'Idade' },
+         { fill: '#fee2e2', stroke: '#fca5a5', label: 'Salário' }].forEach((node, i) => {
+          ctx.beginPath();
+          ctx.arc(inputX, inputYs[i], radius, 0, Math.PI * 2);
+          ctx.fillStyle = node.fill; ctx.strokeStyle = node.stroke; ctx.lineWidth = 2;
+          ctx.fill(); ctx.stroke();
+          ctx.fillStyle    = '#334155';
+          ctx.font         = '700 9px Fira Code, monospace';
+          ctx.textAlign    = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(node.label, inputX, inputYs[i]);
+        });
+
+        ctx.beginPath();
+        ctx.arc(outputX, outputY, radius, 0, Math.PI * 2);
+        ctx.fillStyle = '#f0fdf4'; ctx.strokeStyle = '#22c55e'; ctx.lineWidth = 2;
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle    = '#334155';
+        ctx.font         = '700 8px Inter, sans-serif';
+        ctx.textAlign    = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('crédito', outputX, outputY);
+
+        [['Entrada', inputX], ['Saída', outputX]].forEach(([label, x]) => {
+          ctx.fillStyle    = '#6b7fa3';
+          ctx.font         = '600 9px Inter, sans-serif';
+          ctx.textAlign    = 'center';
+          ctx.textBaseline = 'top';
+          ctx.fillText(label, x, H - 14);
+        });
+
+        ctx.fillStyle = accent;
+        ctx.font      = '700 10px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillText('Treino estável: Z-score global equilibra os gradientes', W / 2, 4);
+      }
+    }
+
+    /* ── Full render ─────────────────────────────────────────────────────── */
+    function render() {
+      const state = modeStates[currentMode];
+      updateModeChrome();
+      buildTable();
+      updateStatsPills();
+      updateControls(state);
+      updateTrainNote();
+      updateLrSlider(state);
+      updateGradientBars(state);
+      updateMetrics(state);
+      updateWeights(state);
+      updatePredictions(state);
+      updateHistory(state);
+      drawMLP(state);
+    }
+
+    /* ── Training control ────────────────────────────────────────────────── */
+    function stopTraining() {
+      if (trainingTimer) { clearTimeout(trainingTimer); trainingTimer = null; }
+      isTraining = false;
+    }
+
+    function runTraining(remaining, modeAtStart) {
+      if (remaining <= 0 || currentMode !== modeAtStart) { stopTraining(); render(); return; }
+      trainEpoch(modeStates[modeAtStart]);
+      render();
+      trainingTimer = setTimeout(() => runTraining(remaining - 1, modeAtStart), 320);
+    }
+
+    function startTraining(total) {
+      if (isTraining) return;
+      isTraining = true;
+      render();
+      runTraining(total, currentMode);
+    }
+
+    function trainOneEpoch() {
+      if (isTraining) return;
+      trainEpoch(modeStates[currentMode]);
+      render();
+    }
+
+    function resetCurrentMode() {
+      stopTraining();
+      modeStates[currentMode] = createModeState(currentMode);
+      render();
+    }
+
+    /* ── Mode / batch switching ──────────────────────────────────────────── */
+    function setMode(mode) { stopTraining(); currentMode = mode; currentBatch = 0; render(); }
+    function setBatchSize(size) { stopTraining(); batchSize = size; currentBatch = 0; render(); }
+    function prevBatch() { if (currentBatch > 0) { currentBatch--; render(); } }
+    function nextBatch() {
+      const total = getBatches(batchSize).length;
+      if (currentBatch < total - 1) { currentBatch++; render(); }
+    }
+
+    function onLrChange(val) {
+      const lr = sliderToLr(val, currentMode);
+      modeStates[currentMode].learningRate = lr;
+      const el = document.getElementById('lrVal');
+      el.textContent = formatLr(lr);
+      el.style.color = MODE_CONFIG[currentMode].accentColor;
+    }
+
+    render();
+  </script>
+</body>
+</html>

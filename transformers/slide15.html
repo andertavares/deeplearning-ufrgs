@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 15 – Estrutura do Decoder</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .slide-main { gap: 0.55rem; }
+
+    .content-split {
+      display: grid;
+      grid-template-columns: 1fr 1.15fr;
+      gap: 1rem;
+      flex: 1;
+    }
+
+    /* ── Decoder pipeline column ── */
+    .decoder-col {
+      background: var(--bg2);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 1rem 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      box-shadow: var(--shadow);
+    }
+    .decoder-col-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      border-bottom: 1.5px solid var(--border2);
+      padding-bottom: 0.45rem;
+      margin-bottom: 0.7rem;
+    }
+    .pipeline-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+    }
+
+    .pipe-block {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-sm);
+      border: 2.5px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s;
+      user-select: none;
+    }
+    .pipe-block:hover { transform: translateX(3px); }
+    .pipe-block.active {
+      transform: translateX(4px) scale(1.02);
+    }
+
+    /* orange/yellow – Masked Self-Attention */
+    .pipe-block.orange-block {
+      background: var(--yellow-lt);
+      border-color: var(--orange);
+    }
+    .pipe-block.orange-block.active {
+      box-shadow: 0 0 0 3px rgba(194,65,12,0.22), 0 4px 14px rgba(194,65,12,0.18);
+    }
+
+    /* purple – Cross-Attention */
+    .pipe-block.purple-block {
+      background: var(--purple-lt);
+      border-color: var(--purple);
+    }
+    .pipe-block.purple-block.active {
+      box-shadow: 0 0 0 3px rgba(109,40,217,0.22), 0 4px 14px rgba(109,40,217,0.18);
+    }
+
+    /* green – FFN */
+    .pipe-block.green-block {
+      background: var(--green-lt);
+      border-color: var(--green);
+    }
+    .pipe-block.green-block.active {
+      box-shadow: 0 0 0 3px rgba(22,101,52,0.22), 0 4px 14px rgba(22,101,52,0.18);
+    }
+
+    /* teal – Add&Norm */
+    .pipe-block.teal-block {
+      background: var(--teal-lt);
+      border-color: var(--teal);
+    }
+
+    /* blue – output linear/softmax */
+    .pipe-block.blue-block {
+      background: var(--blue-lt);
+      border-color: var(--blue);
+    }
+
+    .pipe-block-icon { font-size: 1.3rem; flex-shrink: 0; }
+    .pipe-block-label {
+      font-weight: 700;
+      font-size: 0.93rem;
+      color: var(--text);
+      flex: 1;
+    }
+    .pipe-block-sub {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-family: 'Fira Code', monospace;
+    }
+
+    .pipe-connector {
+      width: 2px;
+      height: 16px;
+      background: var(--border2);
+      position: relative;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .pipe-connector::after {
+      content: '▼';
+      font-size: 0.62rem;
+      color: var(--text-dim);
+      position: absolute;
+      bottom: -4px;
+    }
+    .pipe-connector.active-conn { background: var(--teal); }
+    .pipe-connector.active-conn::after { color: var(--teal); }
+
+    .pipe-input-label {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--teal);
+      margin-bottom: 0.3rem;
+      text-align: center;
+      letter-spacing: 0.04em;
+    }
+    .pipe-output-label {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--blue);
+      margin-top: 0.3rem;
+      text-align: center;
+      letter-spacing: 0.04em;
+    }
+
+    /* encoder side note */
+    .encoder-note {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.45rem 0.9rem;
+      background: var(--blue-lt);
+      border: 1.5px solid var(--blue);
+      border-radius: var(--radius-sm);
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--blue);
+      margin-bottom: 0.5rem;
+    }
+
+    /* ── Right info panel ── */
+    .info-panel {
+      background: var(--bg2);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 1.2rem 1.3rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+      box-shadow: var(--shadow);
+    }
+    .info-panel-prompt {
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 0.97rem;
+      padding: 2rem 0;
+    }
+    .info-section { display: flex; flex-direction: column; gap: 0.55rem; }
+    .info-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .info-desc {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .info-formula {
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0.65rem 1rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.82rem;
+      color: var(--text);
+      line-height: 1.8;
+    }
+    .info-role {
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 0.5rem 0.9rem;
+      border-radius: var(--radius-sm);
+      line-height: 1.5;
+    }
+    .info-role.orange { background: var(--yellow-lt); color: var(--orange); border: 1.5px solid #fde047; }
+    .info-role.purple { background: var(--purple-lt); color: var(--purple); border: 1.5px solid #c4b5fd; }
+    .info-role.green  { background: var(--green-lt);  color: var(--green);  border: 1.5px solid #86efac; }
+    .info-role.teal   { background: var(--teal-lt);   color: var(--teal);   border: 1.5px solid var(--teal); }
+
+    .sublayer-badge {
+      display: inline-block;
+      padding: 0.2rem 0.7rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+    .badge-orange { background: var(--yellow-lt); color: var(--orange); border: 1.5px solid #fde047; }
+    .badge-purple { background: var(--purple-lt); color: var(--purple); border: 1.5px solid #c4b5fd; }
+    .badge-green  { background: var(--green-lt);  color: var(--green);  border: 1.5px solid #86efac; }
+
+    @media (max-width: 900px) {
+      .content-split { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Transformers</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 15 · Slide 15 / 19</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block" style="padding:0.5rem 0 0.2rem;">
+        <h1 class="slide-title">Estrutura do Decoder</h1>
+        <p class="slide-subtitle">Três sublayers para geração autoregressiva</p>
+      </div>
+
+      <div class="content-split">
+        <!-- Left: decoder pipeline -->
+        <div class="decoder-col">
+          <div class="decoder-col-title">Pipeline do Decoder — clique em uma sublayer</div>
+
+          <div style="position:relative;flex:1;min-height:0;" id="pipelineWrapper">
+            <!-- Encoder note — absolutely positioned, aligned to Cross-Attention by JS -->
+            <div id="encoderNote" style="position:absolute;left:0;top:0;width:7.6rem;background:var(--blue-lt);border:1.5px solid var(--blue);border-radius:8px;padding:0.5rem 0.6rem;font-size:0.7rem;font-weight:700;color:var(--blue);text-align:center;line-height:1.6;z-index:2;box-shadow:0 2px 8px rgba(29,78,216,0.12);">
+              🔵 Encoder<br>
+              <span style="font-family:'Fira Code',monospace;font-size:0.82rem;">A<sup>enc</sup></span><br>
+              <span style="font-size:0.63rem;font-weight:500;opacity:0.9;">K e V →<br>Cross-Attn</span>
+            </div>
+            <!-- Horizontal arrow from encoder note to Cross-Attention block, sized by JS -->
+            <div id="encoderArrow" style="position:absolute;height:2px;background:var(--blue);opacity:0.7;top:0;pointer-events:none;z-index:1;">
+              <div style="position:absolute;right:-1px;top:-4px;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:7px solid var(--blue);"></div>
+            </div>
+
+          <div class="pipeline-col" id="pipelineCol" style="padding-left:8.8rem;">
+
+            <div class="pipe-input-label" id="block-input" onclick="selectBlock('input')" style="cursor:pointer;padding:0.5rem 0.8rem;border:2px dashed var(--teal);border-radius:var(--radius-sm);transition:all 0.2s;user-select:none;" onmouseover="this.style.background='var(--teal-lt)'" onmouseout="this.style.background=''">▼ Entrada deslocada à direita (tokens do decoder) 👆</div>
+            <div class="pipe-connector" id="conn-input-mask"></div>
+
+            <!-- Masked Self-Attention -->
+            <div class="pipe-block orange-block" id="block-masked" onclick="selectBlock('masked')">
+              <span class="pipe-block-icon">🟠</span>
+              <div>
+                <div class="pipe-block-label">Masked Self-Attention</div>
+                <div class="pipe-block-sub">máscara causal (triangular)</div>
+              </div>
+            </div>
+            <div class="pipe-connector" id="conn-mask-norm"></div>
+
+            <!-- Add&Norm after masked -->
+            <div class="pipe-block teal-block" style="cursor:default;opacity:0.8;">
+              <span class="pipe-block-icon">⚖️</span>
+              <div>
+                <div class="pipe-block-label">Add &amp; Norm</div>
+                <div class="pipe-block-sub">LayerNorm(x + sublayer(x))</div>
+              </div>
+            </div>
+            <div class="pipe-connector" id="conn-mask-cross"></div>
+
+            <!-- Cross-Attention -->
+            <div class="pipe-block purple-block" id="block-cross" onclick="selectBlock('cross')">
+              <span class="pipe-block-icon">🟣</span>
+              <div>
+                <div class="pipe-block-label">Cross-Attention</div>
+                <div class="pipe-block-sub">Q←decoder · K,V←encoder</div>
+              </div>
+            </div>
+            <div class="pipe-connector" id="conn-cross-norm"></div>
+
+            <!-- Add&Norm after Cross -->
+            <div class="pipe-block teal-block" style="cursor:default;opacity:0.8;">
+              <span class="pipe-block-icon">⚖️</span>
+              <div>
+                <div class="pipe-block-label">Add &amp; Norm</div>
+                <div class="pipe-block-sub">LayerNorm(x + sublayer(x))</div>
+              </div>
+            </div>
+            <div class="pipe-connector" id="conn-cross-ffn"></div>
+
+            <!-- FFN -->
+            <div class="pipe-block green-block" id="block-ffn" onclick="selectBlock('ffn')">
+              <span class="pipe-block-icon">🟩</span>
+              <div>
+                <div class="pipe-block-label">Feed-Forward Network</div>
+                <div class="pipe-block-sub">FFN(x) = ReLU(W₁·x+b₁)·W₂+b₂</div>
+              </div>
+            </div>
+            <div class="pipe-connector" id="conn-ffn-norm2"></div>
+
+            <!-- Add&Norm after FFN -->
+            <div class="pipe-block teal-block" style="cursor:default;opacity:0.8;">
+              <span class="pipe-block-icon">⚖️</span>
+              <div>
+                <div class="pipe-block-label">Add &amp; Norm</div>
+                <div class="pipe-block-sub">LayerNorm(x + sublayer(x))</div>
+              </div>
+            </div>
+            <div class="pipe-connector" id="conn-out"></div>
+
+            <div class="pipe-output-label" id="block-linear" onclick="selectBlock('linear')" style="cursor:pointer;padding:0.5rem 0.8rem;border:2px dashed var(--blue);border-radius:var(--radius-sm);transition:all 0.2s;user-select:none;" onmouseover="this.style.background='var(--blue-lt)'" onmouseout="this.style.background=''">▼ Linear + Softmax → token 👆</div>
+          </div><!-- /pipeline-col -->
+          </div><!-- /pipelineWrapper -->
+        </div>
+
+        <!-- Right: info panel -->
+        <div class="info-panel" id="infoPanel">
+          <div class="info-panel-prompt" id="promptMsg">
+            👆 Clique em uma das três sublayers à esquerda para ver sua descrição e fórmula
+          </div>
+          <div class="info-section" id="infoContent" style="display:none;"></div>
+        </div>
+      </div>
+
+      <!-- Insight box -->
+      <div class="insight-box">
+        <span class="i-icon">🔒</span>
+        <div class="i-text">
+          <strong>Máscara causal:</strong> ao prever o próximo token, o modelo
+          <strong>não pode usar informações vindas de posições futuras.</strong>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide14.html'">← Anterior</button>
+      <div class="nav-dots" id="navDots"></div>
+      <button class="btn-nav btn-next" onclick="location.href='slide16.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    (function(){
+      const container = document.getElementById('navDots');
+      const CURRENT = 15;
+      for (let i = 1; i <= 19; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'dot' + (i === CURRENT ? ' active' : '');
+        dot.title = 'Slide ' + i;
+        dot.style.cursor = 'pointer';
+        dot.addEventListener('click', () => {
+          location.href = 'slide' + String(i).padStart(2,'0') + '.html';
+        });
+        container.appendChild(dot);
+      }
+    })();
+
+    const INFO = {
+      input: {
+        icon: '📥',
+        badge: '<span class="sublayer-badge" style="background:var(--teal-lt);color:var(--teal);border:1.5px solid var(--teal);">Entrada</span>',
+        title: 'Entrada deslocada à direita',
+        desc: 'Durante o <strong>treinamento</strong>, o decoder recebe <em>os tokens corretos</em> como entrada, mas <strong>deslocados uma posição para a direita</strong>: um token especial <code style="font-family:\'Fira Code\',monospace">&lt;BOS&gt;</code> (início de sequência) é inserido no começo, e o último token da saída é removido. Assim, ao prever o token na posição <em>i</em>, a entrada já contém os tokens de 1 até <em>i−1</em>.<br><br>Na <strong>inferência</strong> (geração real), o processo é autoregressivo: o modelo gera um token por vez, e cada novo token gerado é re-alimentado como entrada para a próxima etapa.',
+        formula: `Treinamento (teacher forcing):<br>
+  alvo:   &lt;BOS&gt; t₁  t₂  t₃  &lt;EOS&gt;<br>
+  entrada: t₁   t₂  t₃  &lt;EOS&gt;  —<br>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↑ deslocamento de 1 posição<br>
+<br>
+Inferência (autoregressiva):<br>
+  passo 1: entrada = [&lt;BOS&gt;]          → gera t₁<br>
+  passo 2: entrada = [&lt;BOS&gt;, t₁]      → gera t₂<br>
+  passo 3: entrada = [&lt;BOS&gt;, t₁, t₂]  → gera t₃<br>
+  ...`,
+        role: 'O deslocamento garante que o decoder <strong>nunca veja o token que deve prever</strong> como parte de sua entrada — condição fundamental para o aprendizado supervisionado sequencial.',
+        roleClass: 'teal',
+        viz: `<div style="background:var(--teal-lt);border:1.5px solid var(--teal);border-radius:6px;padding:0.5rem 0.8rem;font-size:0.8rem;font-family:'Fira Code',monospace;line-height:2;">
+<span style="color:var(--teal);font-weight:700;">Exemplo — tradução "She left alone":</span><br>
+<span style="color:var(--text-dim);">Entrada decoder:</span> &lt;BOS&gt; &nbsp;Ela &nbsp;saiu &nbsp;só<br>
+<span style="color:var(--text-dim);">Alvo decoder: &nbsp;&nbsp;</span> Ela &nbsp;&nbsp;saiu &nbsp;só &nbsp;&lt;EOS&gt;<br>
+<span style="color:var(--text-dim);font-size:0.7rem;">↑ cada token prediz o próximo</span>
+</div>`
+      },
+      masked: {
+        icon: '🟠',
+        badge: '<span class="sublayer-badge badge-orange">Sublayer 1</span>',
+        title: 'Masked Self-Attention',
+        desc: 'Igual ao Self-Attention do encoder, mas com uma <strong>máscara causal triangular</strong> que zera os scores de posições futuras antes do softmax. Garante que o modelo só acesse tokens anteriores ao prever o próximo. Aqui Q, K e V vêm todos do próprio decoder (self-attention).',
+        formula: `Attention(Q,K,V) = softmax((QKᵀ + M) / √dₖ) · V
+
+M[i,j] = {  0     se j ≤ i
+           { −∞    se j > i
+
+Q = K = V = Z_dec · W_q/k/v  ← tudo do decoder`,
+        role: 'Permite que o decoder modele <strong>dependências entre os tokens já gerados</strong>, sem "espiar" o futuro.',
+        roleClass: 'orange',
+        viz: `<div style="background:var(--yellow-lt);border:1.5px solid #fde047;border-radius:6px;padding:0.5rem 0.8rem;font-size:0.8rem;font-family:'Fira Code',monospace;line-height:1.8;">
+<span style="color:var(--orange);font-weight:700;">Máscara causal (4 tokens de exemplo):</span><br>
+<span style="color:var(--green);">1</span> <span style="color:var(--red);">−∞ −∞ −∞</span>  ← só vê pos. 1<br>
+<span style="color:var(--green);">1  1</span> <span style="color:var(--red);">−∞ −∞</span>  ← vê pos. 1–2<br>
+<span style="color:var(--green);">1  1  1</span> <span style="color:var(--red);">−∞</span>  ← vê pos. 1–3<br>
+<span style="color:var(--green);">1  1  1  1</span>   ← vê todos
+</div>`
+      },
+      cross: {
+        icon: '🟣',
+        badge: '<span class="sublayer-badge badge-purple">Sublayer 2</span>',
+        title: 'Cross-Attention',
+        desc: 'As <strong>Queries Q</strong> vêm do decoder (saída do Add&amp;Norm anterior), enquanto <strong>Keys K</strong> e <strong>Values V</strong> vêm da <strong>saída do encoder A<sup>enc</sup></strong>. É aqui que o decoder "consulta" a sequência de entrada original. Não há máscara causal nesta camada.',
+        formula: `Q = Z_dec · Wq    ← decoder (após masked attn + add&norm)
+K = A_enc · Wk    ← encoder output
+V = A_enc · Wv    ← encoder output
+
+Attention(Q, K, V) = softmax(QKᵀ / √dₖ) · V`,
+        role: '<strong>Conecta o decoder ao encoder</strong>: cada posição do decoder pode atender a qualquer posição do encoder.',
+        roleClass: 'purple',
+        viz: `<div style="background:var(--purple-lt);border:1.5px solid #c4b5fd;border-radius:6px;padding:0.5rem 0.8rem;font-size:0.8rem;line-height:1.7;">
+<span style="color:var(--purple);font-weight:700;">Fluxo de informação:</span><br>
+🔵 <strong>Encoder</strong>: "Ela saiu só" → A<sup>enc</sup><br>
+&nbsp;&nbsp;&nbsp;↓ projeta em K e V<br>
+🟣 <strong>Decoder</strong>: Z<sub>dec</sub> → projeta em Q<br>
+&nbsp;&nbsp;&nbsp;↓ Q · Kᵀ → scores → softmax → pesos<br>
+&nbsp;&nbsp;&nbsp;↓ pesos · V → contexto do encoder
+</div>`
+      },
+      ffn: {
+        icon: '🟩',
+        badge: '<span class="sublayer-badge badge-green">Sublayer 3</span>',
+        title: 'Feed-Forward Network',
+        desc: 'Idêntica à FFN do encoder: duas transformações lineares com ReLU entre elas. Aplicada <strong>independentemente em cada posição</strong>, permitindo refinamento não-linear das representações. W₁ ∈ ℝ<sup>d×d_ff</sup>, W₂ ∈ ℝ<sup>d_ff×d</sup>, com d_ff = 4d.',
+        formula: `FFN(z) = ReLU(W₁·z + b₁)·W₂ + b₂
+
+W₁ ∈ ℝ^{d × d_ff}   (ex: 512 × 2048)
+W₂ ∈ ℝ^{d_ff × d}   (ex: 2048 × 512)
+Saída H ∈ ℝ^{n × d}  (mesma forma que entrada)`,
+        role: '<strong>Processa cada token individualmente</strong>, adicionando capacidade representacional sem troca de informação entre posições.',
+        roleClass: 'green',
+        viz: `<div style="background:var(--green-lt);border:1.5px solid #86efac;border-radius:6px;padding:0.5rem 0.8rem;font-size:0.8rem;font-family:'Fira Code',monospace;line-height:1.8;">
+z (d) → <span style="color:var(--green);font-weight:700;">×W₁</span> → h (d_ff) → <span style="color:var(--orange);font-weight:700;">ReLU</span> → h̃ (d_ff) → <span style="color:var(--green);font-weight:700;">×W₂</span> → f (d)<br>
+<span style="color:var(--text-dim);">token-by-token, sem comunicação entre posições</span>
+</div>`
+      },
+      linear: {
+        icon: '📊',
+        badge: '<span class="sublayer-badge" style="background:var(--blue-lt);color:var(--blue);border:1.5px solid var(--blue);">Saída</span>',
+        title: 'Linear + Softmax → token',
+        desc: 'A camada <strong>Linear</strong> projeta o vetor de saída do decoder (dimensão <em>d</em>) para o espaço do vocabulário (<em>|V|</em> dimensões). Em seguida, o <strong>Softmax</strong> converte os scores em probabilidades.',
+        formula: `logits = h · W_vocab    W_vocab ∈ ℝ^{d × |V|}<br>
+P(token) = softmax(logits)  ∈ ℝ^{|V|}<br>
+<br>
+Cada posição de saída → |V| scores → 1 token`,
+        role: 'Este classificador tem <strong>uma saída para cada token do vocabulário</strong>. O token com maior probabilidade é selecionado (argmax ou amostragem).',
+        roleClass: 'teal',
+        viz: `<div style="background:var(--blue-lt);border:1.5px solid var(--blue);border-radius:6px;padding:0.5rem 0.8rem;font-size:0.8rem;font-family:'Fira Code',monospace;line-height:1.8;">
+h (d) → <span style="color:var(--blue);font-weight:700;">×W_vocab</span> → logits (|V|) → <span style="color:var(--teal);font-weight:700;">softmax</span> → P(|V|)<br>
+<span style="color:var(--text-dim);">argmax P → token predito</span>
+</div>`
+      }
+    };
+
+    let currentBlock = null;
+
+    function selectBlock(key) {
+      // Reset all blocks
+      ['block-input','block-masked','block-cross','block-ffn','block-linear'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('active');
+      });
+      ['conn-out','conn-ffn-norm2','conn-cross-ffn','conn-cross-norm','conn-mask-cross','conn-mask-norm','conn-input-mask'].forEach(id => {
+        document.getElementById(id).classList.remove('active-conn');
+      });
+
+      currentBlock = key;
+      const blockId = key === 'input' ? 'block-input' : key === 'masked' ? 'block-masked' : key === 'cross' ? 'block-cross' : key === 'ffn' ? 'block-ffn' : 'block-linear';
+      const blockEl = document.getElementById(blockId);
+      if (blockEl) blockEl.classList.add('active');
+
+      // Activate relevant connectors
+      if (key === 'input') {
+        document.getElementById('conn-input-mask').classList.add('active-conn');
+      } else if (key === 'masked') {
+        document.getElementById('conn-input-mask').classList.add('active-conn');
+        document.getElementById('conn-mask-norm').classList.add('active-conn');
+      } else if (key === 'cross') {
+        document.getElementById('conn-mask-cross').classList.add('active-conn');
+        document.getElementById('conn-cross-norm').classList.add('active-conn');
+      } else if (key === 'ffn') {
+        document.getElementById('conn-cross-ffn').classList.add('active-conn');
+        document.getElementById('conn-ffn-norm2').classList.add('active-conn');
+        document.getElementById('conn-out').classList.add('active-conn');
+      } else {
+        document.getElementById('conn-out').classList.add('active-conn');
+      }
+
+      const d = INFO[key];
+      document.getElementById('promptMsg').style.display = 'none';
+      const content = document.getElementById('infoContent');
+      content.style.display = 'flex';
+      content.innerHTML = `
+        <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">
+          ${d.badge}
+          <span class="info-title">${d.icon} ${d.title}</span>
+        </div>
+        <p class="info-desc">${d.desc}</p>
+        <div class="info-formula" style="white-space:pre-line;">${d.formula}</div>
+        ${d.viz ? d.viz : ''}
+        <div class="info-role ${d.roleClass}">💡 ${d.role}</div>
+        ${key !== 'linear' ? `<div style="margin-top:0.3rem;font-size:0.8rem;color:var(--text-dim);">
+          Cada sublayer é seguida de uma conexão residual + LayerNorm:<br>
+          <code style="font-family:'Fira Code',monospace;">saída = LayerNorm(x + sublayer(x))</code>
+        </div>` : ''}
+      `;
+    }
+
+    /* ── Align encoder note to Cross-Attention block ── */
+    function positionEncoderNote() {
+      const crossBlock = document.getElementById('block-cross');
+      const note       = document.getElementById('encoderNote');
+      const arrow      = document.getElementById('encoderArrow');
+      const wrapper    = document.getElementById('pipelineWrapper');
+      if (!crossBlock || !note || !arrow || !wrapper) return;
+      const crossRect   = crossBlock.getBoundingClientRect();
+      const wrapperRect = wrapper.getBoundingClientRect();
+      const noteH = note.offsetHeight;
+      const noteW = note.offsetWidth;
+      // Vertically center note with block
+      const topOffset = crossRect.top - wrapperRect.top + (crossRect.height - noteH) / 2;
+      note.style.top = Math.max(0, topOffset) + 'px';
+      // Arrow: same vertical center, spans from right edge of note to left edge of block
+      const arrowTop = crossRect.top - wrapperRect.top + crossRect.height / 2 - 1;
+      const blockLeft = crossRect.left - wrapperRect.left;
+      arrow.style.top   = arrowTop + 'px';
+      arrow.style.left  = noteW + 'px';
+      arrow.style.width = Math.max(0, blockLeft - noteW) + 'px';
+    }
+    window.addEventListener('load', positionEncoderNote);
+  </script>
+</body>
+</html>

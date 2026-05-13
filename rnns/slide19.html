@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 19 – Conteúdo Candidato: O Que Escrever</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .eq-box { font-family:'Fira Code',monospace; font-size:0.85rem; background:var(--bg3);
+              border:1.5px solid var(--border2); border-radius:var(--radius-sm);
+              padding:0.5rem 0.8rem; color:var(--text); margin-top:0.8rem; text-align:center; }
+    .svg-wrap { background:var(--bg3); border:1.5px solid var(--border2); border-radius:var(--radius-sm); padding:0.5rem; }
+    .lstm-cell-svg { width:100%; display:block; }
+    .two-sliders { display:flex; gap:1rem; margin-bottom:0.8rem; }
+    .slider-col { flex:1; }
+    .slider-col label { font-size:0.8rem; font-family:'Fira Code',monospace; font-weight:600;
+                        color:var(--text-muted); display:block; margin-bottom:0.3rem; }
+    .slider-col input[type=range] { width:100%; cursor:pointer; }
+    #it2-slider { accent-color:var(--teal); }
+    #ct-slider  { accent-color:#1d4ed8; }
+    .slider-val { font-family:'Fira Code',monospace; font-weight:700; font-size:0.88rem; }
+    #it2-val { color:var(--teal); }
+    #ct-val  { color:#1d4ed8; }
+    .result-bar-wrap { margin-top:0.8rem; background:var(--bg3); border:1.5px solid var(--border2);
+                       border-radius:var(--radius-sm); padding:0.6rem; }
+    .result-label { font-size:0.8rem; font-family:'Fira Code',monospace; color:var(--text-dim);
+                    margin-bottom:0.4rem; text-align:center; }
+    .hbar-bg { height:22px; background:var(--bg2); border-radius:4px; border:1px solid var(--border2);
+               position:relative; overflow:hidden; }
+    .hbar-center { position:absolute; top:0; left:50%; width:2px; height:100%; background:var(--border2); }
+    .hbar-fill { position:absolute; top:0; height:100%; border-radius:4px; transition:all 0.35s ease; }
+    .result-val-text { font-size:0.82rem; font-family:'Fira Code',monospace; text-align:center;
+                       margin-top:0.3rem; font-weight:700; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Redes Neurais Recorrentes</span>
+      <span class="prof-tag" style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 11 · Slide 2 / 2</span>
+    </header>
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Conteúdo Candidato: O Que Escrever</h1>
+        <p class="slide-subtitle">O candidato propõe o conteúdo — a input gate decide o quanto entra</p>
+      </div>
+      <div class="content-split">
+        <div class="panel panel-left">
+          <h2 class="panel-title">🧠 LSTM — Candidato em Destaque</h2>
+          <!-- LSTM diagram: candidate highlighted (lstm.svg base) -->
+          <div class="svg-wrap">
+            <svg class="lstm-cell-svg" viewBox="0 0 570 390" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="mT19" markerWidth="4.5" markerHeight="3.5" refX="3.5" refY="1.75" orient="auto"><path d="M0,0 L4.5,1.75 L0,3.5 Z" fill="#0d6e6e"/></marker>
+                <marker id="mO19" markerWidth="4.5" markerHeight="3.5" refX="3.5" refY="1.75" orient="auto"><path d="M0,0 L4.5,1.75 L0,3.5 Z" fill="#c2410c"/></marker>
+              </defs>
+              <image href="../lstm.svg" x="0" y="0" width="570" height="390"/>
+              <!-- tanh_c circle (teal) -->
+              <circle cx="297" cy="161" r="18" fill="rgba(13,110,110,0.18)" stroke="#0d6e6e" stroke-width="3.5"/>
+              <!-- tanh_c → ×_ic (teal) -->
+              <line x1="297" y1="143" x2="297" y2="139" stroke="#0d6e6e" stroke-width="3" marker-end="url(#mT19)"/>
+              <!-- h bus (teal) -->
+              <line x1="108" y1="203" x2="325" y2="203" stroke="#0d6e6e" stroke-width="3"/>
+              <!-- h → tanh_c (teal) -->
+              <line x1="297" y1="203" x2="297" y2="179" stroke="#0d6e6e" stroke-width="3" marker-end="url(#mT19)"/>
+              <!-- x_t bus (orange) -->
+              <line x1="177" y1="260" x2="343" y2="260" stroke="#c2410c" stroke-width="3"/>
+              <!-- x_t → tanh_c (orange) -->
+              <line x1="297" y1="260" x2="297" y2="179" stroke="#c2410c" stroke-width="3" marker-end="url(#mO19)"/>
+            </svg>
+          </div>
+          <h2 class="panel-title" style="margin-top:0.2rem;">🎛️ Comparação: i&#x209C; vs c&#771;&#x209C;</h2>
+          <div class="two-sliders">
+            <div class="slider-col">
+              <label>i&#x209C; (quanto) = <span class="slider-val" id="it2-val">0.60</span></label>
+              <input type="range" id="it2-slider" min="0" max="1" step="0.01" value="0.6" oninput="updateCand()"/>
+            </div>
+            <div class="slider-col">
+              <label>c̃&#x209C; (o quê) = <span class="slider-val" id="ct-val">0.50</span></label>
+              <input type="range" id="ct-slider" min="-1" max="1" step="0.01" value="0.5" oninput="updateCand()"/>
+            </div>
+          </div>
+          <div class="eq-box">c̃&#x209C; = tanh(Wc &middot; x&#x209C; + Uc &middot; h&#x209C;&#x208B;&#x2081; + bc)</div>
+          <div class="result-bar-wrap">
+            <div class="result-label">i&#x209C; &#x2299; c̃&#x209C; = <span id="prod-val">0.300</span></div>
+            <div class="hbar-bg">
+              <div class="hbar-center"></div>
+              <div class="hbar-fill" id="hbar-fill"></div>
+            </div>
+          </div>
+        </div>
+        <div class="panel panel-right">
+          <h2 class="panel-title">📖 Candidato e Controle</h2>
+          <div class="concept-cards">
+            <div class="concept-card" style="--delay:0s">
+              <span class="card-icon">📝</span>
+              <div class="card-text"><strong>Conteúdo candidato</strong><p>c̃&#x209C; é o conteúdo candidato — o que poderia ser escrito na memória.</p></div>
+            </div>
+            <div class="concept-card" style="--delay:0.1s">
+              <span class="card-icon">✂️</span>
+              <div class="card-text"><strong>Filtro de intensidade</strong><p>i&#x209C; filtra esse conteúdo — decide quanto do candidato realmente entra.</p></div>
+            </div>
+            <div class="concept-card" style="--delay:0.2s">
+              <span class="card-icon">🎛️</span>
+              <div class="card-text"><strong>Multiplicação</strong><p>Duas saídas de dois mecanismos diferentes são combinadas por multiplicação elemento a elemento.</p></div>
+            </div>
+          </div>
+          <div class="highlight-box blue" style="margin-top:0.8rem;">
+            <span class="icon">🔗</span>
+            <span>Juntos, i&#x209C; e c̃&#x209C; determinam a nova informação que será incorporada à memória.</span>
+          </div>
+          <div class="highlight-box teal" style="margin-top:0.5rem;">
+            <span class="icon">➡️</span>
+            <span>Agora podemos calcular a nova memória combinando o que vem do passado com o que acabou de ser escrito.</span>
+          </div>
+        </div>
+      </div>
+    </main>
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide18.html'">&#8592; Anterior</button>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide20.html'">Próximo &#8594;</button>
+    </nav>
+  </div>
+  <script>
+    function updateCand() {
+      const it = parseFloat(document.getElementById('it2-slider').value);
+      const ct = parseFloat(document.getElementById('ct-slider').value);
+      document.getElementById('it2-val').textContent = it.toFixed(2);
+      document.getElementById('ct-val').textContent = ct.toFixed(2);
+      const prod = it * ct;
+      document.getElementById('prod-val').textContent = prod.toFixed(3);
+      const fill = document.getElementById('hbar-fill');
+      const pct = Math.abs(prod) * 50;
+      if (prod >= 0) {
+        fill.style.left = '50%';
+        fill.style.right = '';
+        fill.style.width = pct + '%';
+        fill.style.background = 'var(--teal)';
+      } else {
+        fill.style.right = '50%';
+        fill.style.left = '';
+        fill.style.width = pct + '%';
+        fill.style.background = '#ef4444';
+      }
+    }
+    updateCand();
+  </script>
+</body>
+</html>

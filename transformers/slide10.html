@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 10 – A = SV — Combinação Ponderada</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .token-chip {
+      padding:0.3rem 0.85rem;
+      border-radius:999px;
+      font-family:'Fira Code',monospace;
+      font-size:0.88rem;
+      font-weight:600;
+      cursor:pointer;
+      border:2px solid var(--border);
+      background:var(--bg3);
+      color:var(--text-muted);
+      transition:all 0.18s;
+    }
+    .token-chip:hover { border-color:var(--teal); color:var(--teal); }
+    .token-chip.active { background:var(--teal-lt); border-color:var(--teal); color:var(--teal); }
+
+    .stacked-bar {
+      display:flex;
+      height:2rem;
+      border-radius:8px;
+      overflow:hidden;
+      border:1px solid var(--border2);
+      width:100%;
+    }
+    .stacked-seg {
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-family:'Fira Code',monospace;
+      font-size:0.72rem;
+      font-weight:700;
+      color:white;
+      transition:width 0.35s ease;
+      overflow:hidden;
+      white-space:nowrap;
+    }
+
+    .value-table {
+      width:100%;
+      border-collapse:collapse;
+      font-family:'Fira Code',monospace;
+      font-size:0.8rem;
+    }
+    .value-table th {
+      font-size:0.7rem;
+      color:var(--text-dim);
+      font-weight:600;
+      text-align:right;
+      padding:0.15rem 0.4rem;
+    }
+    .value-table th:first-child { text-align:left; }
+    .value-table td {
+      padding:0.25rem 0.4rem;
+      text-align:right;
+      border-radius:3px;
+    }
+    .value-table td:first-child { text-align:left; font-weight:700; }
+
+    .step-term {
+      display:flex;
+      align-items:center;
+      gap:0.5rem;
+      padding:0.45rem 0.65rem;
+      border-radius:var(--radius-sm);
+      border:1.5px solid var(--border2);
+      font-family:'Fira Code',monospace;
+      font-size:0.82rem;
+      flex-wrap:wrap;
+    }
+    .weight-badge {
+      padding:0.15rem 0.5rem;
+      border-radius:999px;
+      font-weight:700;
+      font-size:0.82rem;
+    }
+
+    .running-total {
+      font-family:'Fira Code',monospace;
+      font-size:0.84rem;
+      color:var(--text-muted);
+      padding:0.3rem 0.6rem;
+      background:var(--bg3);
+      border-radius:6px;
+      border:1px solid var(--border2);
+    }
+
+    .z-result {
+      background:var(--teal-lt);
+      border:2px solid #5eead4;
+      border-radius:var(--radius-sm);
+      padding:0.5rem 0.8rem;
+      font-family:'Fira Code',monospace;
+      font-size:0.9rem;
+      color:var(--teal);
+      font-weight:700;
+      text-align:center;
+    }
+
+    .z-summary-table {
+      width:100%;
+      border-collapse:collapse;
+      font-family:'Fira Code',monospace;
+      font-size:0.8rem;
+    }
+    .z-summary-table th {
+      font-size:0.72rem;
+      color:var(--text-dim);
+      font-weight:600;
+      text-align:right;
+      padding:0.15rem 0.45rem;
+    }
+    .z-summary-table th:first-child { text-align:left; }
+    .z-summary-table td {
+      padding:0.25rem 0.45rem;
+      text-align:right;
+      border-radius:3px;
+    }
+    .z-summary-table td:first-child { text-align:left; font-weight:700; }
+    .z-summary-table tr.selected-z td {
+      background:var(--teal-lt);
+      color:var(--teal);
+      font-weight:700;
+    }
+
+    .btn-step {
+      display:inline-flex;
+      align-items:center;
+      gap:0.4rem;
+      padding:0.45rem 1rem;
+      border-radius:var(--radius-sm);
+      border:2px solid var(--teal);
+      background:var(--bg2);
+      color:var(--teal);
+      font-weight:700;
+      font-size:0.88rem;
+      cursor:pointer;
+      transition:all 0.18s;
+    }
+    .btn-step:hover { background:var(--teal-lt); }
+    .btn-step:disabled { opacity:0.4; cursor:not-allowed; }
+
+    .formula-badge {
+      font-family:'Fira Code',monospace;
+      font-size:0.9rem;
+      background:var(--bg3);
+      border:1px solid var(--border2);
+      border-radius:var(--radius-sm);
+      padding:0.4rem 0.8rem;
+      color:var(--text-muted);
+      text-align:center;
+    }
+
+    /* ── matrix blocks ── */
+    .mat-table { font-family:'Fira Code',monospace; font-size:0.92rem; border-collapse:collapse; }
+    .mat-table th { color:var(--text-dim); font-weight:600; font-size:0.78rem; padding:0.18rem 0.5rem; text-align:right; }
+    .mat-table td { padding:0.28rem 0.5rem; text-align:right; border-radius:3px; min-width:3rem; }
+    .mat-table td.lbl-cell { font-weight:600; color:var(--text-dim); text-align:left; min-width:2.6rem; }
+    .mat-table tr.row-hl-s td { border-top:2px solid rgba(13,110,110,0.45); border-bottom:2px solid rgba(13,110,110,0.45); }
+    .mat-table tr.row-hl-s td.lbl-cell { color:var(--teal); font-weight:700; border-left:3px solid var(--teal); padding-left:0.35rem; }
+    .mat-table tr.row-hl-v td   { background:var(--purple-lt) !important; }
+    .mat-table tr.row-hl-v td.lbl-cell { color:var(--purple); }
+    .mat-table tr.row-hl-a td   { background:var(--blue-lt)   !important; }
+    .mat-table tr.row-hl-a td.lbl-cell { color:var(--blue); }
+    .mat-table tr.row-clickable { cursor:pointer; transition:background 0.12s; }
+    .mat-table tr.row-clickable:hover:not(.row-hl-s) td { background:var(--bg3) !important; }
+    .bracket-wrap { display:flex; align-items:stretch; }
+    .bracket-l { border-left:3px solid; border-top:3px solid; border-bottom:3px solid; border-radius:4px 0 0 4px; width:7px; }
+    .bracket-r { border-right:3px solid; border-top:3px solid; border-bottom:3px solid; border-radius:0 4px 4px 0; width:7px; }
+    .bc-s { border-color:var(--teal); }
+    .bc-v { border-color:var(--purple); }
+    .bc-a { border-color:var(--blue); }
+    .mat-block { display:flex; flex-direction:column; align-items:flex-start; gap:0.22rem; }
+    .mat-label { font-family:'Fira Code',monospace; font-size:0.82rem; font-weight:700; padding:0.1rem 0.5rem; border-radius:6px; }
+    .mat-lbl-s { background:var(--teal-lt);   color:var(--teal);   }
+    .mat-lbl-v { background:var(--purple-lt); color:var(--purple); }
+    .mat-lbl-a { background:var(--blue-lt);   color:var(--blue);   }
+    .comp-row { display:flex; align-items:center; gap:0.8rem; flex-wrap:nowrap; overflow-x:auto; padding:0.3rem 0; }
+    .comp-op  { font-family:'Fira Code',monospace; font-size:1.4rem; font-weight:700; color:var(--text-dim); flex-shrink:0; align-self:center; }
+    .comp-eq  { color:var(--teal); }
+
+    @keyframes fadeIn {
+      from { opacity:0; transform:translateY(4px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    .fade-in { animation:fadeIn 0.25s ease both; }
+    @keyframes slideIn {
+      from { opacity:0; transform:translateX(-8px); }
+      to   { opacity:1; transform:translateX(0); }
+    }
+    .slide-in { animation:slideIn 0.25s ease both; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Transformers</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 10 · Slide 10 / 11</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">A = SV — Combinação Ponderada</h1>
+        <p class="slide-subtitle">Os pesos de atenção combinam os values para gerar embeddings contextuais</p>
+      </div>
+
+      <!-- Controls -->
+      <div class="panel" style="display:flex;gap:1.5rem;align-items:center;flex-wrap:wrap;padding:0.75rem 1rem;">
+        <div style="display:flex;flex-direction:column;gap:0.3rem;">
+          <div style="font-size:0.78rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.07em;">Frase:</div>
+          <div class="toggle-group" id="phrase-toggle">
+            <button class="btn-toggle active" onclick="setPhrase(0)">Ela saiu só</button>
+            <button class="btn-toggle" onclick="setPhrase(1)">Só ela saiu</button>
+            <button class="btn-toggle" onclick="setPhrase(2)">Ela só saiu</button>
+          </div>
+        </div>
+        <div style="font-size:0.85rem;color:var(--text-muted);font-style:italic;flex:1;">Clique em uma célula de <strong>A</strong> para ver os elementos de S e V envolvidos.</div>
+        <div class="formula-badge">A&nbsp;=&nbsp;S&nbsp;&middot;&nbsp;V</div>
+      </div>
+
+      <!-- Matrices: S · V = A -->
+      <div class="panel" style="overflow-x:auto;">
+        <div class="comp-row" id="matrices-row"></div>
+      </div>
+
+      <!-- Detail: step-by-step for selected row -->
+      <div class="panel" id="detail-panel">
+        <div id="step-area" style="display:flex;flex-direction:column;gap:0.5rem;"></div>
+      </div>
+
+      <!-- Insight -->
+      <div class="insight-box">
+        <div class="i-icon">🎓</div>
+        <div class="i-text">
+          Cada célula A(i,j) é o produto interno da linha i de S pela coluna j de V: os pesos de atenção determinam quanto cada token contribui para a dimensão j do embedding contextual do token i.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide09.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide11.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    const EMB_LEX = {
+      'Ela':  [1,  2], 'ela':  [1,  2],
+      'saiu': [3, -1],
+      'só':   [-1, 2], 'Só':   [-1, 2],
+    };
+    function round2(x) { return Math.round(x * 100) / 100; }
+    function computePE(pos) {
+      return [
+        Math.sin(pos / Math.pow(10000, 0/2)),
+        Math.cos(pos / Math.pow(10000, 0/2)),
+      ].map(v => round2(v));
+    }
+    const POS_ENC = [computePE(0), computePE(1), computePE(2)];
+    const WQ = [[1, 0], [0, 1]];
+    const WK = [[0, 1], [1, 0]];
+    const WV = [[1, 1], [0, 1]];
+
+    function getMatrices(tokens) {
+      const X = tokens.map((t,i) => EMB_LEX[t].map((v,j) => round2(v + POS_ENC[i][j])));
+      const Q = X.map(row => [0,1].map(j => round2(row.reduce((s,v,k)=>s+v*WQ[k][j],0))));
+      const K = X.map(row => [0,1].map(j => round2(row.reduce((s,v,k)=>s+v*WK[k][j],0))));
+      const V = X.map(row => [0,1].map(j => round2(row.reduce((s,v,k)=>s+v*WV[k][j],0))));
+      return {X, Q, K, V};
+    }
+    function computeQKT(Q, K) {
+      return Q.map(qi => K.map(kj => round2(qi.reduce((s,v,i)=>s+v*kj[i],0))));
+    }
+    function softmaxRow(row) {
+      const max = Math.max(...row);
+      const exps = row.map(x => Math.exp(x - max));
+      const sum = exps.reduce((a,b)=>a+b,0);
+      return exps.map(e => round2(e/sum));
+    }
+    function computeAttention(tokens, dk=2) {
+      const {X, Q, K, V} = getMatrices(tokens);
+      const scores = computeQKT(Q, K);
+      const scaled = scores.map(row => row.map(s => round2(s / Math.sqrt(dk))));
+      const S = scaled.map(row => softmaxRow(row));
+      const A = S.map(si => [0,1].map(j => round2(si.reduce((s,a,k)=>s+a*V[k][j],0))));
+      return {Q, K, V, scores, scaled, S, A};
+    }
+
+    const PHRASES = [
+      ['Ela', 'saiu', 'só'],
+      ['Só',  'ela',  'saiu'],
+      ['Ela', 'só',   'saiu'],
+    ];
+    const SEG_COLORS = ['#0d6e6e','#1d4ed8','#6d28d9'];
+    const SEG_BG     = ['var(--teal-lt)','var(--blue-lt)','var(--purple-lt)'];
+    const SUB = ['₁','₂','₃'];
+
+    let currentPhrase  = 0;
+    let selectedToken  = null;
+    let selectedACell  = null; // {i,j} when a cell of A is clicked
+
+    function fmt(v) { return (v >= 0 ? ' ' : '') + v.toFixed(2); }
+    function fmtVec(arr) { return '[ ' + arr.map(v => fmt(v)).join(',  ') + ' ]'; }
+    function probToColor(val) {
+      const r = Math.round(255 - val * (255 - 13));
+      const g = Math.round(255 - val * (255 - 110));
+      const b = Math.round(255 - val * (255 - 110));
+      return `rgb(${r},${g},${b})`;
+    }
+
+    function getCurrentData() {
+      const tokens = PHRASES[currentPhrase];
+      return { tokens, ...computeAttention(tokens) };
+    }
+
+    // ── matrix builders ────────────────────────────────────────────────
+    function buildMatS(tokens, S, selRow) {
+      let html = `<div class="mat-block"><div class="mat-label mat-lbl-s">S</div>`;
+      html += `<div class="bracket-wrap"><div class="bracket-l bc-s"></div>`;
+      html += `<table class="mat-table"><thead><tr><th></th>`;
+      tokens.forEach(t => { html += `<th>${t}</th>`; });
+      html += `</tr></thead><tbody>`;
+      tokens.forEach((rowTok, i) => {
+        const hlCls = (i === selRow) ? 'row-hl-s' : '';
+        html += `<tr class="row-clickable ${hlCls}" onclick="selectToken(${i})"><td class="lbl-cell">${rowTok}</td>`;
+        S[i].forEach(v => {
+          const bg = probToColor(v);
+          const tc = v > 0.5 ? 'white' : '#1a2e1a';
+          html += `<td style="background:${bg};color:${tc};border-radius:3px;">${v.toFixed(2)}</td>`;
+        });
+        html += `</tr>`;
+      });
+      html += `</tbody></table><div class="bracket-r bc-s"></div></div></div>`;
+      return html;
+    }
+
+    function buildMatV(tokens, V, hlRow) {
+      const hlCol = selectedACell !== null ? selectedACell.j : null;
+      let html = `<div class="mat-block"><div class="mat-label mat-lbl-v">V</div>`;
+      html += `<div class="bracket-wrap"><div class="bracket-l bc-v"></div>`;
+      html += `<table class="mat-table"><thead><tr><th></th>`;
+      ['d₁','d₂'].forEach((c, j) => {
+        const hl = (j === hlCol) ? 'style="color:var(--purple);font-weight:700;"' : '';
+        html += `<th ${hl}>${c}</th>`;
+      });
+      html += `</tr></thead><tbody>`;
+      tokens.forEach((rowTok, i) => {
+        const hlCls = (i === hlRow) ? 'row-hl-v' : '';
+        html += `<tr class="${hlCls}"><td class="lbl-cell">${rowTok}</td>`;
+        V[i].forEach((v, j) => {
+          const colBg = (j === hlCol) ? 'background:var(--purple-lt);' : '';
+          html += `<td style="${colBg}color:${v>=0?'#6d28d9':'#c2410c'}">${fmt(v)}</td>`;
+        });
+        html += `</tr>`;
+      });
+      html += `</tbody></table><div class="bracket-r bc-v"></div></div></div>`;
+      return html;
+    }
+
+    function buildMatA(tokens, A, selRow) {
+      let html = `<div class="mat-block"><div class="mat-label mat-lbl-a">A</div>`;
+      html += `<div class="bracket-wrap"><div class="bracket-l bc-a"></div>`;
+      html += `<table class="mat-table"><thead><tr><th></th><th>d₁</th><th>d₂</th></tr></thead><tbody>`;
+      tokens.forEach((rowTok, i) => {
+        const hlCls = (i === selRow) ? 'row-hl-a' : '';
+        html += `<tr class="${hlCls}"><td class="lbl-cell">${rowTok}</td>`;
+        A[i].forEach((v, j) => {
+          const isSel = selectedACell && selectedACell.i===i && selectedACell.j===j;
+          const border = isSel ? 'outline:2.5px solid var(--teal);outline-offset:-2px;' : '';
+          html += `<td style="${border}color:${v>=0?'#1d4ed8':'#c2410c'};cursor:pointer;border-radius:4px;" onclick="selectACell(${i},${j})">${fmt(v)}</td>`;
+        });
+        html += `</tr>`;
+      });
+      html += `</tbody></table><div class="bracket-r bc-a"></div></div></div>`;
+      return html;
+    }
+
+    // ── render ─────────────────────────────────────────────────────
+    function renderMatrices() {
+      const {tokens, S, V, A} = getCurrentData();
+      let html = buildMatS(tokens, S, selectedToken);
+      html += `<div class="comp-op">&middot;</div>`;
+      html += buildMatV(tokens, V, null);
+      html += `<div class="comp-op comp-eq">=</div>`;
+      html += buildMatA(tokens, A, selectedToken);
+      document.getElementById('matrices-row').innerHTML = `<div class="comp-row fade-in">${html}</div>`;
+    }
+
+    function renderDetail() {
+      const {tokens, S, V, A} = getCurrentData();
+      const area = document.getElementById('step-area');
+
+      if (selectedACell === null) {
+        area.innerHTML = `<div style="color:var(--text-dim);font-size:0.88rem;font-style:italic;padding:0.3rem 0;">Clique em uma célula de <strong>A</strong> para ver o cálculo detalhado.</div>`;
+        return;
+      }
+
+      const {i, j} = selectedACell;
+      const sRow   = S[i];
+      const vCol   = tokens.map((_, k) => V[k][j]);
+      const terms  = sRow.map((w, k) => round2(w * vCol[k]));
+      const result = A[i][j];
+      const dimLbl = ['d₁','d₂'][j];
+      const termLines = tokens.map((t, k) =>
+        `<div class="step-term fade-in" style="border-color:${SEG_COLORS[k]}30;background:${SEG_BG[k]}50;">`
+        + `<span class="weight-badge" style="background:${SEG_COLORS[k]};color:white;">${sRow[k].toFixed(2)}</span>`
+        + `<span style="color:var(--text-muted);">x</span>`
+        + `<span style="color:${SEG_COLORS[k]};font-family:'Fira Code',monospace;">${fmt(vCol[k])}</span>`
+        + `<span style="color:var(--text-muted);">=</span>`
+        + `<span style="font-family:'Fira Code',monospace;color:var(--text-muted);">${terms[k].toFixed(2)}</span>`
+        + `</div>`
+      ).join('');
+      area.innerHTML =
+        `<div style="font-size:0.84rem;font-weight:700;color:var(--text-muted);margin-bottom:0.3rem;">`
+        + `A(${i+1},${j+1}) = `
+        + `<span style="color:var(--teal);">linha ${i+1} de S</span>`
+        + ` &middot; `
+        + `<span style="color:var(--purple);">coluna ${dimLbl} de V</span>`
+        + ` &mdash; embedding de <span style="color:var(--teal);">&quot;${tokens[i]}&quot;</span> na dimensão ${dimLbl}</div>`
+        + termLines
+        + `<div class="running-total">Soma = <span style="color:var(--blue);font-weight:700;">${result.toFixed(2)}</span></div>`
+        + `<div style="font-size:0.76rem;color:var(--text-dim);margin-top:0.2rem;font-style:italic;">Clique em outra célula de A para explorar.</div>`;
+    }
+
+    function renderAll() { renderMatrices(); renderDetail(); }
+
+    function selectToken(i) { selectedToken = i; selectedACell = null; renderAll(); }
+    function selectACell(i, j) {
+      selectedToken = i;
+      selectedACell = (selectedACell && selectedACell.i===i && selectedACell.j===j) ? null : {i, j};
+      renderAll();
+    }
+    function setPhrase(idx) {
+      currentPhrase = idx; selectedToken = null; selectedACell = null;
+      document.querySelectorAll('#phrase-toggle .btn-toggle').forEach((b,i) => b.classList.toggle('active', i===idx));
+      renderAll();
+    }
+
+    // Init
+    renderAll();
+  </script>
+</body>
+</html>
+      

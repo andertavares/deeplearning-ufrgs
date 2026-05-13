@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 03 – Patches como tokens visuais</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .patch-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(4, 1fr);
+      gap: 3px;
+      width: 220px;
+      height: 220px;
+      background: var(--bg3);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 3px;
+    }
+    .patch-cell {
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.68rem;
+      font-family: 'Fira Code', monospace;
+      font-weight: 700;
+      color: #fff;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.75);
+      transition: outline 0.2s, transform 0.15s;
+      user-select: none;
+      box-shadow: 0 0 0 1.5px #e11d48; /* vermelho */
+    }
+    .patch-cell:hover { transform: scale(1.08); }
+    .patch-cell.selected {
+      outline: 3px solid #0d6e6e;
+      outline-offset: -2px;
+      transform: scale(1.06);
+      color: rgba(0,0,0,0.85);
+    }
+    .process-display {
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0.75rem 1rem;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      min-height: 80px;
+      transition: all 0.3s;
+    }
+    .process-pipeline {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 0.6rem;
+    }
+    .proc-box {
+      padding: 0.35rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-family: 'Fira Code', monospace;
+      font-weight: 600;
+      border: 1.5px solid var(--border2);
+      background: var(--bg2);
+      color: var(--text);
+    }
+    .proc-box.patch-sq { background: var(--blue-lt); border-color: #93c5fd; color: var(--blue); }
+    .proc-box.flat-box { background: var(--yellow-lt); border-color: #fde047; color: var(--yellow); }
+    .proc-box.proj-box { background: var(--purple-lt); border-color: #c4b5fd; color: var(--purple); }
+    .proc-box.emb-box  { background: var(--teal-lt);   border-color: #5eead4; color: var(--teal); }
+    .proc-arrow { font-size: 0.95rem; color: var(--text-dim); }
+
+    .analogy-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.8rem;
+    }
+    .analogy-side {
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    .analogy-side h4 {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+    }
+    .analogy-token {
+      padding: 0.3rem 0.8rem;
+      border-radius: 6px;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+    .analogy-token.text { background: var(--blue-lt); border: 1.5px solid #93c5fd; color: var(--blue); }
+    .analogy-patch {
+      width: 40px; height: 40px;
+      border-radius: 6px;
+      border: 2px solid var(--border2);
+    }
+    .analogy-arrow { font-size: 1rem; color: var(--text-dim); }
+    .analogy-embed {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 4px;
+      padding: 0.2rem 0.45rem;
+      text-align: center;
+    }
+    .hint-text {
+      font-size: 1rem;
+      color: var(--text-dim);
+      text-align: center;
+      font-style: italic;
+    }
+
+    /* --- Visual Pipeline --- */
+    .viz-pipeline {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.2rem;
+      width: 100%;
+    }
+    .viz-hint-msg {
+      font-size: 1.05rem;
+      color: var(--text-dim);
+      text-align: center;
+      font-style: italic;
+      padding: 0.8rem 0;
+    }
+    .viz-step {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.3rem;
+      animation: vfadeIn 0.35s ease both;
+    }
+    @keyframes vfadeIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .viz-step-label {
+      font-size: 0.88rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-dim);
+      align-self: flex-start;
+    }
+    .viz-down-arrow {
+      font-size: 0.95rem;
+      color: var(--text-dim);
+      font-family: 'Fira Code', monospace;
+      font-weight: 600;
+      text-align: center;
+      animation: vfadeIn 0.3s ease both;
+    }
+    /* Channels row */
+    .channels-row { display: flex; gap: 1.6rem; align-items: flex-end; justify-content: center; }
+    .channel-block { display: flex; flex-direction: column; align-items: center; gap: 0.15rem; }
+    .channel-img {
+      width: 62px; height: 62px;
+      border-radius: 4px; border: 2px solid;
+      background-size: cover;
+    }
+    .channel-img.ch-r { border-color: #f87171; filter: grayscale(1) sepia(1) hue-rotate(0deg) saturate(6) brightness(0.8); }
+    .channel-img.ch-g { border-color: #4ade80; filter: grayscale(1) sepia(1) hue-rotate(100deg) saturate(4) brightness(0.8); }
+    .channel-img.ch-b { border-color: #60a5fa; filter: grayscale(1) sepia(1) hue-rotate(200deg) saturate(6) brightness(0.7); }
+    .ch-label { font-size: 0.9rem; font-family: 'Fira Code', monospace; font-weight: 700; }
+    .ch-label.r { color: #ef4444; }
+    .ch-label.g { color: #22c55e; }
+    .ch-label.b { color: #3b82f6; }
+    .ch-dim { font-size: 0.82rem; color: var(--text-dim); font-family: 'Fira Code', monospace; }
+    /* Flattened vector */
+    .flat-vector {
+      display: flex; width: 100%; height: 24px;
+      border-radius: 4px; overflow: hidden; border: 1.5px solid var(--border2);
+    }
+    .fv-seg {
+      height: 100%; flex: 1; display: flex;
+      align-items: center; justify-content: center;
+      font-size: 0.82rem; font-family: 'Fira Code', monospace;
+      font-weight: 700; color: rgba(255,255,255,0.95);
+    }
+    .fv-seg.r { background: #ef4444; }
+    .fv-seg.g { background: #22c55e; }
+    .fv-seg.b { background: #3b82f6; }
+    .flat-label { font-size: 0.9rem; font-family: 'Fira Code', monospace; color: var(--text-dim); text-align: center; }
+    /* Linear projection */
+    .proj-visual {
+      display: flex; align-items: center; justify-content: center;
+      gap: 0.25rem; flex-wrap: nowrap; width: 100%;
+    }
+    .proj-matrix-box {
+      background: var(--purple-lt); border: 1.5px solid #c4b5fd;
+      border-radius: 6px; padding: 0.3rem 0.5rem;
+      display: flex; flex-direction: column; align-items: center; gap: 0.05rem;
+    }
+    .proj-matrix-name { font-family: 'Fira Code', monospace; font-size: 1.25rem; font-weight: 700; color: var(--purple); line-height: 1; }
+    .proj-matrix-dims { font-family: 'Fira Code', monospace; font-size: 0.78rem; color: var(--purple); opacity: 0.85; }
+    .proj-vec-box {
+      background: var(--yellow-lt); border: 1.5px solid #fde047;
+      border-radius: 6px; padding: 0.3rem 0.45rem;
+      display: flex; flex-direction: column; align-items: center; gap: 0.05rem;
+    }
+    .proj-vec-name { font-family: 'Fira Code', monospace; font-size: 1.25rem; font-weight: 700; color: var(--yellow); line-height: 1; }
+    .proj-vec-dims { font-family: 'Fira Code', monospace; font-size: 0.78rem; color: var(--yellow); opacity: 0.85; }
+    .proj-op { font-size: 1.25rem; font-weight: 700; color: var(--text-dim); }
+    .proj-bias-box {
+      background: var(--bg3); border: 1.5px solid var(--border2);
+      border-radius: 6px; padding: 0.3rem 0.45rem;
+      display: flex; flex-direction: column; align-items: center; gap: 0.05rem;
+    }
+    .proj-bias-name { font-family: 'Fira Code', monospace; font-size: 1.25rem; font-weight: 700; color: var(--text); line-height: 1; }
+    .proj-bias-dims { font-family: 'Fira Code', monospace; font-size: 0.78rem; color: var(--text-dim); }
+    /* Embedding */
+    .emb-vector {
+      width: 100%; height: 16px; border-radius: 4px;
+      background: linear-gradient(90deg, #0d9488 0%, #7c3aed 50%, #0ea5e9 100%);
+      border: 1.5px solid #5eead4;
+    }
+    .emb-vals { font-family: 'Fira Code', monospace; font-size: 0.9rem; color: var(--teal); text-align: center; }
+    .emb-dim-label { font-family: 'Fira Code', monospace; font-size: 0.88rem; color: var(--text-dim); text-align: center; }
+    /* Embedding cells */
+    .emb-cells { display: flex; flex-wrap: nowrap; gap: 3px; overflow-x: auto; width: 100%; padding: 0.1rem 0 0.2rem; scrollbar-width: thin; scrollbar-color: #0d9488 #f3f4f6; align-items: center; }
+    .emb-cell { flex-shrink: 0; width: 28px; height: 28px; border-radius: 3px; cursor: default; }
+    .emb-ellipsis { flex-shrink: 0; font-size: 1.2rem; color: var(--text-dim); font-family: 'Fira Code', monospace; font-weight: 700; align-self: center; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">ViT</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 2 · Slide 2 / 2</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Patches como tokens visuais</h1>
+        <p class="slide-subtitle">Bloco 2 — Patches</p>
+      </div>
+
+      <div class="content-split" style="align-items:start;">
+        <!-- Left: Interactive patch grid -->
+        <div class="panel">
+          <span class="panel-title">Clique em um patch</span>
+          <p class="hint-text">Selecione um patch para ver como ele é transformado em embedding</p>
+
+          <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;margin-bottom:0.3rem;">
+            <span style="font-size:1.05rem;font-weight:600;color:var(--text-muted);">Patches:</span>
+            <div class="toggle-group">
+              <button class="btn-toggle" id="nbtn-2" onclick="setN(2)">2×2</button>
+              <button class="btn-toggle active" id="nbtn-4" onclick="setN(4)">4×4</button>
+              <button class="btn-toggle" id="nbtn-8" onclick="setN(8)">8×8</button>
+              <button class="btn-toggle" id="nbtn-16" onclick="setN(16)">16×16</button>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:center;">
+            <div class="patch-grid" id="patch-grid"></div>
+          </div>
+
+          <!-- Visual step-by-step pipeline -->
+          <div class="viz-pipeline" id="viz-pipeline">
+            <p class="viz-hint-msg" id="viz-hint">← Selecione um patch para ver o processo</p>
+
+            <!-- Step 1: RGB channels -->
+            <div class="viz-step" id="viz-step1" style="display:none;">
+              <span class="viz-step-label">1 · Canais de cor — P×P pixels cada</span>
+              <div class="channels-row">
+                <div class="channel-block">
+                  <div class="channel-img ch-r" id="ch-r"></div>
+                  <span class="ch-label r">R</span>
+                  <span class="ch-dim" id="ch-dim-r">P² px</span>
+                </div>
+                <div class="channel-block">
+                  <div class="channel-img ch-g" id="ch-g"></div>
+                  <span class="ch-label g">G</span>
+                  <span class="ch-dim" id="ch-dim-g">P² px</span>
+                </div>
+                <div class="channel-block">
+                  <div class="channel-img ch-b" id="ch-b"></div>
+                  <span class="ch-label b">B</span>
+                  <span class="ch-dim" id="ch-dim-b">P² px</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="viz-down-arrow" id="viz-arr1" style="display:none;">↓ achatar (flatten)</div>
+
+            <!-- Step 2: Flattened vector -->
+            <div class="viz-step" id="viz-step2" style="display:none;">
+              <span class="viz-step-label">2 · Vetor achatado — 3 canais concatenados</span>
+              <div class="flat-vector">
+                <div class="fv-seg r">R</div>
+                <div class="fv-seg g">G</div>
+                <div class="fv-seg b">B</div>
+              </div>
+              <span class="flat-label" id="flat-label">x ∈ ℝ^(P²·C) = ℝ^(P²·3)</span>
+            </div>
+
+            <div class="viz-down-arrow" id="viz-arr2" style="display:none;">↓ projeção linear</div>
+
+            <!-- Step 3: Linear projection -->
+            <div class="viz-step" id="viz-step3" style="display:none;">
+              <span class="viz-step-label">3 · Projeção linear — W · x + b</span>
+              <div class="proj-visual">
+                <div class="proj-matrix-box">
+                  <span class="proj-matrix-name">W</span>
+                  <span class="proj-matrix-dims" id="w-dims">d × P²C</span>
+                </div>
+                <span class="proj-op">·</span>
+                <div class="proj-vec-box">
+                  <span class="proj-vec-name">x</span>
+                  <span class="proj-vec-dims" id="x-dims">P²C × 1</span>
+                </div>
+                <span class="proj-op">+</span>
+                <div class="proj-bias-box">
+                  <span class="proj-bias-name">b</span>
+                  <span class="proj-bias-dims">d × 1</span>
+                </div>
+              </div>
+              <span style="font-size:0.82rem;color:var(--text-dim);font-family:'Fira Code',monospace;">↑ x = vetor achatado (passo 2)</span>
+            </div>
+
+            <div class="viz-down-arrow" id="viz-arr3" style="display:none;">↓</div>
+
+            <!-- Step 4: Embedding -->
+            <div class="viz-step" id="viz-step4" style="display:none;">
+              <span class="viz-step-label">4 · Embedding do patch</span>
+              <div class="emb-cells" id="emb-cells"></div>
+              <span class="emb-dim-label" style="margin-top:0.2rem;">e ∈ ℝ<sup>d</sup> &nbsp;(d = 768 no ViT-Base)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Analogy + explanation -->
+        <div class="panel">
+          <span class="panel-title">Analogia: texto vs. imagem</span>
+
+          <div class="analogy-row">
+            <div class="analogy-side">
+              <h4>Texto</h4>
+              <span class="analogy-token text">cachorro</span>
+              <span class="analogy-arrow">↓ embedding</span>
+              <span class="analogy-embed">[0.67, -0.23,<br>0.91, 0.14…]</span>
+            </div>
+            <div class="analogy-side">
+              <h4>Imagem</h4>
+              <div class="analogy-patch" style="background:linear-gradient(135deg,#60a5fa,#34d399);"></div>
+              <span class="analogy-arrow">↓ embedding</span>
+              <span class="analogy-embed">[0.23, -0.51,<br>0.84, 0.12…]</span>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="concept-cards" style="flex:0;">
+            <div class="concept-card" style="--delay:0.0s">
+              <span class="card-icon">✂️</span>
+              <div class="card-text">
+                <strong>Achatar (flatten)</strong>
+                <p>O patch P×P é convertido em um vetor de P²×C valores (C = canais de cor).</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.1s">
+              <span class="card-icon">🔢</span>
+              <div class="card-text">
+                <strong>Projeção linear</strong>
+                <p>Uma matriz W projeta o vetor achatado para o espaço de dimensão d do modelo.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.2s">
+              <span class="card-icon">🔗</span>
+              <div class="card-text">
+                <strong>Mesma dimensão</strong>
+                <p>Todos os patches geram embeddings com a mesma dimensão d — pronto para o encoder.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="insight-box">
+            <span class="i-icon">🧩</span>
+            <span class="i-text">Patches visuais são os <strong>'tokens' da imagem</strong> — cada um é transformado em um vetor denso de mesma dimensão.</span>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide02.html'">← Anterior</button>
+      <div class="nav-dots">
+        <div class="dot"></div>
+        <div class="dot active"></div>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide04.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    const GRID_PX = 220;
+    let N = 4;
+
+    // Embedding values per patch (arrays of numbers for bar chart)
+    const embedSnippets = [
+      [ 0.82,-0.14, 0.67, 0.23, 0.11,-0.38, 0.55, 0.19],
+      [ 0.79,-0.08, 0.71, 0.18, 0.09,-0.41, 0.52, 0.22],
+      [ 0.75, 0.11, 0.69, 0.25, 0.14,-0.35, 0.59, 0.17],
+      [ 0.81,-0.05, 0.73, 0.21, 0.11,-0.40, 0.54, 0.20],
+      [ 0.12, 0.74,-0.38, 0.56, 0.08,-0.29, 0.63, 0.15],
+      [ 0.09, 0.81,-0.41, 0.52, 0.13,-0.32, 0.61, 0.18],
+      [ 0.15, 0.77,-0.35, 0.59, 0.10,-0.28, 0.65, 0.12],
+      [ 0.11, 0.79,-0.40, 0.54, 0.07,-0.31, 0.58, 0.16],
+      [ 0.08, 0.69,-0.29, 0.63, 0.82,-0.14, 0.67, 0.23],
+      [ 0.13, 0.72,-0.32, 0.61, 0.79,-0.08, 0.71, 0.18],
+      [ 0.10, 0.70,-0.28, 0.65, 0.75, 0.11, 0.69, 0.25],
+      [ 0.07, 0.75,-0.31, 0.58, 0.81,-0.05, 0.73, 0.21],
+      [-0.23, 0.34, 0.58,-0.47,-0.19, 0.38, 0.61,-0.44],
+      [-0.19, 0.38, 0.61,-0.44,-0.21, 0.36, 0.55,-0.49],
+      [-0.21, 0.36, 0.55,-0.49,-0.25, 0.33, 0.59,-0.46],
+      [-0.25, 0.33, 0.59,-0.46,-0.23, 0.34, 0.58,-0.47],
+    ];
+
+    let selectedPatch = -1;
+
+    // Off-screen canvas for pixel extraction
+    const offCanvas = document.createElement('canvas');
+    const offCtx    = offCanvas.getContext('2d');
+    let imgReady    = false;
+    const srcImg    = new Image();
+    srcImg.onload   = () => {
+      offCanvas.width  = srcImg.naturalWidth;
+      offCanvas.height = srcImg.naturalHeight;
+      offCtx.drawImage(srcImg, 0, 0);
+      imgReady = true;
+    };
+    srcImg.src = 'illusion.png';
+
+    function setN(n) {
+      N = n;
+      [2, 4, 8, 16].forEach(v => {
+        const el = document.getElementById(`nbtn-${v}`);
+        if (el) el.classList.toggle('active', v === n);
+      });
+      selectedPatch = -1;
+      document.getElementById('viz-hint').style.display = '';
+      ['viz-step1','viz-arr1','viz-step2','viz-arr2','viz-step3','viz-arr3','viz-step4']
+        .forEach(id => { document.getElementById(id).style.display = 'none'; });
+      buildPatchGrid();
+    }
+
+    function buildPatchGrid() {
+      const cellPx = GRID_PX / N;
+      const grid = document.getElementById('patch-grid');
+      grid.innerHTML = '';
+      grid.style.gridTemplateColumns = `repeat(${N}, 1fr)`;
+      grid.style.gridTemplateRows    = `repeat(${N}, 1fr)`;
+      for (let i = 0; i < N * N; i++) {
+        const r = Math.floor(i / N), c = i % N;
+        const cell = document.createElement('div');
+        cell.className = 'patch-cell';
+        cell.style.backgroundImage    = `url('illusion.png')`;
+        cell.style.backgroundSize     = `${GRID_PX}px ${GRID_PX}px`;
+        cell.style.backgroundPosition = `${-(c * cellPx)}px ${-(r * cellPx)}px`;
+        cell.onclick = () => selectPatch(i);
+        grid.appendChild(cell);
+      }
+    }
+
+    const VIT_P   = 16;
+    const VIT_P2  = VIT_P * VIT_P;
+    const VIT_P2C = VIT_P2 * 3;
+
+    function getPatchPixels(row, col) {
+      if (!imgReady) return null;
+      const W = offCanvas.width, H = offCanvas.height;
+      const cW = W / N, cH = H / N;
+      const x = Math.round(col * cW), y = Math.round(row * cH);
+      const w = Math.max(1, Math.floor(cW)), h = Math.max(1, Math.floor(cH));
+      try { return offCtx.getImageData(x, y, w, h).data; } catch(e) { return null; }
+    }
+
+    function renderFlatCanvas(pixData, pw, ph) {
+      const canvas = document.getElementById('flat-canvas');
+      const parentW = canvas.parentElement ? (canvas.parentElement.clientWidth - 8) : 260;
+      const W = Math.max(parentW, 80);
+      const rowH = 8, gap = 1, labelW = 12;
+      const totalH = rowH * 3 + gap * 2;
+      canvas.width  = W;
+      canvas.height = totalH;
+      canvas.style.height = totalH + 'px';
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, W, totalH);
+      const totalPx  = pw * ph;
+      const barW     = W - labelW;
+      const cellW    = barW / totalPx;
+      const chColors = [[239,68,68],[34,197,94],[59,130,246]];
+      const chLabels = ['R','G','B'];
+      for (let ch = 0; ch < 3; ch++) {
+        const yOff = ch * (rowH + gap);
+        for (let px = 0; px < totalPx; px++) {
+          const val   = pixData ? pixData[px * 4 + ch] : 128;
+          const alpha = 0.08 + 0.92 * (val / 255);
+          const [r, g, b] = chColors[ch];
+          ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
+          ctx.fillRect(labelW + px * cellW, yOff, Math.max(cellW, 1), rowH);
+        }
+        ctx.font = 'bold 8px "Fira Code", monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = `rgba(${chColors[ch].join(',')},1)`;
+        ctx.fillText(chLabels[ch], labelW / 2, yOff + rowH / 2);
+      }
+    }
+
+    function renderEmbCells(vals) {
+      const container = document.getElementById('emb-cells');
+      container.innerHTML = '';
+      vals.forEach(v => {
+        const cell = document.createElement('div');
+        cell.className = 'emb-cell';
+        const t = Math.min(1, Math.abs(v));
+        const alpha = 0.18 + 0.82 * t;
+        cell.style.background = v >= 0
+          ? `rgba(13,148,136,${alpha})`
+          : `rgba(225,29,72,${alpha})`;
+        cell.title = v.toFixed(3);
+        container.appendChild(cell);
+      });
+      const dots = document.createElement('span');
+      dots.className = 'emb-ellipsis';
+      dots.textContent = '…';
+      container.appendChild(dots);
+      const dlbl = document.createElement('span');
+      dlbl.style.cssText = 'flex-shrink:0;font-size:0.82rem;font-family:"Fira Code",monospace;color:var(--teal);align-self:center;white-space:nowrap;margin-left:2px;';
+      dlbl.textContent = '[d=768]';
+      container.appendChild(dlbl);
+    }
+
+    function selectPatch(idx) {
+      const cells = document.querySelectorAll('.patch-cell');
+      cells.forEach(c => c.classList.remove('selected'));
+      cells[idx].classList.add('selected');
+      selectedPatch = idx;
+
+      const row = Math.floor(idx / N), col = idx % N;
+      const cellPx = GRID_PX / N;
+      const bgSize = `${GRID_PX}px ${GRID_PX}px`;
+      const bgPos  = `${-(col * cellPx)}px ${-(row * cellPx)}px`;
+
+      // Step 1: channel images
+      ['ch-r','ch-g','ch-b'].forEach(id => {
+        const el = document.getElementById(id);
+        el.style.backgroundImage    = `url('illusion.png')`;
+        el.style.backgroundSize     = bgSize;
+        el.style.backgroundPosition = bgPos;
+      });
+      const dimTxt = `${VIT_P}×${VIT_P} = ${VIT_P2} px`;
+      document.getElementById('ch-dim-r').textContent =
+      document.getElementById('ch-dim-g').textContent =
+      document.getElementById('ch-dim-b').textContent = dimTxt;
+
+      // Step 2: flat label
+      document.getElementById('flat-label').innerHTML =
+        `x ∈ ℝ<sup>(${VIT_P}²·3)</sup> = ℝ<sup>${VIT_P2C}</sup>`;
+
+      // Step 3: matrix dims
+      document.getElementById('w-dims').textContent = `768 × ${VIT_P2C}`;
+      document.getElementById('x-dims').textContent = `${VIT_P2C} × 1`;
+
+      // Step 4: embedding cells
+      renderEmbCells(embedSnippets[idx % embedSnippets.length]);
+
+      // Animate steps
+      document.getElementById('viz-hint').style.display = 'none';
+      const steps = ['viz-step1','viz-arr1','viz-step2','viz-arr2','viz-step3','viz-arr3','viz-step4'];
+      steps.forEach(id => {
+        const el = document.getElementById(id);
+        el.style.display = 'none';
+        el.style.animation = 'none';
+        void el.offsetWidth;
+      });
+      steps.forEach((id, i) => {
+        setTimeout(() => {
+          const el = document.getElementById(id);
+          el.style.display = id.startsWith('viz-arr') ? 'block' : 'flex';
+          el.style.animation = 'vfadeIn 0.3s ease both';
+        }, i * 110);
+      });
+
+      // Analogy patch
+      const aBox = 40;
+      const ap   = document.querySelector('.analogy-patch');
+      ap.style.backgroundImage    = `url('illusion.png')`;
+      ap.style.backgroundSize     = `${aBox * N}px ${aBox * N}px`;
+      ap.style.backgroundPosition = `${-(col * aBox)}px ${-(row * aBox)}px`;
+    }
+
+    buildPatchGrid();
+  </script>
+</body>
+</html>

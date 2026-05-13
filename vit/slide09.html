@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 09 – Bloco Encoder do ViT</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .slide-main { gap: 0.65rem; }
+
+    /* ── encoder block panel ── */
+    .enc-outer {
+      display: flex; gap: 1.5rem; align-items: flex-start; flex: 1;
+    }
+
+    /* SVG diagram wrapper */
+    .enc-svg-wrap { flex-shrink: 0; position: relative; display: flex; flex-direction: column; align-items: center; }
+
+    /* Info panel */
+    .enc-info {
+      flex: 1;
+      background: var(--bg3); border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm); padding: 1rem 1.2rem;
+      transition: border-color 0.25s, background 0.25s;
+      display: flex; flex-direction: column; gap: 0.6rem;
+    }
+    .enc-info.highlight { border-color: var(--active-border); background: var(--active-bg); }
+    .enc-info-title {
+      font-family: 'Fira Code', monospace; font-weight: 700; font-size: 1rem;
+    }
+    .enc-info-formula {
+      font-family: 'Fira Code', monospace; font-size: 0.85rem; font-weight: 700;
+      padding: 0.32rem 0.75rem; border-radius: 6px;
+      background: var(--bg2); border: 1.5px solid var(--border2);
+      color: var(--teal); display: inline-block;
+    }
+    .enc-info-text {
+      font-size: 0.93rem; color: var(--text-muted); line-height: 1.6;
+    }
+    .enc-info-placeholder {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 0.5rem; flex: 1; opacity: 0.7;
+    }
+
+    /* repeat label */
+    .enc-repeat-lbl {
+      font-family: 'Fira Code', monospace; font-size: 0.72rem; font-weight: 700;
+      color: var(--text-dim); text-align: center; letter-spacing: 0.04em;
+      margin-bottom: 0.4rem;
+    }
+
+    /* formula summary */
+    .formula-summary {
+      display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center;
+      padding: 0.5rem 0.9rem;
+      background: var(--bg3); border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      font-family: 'Fira Code', monospace; font-size: 0.82rem;
+    }
+    .formula-summary .lbl { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); margin-right: 0.2rem; }
+    .formula-summary .f1  { color: var(--teal);   font-weight: 700; }
+    .formula-summary .sep { color: var(--text-dim); }
+    .formula-summary .f2  { color: var(--purple); font-weight: 700; }
+
+    /* block legend pills */
+    .legend-row { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+    .leg-pill {
+      padding: 0.18rem 0.6rem; border-radius: 999px;
+      font-family: 'Fira Code', monospace; font-size: 0.75rem; font-weight: 700;
+      border: 1.5px solid; cursor: pointer; transition: opacity 0.15s;
+    }
+    .leg-pill:hover { opacity: 0.8; }
+    .leg-pill.ln  { background: #fef9c3; border-color: #fde047; color: #854d0e; }
+    .leg-pill.mha { background: var(--teal-lt);   border-color: #5eead4; color: var(--teal); }
+    .leg-pill.res { background: var(--green-lt);  border-color: #86efac; color: var(--green); }
+    .leg-pill.mlp { background: var(--purple-lt); border-color: #c4b5fd; color: var(--purple); }
+
+    /* SVG clickable blocks */
+    .enc-block-rect { cursor: pointer; transition: filter 0.18s; }
+    .enc-block-rect:hover { filter: brightness(0.9); }
+    .enc-block-rect.active-block { filter: drop-shadow(0 0 6px rgba(0,0,0,0.3)); }
+
+    /* ── LayerNorm numerical example ── */
+    .ln-example {
+      display: flex; flex-direction: column; gap: 0.42rem;
+      font-family: 'Fira Code', monospace; margin-top: 0.2rem;
+    }
+    .ln-row-label {
+      font-size: 0.73rem; font-weight: 700; color: #854d0e;
+    }
+    .ln-vec-row { display: flex; gap: 0.3rem; }
+    .ln-cell {
+      flex: 1; height: 50px; position: relative; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden; border: 1.5px solid;
+    }
+    .ln-cell span {
+      position: relative; z-index: 1;
+      font-size: 0.75rem; font-weight: 700;
+    }
+    .ln-cell::after {
+      content: ''; position: absolute; left: 0; right: 0;
+      background: currentColor; opacity: 0.2;
+    }
+    .ln-inp::after  { bottom: 0; height: var(--h); }
+    .ln-pos::after  { bottom: 0; height: var(--h); }
+    .ln-neg::after  { top: 0;    height: var(--h); }
+    .ln-out-pos::after { bottom: 0; height: var(--h); }
+    .ln-out-neg::after { top: 0;    height: var(--h); }
+    .ln-inp     { background: #fef9c3; color: #854d0e; border-color: #fde047; }
+    .ln-pos     { background: #f0fdf4; color: #166534; border-color: #86efac; }
+    .ln-neg     { background: #eff6ff; color: #1d4ed8; border-color: #93c5fd; }
+    .ln-out-pos { background: #f0fdf4; color: #166534; border-color: #4ade80; }
+    .ln-out-neg { background: #eff6ff; color: #1d4ed8; border-color: #60a5fa; }
+    .ln-stats-row {
+      display: flex; gap: 0.45rem; align-items: center; flex-wrap: wrap;
+    }
+    .ln-stat-box {
+      background: #fef9c3; border: 1.5px solid #fde047; color: #854d0e;
+      border-radius: 4px; padding: 0.12rem 0.5rem;
+      font-size: 0.78rem; font-weight: 700;
+    }
+    .ln-stat-note { font-size: 0.7rem; color: var(--text-dim); }
+    .ln-op-arrow {
+      font-size: 0.71rem; color: #854d0e; font-weight: 700;
+      text-align: center; background: #fef9c3;
+      border-radius: 4px; padding: 0.12rem 0.4rem;
+      border: 1px solid #fde047;
+    }
+
+    /* ── MLP visual ── */
+    .mlp-example {
+      display: flex; flex-direction: column; gap: 0.42rem;
+      font-family: 'Fira Code', monospace;
+    }
+    .mlp-section-label { font-size: 0.73rem; font-weight: 700; color: #6d28d9; }
+    .mlp-tokens-grid {
+      display: flex; border: 1.5px solid #c4b5fd; border-radius: 6px; overflow: hidden;
+    }
+    .mlp-tok-col {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      gap: 0.17rem; padding: 0.25rem 0.12rem;
+      border-right: 1px dashed #c4b5fd;
+    }
+    .mlp-tok-col:last-child { border-right: none; }
+    .mlp-tok-label { font-size: 0.67rem; color: #6d28d9; font-weight: 700; }
+    .mlp-tok-vec {
+      width: 92%; background: #ede9fe; border: 1px solid #c4b5fd;
+      border-radius: 4px; padding: 0.1rem; text-align: center;
+      font-size: 0.65rem; color: #5b21b6; font-weight: 700;
+    }
+    .mlp-w-box {
+      font-size: 0.62rem; color: #7c3aed; font-weight: 700;
+      background: #f5f3ff; border: 1px solid #ddd6fe;
+      border-radius: 3px; padding: 0.07rem 0.25rem; text-align: center; width: 92%;
+    }
+    .mlp-arrow-down { font-size: 0.63rem; color: #7c3aed; line-height: 1.1; }
+    .mlp-no-comm {
+      font-size: 0.66rem; color: var(--text-dim); font-style: italic; text-align: center;
+    }
+    .mlp-eq-row {
+      font-size: 0.74rem; background: #f5f3ff;
+      border: 1.5px solid #ddd6fe; border-radius: 4px;
+      padding: 0.18rem 0.5rem; display: flex; align-items: center;
+      gap: 0.4rem; flex-wrap: wrap;
+    }
+    .mlp-dim-tag {
+      font-size: 0.65rem; background: #ede9fe; border: 1px solid #c4b5fd;
+      border-radius: 3px; padding: 0.04rem 0.3rem; color: #6d28d9; font-weight: 700;
+      white-space: nowrap;
+    }
+    .mlp-matrix-wrap { display: flex; flex-direction: column; gap: 0.35rem; }
+    .mlp-matrix-row {
+      display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+      font-family: 'Fira Code', monospace;
+    }
+    .mlp-matrix-label {
+      font-size: 0.7rem; font-weight: 700; color: #6d28d9; min-width: 2.3rem;
+    }
+    .mlp-matrix {
+      display: grid; gap: 0.18rem; padding: 0.25rem;
+      background: #f5f3ff; border: 1.5px solid #ddd6fe; border-radius: 6px;
+    }
+    .mlp-matrix.w { grid-template-columns: repeat(2, 1fr); width: 130px; }
+    .mlp-matrix.x { grid-template-columns: repeat(2, 1fr); width: 140px; }
+    .mlp-matrix.b { grid-template-columns: 1fr; width: 62px; }
+    .mlp-matrix.h { grid-template-columns: repeat(3, 1fr); width: 180px; }
+    .mlp-cell {
+      height: 26px; display: flex; align-items: center; justify-content: center;
+      border-radius: 4px; border: 1px solid #c4b5fd;
+      font-size: 0.65rem; font-weight: 700; color: #5b21b6;
+      background: #ede9fe; cursor: default; user-select: none;
+    }
+    .mlp-cell.h { cursor: pointer; background: #faf5ff; }
+    .mlp-cell.active {
+      background: #c4b5fd; color: #312e81; border-color: #8b5cf6;
+      box-shadow: 0 0 0 2px rgba(124,58,237,0.25) inset;
+    }
+    .mlp-matrix-op {
+      font-size: 0.85rem; font-weight: 700; color: #7c3aed;
+      padding: 0.1rem 0.25rem;
+    }
+    .mlp-matrix-note {
+      font-size: 0.66rem; color: var(--text-dim); font-style: italic;
+    }
+    .gelu-eq {
+      font-size: 0.74rem; background: #f5f3ff; color: #5b21b6;
+      border: 1.5px solid #ddd6fe; border-radius: 4px;
+      padding: 0.18rem 0.5rem; line-height: 1.45;
+    }
+
+    /* ── mat-t table (adapted from slide08 style) ── */
+    .mat-wrap { display: flex; flex-direction: column; gap: 0.18rem; align-items: center; }
+    .mat-name { font-family: 'Fira Code', monospace; font-size: 0.78rem; font-weight: 700; color: #6d28d9; text-align: center; }
+    .mat-t { font-family: 'Fira Code', monospace; font-size: 0.72rem; border-collapse: separate; border-spacing: 2px; }
+    .mat-t th { font-size: 0.63rem; color: var(--text-dim); padding: 0 0.18rem; font-weight: 600; text-align: center; }
+    .mat-t td { padding: 0.12rem 0.28rem; text-align: center; min-width: 2rem; border-radius: 3px; background: #f5f3ff; border: 1px solid #e9d5ff; white-space: nowrap; font-weight: 700; color: #5b21b6; }
+    .mat-t td.row-lbl { text-align: right; font-weight: 700; color: #6d28d9; background: transparent !important; border: none; min-width: 1.5rem; }
+    .mat-t tr.cls-row td { background: rgba(196,181,253,0.3) !important; border-color: #c4b5fd; }
+    .mat-t tr.cls-row td.row-lbl { color: var(--purple); }
+    .mat-t td.h-cell { cursor: pointer; }
+    .mat-t td.h-cell:hover { background: #e9d5ff !important; }
+    .mat-t td.active { background: #c4b5fd !important; color: #312e81 !important; border-color: #8b5cf6; outline: 1.5px solid rgba(124,58,237,0.4); outline-offset: -1px; }
+
+    /* ── LN γ/β sliders ── */
+    .ln-slider-grid {
+      display: grid; grid-template-columns: auto 1fr auto;
+      gap: 0.06rem 0.22rem; align-items: center;
+      font-family: 'Fira Code', monospace; font-size: 0.63rem;
+      color: #92400e; margin-bottom: 0.22rem; min-width: 130px;
+    }
+    .ln-slider-grid input[type=range] {
+      width: 76px; accent-color: #d97706; cursor: pointer;
+      height: 14px; margin: 0;
+    }
+    .ln-slider-grid .sv { min-width: 2.1rem; text-align: right; font-weight: 700; color: #854d0e; }
+  </style>
+</head>
+<body>
+<div class="slide-container">
+
+  <!-- ── HEADER ── -->
+  <header class="slide-header">
+    <span class="course-tag">ViT</span>
+    <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+    <span class="slide-counter">Bloco 5 · Slide 2 / 2</span>
+  </header>
+
+  <!-- ── MAIN ── -->
+  <main class="slide-main">
+
+    <!-- Title -->
+    <div class="title-block" style="padding:0.4rem 0 0;">
+      <h1 class="slide-title">Bloco Encoder do ViT</h1>
+      <p class="slide-subtitle">LN → MHA → ⊕ → LN → MLP → ⊕ — repetido L vezes para cada token</p>
+    </div>
+
+    <!-- Legend / click hints -->
+    <div style="display:flex;align-items:center;gap:0.8rem;flex-wrap:wrap;">
+      <span style="font-size:0.8rem;color:var(--text-dim);">Clique para ver a descrição:</span>
+      <div class="legend-row">
+        <span class="leg-pill ln"  onclick="selectBlock('r-ln1')">Layer Norm</span>
+        <span class="leg-pill mha" onclick="selectBlock('r-mha')">Multi-Head Attention</span>
+        <span class="leg-pill res" onclick="selectBlock('r-add1')">Resíduo ⊕</span>
+        <span class="leg-pill mlp" onclick="selectBlock('r-mlp')">MLP / FFN</span>
+      </div>
+    </div>
+
+    <!-- Main encoder diagram + info panel -->
+    <div class="enc-outer">
+
+      <!-- SVG Diagram -->
+      <div class="enc-svg-wrap">
+        <div class="enc-repeat-lbl">repetido L vezes</div>
+        <svg id="encSvg"
+             viewBox="0 0 240 420"
+             width="240"
+             style="display:block; overflow:visible;"
+             xmlns="http://www.w3.org/2000/svg">
+
+          <defs>
+            <marker id="arr" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+              <polygon points="0 0, 7 2.5, 0 5" fill="#6b7fa3" opacity="0.7"/>
+            </marker>
+            <marker id="arr-skip" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+              <polygon points="0 0, 7 2.5, 0 5" fill="#6b7fa3" opacity="0.5"/>
+            </marker>
+          </defs>
+
+          <!-- dashed repeat border -->
+          <rect x="8" y="26" width="214" height="356" rx="12"
+                fill="none" stroke="#d1d9e8" stroke-width="2"
+                stroke-dasharray="7 4" opacity="0.8"/>
+
+          <!-- Input label -->
+          <text x="120" y="16" text-anchor="middle"
+                font-family="'Fira Code',monospace" font-size="11" font-weight="700"
+                fill="#6b7fa3">entrada  x  (sequência de tokens)</text>
+
+          <!-- Input → branch1 -->
+          <line x1="120" y1="18" x2="120" y2="34"
+                stroke="#6b7fa3" stroke-width="1.5" opacity="0.6" marker-end="url(#arr)"/>
+
+          <!-- Branch 1 node -->
+          <circle cx="120" cy="36" r="3.5" fill="#6b7fa3" opacity="0.55"/>
+
+          <!-- Skip 1 -->
+          <line x1="123.5" y1="36" x2="208" y2="36"
+                stroke="#6b7fa3" stroke-width="1.5" opacity="0.4" stroke-dasharray="5 3"/>
+          <line x1="208" y1="36" x2="208" y2="180"
+                stroke="#6b7fa3" stroke-width="1.5" opacity="0.4" stroke-dasharray="5 3"/>
+          <line x1="208" y1="180" x2="143" y2="180"
+                stroke="#6b7fa3" stroke-width="1.5" opacity="0.4"
+                stroke-dasharray="5 3" marker-end="url(#arr-skip)"/>
+          <text x="215" y="107" text-anchor="start"
+                font-family="'Fira Code',monospace" font-size="8" fill="#6b7fa3"
+                transform="rotate(90,215,107)">resíduo 1</text>
+
+          <!-- branch1 → LN1 -->
+          <line x1="120" y1="36" x2="120" y2="48"
+                stroke="#6b7fa3" stroke-width="1.5" opacity="0.6" marker-end="url(#arr)"/>
+
+          <!-- LN1 -->
+          <rect id="r-ln1" class="enc-block-rect"
+                x="30" y="50" width="178" height="40" rx="8"
+                fill="#fef9c3" stroke="#fde047" stroke-width="2"/>
+          <text x="119" y="66" text-anchor="middle" pointer-events="none"
+                font-family="'Fira Code',monospace" font-size="14" font-weight="700"
+                fill="#854d0e">Layer Norm  (LN₁)</text>
+          
+
+          <!-- LN1 → MHA -->
+          <line x1="120" y1="90" x2="120" y2="104"
+                stroke="#6b7fa3" stroke-width="1.5" opacity="0.6" marker-end="url(#arr)"/>
+
+          <!-- MHA -->
+          <rect id="r-mha" class="enc-block-rect"
+                x="30" y="106" width="178" height="44" rx="8"
+                fill="#ccfbf1" stroke="#5eead4" stroke-width="2"/>
+          <text x="119" y="124" text-anchor="middle" pointer-events="none"
+                font-family="'Fira Code',monospace" font-size="14" font-weight="700"
+                fill="#0d6e6e">Multi-Head Attention</text>
+          
+
+          <!-- MHA → Add1 -->
+          <line x1="120" y1="150" x2="120" y2="166"
+                stroke="#6b7fa3" stroke-width="1.5" opacity="0.6" marker-end="url(#arr)"/>
+
+          <!-- Add1 -->
+          <circle id="r-add1" class="enc-block-rect"
+                  cx="120" cy="180" r="15"
+                  fill="#dcfce7" stroke="#86efac" stroke-width="2"/>
+          <text x="120" y="185" text-anchor="middle" pointer-events="none"
+                font-family="'Fira Code',monospace" font-size="16" font-weight="700"
+                fill="#166534">⊕</text>
+
+          <!-- Add1 → branch2 -->
+          <line x1="120" y1="195" x2="120" y2="212"
+                stroke="#6b7fa3" stroke-width="1.5" opacity="0.6" marker-end="url(#arr)"/>
+
+          <!-- Branch 2 node -->
+          <circle cx="120" cy="214" r="3.5" fill="#6b7fa3" opacity="0.55"/>
+
+          <!-- Skip 2 -->
+          <line x1="123.5" y1="214" x2="208" y2="214"
+                stroke="#6b7fa3" stroke-width="1.5" opacity="0.4" stroke-dasharray="5 3"/>
+          <line x1="208" y1="214" x2="208" y2="348"
+                stroke="#6b7fa3" stroke-width="1.5" opacity="0.4" stroke-dasharray="5 3"/>
+          <line x1="208" y1="348" x2="143" y2="348"
+                stroke="#6b7fa3" stroke-width="1.5" opacity="0.4"
+                stroke-dasharray="5 3" marker-end="url(#arr-skip)"/>
+          <text x="215" y="278" text-anchor="start"
+                font-family="'Fira Code',monospace" font-size="8" fill="#6b7fa3"
+                transform="rotate(90,215,278)">resíduo 2</text>
+
+          <!-- branch2 → LN2 -->
+          <line x1="120" y1="214" x2="120" y2="228"
+                stroke="#6b7fa3" stroke-width="1.5" opacity="0.6" marker-end="url(#arr)"/>
+
+          <!-- LN2 -->
+          <rect id="r-ln2" class="enc-block-rect"
+                x="30" y="230" width="178" height="40" rx="8"
+                fill="#fef9c3" stroke="#fde047" stroke-width="2"/>
+          <text x="119" y="246" text-anchor="middle" pointer-events="none"
+                font-family="'Fira Code',monospace" font-size="14" font-weight="700"
+                fill="#854d0e">Layer Norm  (LN₂)</text>
+         
+
+          <!-- LN2 → MLP -->
+          <line x1="120" y1="270" x2="120" y2="284"
+                stroke="#6b7fa3" stroke-width="1.5" opacity="0.6" marker-end="url(#arr)"/>
+
+          <!-- MLP -->
+          <rect id="r-mlp" class="enc-block-rect"
+                x="30" y="286" width="178" height="44" rx="8"
+                fill="#ede9fe" stroke="#c4b5fd" stroke-width="2"/>
+          <text x="119" y="304" text-anchor="middle" pointer-events="none"
+                font-family="'Fira Code',monospace" font-size="14" font-weight="700"
+                fill="#6d28d9">MLP / Feed-Forward</text>
+          
+
+          <!-- MLP → Add2 -->
+          <line x1="120" y1="330" x2="120" y2="333"
+                stroke="#6b7fa3" stroke-width="1.5" opacity="0.6" marker-end="url(#arr)"/>
+
+          <!-- Add2 -->
+          <circle id="r-add2" class="enc-block-rect"
+                  cx="120" cy="348" r="15"
+                  fill="#dcfce7" stroke="#86efac" stroke-width="2"/>
+          <text x="120" y="353" text-anchor="middle" pointer-events="none"
+                font-family="'Fira Code',monospace" font-size="16" font-weight="700"
+                fill="#166534">⊕</text>
+
+          <!-- Add2 → output -->
+          <line x1="120" y1="363" x2="120" y2="380"
+                stroke="#6b7fa3" stroke-width="1.5" opacity="0.6" marker-end="url(#arr)"/>
+
+          <!-- Output label -->
+          <text x="120" y="394" text-anchor="middle"
+                font-family="'Fira Code',monospace" font-size="11" font-weight="700"
+                fill="#6b7fa3">saída  x'  (mesma forma que entrada)</text>
+
+        </svg>
+      </div><!-- /enc-svg-wrap -->
+
+      <!-- Info Panel (right side) -->
+      <div class="enc-info" id="encInfo" style="min-height:360px;">
+        <div class="enc-info-placeholder">
+          <div style="font-size:2rem;">←</div>
+          <p style="text-align:center;color:var(--text-dim);font-style:italic;font-size:0.92rem;">
+            Clique em um bloco do diagrama<br/>para ver a explicação detalhada
+          </p>
+          <div class="legend-row" style="justify-content:center;margin-top:0.5rem;">
+            <span class="leg-pill ln"  onclick="selectBlock('r-ln1')">LN₁</span>
+            <span class="leg-pill mha" onclick="selectBlock('r-mha')">MHA</span>
+            <span class="leg-pill res" onclick="selectBlock('r-add1')">⊕₁</span>
+            <span class="leg-pill ln"  onclick="selectBlock('r-ln2')">LN₂</span>
+            <span class="leg-pill mlp" onclick="selectBlock('r-mlp')">MLP</span>
+            <span class="leg-pill res" onclick="selectBlock('r-add2')">⊕₂</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /enc-outer -->
+
+    <!-- Formula summary -->
+    <div class="formula-summary" style="flex-direction:column;align-items:flex-start;gap:0.3rem;">
+      <span class="lbl">Fórmula compacta:</span>
+      <span class="f1">x' &nbsp;= x &nbsp;+ MHA(LN(x))</span>
+      <span class="f2">x'' = x' + MLP(LN(x'))</span>
+      <span style="color:var(--text-dim);font-size:0.76rem;">— aplicado a todos os tokens (inclusive [CLS]) em paralelo</span>
+    </div>
+
+    <!-- Insight box -->
+    <div class="insight-box">
+      <span class="i-icon">🧠</span>
+      <div class="i-text">
+        "Cada bloco encoder refina a representação de <strong>todos os tokens</strong> — incluindo [CLS] —
+        combinando atenção global (MHA) e transformação não-linear por token (MLP).
+        As conexões residuais garantem que o gradiente flua mesmo em redes com dezenas de camadas."
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ── NAV ── -->
+  <nav class="slide-nav">
+    <button class="btn-nav btn-prev" onclick="location.href='slide08.html'">← Anterior</button>
+    <div class="nav-dots" id="navDots"></div>
+    <button class="btn-nav btn-next" onclick="location.href='slide10.html'">Próximo →</button>
+  </nav>
+
+</div><!-- /slide-container -->
+
+<script>
+// ──────────────────────────────────────────────────
+// Encoder block info data
+// ──────────────────────────────────────────────────
+const BLOCK_INFO = {
+  'r-ln1': {
+    title: 'Layer Norm 1  (LN₁)',
+    formula: 'LN(x) = (x − μ) / σ · γ + β',
+    color: '#854d0e',
+    borderColor: '#fde047',
+    bg: '#fefce8',
+    text: `Normaliza cada token ao longo de d<sub>model</sub>: subtrai μ e divide por σ,
+           depois reescala com parâmetros aprendíveis γ e β.
+           Configuração <strong>Pre-Norm</strong> — aplicada <em>antes</em> do MHA,
+           estabiliza as ativações em redes profundas.`,
+    visual: `<div class="ln-example">
+  <div class="ln-row-label">LN: normaliza cada token ao longo de d, independentemente</div>
+  <div style="display:flex;align-items:center;gap:0.4rem;flex-wrap:nowrap;overflow-x:auto;padding-bottom:0.2rem;margin-top:0.2rem;">
+    <div class="mat-wrap">
+      <div class="mat-name" style="color:#854d0e;">X (entrada)</div>
+      <table class="mat-t">
+        <thead><tr><th></th><th>d₁</th><th>d₂</th></tr></thead>
+        <tbody>
+          <tr><td class="row-lbl" style="color:#92400e;">[C]</td><td style="background:#fef9c3;border-color:#fde047;color:#854d0e;">2</td><td style="background:#fef9c3;border-color:#fde047;color:#854d0e;">6</td></tr>
+          <tr><td class="row-lbl" style="color:#92400e;">P₁</td><td style="background:#fef9c3;border-color:#fde047;color:#854d0e;">3</td><td style="background:#fef9c3;border-color:#fde047;color:#854d0e;">1</td></tr>
+          <tr><td class="row-lbl" style="color:#92400e;">P₂</td><td style="background:#fef9c3;border-color:#fde047;color:#854d0e;">5</td><td style="background:#fef9c3;border-color:#fde047;color:#854d0e;">3</td></tr>
+          <tr><td class="row-lbl" style="color:#92400e;">P₃</td><td style="background:#fef9c3;border-color:#fde047;color:#854d0e;">1</td><td style="background:#fef9c3;border-color:#fde047;color:#854d0e;">7</td></tr>
+          <tr><td class="row-lbl" style="color:#92400e;">P₄</td><td style="background:#fef9c3;border-color:#fde047;color:#854d0e;">4</td><td style="background:#fef9c3;border-color:#fde047;color:#854d0e;">2</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="font-size:1rem;color:#854d0e;font-weight:700;">→</div>
+    <div class="mat-wrap">
+      <div class="mat-name" style="color:#854d0e;">μ &nbsp; σ</div>
+      <table class="mat-t">
+        <thead><tr><th>μ</th><th>σ</th></tr></thead>
+        <tbody>
+          <tr><td>4.0</td><td>2.0</td></tr>
+          <tr><td>2.0</td><td>1.0</td></tr>
+          <tr><td>4.0</td><td>1.0</td></tr>
+          <tr><td>4.0</td><td>3.0</td></tr>
+          <tr><td>3.0</td><td>1.0</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="font-size:1rem;color:#854d0e;font-weight:700;">→</div>
+    <div class="mat-wrap">
+      <div class="mat-name" style="color:#854d0e;">X̂ = (X−μ)/σ</div>
+      <table class="mat-t">
+        <thead><tr><th></th><th>d₁</th><th>d₂</th></tr></thead>
+        <tbody>
+          <tr><td class="row-lbl" style="color:#92400e;">[C]</td><td style="background:#eff6ff;border-color:#93c5fd;color:#1d4ed8;">−1.0</td><td style="background:#f0fdf4;border-color:#86efac;color:#166534;">+1.0</td></tr>
+          <tr><td class="row-lbl" style="color:#92400e;">P₁</td><td style="background:#f0fdf4;border-color:#86efac;color:#166534;">+1.0</td><td style="background:#eff6ff;border-color:#93c5fd;color:#1d4ed8;">−1.0</td></tr>
+          <tr><td class="row-lbl" style="color:#92400e;">P₂</td><td style="background:#f0fdf4;border-color:#86efac;color:#166534;">+1.0</td><td style="background:#eff6ff;border-color:#93c5fd;color:#1d4ed8;">−1.0</td></tr>
+          <tr><td class="row-lbl" style="color:#92400e;">P₃</td><td style="background:#eff6ff;border-color:#93c5fd;color:#1d4ed8;">−1.0</td><td style="background:#f0fdf4;border-color:#86efac;color:#166534;">+1.0</td></tr>
+          <tr><td class="row-lbl" style="color:#92400e;">P₄</td><td style="background:#f0fdf4;border-color:#86efac;color:#166534;">+1.0</td><td style="background:#eff6ff;border-color:#93c5fd;color:#1d4ed8;">−1.0</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="ln-slider-grid" style="align-self:center;">
+      <span>γ<sub>1</sub></span><input type="range" id="ln1-g1" min="-3" max="3" step="0.5" value="1"><span class="sv" id="ln1-g1-val">1.0</span>
+      <span>γ<sub>2</sub></span><input type="range" id="ln1-g2" min="-3" max="3" step="0.5" value="1"><span class="sv" id="ln1-g2-val">1.0</span>
+      <span>β<sub>1</sub></span><input type="range" id="ln1-b1" min="-3" max="3" step="0.5" value="0"><span class="sv" id="ln1-b1-val">0.0</span>
+      <span>β<sub>2</sub></span><input type="range" id="ln1-b2" min="-3" max="3" step="0.5" value="0"><span class="sv" id="ln1-b2-val">0.0</span>
+    </div>
+    <div style="font-size:1rem;color:#854d0e;font-weight:700;">→</div>
+    <div class="mat-wrap">
+      <div class="mat-name" style="color:#854d0e;">γ·X̂ + β</div>
+      <table class="mat-t">
+        <thead><tr><th></th><th>d₁</th><th>d₂</th></tr></thead>
+        <tbody>
+          <tr><td class="row-lbl" style="color:#92400e;">[C]</td><td id="ln1-o-0-0"></td><td id="ln1-o-0-1"></td></tr>
+          <tr><td class="row-lbl" style="color:#92400e;">P₁</td><td id="ln1-o-1-0"></td><td id="ln1-o-1-1"></td></tr>
+          <tr><td class="row-lbl" style="color:#92400e;">P₂</td><td id="ln1-o-2-0"></td><td id="ln1-o-2-1"></td></tr>
+          <tr><td class="row-lbl" style="color:#92400e;">P₃</td><td id="ln1-o-3-0"></td><td id="ln1-o-3-1"></td></tr>
+          <tr><td class="row-lbl" style="color:#92400e;">P₄</td><td id="ln1-o-4-0"></td><td id="ln1-o-4-1"></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="ln-op-arrow">▼ &nbsp;γ · X̂ + β &nbsp;— γ escala, β desloca; arraste os sliders para explorar</div>
+  <div class="ln-stat-note">γ=1 β=0: saída = X̂ (neutro). Com d=2 o X̂ é sempre ±1; em produção d≫2 e γ,β variam por dimensão.</div>
+</div>`,
+  },
+  'r-mha': {
+    title: 'Multi-Head Attention  (MHA)',
+    formula: 'MHA(Q,K,V) = Concat(head₁,…,headₕ) · Wᴼ',
+    color: '#0d6e6e',
+    borderColor: '#5eead4',
+    bg: '#f0fdf9',
+    text: `Cada token (incluindo [CLS]) projeta sua representação em três matrizes:
+           Q (pergunta), K (chave) e V (valor), via pesos <em>W<sup>Q</sup>, W<sup>K</sup>, W<sup>V</sup></em>.<br><br>
+           A pontuação de atenção entre todo par de tokens é calculada em paralelo —
+           sem restrição espacial. Isso permite que <strong>[CLS] "ouça" todos os patches</strong>
+           de uma vez. Com <em>h</em> cabeças, diferentes subespaços de atenção são aprendidos
+           simultaneamente.`,
+  },
+  'r-add1': {
+    title: 'Conexão Residual 1  (⊕)',
+    formula: 'x ← x + MHA(LN₁(x))',
+    color: '#166534',
+    borderColor: '#86efac',
+    bg: '#f0fdf4',
+    text: `Soma o vetor de entrada <em>x</em> (antes do LN₁) com a saída do MHA.
+           Esse atalho cria um <strong>caminho direto de gradiente</strong>: o bloco aprende
+           apenas o <em>refinamento</em> a adicionar, não uma transformação do zero.<br><br>
+           Sem conexões residuais, o gradiente desaparece em redes com muitas camadas
+           (vanishing gradient). Com elas, o ViT pode ser treinado com 12, 24 ou mais blocos.`,
+  },
+  'r-ln2': {
+    title: 'Layer Norm 2  (LN₂)',
+    formula: 'LN(x) = (x − μ) / σ · γ + β',
+    color: '#854d0e',
+    borderColor: '#fde047',
+    bg: '#fefce8',
+    text: `Mesma operação que LN₁, mas com parâmetros γ₂ e β₂ <em>independentes</em>.
+           Aplicada após o primeiro resíduo e antes do MLP.
+           Reapronta as ativações para a camada não-linear.`,
+    visual: `<div class="ln-example">
+  <div class="ln-row-label">LN₂: mesma operação, parâmetros γ₂ e β₂ independentes de LN₁</div>
+  <div style="display:flex;align-items:center;gap:0.4rem;flex-wrap:nowrap;overflow-x:auto;padding-bottom:0.2rem;margin-top:0.2rem;">
+    <div class="mat-wrap">
+      <div class="mat-name" style="color:#854d0e;">X (entrada)</div>
+      <table class="mat-t">
+        <thead><tr><th></th><th>d₁</th><th>d₂</th></tr></thead>
+        <tbody>
+          <tr><td class="row-lbl" style="color:#92400e;">[C]</td><td style="background:#fef9c3;border-color:#fde047;color:#854d0e;">2</td><td style="background:#fef9c3;border-color:#fde047;color:#854d0e;">6</td></tr>
+          <tr><td class="row-lbl" style="color:#92400e;">P₁</td><td style="background:#fef9c3;border-color:#fde047;color:#854d0e;">3</td><td style="background:#fef9c3;border-color:#fde047;color:#854d0e;">1</td></tr>
+          <tr><td class="row-lbl" style="color:#92400e;">P₂</td><td style="background:#fef9c3;border-color:#fde047;color:#854d0e;">5</td><td style="background:#fef9c3;border-color:#fde047;color:#854d0e;">3</td></tr>
+          <tr><td class="row-lbl" style="color:#92400e;">P₃</td><td style="background:#fef9c3;border-color:#fde047;color:#854d0e;">1</td><td style="background:#fef9c3;border-color:#fde047;color:#854d0e;">7</td></tr>
+          <tr><td class="row-lbl" style="color:#92400e;">P₄</td><td style="background:#fef9c3;border-color:#fde047;color:#854d0e;">4</td><td style="background:#fef9c3;border-color:#fde047;color:#854d0e;">2</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="font-size:1rem;color:#854d0e;font-weight:700;">→</div>
+    <div class="mat-wrap">
+      <div class="mat-name" style="color:#854d0e;">μ &nbsp; σ</div>
+      <table class="mat-t">
+        <thead><tr><th>μ</th><th>σ</th></tr></thead>
+        <tbody>
+          <tr><td>4.0</td><td>2.0</td></tr>
+          <tr><td>2.0</td><td>1.0</td></tr>
+          <tr><td>4.0</td><td>1.0</td></tr>
+          <tr><td>4.0</td><td>3.0</td></tr>
+          <tr><td>3.0</td><td>1.0</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="font-size:1rem;color:#854d0e;font-weight:700;">→</div>
+    <div class="mat-wrap">
+      <div class="mat-name" style="color:#854d0e;">X̂ = (X−μ)/σ</div>
+      <table class="mat-t">
+        <thead><tr><th></th><th>d₁</th><th>d₂</th></tr></thead>
+        <tbody>
+          <tr><td class="row-lbl" style="color:#92400e;">[C]</td><td style="background:#eff6ff;border-color:#93c5fd;color:#1d4ed8;">−1.0</td><td style="background:#f0fdf4;border-color:#86efac;color:#166534;">+1.0</td></tr>
+          <tr><td class="row-lbl" style="color:#92400e;">P₁</td><td style="background:#f0fdf4;border-color:#86efac;color:#166534;">+1.0</td><td style="background:#eff6ff;border-color:#93c5fd;color:#1d4ed8;">−1.0</td></tr>
+          <tr><td class="row-lbl" style="color:#92400e;">P₂</td><td style="background:#f0fdf4;border-color:#86efac;color:#166534;">+1.0</td><td style="background:#eff6ff;border-color:#93c5fd;color:#1d4ed8;">−1.0</td></tr>
+          <tr><td class="row-lbl" style="color:#92400e;">P₃</td><td style="background:#eff6ff;border-color:#93c5fd;color:#1d4ed8;">−1.0</td><td style="background:#f0fdf4;border-color:#86efac;color:#166534;">+1.0</td></tr>
+          <tr><td class="row-lbl" style="color:#92400e;">P₄</td><td style="background:#f0fdf4;border-color:#86efac;color:#166534;">+1.0</td><td style="background:#eff6ff;border-color:#93c5fd;color:#1d4ed8;">−1.0</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="ln-slider-grid" style="align-self:center;">
+      <span>γ<sub>1</sub></span><input type="range" id="ln2-g1" min="-3" max="3" step="0.5" value="1"><span class="sv" id="ln2-g1-val">1.0</span>
+      <span>γ<sub>2</sub></span><input type="range" id="ln2-g2" min="-3" max="3" step="0.5" value="1"><span class="sv" id="ln2-g2-val">1.0</span>
+      <span>β<sub>1</sub></span><input type="range" id="ln2-b1" min="-3" max="3" step="0.5" value="0"><span class="sv" id="ln2-b1-val">0.0</span>
+      <span>β<sub>2</sub></span><input type="range" id="ln2-b2" min="-3" max="3" step="0.5" value="0"><span class="sv" id="ln2-b2-val">0.0</span>
+    </div>
+    <div style="font-size:1rem;color:#854d0e;font-weight:700;">→</div>
+    <div class="mat-wrap">
+      <div class="mat-name" style="color:#854d0e;">γ₂·X̂ + β₂</div>
+      <table class="mat-t">
+        <thead><tr><th></th><th>d₁</th><th>d₂</th></tr></thead>
+        <tbody>
+          <tr><td class="row-lbl" style="color:#92400e;">[C]</td><td id="ln2-o-0-0"></td><td id="ln2-o-0-1"></td></tr>
+          <tr><td class="row-lbl" style="color:#92400e;">P₁</td><td id="ln2-o-1-0"></td><td id="ln2-o-1-1"></td></tr>
+          <tr><td class="row-lbl" style="color:#92400e;">P₂</td><td id="ln2-o-2-0"></td><td id="ln2-o-2-1"></td></tr>
+          <tr><td class="row-lbl" style="color:#92400e;">P₃</td><td id="ln2-o-3-0"></td><td id="ln2-o-3-1"></td></tr>
+          <tr><td class="row-lbl" style="color:#92400e;">P₄</td><td id="ln2-o-4-0"></td><td id="ln2-o-4-1"></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="ln-op-arrow">▼ &nbsp;γ₂ · X̂ + β₂ &nbsp;— parâmetros independentes de LN₁; arraste os sliders para explorar</div>
+  <div class="ln-stat-note">γ=1 β=0: saída = X̂ (neutro). Parâmetros γ₂,β₂ são aprendidos independentemente de γ₁,β₁.</div>
+</div>`,
+  },
+  'r-mlp': {
+    title: 'MLP / Feed-Forward  (FFN)',
+    formula: 'FFN(x) = Linear₂( GELU( Linear₁(x) ) )',
+    color: '#6d28d9',
+    borderColor: '#c4b5fd',
+    bg: '#faf5ff',
+    text: `Duas projeções lineares com GELU entre elas — processado <em>por token separadamente</em>.
+           Enquanto o MHA captura relações globais, o MLP aplica uma transformação
+           não-linear independente a cada token.`,
+    visual: `<div class="mlp-example">
+  <div class="mlp-section-label">① Primeira projeção linear (CLS + 4 patches, dim = 2)</div>
+  <div style="display:flex;align-items:center;gap:0.4rem;flex-wrap:nowrap;overflow-x:auto;padding-bottom:0.2rem;">
+    <div class="mat-wrap">
+      <div class="mat-name">X</div>
+      <table class="mat-t" data-matrix="x1">
+        <thead><tr><th></th><th>d₁</th><th>d₂</th></tr></thead>
+        <tbody>
+          <tr class="cls-row"><td class="row-lbl">[C]</td><td data-row="1" data-col="1">x<sub>c,1</sub></td><td data-row="1" data-col="2">x<sub>c,2</sub></td></tr>
+          <tr><td class="row-lbl">P₁</td><td data-row="2" data-col="1">x<sub>1,1</sub></td><td data-row="2" data-col="2">x<sub>1,2</sub></td></tr>
+          <tr><td class="row-lbl">P₂</td><td data-row="3" data-col="1">x<sub>2,1</sub></td><td data-row="3" data-col="2">x<sub>2,2</sub></td></tr>
+          <tr><td class="row-lbl">P₃</td><td data-row="4" data-col="1">x<sub>3,1</sub></td><td data-row="4" data-col="2">x<sub>3,2</sub></td></tr>
+          <tr><td class="row-lbl">P₄</td><td data-row="5" data-col="1">x<sub>4,1</sub></td><td data-row="5" data-col="2">x<sub>4,2</sub></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="mlp-matrix-op">·</div>
+    <div class="mat-wrap">
+      <div class="mat-name">W₁</div>
+      <table class="mat-t" data-matrix="w1">
+        <thead><tr><th>f₁</th><th>f₂</th><th>f₃</th></tr></thead>
+        <tbody>
+          <tr><td data-row="1" data-col="1">w₁₁</td><td data-row="1" data-col="2">w₁₂</td><td data-row="1" data-col="3">w₁₃</td></tr>
+          <tr><td data-row="2" data-col="1">w₂₁</td><td data-row="2" data-col="2">w₂₂</td><td data-row="2" data-col="3">w₂₃</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="mlp-matrix-op">+</div>
+    <div class="mat-wrap">
+      <div class="mat-name">b₁</div>
+      <table class="mat-t" data-matrix="b1">
+        <tbody>
+          <tr><td data-row="1">b₁</td></tr>
+          <tr><td data-row="2">b₂</td></tr>
+          <tr><td data-row="3">b₃</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="mlp-matrix-op">=</div>
+    <div class="mat-wrap">
+      <div class="mat-name">H</div>
+      <table class="mat-t" data-matrix="h1">
+        <thead><tr><th></th><th>f₁</th><th>f₂</th><th>f₃</th></tr></thead>
+        <tbody>
+          <tr class="cls-row"><td class="row-lbl">[C]</td><td class="h-cell" data-row="1" data-col="1">h<sub>c,1</sub></td><td class="h-cell" data-row="1" data-col="2">h<sub>c,2</sub></td><td class="h-cell" data-row="1" data-col="3">h<sub>c,3</sub></td></tr>
+          <tr><td class="row-lbl">P₁</td><td class="h-cell" data-row="2" data-col="1">h<sub>1,1</sub></td><td class="h-cell" data-row="2" data-col="2">h<sub>1,2</sub></td><td class="h-cell" data-row="2" data-col="3">h<sub>1,3</sub></td></tr>
+          <tr><td class="row-lbl">P₂</td><td class="h-cell" data-row="3" data-col="1">h<sub>2,1</sub></td><td class="h-cell" data-row="3" data-col="2">h<sub>2,2</sub></td><td class="h-cell" data-row="3" data-col="3">h<sub>2,3</sub></td></tr>
+          <tr><td class="row-lbl">P₃</td><td class="h-cell" data-row="4" data-col="1">h<sub>3,1</sub></td><td class="h-cell" data-row="4" data-col="2">h<sub>3,2</sub></td><td class="h-cell" data-row="4" data-col="3">h<sub>3,3</sub></td></tr>
+          <tr><td class="row-lbl">P₄</td><td class="h-cell" data-row="5" data-col="1">h<sub>4,1</sub></td><td class="h-cell" data-row="5" data-col="2">h<sub>4,2</sub></td><td class="h-cell" data-row="5" data-col="3">h<sub>4,3</sub></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="mlp-matrix-note">Clique em h<sub>t,i</sub>: destaca linha t de X (o token), coluna i de W₁ (a projeção) e b<sub>i</sub>. Tokens não se comunicam.</div>
+  <div class="mlp-eq-row">
+    <span class="mlp-dim-tag">Linear₁</span>
+    <span style="font-weight:700;color:#5b21b6;">H = X · W₁ + b₁</span>
+    <span style="color:var(--text-dim);font-size:0.67rem;">X∈ℝ<sup>5×2</sup>, W₁∈ℝ<sup>2×3</sup> → H∈ℝ<sup>5×3</sup></span>
+  </div>
+  <div class="mlp-section-label">② GELU (Gaussian Error Linear Unit) vs. ReLU</div>
+  <div class="gelu-eq">
+    GELU(x) = x·Φ(x)
+    &nbsp;≈&nbsp; 0.5·x·(1 + tanh(√(2/π)·(x + 0.044715·x³)))<br/>
+    <span style="font-size:0.68rem;color:#7c3aed;opacity:0.85;">Φ(x) = CDF da Normal padrão — probabilidade de um valor ≤ x; escala x suavemente entre 0 e 1</span><br/>
+    ReLU(x) = max(0, x)
+  </div>
+  <svg viewBox="0 0 260 185" width="100%" style="max-height:230px;display:block;" xmlns="http://www.w3.org/2000/svg">
+    <line x1="10" y1="140" x2="250" y2="140" stroke="#e5e7eb" stroke-width="1.1"/>
+    <line x1="130" y1="12" x2="130" y2="158" stroke="#e5e7eb" stroke-width="1.1"/>
+    <text x="134" y="155" font-size="12" fill="#9ca3af" font-family="Fira Code,monospace">0</text>
+    <text x="240" y="150" font-size="12" fill="#9ca3af" font-family="Fira Code,monospace">x</text>
+    <text x="134" y="18" font-size="12" fill="#9ca3af" font-family="Fira Code,monospace">y</text>
+    <polyline points="10,140 130,140 250,30" fill="none" stroke="#d1d5db" stroke-width="1.8" stroke-dasharray="4 2"/>
+    <text x="186" y="72" font-size="13" fill="#b0b8c1" font-family="Fira Code,monospace">ReLU</text>
+    <polyline
+      points="10,139.8 30,140.2 50,141.8 70,144.4 90,147.2 102,147.8 114,146.8 126,144.2 138,139.0 150,131.0 162,121.0 174,110.0 186,98.0 206,76.0 226,52.0 250,30.0"
+      fill="none" stroke="#7c3aed" stroke-width="2.6"/>
+    <circle cx="102" cy="147.8" r="3" fill="#7c3aed"/>
+    <line x1="102" y1="147.8" x2="102" y2="140" stroke="#c4b5fd" stroke-width="1" stroke-dasharray="2 1"/>
+    <text x="10" y="178" font-size="11" fill="#7c3aed" font-family="Fira Code,monospace">min ≈ −0.17  (x ≈ −0.75)</text>
+    <text x="14" y="122" font-size="16" fill="#7c3aed" font-family="Fira Code,monospace" font-weight="bold">GELU</text>
+  </svg>
+  <div class="mlp-section-label">③ Segunda projeção linear</div>
+  <div class="mlp-eq-row">
+    <span class="mlp-dim-tag">Linear₂</span>
+    <span style="font-weight:700;color:#5b21b6;">y<sub>t</sub> = W₂·g<sub>t</sub> + b₂</span>
+    <span style="color:var(--text-dim);font-size:0.67rem;">W₂∈ℝ<sup>2×3</sup>, g<sub>t</sub>∈ℝ<sup>3</sup> → y<sub>t</sub>∈ℝ<sup>2</sup></span>
+  </div>
+</div>`,
+  },
+  'r-add2': {
+    title: 'Conexão Residual 2  (⊕)',
+    formula: 'x ← x + MLP(LN₂(x))',
+    color: '#166534',
+    borderColor: '#86efac',
+    bg: '#f0fdf4',
+    text: `Segundo atalho residual: soma o vetor após o primeiro resíduo
+           com a saída do MLP. Completa o bloco encoder.<br><br>
+           A saída <strong>x'</strong> tem a mesma dimensão e forma que a entrada <strong>x</strong> —
+           o que permite empilhar L blocos idênticos sem alterar as dimensões.
+           Para [CLS], essa saída acumulou mais contexto global a cada bloco.`,
+  },
+};
+
+let activeBlock = null;
+
+function selectBlock(id) {
+  const info  = BLOCK_INFO[id];
+  if (!info) return;
+  const panel = document.getElementById('encInfo');
+  const svgEl = document.getElementById(id);
+
+  if (activeBlock && activeBlock !== id) {
+    const prev = document.getElementById(activeBlock);
+    if (prev) prev.classList.remove('active-block');
+  }
+
+  if (activeBlock === id) {
+    svgEl.classList.remove('active-block');
+    activeBlock = null;
+    panel.style.borderColor = 'var(--border2)';
+    panel.style.background  = 'var(--bg3)';
+    panel.classList.remove('highlight');
+    panel.innerHTML = `
+      <div class="enc-info-placeholder">
+        <div style="font-size:2rem;">←</div>
+        <p style="text-align:center;color:var(--text-dim);font-style:italic;font-size:0.92rem;">
+          Clique em um bloco do diagrama<br/>para ver a explicação detalhada
+        </p>
+        <div class="legend-row" style="justify-content:center;margin-top:0.5rem;">
+          <span class="leg-pill ln"  onclick="selectBlock('r-ln1')">LN₁</span>
+          <span class="leg-pill mha" onclick="selectBlock('r-mha')">MHA</span>
+          <span class="leg-pill res" onclick="selectBlock('r-add1')">⊕₁</span>
+          <span class="leg-pill ln"  onclick="selectBlock('r-ln2')">LN₂</span>
+          <span class="leg-pill mlp" onclick="selectBlock('r-mlp')">MLP</span>
+          <span class="leg-pill res" onclick="selectBlock('r-add2')">⊕₂</span>
+        </div>
+      </div>`;
+    return;
+  }
+
+  activeBlock = id;
+  svgEl.classList.add('active-block');
+  panel.style.borderColor = info.borderColor;
+  panel.style.background  = info.bg;
+  panel.classList.add('highlight');
+  panel.innerHTML = `
+    <div class="enc-info-title" style="color:${info.color};">${info.title}</div>
+    <div class="enc-info-formula">${info.formula}</div>
+    <div class="enc-info-text">${info.text}</div>
+    ${info.visual ? `<div class="enc-info-visual">${info.visual}</div>` : ''}
+  `;
+
+  if (id === 'r-mlp') {
+    initMlpMatrix(panel);
+  }
+  if (id === 'r-ln1') initLnSliders('ln1', [[-1,1],[1,-1],[1,-1],[-1,1],[1,-1]]);
+  if (id === 'r-ln2') initLnSliders('ln2', [[-1,1],[1,-1],[1,-1],[-1,1],[1,-1]]);
+}
+
+function initLnSliders(prefix, xhat) {
+  function setCell(el, v) {
+    if (!el) return;
+    el.textContent = (v >= 0 ? '+' : '') + v.toFixed(1);
+    el.style.background  = v < 0 ? '#eff6ff' : v === 0 ? '#f5f3ff' : '#f0fdf4';
+    el.style.borderColor = v < 0 ? '#93c5fd' : v === 0 ? '#e9d5ff' : '#86efac';
+    el.style.color       = v < 0 ? '#1d4ed8' : v === 0 ? '#5b21b6' : '#166534';
+  }
+  function update() {
+    var g1 = parseFloat(document.getElementById(prefix+'-g1').value);
+    var g2 = parseFloat(document.getElementById(prefix+'-g2').value);
+    var b1 = parseFloat(document.getElementById(prefix+'-b1').value);
+    var b2 = parseFloat(document.getElementById(prefix+'-b2').value);
+    document.getElementById(prefix+'-g1-val').textContent = g1.toFixed(1);
+    document.getElementById(prefix+'-g2-val').textContent = g2.toFixed(1);
+    document.getElementById(prefix+'-b1-val').textContent = b1.toFixed(1);
+    document.getElementById(prefix+'-b2-val').textContent = b2.toFixed(1);
+    xhat.forEach(function(row, t) {
+      setCell(document.getElementById(prefix+'-o-'+t+'-0'), g1*row[0]+b1);
+      setCell(document.getElementById(prefix+'-o-'+t+'-1'), g2*row[1]+b2);
+    });
+  }
+  ['g1','g2','b1','b2'].forEach(function(s) {
+    var el = document.getElementById(prefix+'-'+s);
+    if (el) el.addEventListener('input', update);
+  });
+  update();
+}
+
+function initMlpMatrix(panel) {
+  const hCells = panel.querySelectorAll('[data-matrix="h1"] td.h-cell');
+  const wCells = panel.querySelectorAll('[data-matrix="w1"] td[data-col]');
+  const xCells = panel.querySelectorAll('[data-matrix="x1"] td[data-col]');
+  const bCells = panel.querySelectorAll('[data-matrix="b1"] td[data-row]');
+
+  if (!hCells.length) return;
+
+  const clearActive = () => {
+    [...hCells, ...wCells, ...xCells, ...bCells].forEach(el => el.classList.remove('active'));
+  };
+
+  hCells.forEach(cell => {
+    cell.addEventListener('click', () => {
+      const row = cell.getAttribute('data-row');
+      const col = cell.getAttribute('data-col');
+      clearActive();
+      cell.classList.add('active');
+      // H = X · W₁: h_{t,i} = Σ_k x_{t,k} · w_{k,i} + b_i
+      wCells.forEach(w => {
+        if (w.getAttribute('data-col') === col) w.classList.add('active'); // column i of W₁
+      });
+      xCells.forEach(x => {
+        if (x.getAttribute('data-row') === row) x.classList.add('active'); // row t of X
+      });
+      bCells.forEach(b => {
+        if (b.getAttribute('data-row') === col) b.classList.add('active'); // b_i
+      });
+    });
+  });
+}
+
+// Attach SVG click handlers
+['r-ln1', 'r-mha', 'r-add1', 'r-ln2', 'r-mlp', 'r-add2'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('click', () => selectBlock(id));
+});
+
+// ──────────────────────────────────────────────────
+// NAV DOTS
+// ──────────────────────────────────────────────────
+function buildNavDots() {
+  const container = document.getElementById('navDots');
+  for (let i = 1; i <= 11; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'dot' + (i === 9 ? ' active' : '');
+    dot.title = `Slide ${i}`;
+    dot.style.cursor = 'pointer';
+    dot.addEventListener('click', () => { location.href = `slide${String(i).padStart(2,'0')}.html`; });
+    container.appendChild(dot);
+  }
+}
+buildNavDots();
+</script>
+</body>
+</html>

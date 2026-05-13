@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 14 – O Problema do Vanishing Gradient</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .alpha-btns { display:flex; gap:0.5rem; margin-bottom:0.8rem; }
+    .alpha-btn { flex:1; padding:0.4rem 0.3rem; border:1.5px solid var(--border2); border-radius:var(--radius-sm);
+                 background:var(--bg2); font-size:0.85rem; font-weight:700; cursor:pointer;
+                 color:var(--text-muted); transition:all 0.2s; font-family:'Fira Code',monospace; }
+    .alpha-btn.active { background:var(--teal); color:#fff; border-color:var(--teal); }
+    .chart-title { font-size:0.8rem; font-weight:600; color:var(--text-muted); margin-bottom:0.5rem; text-align:center; }
+    .bar-chart { display:flex; align-items:flex-end; gap:0.15rem;
+                 background:var(--bg3); border:1.5px solid var(--border2); border-radius:var(--radius-sm);
+                 padding:0.5rem 0.4rem 1.6rem 0.4rem; height:130px; position:relative; }
+    .bar-col { display:flex; flex-direction:column; align-items:center; flex:1; height:100%; justify-content:flex-end; position:relative; }
+    .bar-fill { width:100%; background:var(--teal); border-radius:2px 2px 0 0; transition:height 0.5s ease; min-height:2px; }
+    .bar-label { font-size:0.58rem; font-family:'Fira Code',monospace; color:var(--text-dim); white-space:nowrap; position:absolute; bottom:-1.3rem; }
+    .chart-ylabel { font-size:0.72rem; color:var(--text-dim); text-align:center; margin-top:0.3rem; font-style:italic; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Redes Neurais Recorrentes</span>
+      <span class="prof-tag" style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 8 · Slide 1 / 1</span>
+    </header>
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">O Problema do Vanishing Gradient</h1>
+        <p class="slide-subtitle">Gradientes que atravessam muitos passos tendem a desaparecer</p>
+      </div>
+      <div class="content-split">
+        <div class="panel panel-left">
+          <h2 class="panel-title">📉 Simulador de Decaimento</h2>
+          <div class="alpha-btns">
+            <button class="alpha-btn active" onclick="setAlpha(0.9,this)">&alpha; = 0.9</button>
+            <button class="alpha-btn" onclick="setAlpha(0.7,this)">&alpha; = 0.7</button>
+            <button class="alpha-btn" onclick="setAlpha(0.5,this)">&alpha; = 0.5</button>
+          </div>
+          <div class="chart-title">Magnitude relativa do gradiente por passo temporal</div>
+          <div class="bar-chart" id="bar-chart"></div>
+          <div class="chart-ylabel">Quanto menor &alpha;, mais rápido o gradiente desaparece</div>
+        </div>
+        <div class="panel panel-right">
+          <h2 class="panel-title">⚠️ Por Que Isso é um Problema?</h2>
+          <div class="concept-cards">
+            <div class="concept-card" style="--delay:0s">
+              <span class="card-icon">α</span>
+              <div class="card-text"><strong>O que é α?</strong><p>α representa o fator de escala pelo qual o gradiente é multiplicado a cada passo temporal — corresponde à norma espectral do Jacobiano ∂hₜ/∂h_{t-1}. Se α &lt; 1, o gradiente diminui; se α &gt; 1, explode.</p></div>
+            </div>
+            <div class="concept-card" style="--delay:0.08s">
+              <span class="card-icon">📉</span>
+              <div class="card-text"><strong>Multiplicação em cadeia</strong><p>A cada passo temporal, o gradiente é multiplicado por derivadas e matrizes com magnitude &lt; 1.</p></div>
+            </div>
+            <div class="concept-card" style="--delay:0.16s">
+              <span class="card-icon">🌫️</span>
+              <div class="card-text"><strong>Desvanecimento</strong><p>Depois de muitos passos, o gradiente chega quase a zero — mesmo com α = 0,9.</p></div>
+            </div>
+            <div class="concept-card" style="--delay:0.24s">
+              <span class="card-icon">❌</span>
+              <div class="card-text"><strong>Dependências curtas</strong><p>Estados distantes quase não recebem sinal de correção — a rede aprende dependências curtas.</p></div>
+            </div>
+          </div>
+          <div class="highlight-box yellow" style="margin-top:0.8rem;">
+            <span class="icon">⚠️</span>
+            <span>Existe também o exploding gradient (fatores &gt; 1), mas o foco aqui é o desvanecimento, por ser a motivação da LSTM.</span>
+          </div>
+          <div class="highlight-box teal" style="margin-top:0.5rem;">
+            <span class="icon">➡️</span>
+            <span>Precisamos de uma arquitetura que garanta um caminho mais estável para o gradiente — é aí que entra a LSTM.</span>
+          </div>
+        </div>
+      </div>
+    </main>
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide13.html'">&#8592; Anterior</button>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide15.html'">Próximo &#8594;</button>
+    </nav>
+  </div>
+  <script>
+    let currentAlpha = 0.9;
+    const N = 21; // t, t-1, ..., t-20
+
+    function buildChart() {
+      const chart = document.getElementById('bar-chart');
+      chart.innerHTML = '';
+      for (let k = 0; k < N; k++) {
+        const col = document.createElement('div');
+        col.className = 'bar-col';
+        const fill = document.createElement('div');
+        fill.className = 'bar-fill';
+        fill.id = 'b' + k;
+        const label = document.createElement('span');
+        label.className = 'bar-label';
+        label.textContent = k === 0 ? 't' : (k % 5 === 0 ? 't-' + k : '');
+        col.appendChild(fill);
+        col.appendChild(label);
+        chart.appendChild(col);
+      }
+    }
+
+    function setAlpha(a, btn) {
+      currentAlpha = a;
+      document.querySelectorAll('.alpha-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      updateBars();
+    }
+
+    function updateBars() {
+      for (let k = 0; k < N; k++) {
+        const h = Math.pow(currentAlpha, k) * 100;
+        document.getElementById('b' + k).style.height = h + '%';
+      }
+    }
+
+    buildChart();
+    updateBars();
+  </script>
+</body>
+</html>

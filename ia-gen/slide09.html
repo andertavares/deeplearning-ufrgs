@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 09 – Explorando o espaço latente</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .canvas-wrap {
+      display: flex; flex-direction: column; align-items: center; gap: 0.4rem;
+    }
+    canvas { border-radius: var(--radius-sm); border: 1px solid var(--border); cursor: crosshair; }
+    #latent-canvas { cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">IA Generativa</span>
+      <span style="font-size:0.9rem;color:var(--text-muted);font-weight:500;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 4 · Slide 9 / 24</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Explorando o espaço latente</h1>
+        <p class="slide-subtitle">Clique nos pontos coloridos para ver diferentes "decodificações"</p>
+      </div>
+
+      <div style="display:flex;gap:1.4rem;align-items:flex-start;flex-wrap:wrap;justify-content:center;flex:1;">
+        <div class="canvas-wrap">
+          <canvas id="latent-canvas" width="300" height="270"></canvas>
+          <span style="font-size:0.78rem;color:var(--text-dim);">Espaço latente 2D — clique para explorar</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.8rem;align-items:center;">
+          <div class="canvas-wrap">
+            <canvas id="decoded-canvas" width="150" height="150"></canvas>
+            <span style="font-size:0.78rem;color:var(--text-dim);" id="decoded-label">Clique no espaço →</span>
+          </div>
+          <div class="panel" style="padding:0.85rem;font-size:0.82rem;max-width:175px;text-align:center;">
+            <span style="color:var(--text-muted);">Cada ponto = vetor latente<br/>que gera uma saída diferente</span>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide08.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide10.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    const LATENT_POINTS = [
+      { x: 60,  y: 80,  shape: 'circle',   color: '#0d6e6e', label: 'rosto jovem' },
+      { x: 180, y: 70,  shape: 'square',   color: '#1d4ed8', label: 'rosto adulto' },
+      { x: 250, y: 160, shape: 'triangle', color: '#854d0e', label: 'rosto sorridente' },
+      { x: 80,  y: 210, shape: 'circle',   color: '#b91c1c', label: 'rosto com óculos' },
+      { x: 200, y: 230, shape: 'square',   color: '#6d28d9', label: 'rosto escuro' },
+      { x: 140, y: 145, shape: 'triangle', color: '#065f46', label: 'neutro' },
+    ];
+
+    function drawLatentSpace(ctx, w, h, sel) {
+      ctx.clearRect(0, 0, w, h);
+      const grad = ctx.createRadialGradient(w/2, h/2, 0, w/2, h/2, w/2);
+      grad.addColorStop(0, '#e8ecf5');
+      grad.addColorStop(1, '#f0f2f6');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = 'rgba(0,0,0,0.04)';
+      for (let gx = 20; gx < w; gx += 30)
+        for (let gy = 20; gy < h; gy += 30) {
+          ctx.beginPath(); ctx.arc(gx, gy, 2, 0, Math.PI*2); ctx.fill();
+        }
+      ctx.fillStyle = '#6b7fa3';
+      ctx.font = '11px sans-serif';
+      ctx.fillText('z₁ →', w - 30, h - 8);
+      ctx.fillText('↑ z₂', 4, 16);
+      LATENT_POINTS.forEach((p, i) => {
+        const isSel = i === sel;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, isSel ? 14 : 10, 0, Math.PI*2);
+        ctx.fillStyle = p.color + (isSel ? 'ff' : '99');
+        ctx.fill();
+        if (isSel) {
+          ctx.strokeStyle = '#0f1724';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+        ctx.fillStyle = '#0f1724';
+        ctx.font = '10px sans-serif';
+        ctx.fillText(p.label, p.x + 14, p.y + 4);
+      });
+    }
+
+    function drawDecoded(point) {
+      const canvas = document.getElementById('decoded-canvas');
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width, h = canvas.height;
+      ctx.fillStyle = '#f0f2f6';
+      ctx.fillRect(0, 0, w, h);
+      const cx = w/2, cy = h/2, sz = 38;
+      ctx.fillStyle = point.color;
+      ctx.shadowColor = point.color;
+      ctx.shadowBlur = 18;
+      if (point.shape === 'circle') {
+        ctx.beginPath(); ctx.arc(cx, cy, sz, 0, Math.PI*2); ctx.fill();
+      } else if (point.shape === 'square') {
+        ctx.fillRect(cx - sz, cy - sz, sz*2, sz*2);
+      } else {
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - sz);
+        ctx.lineTo(cx + sz, cy + sz);
+        ctx.lineTo(cx - sz, cy + sz);
+        ctx.closePath(); ctx.fill();
+      }
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#0f1724';
+      ctx.font = '11px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(point.label, cx, h - 10);
+      ctx.textAlign = 'left';
+      document.getElementById('decoded-label').textContent = `"${point.label}"`;
+    }
+
+    (function init() {
+      const canvas = document.getElementById('latent-canvas');
+      const ctx = canvas.getContext('2d');
+      drawLatentSpace(ctx, canvas.width, canvas.height, -1);
+      // draw empty decoded
+      const dc = document.getElementById('decoded-canvas');
+      const dctx = dc.getContext('2d');
+      dctx.fillStyle = '#f0f2f6';
+      dctx.fillRect(0, 0, dc.width, dc.height);
+      dctx.fillStyle = '#6b7fa3';
+      dctx.font = '12px sans-serif';
+      dctx.textAlign = 'center';
+      dctx.fillText('← clique em um ponto', dc.width/2, dc.height/2);
+      dctx.textAlign = 'left';
+
+      canvas.onclick = (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const mx = (e.clientX - rect.left) * (canvas.width / rect.width);
+        const my = (e.clientY - rect.top)  * (canvas.height / rect.height);
+        let nearest = null, minD = Infinity;
+        LATENT_POINTS.forEach((p, i) => {
+          const d = Math.hypot(mx - p.x, my - p.y);
+          if (d < minD) { minD = d; nearest = i; }
+        });
+        drawLatentSpace(ctx, canvas.width, canvas.height, nearest);
+        if (nearest !== null) drawDecoded(LATENT_POINTS[nearest]);
+      };
+    })();
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') location.href = 'slide10.html';
+      if (e.key === 'ArrowLeft'  || e.key === 'PageUp')   location.href = 'slide08.html';
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 16 – Masked Self-Attention</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .slide-main { gap: 0.5rem; }
+
+    .content-split {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 1rem;
+      flex: 1;
+    }
+
+    /* ── Heatmap panel ── */
+    .heatmap-panel {
+      background: var(--bg2);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 1rem 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+      box-shadow: var(--shadow);
+    }
+    .heatmap-panel-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .toggle-group { display: flex; gap: 0.45rem; }
+    .btn-toggle {
+      padding: 0.3rem 0.85rem;
+      border-radius: 999px;
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      color: var(--text-muted);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .btn-toggle:hover { border-color: var(--teal); color: var(--teal); }
+    .btn-toggle.active { background: var(--teal); border-color: var(--teal); color: #fff; }
+
+    /* Grid layout: col-header + row-header + cells */
+    .matrix-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .col-header-row {
+      display: flex;
+      gap: 0;
+      margin-left: 4.2rem;
+    }
+    .col-label {
+      width: 3.8rem;
+      height: 1.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+    .matrix-rows { display: flex; flex-direction: column; gap: 3px; }
+    .matrix-row {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: background 0.15s;
+    }
+    .matrix-row:hover .row-label { color: var(--teal); }
+    .matrix-row.row-active .row-label { color: var(--teal); font-weight: 800; }
+    .row-label {
+      width: 4.2rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      padding-right: 0.4rem;
+      text-align: right;
+      transition: color 0.15s;
+      white-space: nowrap;
+    }
+    .matrix-cell {
+      width: 3.8rem;
+      height: 3.2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      margin: 2px;
+      font-size: 0.77rem;
+      font-family: 'Fira Code', monospace;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.22s;
+      position: relative;
+    }
+    .matrix-cell:hover { transform: scale(1.08); z-index: 2; }
+    .cell-val { font-size: 0.78rem; font-weight: 700; }
+    .cell-pos { font-size: 0.62rem; color: var(--text-dim); }
+
+    /* Allowed cell colors (attention weight intensity) */
+    .cell-allowed { border: 2px solid rgba(13,110,110,0.25); }
+    .cell-blocked {
+      background: #f0f2f6 !important;
+      border: 2px solid var(--border2) !important;
+      opacity: 0.55;
+      position: relative;
+    }
+    .cell-blocked::after {
+      content: '−∞';
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--red);
+      position: absolute;
+    }
+    .cell-blocked .cell-val { display: none; }
+    .cell-blocked .cell-pos { display: none; }
+
+    /* heat intensities */
+    .heat-0 { background: #f0f2f6; }
+    .heat-1 { background: #c7fbe5; }
+    .heat-2 { background: #6ee7b7; }
+    .heat-3 { background: #10b981; }
+    .heat-4 { background: #059669; color: #fff; }
+
+    /* highlight row */
+    .cell-row-highlight {
+      box-shadow: 0 0 0 2.5px var(--teal);
+    }
+
+    /* ── Info panel ── */
+    .info-panel {
+      background: var(--bg2);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+      box-shadow: var(--shadow);
+    }
+    .info-title {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .info-desc {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .mask-matrix {
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem 0.9rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.75rem;
+      line-height: 1.85;
+      color: var(--text);
+    }
+    .mask-inf { color: var(--red); font-weight: 700; }
+    .mask-zero { color: var(--green); font-weight: 700; }
+
+    .row-info-box {
+      padding: 0.7rem 0.9rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      line-height: 1.5;
+      border: 1.5px solid var(--teal);
+      background: var(--teal-lt);
+      color: var(--teal);
+      display: none;
+    }
+    .row-info-box.visible { display: block; }
+
+    @media (max-width: 900px) {
+      .content-split { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Transformers</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 15 · Slide 16 / 19</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block" style="padding:0.5rem 0 0.2rem;">
+        <h1 class="slide-title">Masked Self-Attention</h1>
+        <p class="slide-subtitle">A máscara que impede o modelo de ver o futuro</p>
+      </div>
+
+      <!-- Decoder pipeline overview -->
+      <div style="background:var(--bg2);border:1.5px solid var(--border2);border-radius:var(--radius-sm);padding:0.5rem 1rem;display:flex;align-items:center;gap:0.35rem;flex-wrap:wrap;box-shadow:var(--shadow);">
+        <span style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-dim);margin-right:0.3rem;">Pipeline do Decoder:</span>
+        <div style="display:flex;align-items:center;padding:0.35rem 0.7rem;border-radius:var(--radius-sm);background:var(--orange);border:2px solid var(--orange);color:#fff;font-size:0.78rem;font-weight:700;box-shadow:0 0 0 3px rgba(194,65,12,0.3);">🟠 Masked Self-Attn</div>
+        <span style="color:var(--text-dim);font-size:0.75rem;font-weight:700;">→</span>
+        <div style="display:flex;align-items:center;padding:0.35rem 0.7rem;border-radius:var(--radius-sm);background:var(--teal-lt);border:2px solid var(--teal);color:var(--teal);font-size:0.78rem;font-weight:700;opacity:0.6;">⚖️ Add&amp;Norm</div>
+        <span style="color:var(--text-dim);font-size:0.75rem;font-weight:700;">→</span>
+        <div style="display:flex;align-items:center;padding:0.35rem 0.7rem;border-radius:var(--radius-sm);background:var(--purple-lt);border:2px solid var(--purple);color:var(--purple);font-size:0.78rem;font-weight:700;opacity:0.6;">🟣 Cross-Attn</div>
+        <span style="color:var(--text-dim);font-size:0.75rem;font-weight:700;">→</span>
+        <div style="display:flex;align-items:center;padding:0.35rem 0.7rem;border-radius:var(--radius-sm);background:var(--teal-lt);border:2px solid var(--teal);color:var(--teal);font-size:0.78rem;font-weight:700;opacity:0.6;">⚖️ Add&amp;Norm</div>
+        <span style="color:var(--text-dim);font-size:0.75rem;font-weight:700;">→</span>
+        <div style="display:flex;align-items:center;padding:0.35rem 0.7rem;border-radius:var(--radius-sm);background:var(--green-lt);border:2px solid var(--green);color:var(--green);font-size:0.78rem;font-weight:700;opacity:0.6;">🟩 FFN</div>
+        <span style="color:var(--text-dim);font-size:0.75rem;font-weight:700;">→</span>
+        <div style="display:flex;align-items:center;padding:0.35rem 0.7rem;border-radius:var(--radius-sm);background:var(--teal-lt);border:2px solid var(--teal);color:var(--teal);font-size:0.78rem;font-weight:700;opacity:0.6;">⚖️ Add&amp;Norm</div>
+        <span style="color:var(--text-dim);font-size:0.75rem;font-weight:700;">→</span>
+        <div style="display:flex;align-items:center;padding:0.35rem 0.7rem;border-radius:var(--radius-sm);background:var(--bg3);border:2px solid var(--border2);color:var(--text-muted);font-size:0.78rem;font-weight:700;opacity:0.6;">📊 Linear+Softmax</div>
+      </div>
+
+      <div class="content-split">
+        <!-- Left: heatmap -->
+        <div class="heatmap-panel">
+          <div class="heatmap-panel-title">
+            <span>Scores de Atenção — tokens: &lt;BOS&gt;, Ela, saiu, só</span>
+            <div class="toggle-group">
+              <button class="btn-toggle active" id="btnSemMask" onclick="setMask(false)">Sem máscara</button>
+              <button class="btn-toggle" id="btnComMask" onclick="setMask(true)">Com máscara</button>
+            </div>
+          </div>
+
+          <div class="matrix-wrapper">
+            <!-- col headers: query tokens (columns = key tokens) -->
+            <div style="font-size:0.72rem;color:var(--text-dim);align-self:flex-start;margin-left:4.2rem;margin-bottom:0.1rem;">← tokens chave (j) →</div>
+            <div class="col-header-row" id="colHeaders"></div>
+            <div style="display:flex;align-items:flex-start;gap:0;">
+              <div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:0.72rem;color:var(--text-dim);align-self:center;margin-right:0.2rem;">← tokens query (i) →</div>
+              <div class="matrix-rows" id="matrixRows"></div>
+            </div>
+          </div>
+
+          <div style="font-size:0.78rem;color:var(--text-dim);margin-top:0.2rem;">
+            💡 Clique em uma linha para ver os pesos de atenção. Toggle para aplicar/remover máscara.
+          </div>
+        </div>
+
+        <!-- Right: info -->
+        <div class="info-panel">
+          <div class="info-title" id="infoTitle">Modo: <span id="modeName" style="color:var(--teal)">Sem máscara</span></div>
+
+          <div style="font-size:0.82rem;background:var(--blue-lt);border:1.5px solid var(--blue);border-radius:6px;padding:0.45rem 0.8rem;color:var(--blue);line-height:1.5;">
+            <strong>&lt;BOS&gt;</strong> (Begin Of Sequence) é um token especial adicionado no início da
+            sequência do decoder. Ele representa o "estado inicial" antes de qualquer token ter sido gerado,
+            e serve como query para prever o <em>primeiro</em> token de saída.
+          </div>
+
+          <p class="info-desc" id="infoDesc">
+            Neste modo, <strong>todos os tokens podem atender a todos os outros</strong>. Isso seria adequado para um encoder, mas em um decoder o modelo "espiaria" tokens futuros — o que não é permitido durante a geração autoregressiva.
+          </p>
+
+          <div class="mask-matrix" id="maskMatrix">
+            M = todas as células permitidas (sem bloqueio)
+          </div>
+
+          <div class="row-info-box" id="rowInfoBox"></div>
+
+          <div style="font-size:0.82rem;color:var(--text-muted);line-height:1.5;">
+            <strong>Softmax pós-máscara:</strong> as células com −∞ tornam-se 0 após softmax,
+            eliminando completamente a influência dos tokens futuros.
+          </div>
+        </div>
+      </div>
+
+      <div class="insight-box">
+        <span class="i-icon">🔒</span>
+        <div class="i-text">
+          <strong>Por que mascarar se todos os tokens entram de uma vez?</strong>
+          Durante o <em>treinamento</em>, todos os tokens da sequência alvo entram simultaneamente no decoder
+          (paralelismo). Sem a máscara causal, cada posição poderia "espiar" as respostas corretas das
+          posições futuras — o que nunca ocorre durante a <em>geração</em> real (token a token).
+          A máscara garante que o modelo aprenda a prever cada token
+          apenas a partir do que já teria gerado, replicando a geração autoregressiva.
+          Ao prever a posição <em>i</em>, apenas as posições <em>j ≤ i</em> contribuem.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide15.html'">← Anterior</button>
+      <div class="nav-dots" id="navDots"></div>
+      <button class="btn-nav btn-next" onclick="location.href='slide17.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    (function(){
+      const container = document.getElementById('navDots');
+      const CURRENT = 16;
+      for (let i = 1; i <= 19; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'dot' + (i === CURRENT ? ' active' : '');
+        dot.title = 'Slide ' + i;
+        dot.style.cursor = 'pointer';
+        dot.addEventListener('click', () => {
+          location.href = 'slide' + String(i).padStart(2,'0') + '.html';
+        });
+        container.appendChild(dot);
+      }
+    })();
+
+    const TOKENS = ['<BOS>', 'Ela', 'saiu', 'só'];
+    // Masked attention weights (upper triangle blocked)
+    const MASKED_WEIGHTS = [
+      [1.00, null, null, null],
+      [0.45, 0.55, null, null],
+      [0.22, 0.41, 0.37, null],
+      [0.12, 0.31, 0.28, 0.29]
+    ];
+    // Without mask: uniform-ish weights for demonstration
+    const UNMASKED_WEIGHTS = [
+      [0.40, 0.25, 0.20, 0.15],
+      [0.20, 0.35, 0.25, 0.20],
+      [0.15, 0.25, 0.35, 0.25],
+      [0.15, 0.20, 0.30, 0.35]
+    ];
+
+    let maskedMode = false;
+    let activeRow = null;
+
+    function weightToHeat(w) {
+      if (w === null) return -1;
+      if (w < 0.15) return 0;
+      if (w < 0.25) return 1;
+      if (w < 0.35) return 2;
+      if (w < 0.50) return 3;
+      return 4;
+    }
+
+    function buildMatrix() {
+      // Col headers
+      const colHeaders = document.getElementById('colHeaders');
+      colHeaders.innerHTML = '';
+      TOKENS.forEach(t => {
+        const d = document.createElement('div');
+        d.className = 'col-label';
+        d.textContent = t;
+        colHeaders.appendChild(d);
+      });
+
+      // Rows
+      const matrixRows = document.getElementById('matrixRows');
+      matrixRows.innerHTML = '';
+      const weights = maskedMode ? MASKED_WEIGHTS : UNMASKED_WEIGHTS;
+
+      TOKENS.forEach((rowToken, i) => {
+        const row = document.createElement('div');
+        row.className = 'matrix-row' + (activeRow === i ? ' row-active' : '');
+        row.addEventListener('click', () => { activeRow = (activeRow === i) ? null : i; buildMatrix(); updateRowInfo(); });
+
+        const rowLabel = document.createElement('div');
+        rowLabel.className = 'row-label';
+        rowLabel.textContent = rowToken;
+        row.appendChild(rowLabel);
+
+        TOKENS.forEach((_, j) => {
+          const w = weights[i][j];
+          const cell = document.createElement('div');
+          const isBlocked = maskedMode && w === null;
+          const heatIdx = weightToHeat(w);
+
+          cell.className = 'matrix-cell ' + (isBlocked ? 'cell-blocked' : 'cell-allowed heat-' + heatIdx);
+          if (activeRow === i && !isBlocked) {
+            cell.classList.add('cell-row-highlight');
+          }
+
+          if (!isBlocked) {
+            const valDiv = document.createElement('div');
+            valDiv.className = 'cell-val';
+            valDiv.textContent = w.toFixed(2);
+            const posDiv = document.createElement('div');
+            posDiv.className = 'cell-pos';
+            posDiv.textContent = `a[${i},${j}]`;
+            cell.appendChild(valDiv);
+            cell.appendChild(posDiv);
+          }
+
+          cell.addEventListener('click', (e) => {
+            e.stopPropagation();
+            activeRow = i;
+            buildMatrix();
+            updateRowInfo();
+          });
+
+          row.appendChild(cell);
+        });
+
+        matrixRows.appendChild(row);
+      });
+    }
+
+    function updateRowInfo() {
+      const box = document.getElementById('rowInfoBox');
+      if (activeRow === null) { box.classList.remove('visible'); return; }
+
+      const weights = maskedMode ? MASKED_WEIGHTS : UNMASKED_WEIGHTS;
+      const rowToken = TOKENS[activeRow];
+      const rowW = weights[activeRow];
+
+      function escHtml(s) { return s.replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+      const allowed = rowW.map((w, j) => w !== null ? `<strong>${escHtml(TOKENS[j])}</strong>: ${w.toFixed(2)}` : null).filter(Boolean);
+      const blocked = rowW.map((w, j) => w === null ? `<strong>${escHtml(TOKENS[j])}</strong>` : null).filter(Boolean);
+
+      let html = `<strong>Query: ${escHtml(rowToken)}</strong> atende a:<br>${allowed.join(' · ')}`;
+      if (blocked.length) html += `<br><span style="color:var(--red)">Bloqueados (−∞): ${blocked.join(', ')}</span>`;
+      box.innerHTML = html;
+      box.classList.add('visible');
+    }
+
+    function setMask(enabled) {
+      maskedMode = enabled;
+      document.getElementById('btnSemMask').classList.toggle('active', !enabled);
+      document.getElementById('btnComMask').classList.toggle('active', enabled);
+
+      document.getElementById('modeName').textContent = enabled ? 'Com máscara causal' : 'Sem máscara';
+      document.getElementById('modeName').style.color = enabled ? 'var(--orange)' : 'var(--teal)';
+
+      document.getElementById('infoDesc').innerHTML = enabled
+        ? '<strong>Máscara causal ativa:</strong> posições futuras recebem −∞ antes do softmax. Cada token só pode atender a si mesmo e aos tokens anteriores, como seria na geração real token a token.'
+        : 'Neste modo, <strong>todos os tokens podem atender a todos os outros</strong>. Isso seria adequado para um encoder, mas em um decoder o modelo "espiaria" tokens futuros — o que não é permitido durante a geração autoregressiva.';
+
+      document.getElementById('maskMatrix').innerHTML = enabled
+        ? `M = <br>
+<span class="mask-zero">0</span>   <span class="mask-inf">−∞</span>  <span class="mask-inf">−∞</span>  <span class="mask-inf">−∞</span>   ← &lt;BOS&gt; só vê &lt;BOS&gt;<br>
+<span class="mask-zero">0</span>   <span class="mask-zero">0</span>   <span class="mask-inf">−∞</span>  <span class="mask-inf">−∞</span>   ← Ela vê &lt;BOS&gt;, Ela<br>
+<span class="mask-zero">0</span>   <span class="mask-zero">0</span>   <span class="mask-zero">0</span>   <span class="mask-inf">−∞</span>   ← saiu vê &lt;BOS&gt;..saiu<br>
+<span class="mask-zero">0</span>   <span class="mask-zero">0</span>   <span class="mask-zero">0</span>   <span class="mask-zero">0</span>    ← só vê todos`
+        : 'M = todas as células <span class="mask-zero">0</span> (sem bloqueio — modelo não mascarado)';
+
+      buildMatrix();
+      updateRowInfo();
+    }
+
+    // Init
+    buildMatrix();
+  </script>
+</body>
+</html>

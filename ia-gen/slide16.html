@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 16 – GANs: a ideia adversarial</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .big-quote {
+      font-size: clamp(1.2rem, 2.5vw, 1.7rem);
+      font-weight: 700; line-height: 1.5; text-align: center;
+      padding: 1.1rem 1.8rem;
+      background: var(--bg2); border: 2px solid var(--cyan);
+      border-left: 5px solid var(--cyan);
+      border-radius: var(--radius); color: var(--text); box-shadow: var(--shadow);
+    }
+    .big-quote em { color: var(--cyan); font-style: normal; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">IA Generativa</span>
+      <span style="font-size:0.9rem;color:var(--text-muted);font-weight:500;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 8 · Slide 16 / 24</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">GANs: a ideia adversarial</h1>
+      </div>
+
+      <div class="big-quote">
+        E se treinarmos <em>duas redes</em> em competição?
+      </div>
+
+      <div class="content-split" style="max-width:720px;margin:0 auto;align-items:stretch;">
+        <div class="panel" style="text-align:center;border-color:var(--teal);">
+          <div style="font-size:2.8rem;margin-bottom:0.6rem;">🎨</div>
+          <div style="font-size:1.1rem;font-weight:800;color:var(--teal);margin-bottom:0.6rem;">Gerador</div>
+          <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.8rem;line-height:1.55;">
+            Produz dados <strong style="color:var(--text);">falsos</strong> tentando
+            <strong style="color:var(--text);">enganar</strong> o discriminador.
+          </div>
+          <span style="display:inline-block;padding:0.3rem 0.9rem;background:var(--teal-lt);border:1px solid var(--teal);border-radius:999px;font-size:0.8rem;font-weight:700;color:var(--teal);">Ruído → Dado</span>
+        </div>
+        <div class="panel" style="text-align:center;border-color:var(--cyan);">
+          <div style="font-size:2.8rem;margin-bottom:0.6rem;">🔍</div>
+          <div style="font-size:1.1rem;font-weight:800;color:var(--cyan);margin-bottom:0.6rem;">Discriminador</div>
+          <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.8rem;line-height:1.55;">
+            Tenta <strong style="color:var(--text);">distinguir</strong>
+            dados reais de falsos com máxima precisão.
+          </div>
+          <span style="display:inline-block;padding:0.3rem 0.9rem;background:var(--cyan-lt);border:1px solid var(--cyan);border-radius:999px;font-size:0.8rem;font-weight:700;color:var(--cyan);">Dado → Real/Falso</span>
+        </div>
+      </div>
+
+      <div class="panel" style="max-width:600px;margin:0 auto;text-align:center;padding:0.9rem;">
+        <span style="color:var(--text-muted);font-size:0.9rem;">
+          Goodfellow et al., 2014 — <em>"Generative Adversarial Networks"</em>
+        </span>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide15.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide17.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') location.href = 'slide17.html';
+      if (e.key === 'ArrowLeft'  || e.key === 'PageUp')   location.href = 'slide15.html';
+    });
+  </script>
+</body>
+</html>

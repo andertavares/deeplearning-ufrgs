@@ -1,0 +1,1449 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 25 – Confunda a Rede!</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── Outer panel ──────────────────────────────────────────────────────── */
+    .pipe-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.3rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+      box-shadow: var(--shadow);
+      flex: 1;
+    }
+
+    /* ── Pipeline grid ────────────────────────────────────────────────────── */
+    .pipeline-grid {
+      display: grid;
+      /* entrada | filt | conv | relu | pool | flatten | dense | saida */
+      grid-template-columns: auto auto auto auto auto auto auto auto;
+      gap: 0.6rem 0.5rem;
+      align-items: start;
+      justify-content: center;
+      overflow-x: auto;
+      padding: 0.2rem 0.2rem 0.4rem;
+    }
+
+    .col-header {
+      text-align: center;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.03em;
+      padding: 0.22rem 0.5rem;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+    .h-input   { color: var(--cyan);        background: var(--cyan-lt);        border: 1.5px solid #67e8f9; }
+    .h-filter  { color: var(--text-muted);  background: var(--bg3);            border: 1.5px solid var(--border2); }
+    .h-conv    { color: var(--blue);        background: var(--blue-lt);        border: 1.5px solid #93c5fd; }
+    .h-relu    { color: var(--purple);      background: var(--purple-lt);      border: 1.5px solid #c4b5fd; }
+    .h-pool    { color: var(--green);       background: var(--green-lt);       border: 1.5px solid #86efac; }
+    .h-flatten { color: var(--yellow);      background: var(--yellow-lt);      border: 1.5px solid #fde047; }
+    .h-dense   { color: var(--orange);      background: #ffedd5;               border: 1.5px solid #fdba74; }
+    .h-saida   { color: var(--cyan);        background: var(--cyan-lt);        border: 1.5px solid #67e8f9; }
+
+    /* ── Grid cells ───────────────────────────────────────────────────────── */
+    .cell-entrada  { grid-row: 2 / span 3; display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
+    .cell-filter   { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; }
+    .cell-map      { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; }
+    .cell-flatten  { grid-row: 2 / span 3; display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
+    .cell-dense    { grid-row: 2 / span 3; display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
+    .cell-saida    { grid-row: 2 / span 3; display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
+
+    .cell-badge {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.62rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      white-space: nowrap;
+    }
+
+    canvas { image-rendering: pixelated; display: block; }
+
+    /* ── Clickable / selected state ───────────────────────────────────────── */
+    .inspectable {
+      cursor: pointer;
+      border-radius: 5px;
+      transition: box-shadow 0.15s, transform 0.12s;
+    }
+    .inspectable:hover { transform: scale(1.04); }
+    .inspectable.selected {
+      box-shadow: 0 0 0 3px var(--purple), 0 0 12px rgba(91,33,182,0.35) !important;
+      border-radius: 5px;
+    }
+
+    /* ── Flatten bar strips ───────────────────────────────────────────────── */
+    .flat-strip {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+    .flat-cell-bar {
+      width: 42px;
+      height: 10px;
+      border-radius: 2px;
+    }
+    .flat-sep {
+      height: 3px;
+      width: 42px;
+      background: var(--border2);
+      border-radius: 1px;
+      margin: 2px 0;
+    }
+
+    /* ── Output probability bars ──────────────────────────────────────────── */
+    .output-bars {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+      width: 100px;
+    }
+    .out-bar-row {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .out-bar-label {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.65rem;
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+    }
+    .out-bar-track {
+      height: 12px;
+      background: var(--bg3);
+      border-radius: 6px;
+      border: 1px solid var(--border2);
+      overflow: hidden;
+    }
+    .out-bar-fill {
+      height: 100%;
+      border-radius: 6px;
+      transition: width 0.3s;
+    }
+
+    /* ── Dense network diagram ────────────────────────────────────────────── */
+    .dense-diagram {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 6px;
+    }
+    .dense-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .dense-node {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 1.5px solid;
+    }
+    .dense-ellipsis {
+      font-size: 0.55rem;
+      color: var(--text-dim);
+      line-height: 1;
+    }
+    .dense-layer-label {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.55rem;
+      color: var(--text-dim);
+      text-align: center;
+      margin-top: 3px;
+      white-space: nowrap;
+    }
+    .dense-arrow {
+      font-size: 0.9rem;
+      color: var(--text-dim);
+      padding-bottom: 14px; /* align with node center */
+    }
+
+    /* ── Inspector panel ──────────────────────────────────────────────────── */
+    .inspector {
+      border-radius: var(--radius-sm);
+      padding: 0.75rem 1rem;
+      font-size: 0.88rem;
+      min-height: 80px;
+      border: 1.5px solid var(--border2);
+      background: var(--bg3);
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .insp-hint {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-dim);
+      font-size: 0.85rem;
+    }
+    .insp-body {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.9rem;
+      align-items: flex-start;
+    }
+    .insp-title {
+      font-weight: 700;
+      font-size: 0.92rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      width: 100%;
+      margin-bottom: 0.3rem;
+    }
+    .insp-tag {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.72rem;
+      padding: 0.1rem 0.55rem;
+      border-radius: 999px;
+      border: 1px solid;
+      font-weight: 700;
+    }
+    .insp-block {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      min-width: 110px;
+    }
+    .insp-block-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-dim);
+    }
+    .insp-val {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .insp-grid {
+      display: grid;
+      grid-template-columns: repeat(var(--insp-cols, 3), 1fr);
+      gap: 3px;
+    }
+    .insp-cell {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-align: center;
+      padding: 3px 4px;
+      border-radius: 3px;
+      border: 1px solid var(--border2);
+      background: var(--bg2);
+    }
+    .insp-cell.pos { background: rgba(91,33,182,0.1); border-color: rgba(91,33,182,0.3); color: var(--purple); }
+    .insp-cell.neg { background: rgba(185,28,28,0.08); border-color: rgba(185,28,28,0.25); color: var(--red); }
+    .insp-cell.zer { background: var(--bg3); color: var(--text-dim); }
+    .insp-weights-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 30px);
+      gap: 2px;
+    }
+    .insp-w {
+      width: 30px; height: 24px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.72rem; font-weight: 700;
+      border-radius: 3px;
+    }
+    .insp-flat-strip {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 2px;
+    }
+    .insp-flat-cell {
+      width: 26px; height: 26px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.6rem; font-weight: 700;
+      border-radius: 3px;
+      border: 1px solid;
+    }
+    .insp-bar-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .insp-bar-track {
+      flex: 1;
+      height: 14px;
+      background: var(--bg2);
+      border-radius: 7px;
+      border: 1px solid var(--border2);
+      overflow: hidden;
+      min-width: 80px;
+    }
+    .insp-bar-fill {
+      height: 100%;
+      border-radius: 7px;
+    }
+    .insp-bar-label {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.75rem;
+      font-weight: 700;
+      min-width: 60px;
+    }
+
+    /* ── Transform controls ───────────────────────────────────────────────── */
+    .controls-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1.1rem;
+      align-items: center;
+      padding: 0.55rem 0.8rem;
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius-sm);
+    }
+    .ctrl-group {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+    .ctrl-label {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      white-space: nowrap;
+      min-width: 80px;
+    }
+    .ctrl-val {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--cyan);
+      min-width: 36px;
+      text-align: right;
+    }
+    input[type=range].ctrl-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100px;
+      height: 5px;
+      border-radius: 3px;
+      background: var(--border2);
+      outline: none;
+      cursor: pointer;
+    }
+    input[type=range].ctrl-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: var(--cyan);
+      border: 2px solid var(--bg1);
+      cursor: pointer;
+    }
+    input[type=range].ctrl-slider::-moz-range-thumb {
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: var(--cyan);
+      border: 2px solid var(--bg1);
+      cursor: pointer;
+    }
+    .ctrl-sep {
+      width: 1px; height: 22px;
+      background: var(--border2);
+    }
+    .btn-reset-small {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 999px;
+      border: 1.5px solid var(--border2);
+      background: var(--bg2);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .btn-reset-small:hover {
+      background: var(--red);
+      color: #fff;
+      border-color: var(--red);
+    }
+
+    /* ── Editable pixel grid ─────────────────────────────────────────────── */
+    #pixel-grid-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    #pixel-grid {
+      display: grid;
+      grid-template-columns: repeat(9, 1fr);
+      border: 2px solid var(--border2);
+      border-radius: 6px;
+      overflow: hidden;
+      gap: 1px;
+      background: var(--border2);
+      cursor: crosshair;
+      user-select: none;
+    }
+    .px-cell {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.55rem;
+      font-family: 'Fira Code', monospace;
+      transition: background 0.1s;
+    }
+    .px-cell.on  { background: #ffffff; color: #1e293b; }
+    .px-cell.off { background: #111827; color: #334155; }
+    .px-cell.modified { outline: 2px solid #f97316; outline-offset: -2px; z-index: 2; position: relative; }
+
+    .grid-hint {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      font-family: 'Fira Code', monospace;
+      text-align: center;
+      line-height: 1.5;
+      margin-top: 5px;
+    }
+
+    /* ── Pixel counter ───────────────────────────────────────────────────── */
+    .px-counter {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .px-counter .pc-label { color: var(--text-muted); }
+    .pc-num {
+      font-family: 'Fira Code', monospace;
+      font-weight: 800;
+      font-size: 1rem;
+    }
+    .pc-num.zero   { color: var(--text-dim); }
+    .pc-num.few    { color: var(--yellow); }
+    .pc-num.many   { color: var(--orange); }
+    .pc-num.lots   { color: var(--red); }
+
+    /* ── Reset / hint buttons ────────────────────────────────────────────── */
+    .btn-ctrl {
+      padding: 0.45rem 0.6rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.82rem;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      border: 1.5px solid;
+      transition: all 0.2s;
+    }
+    .btn-reset { background: var(--bg3); border-color: var(--border2); color: var(--text); }
+    .btn-reset:hover { background: var(--purple); border-color: var(--purple); color: #fff; }
+    .btn-hint { background: #fff7ed; border-color: #fed7aa; color: var(--orange); }
+    .btn-hint:hover { background: #fed7aa; }
+
+    /* ── Status message ──────────────────────────────────────────────────── */
+    .status-msg {
+      border-radius: var(--radius-sm);
+      padding: 0.4rem 0.8rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      line-height: 1.5;
+      border: 1.5px solid;
+      transition: all 0.3s;
+      flex: 1;
+      text-align: center;
+    }
+    .status-msg.s-good   { background: var(--green-lt); border-color: #86efac; color: var(--green); }
+    .status-msg.s-warn   { background: var(--yellow-lt); border-color: #fde047; color: var(--yellow); }
+    .status-msg.s-danger { background: #fff1f2; border-color: #fda4af; color: var(--red); }
+    .status-msg.s-attack { background: #fee2e2; border-color: #fca5a5; color: var(--red); }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Redes Convolucionais</span>
+      <span class="prof-tag" style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 8 · Slide 4 / 4</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Confunda a Rede! 🎭</h1>
+        <p class="slide-subtitle">Clique nos pixels da Entrada para alterá-los — observe como os mapas de ativação e a probabilidade de saída reagem ao ataque!</p>
+      </div>
+
+      <div class="pipe-panel">
+        <!-- ── Transform controls ────────────────────────────────────── -->
+        <div class="controls-bar" style="justify-content: space-between;">
+          <div style="display:flex; gap:0.8rem; align-items:center;">
+             <div class="px-counter">
+                <span class="pc-label">Pixels alterados:</span>
+                <span class="pc-num zero" id="mod-count">0</span>
+             </div>
+             <button class="btn-ctrl btn-reset" id="btn-reset">↺ Resetar</button>
+             <button class="btn-ctrl btn-hint" id="btn-hint">💡 Dica</button>
+          </div>
+          <div class="status-msg s-good" id="status-msg">
+             ✅ Rede classifica corretamente como X
+          </div>
+        </div>
+
+        <div class="pipeline-grid" id="pipeline-grid">
+          <!-- built by JS -->
+        </div>
+
+        <div class="inspector" id="inspector">
+          <div class="insp-hint">
+            <span style="font-size:1.2rem">👆</span>
+            <span>Clique em qualquer grid ou elemento do pipeline para inspecionar os valores. (Pinte as células na grade de Entrada)</span>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide24.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot active"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide26.html'">Próximo Bloco →</button>
+    </nav>
+  </div>
+
+  <script>
+    /* ─────────────────────────────────────────────────────────────────────
+       DATA: Filters, input image, MLP weights
+       ───────────────────────────────────────────────────────────────────── */
+    const FILTERS = [
+      { name:'Diagonal ↘', desc:'Detecta diagonal ↘', cssColor:'#5b21b6',
+        weights:[[ 1, 0,-1],[ 0, 1, 0],[-1, 0, 1]] },
+      { name:'Centro ✖',   desc:'Detecta padrão X',   cssColor:'#0e7490',
+        weights:[[ 1,-1, 1],[-1, 1,-1],[ 1,-1, 1]] },
+      { name:'Diagonal ↗', desc:'Detecta diagonal ↗', cssColor:'#166534',
+        weights:[[-1, 0, 1],[ 0, 1, 0],[ 1, 0,-1]] },
+    ];
+
+    const N = 9;
+    const tileX = [
+      [0,0,0,0,0,0,0,0,0],
+      [0,1,0,0,0,0,0,1,0],
+      [0,0,1,0,0,0,1,0,0],
+      [0,0,0,1,0,1,0,0,0],
+      [0,0,0,0,1,0,0,0,0],
+      [0,0,0,1,0,1,0,0,0],
+      [0,0,1,0,0,0,1,0,0],
+      [0,1,0,0,0,0,0,1,0],
+      [0,0,0,0,0,0,0,0,0],
+    ];
+
+    /* ── MLP weights (27 → 4 → 1) ─── */
+    const MLP_W1 = [
+      /* n0: selective for filter0 (diag ↘, pool indices 0-8) */
+      [0.4,0.3,0.1, 0.2,0.5,0.2, 0.1,0.3,0.4,  0,0,0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0,0],
+      /* n1: selective for filter1 (centro X, pool indices 9-17) */
+      [0,0,0,0,0,0,0,0,0,  0.3,0.2,0.3, 0.2,0.6,0.2, 0.3,0.2,0.3,  0,0,0,0,0,0,0,0,0],
+      /* n2: selective for filter2 (diag ↗, pool indices 18-26) */
+      [0,0,0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0,0,  0.4,0.3,0.1, 0.2,0.5,0.2, 0.1,0.3,0.4],
+      /* n3: general energy across all filters */
+      [0.1,0.1,0.1, 0.1,0.2,0.1, 0.1,0.1,0.1,  0.1,0.1,0.1, 0.1,0.2,0.1, 0.1,0.1,0.1,  0.1,0.1,0.1, 0.1,0.2,0.1, 0.1,0.1,0.1],
+    ];
+    /* Thresholds calibrated so neurons only fire for clear pattern presence.
+       b1=-2.5 for all units + small W2 + b2=-1.5 gives:
+         perfect X → 93%,  translation → 87%,  rot15° → 76%,  rot30° → 19% */
+    const MLP_b1 = [-2.5, -2.5, -2.5, -2.5];
+    /* Small W2 weights + negative b2 → wide, pedagogically meaningful output range */
+    const MLP_W2 = [[ 0.3, 0.5, 0.3, 0.1]];  /* logit for P(X) */
+    const MLP_b2 = [-1.5];
+    const CLASS_NAMES = ['X (presente)', 'não-X'];
+
+    /* ─────────────────────────────────────────────────────────────────────
+       TRANSFORM STATE & COMPUTED INPUT
+       ───────────────────────────────────────────────────────────────────── */
+    const ORIG = tileX.map(row => [...row]);
+    let currentInput = tileX.map(row => [...row]);
+    const modifiedCells = new Set();
+    let cellEls = [];
+    
+    // Disable computeTransformed logic from slider
+    function computeTransformed(){ /* Disabled in Slide 25 */ }
+
+    function initPixelGrid() {
+       const gridEl = document.getElementById('pixel-grid');
+       if (!gridEl) return;
+       cellEls = [];
+       gridEl.innerHTML = '';
+       for (let r = 0; r < N; r++) {
+         for (let c = 0; c < N; c++) {
+           const cell = document.createElement('div');
+           cell.className = 'px-cell ' + (currentInput[r][c] ? 'on' : 'off');
+           cell.style.width  = '13px';
+           cell.style.height = '13px';
+           cell.dataset.r = r;
+           cell.dataset.c = c;
+           gridEl.appendChild(cell);
+           cellEls.push(cell);
+         }
+       }
+       
+       let dragging = false;
+       let dragValue = null;
+
+       function toggleCell(r, c, forceTo) {
+         const newVal = (forceTo !== undefined) ? forceTo : (currentInput[r][c] ? 0 : 1);
+         currentInput[r][c] = newVal;
+         const key = r * N + c;
+         if (currentInput[r][c] !== ORIG[r][c]) modifiedCells.add(key);
+         else modifiedCells.delete(key);
+         const cell = cellEls[r * N + c];
+         cell.className = 'px-cell ' + (newVal ? 'on' : 'off') + (modifiedCells.has(key) ? ' modified' : '');
+         
+         computePipeline();
+         redrawAll();
+       }
+
+       gridEl.addEventListener('mousedown', e => {
+         const cell = e.target.closest('.px-cell');
+         if (!cell) return;
+         dragging = true;
+         const r = +cell.dataset.r, c = +cell.dataset.c;
+         dragValue = currentInput[r][c] ? 0 : 1;
+         toggleCell(r, c);
+         e.preventDefault();
+       });
+
+       gridEl.addEventListener('mousemove', e => {
+         if (!dragging) return;
+         const cell = e.target.closest('.px-cell');
+         if (!cell) return;
+         const r = +cell.dataset.r, c = +cell.dataset.c;
+         toggleCell(r, c, dragValue);
+       });
+
+       document.addEventListener('mouseup', () => { dragging = false; });
+    }
+    
+    const CRITICAL = [[4,4],[3,3],[5,5],[3,5],[5,3]];
+    let hintStep = 0;
+    
+    document.getElementById('btn-hint').addEventListener('click', () => {
+       const [r, c] = CRITICAL[hintStep % CRITICAL.length];
+       const newVal = currentInput[r][c] ? 0 : 1;
+       currentInput[r][c] = newVal;
+       const key = r * N + c;
+       if (currentInput[r][c] !== ORIG[r][c]) modifiedCells.add(key);
+       else modifiedCells.delete(key);
+       const cell = cellEls[r * N + c];
+       cell.className = 'px-cell ' + (newVal ? 'on' : 'off') + (modifiedCells.has(key) ? ' modified' : '');
+       
+       hintStep++;
+       computePipeline();
+       redrawAll();
+    });
+    
+    document.getElementById('btn-reset').addEventListener('click', () => {
+      for (let r = 0; r < N; r++)
+        for (let c = 0; c < N; c++) {
+          currentInput[r][c] = ORIG[r][c];
+          const key = r * N + c;
+          modifiedCells.delete(key);
+          if (cellEls.length) {
+              cellEls[r * N + c].className = 'px-cell ' + (ORIG[r][c] ? 'on' : 'off');
+          }
+        }
+      hintStep = 0;
+      computePipeline();
+      redrawAll();
+    });
+
+    /* ─────────────────────────────────────────────────────────────────────
+       COMPUTE PIPELINE
+       ───────────────────────────────────────────────────────────────────── */
+    const NF = N - 3 + 1;                                 // 7
+    const POOL_K = 2, POOL_S = 2;
+    const NP = Math.floor((NF - POOL_K) / POOL_S) + 1;   // 3
+
+    function convolve(weights) {
+      const out = [];
+      for (let r = 0; r < NF; r++) {
+        out.push([]);
+        for (let c = 0; c < NF; c++) {
+          let s = 0;
+          for (let fr = 0; fr < 3; fr++)
+            for (let fc = 0; fc < 3; fc++)
+              s += weights[fr][fc] * currentInput[r+fr][c+fc];
+          out[r].push(s);
+        }
+      }
+      return out;
+    }
+
+    function reluMap(m) { return m.map(row => row.map(v => Math.max(0, v))); }
+
+    /* maxPool returns {pool, src} for inspection */
+    function maxPoolDetailed(m) {
+      const out = [], srcInfo = [];
+      for (let pr = 0; pr < NP; pr++) {
+        out.push([]); srcInfo.push([]);
+        for (let pc = 0; pc < NP; pc++) {
+          let maxV = -Infinity, sr = 0, sc = 0;
+          for (let dr = 0; dr < POOL_K; dr++)
+            for (let dc = 0; dc < POOL_K; dc++) {
+              const v = m[pr*POOL_S+dr][pc*POOL_S+dc];
+              if (v > maxV) { maxV = v; sr = pr*POOL_S+dr; sc = pc*POOL_S+dc; }
+            }
+          out[pr].push(maxV);
+          srcInfo[pr].push({r: sr, c: sc});
+        }
+      }
+      return {pool: out, src: srcInfo};
+    }
+
+    /* MLP forward */
+    function denseRelu(input, W, b) {
+      return W.map((row, i) => Math.max(0, row.reduce((s,w,j) => s + w*input[j], 0) + b[i]));
+    }
+    function denseLinear(input, W, b) {
+      return W.map((row, i) => row.reduce((s,w,j) => s + w*input[j], 0) + b[i]);
+    }
+    function sigmoid(x) { return 1 / (1 + Math.exp(-x)); }
+
+    let allConv, allRelu, allPoolDetailed, allPool, allPoolSrc;
+    let flatVector, mlpHidden, mlpLogits, pX, mlpProbs;
+
+    function computePipeline() {
+      allConv         = FILTERS.map(f => convolve(f.weights));
+      allRelu         = allConv.map(m => reluMap(m));
+      allPoolDetailed = allRelu.map(m => maxPoolDetailed(m));
+      allPool         = allPoolDetailed.map(d => d.pool);
+      allPoolSrc      = allPoolDetailed.map(d => d.src);
+      flatVector      = allPool.flatMap(pool => pool.flatMap(row => row));
+      mlpHidden       = denseRelu(flatVector, MLP_W1, MLP_b1);
+      mlpLogits       = denseLinear(mlpHidden, MLP_W2, MLP_b2);
+      pX              = sigmoid(mlpLogits[0]);
+      mlpProbs        = [pX, 1 - pX];
+    }
+
+    /* initial computation */
+    computePipeline();
+
+    /* ─────────────────────────────────────────────────────────────────────
+       DRAW HELPERS
+       ───────────────────────────────────────────────────────────────────── */
+    function drawGrid(ctx, rows, cols, CS) {
+      ctx.strokeStyle = 'rgba(51,65,85,0.4)';
+      ctx.lineWidth = 0.5;
+      for (let i = 0; i <= cols; i++) {
+        ctx.beginPath(); ctx.moveTo(i*CS,0); ctx.lineTo(i*CS,rows*CS); ctx.stroke();
+      }
+      for (let i = 0; i <= rows; i++) {
+        ctx.beginPath(); ctx.moveTo(0,i*CS); ctx.lineTo(cols*CS,i*CS); ctx.stroke();
+      }
+    }
+
+    function drawInput(cv) {
+      const ctx = cv.getContext('2d');
+      const CS = cv.width / N;
+      ctx.fillStyle = '#000'; ctx.fillRect(0,0,cv.width,cv.height);
+      for (let r = 0; r < N; r++)
+        for (let c = 0; c < N; c++)
+          if (currentInput[r][c]) { ctx.fillStyle='#fff'; ctx.fillRect(c*CS,r*CS,CS,CS); }
+      drawGrid(ctx, N, N, CS);
+    }
+
+    function drawFilterWeights(cv, weights, accentColor) {
+      const ctx = cv.getContext('2d'), F=3, CS=cv.width/F;
+      ctx.fillStyle='#000'; ctx.fillRect(0,0,cv.width,cv.height);
+      for (let r=0;r<F;r++) for (let c=0;c<F;c++) {
+        const v=weights[r][c];
+        if (v===0) continue;
+        ctx.fillStyle=v>0?'#fff':'#ff4444';
+        ctx.fillRect(c*CS,r*CS,CS,CS);
+      }
+      ctx.font=`bold ${Math.max(8,Math.floor(CS*0.42))}px Fira Code,monospace`;
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      for (let r=0;r<F;r++) for (let c=0;c<F;c++) {
+        const v=weights[r][c];
+        ctx.fillStyle=v===0?'rgba(255,255,255,0.22)':(v>0?'#111':'#fff');
+        ctx.fillText(v,c*CS+CS/2,r*CS+CS/2);
+      }
+      drawGrid(ctx,F,F,CS);
+      ctx.strokeStyle=accentColor; ctx.lineWidth=2;
+      ctx.strokeRect(1,1,cv.width-2,cv.height-2);
+    }
+
+    function drawHeatmap(cv, resp, showNeg) {
+      const ctx = cv.getContext('2d');
+      const rows=resp.length, cols=resp[0].length, CS=cv.width/cols;
+      let maxAbs=0;
+      for (let r=0;r<rows;r++) for (let c=0;c<cols;c++)
+        if (Math.abs(resp[r][c])>maxAbs) maxAbs=Math.abs(resp[r][c]);
+      ctx.fillStyle='#000'; ctx.fillRect(0,0,cv.width,cv.height);
+      for (let r=0;r<rows;r++) for (let c=0;c<cols;c++) {
+        const v=resp[r][c];
+        if (v===0) continue;
+        const t=maxAbs>0?Math.abs(v)/maxAbs:0, g=Math.round(255*t);
+        if (v>0)        ctx.fillStyle=`rgb(${g},${g},${g})`;
+        else if (showNeg) ctx.fillStyle=`rgb(${g},0,0)`;
+        ctx.fillRect(c*CS,r*CS,CS,CS);
+      }
+      drawGrid(ctx,rows,cols,CS);
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────
+       CANVAS SIZES
+       ───────────────────────────────────────────────────────────────────── */
+    const CS_IN   = 13;  // 9×13 = 117
+    const CS_FILT = 17;  // 3×17 =  51
+    const CS_CONV = 12;  // 7×12 =  84
+    const CS_POOL = 20;  // 3×20 =  60
+
+    /* ─────────────────────────────────────────────────────────────────────
+       BUILD GRID DOM
+       ───────────────────────────────────────────────────────────────────── */
+    const grid = document.getElementById('pipeline-grid');
+
+    let selectedEl = null;
+
+    function setSelected(el) {
+      if (selectedEl) selectedEl.classList.remove('selected');
+      selectedEl = el;
+      el.classList.add('selected');
+    }
+
+    function mkCanvas(id, w, h, borderColor) {
+      const cv = document.createElement('canvas');
+      cv.id = id; cv.width = w; cv.height = h;
+      cv.style.border = `1.5px solid ${borderColor||'var(--border2)'}`;
+      cv.style.borderRadius = '4px';
+      cv.className = 'inspectable';
+      return cv;
+    }
+
+    function mkBadge(text, color) {
+      const d = document.createElement('div');
+      d.className = 'cell-badge';
+      d.textContent = text;
+      if (color) d.style.color = color;
+      return d;
+    }
+
+    /* ── Header row ── */
+    const HEADERS = [
+      {text:'Entrada',       cls:'h-input'},
+      {text:'Filtro (3×3)',  cls:'h-filter'},
+      {text:'Conv (7×7)',    cls:'h-conv'},
+      {text:'ReLU (7×7)',    cls:'h-relu'},
+      {text:'MaxPool (3×3)', cls:'h-pool'},
+      {text:'Flatten',       cls:'h-flatten'},
+      {text:'Dense',         cls:'h-dense'},
+      {text:'Saída',         cls:'h-saida'},
+    ];
+    HEADERS.forEach(h => {
+      const d = document.createElement('div');
+      d.className = 'col-header ' + h.cls;
+      d.textContent = h.text;
+      grid.appendChild(d);
+    });
+
+    /* ── Filter rows ── */
+    FILTERS.forEach((f, fi) => {
+      /* Col 0: Entrada (fi=0 only, spans 3 rows) */
+      if (fi === 0) {
+        const cell = document.createElement('div');
+        cell.className = 'cell-entrada';
+        cell.style.cssText = 'grid-column:1; grid-row:2 / span 3; justify-content: center;';
+        
+        const gridContainer = document.createElement('div');
+        gridContainer.id = 'pixel-grid-container';
+        gridContainer.className = 'inspectable';
+        gridContainer.addEventListener('click', () => { setSelected(gridContainer); currentInspectFn = inspectInput; inspectInput(); });
+        
+        const pxGrid = document.createElement('div');
+        pxGrid.id = 'pixel-grid';
+        pxGrid.style.width = (N * 13 + (N - 1)) + 'px'; // Cell PX=13
+        gridContainer.appendChild(pxGrid);
+        
+        const hint = document.createElement('div');
+        hint.className = 'grid-hint';
+        hint.innerHTML = 'Clique para ligar/desligar<br/>Arraste para desenhar';
+        gridContainer.appendChild(hint);
+        
+        cell.appendChild(gridContainer);
+        cell.appendChild(mkBadge('9 × 9 × 1 = 81', 'var(--cyan)'));
+        grid.appendChild(cell);
+      }
+
+      /* Col 1: Filter weights */
+      const cellF = document.createElement('div');
+      cellF.className = 'cell-filter';
+      cellF.style.cssText = `grid-column:2; grid-row:${fi+2};`;
+      const cvF = mkCanvas(`cv-filt-${fi}`, 3*CS_FILT, 3*CS_FILT, f.cssColor);
+      cvF.addEventListener('click', () => { setSelected(cvF); currentInspectFn = () => inspectFilter(fi); inspectFilter(fi); });
+      drawFilterWeights(cvF, f.weights, f.cssColor);
+      cellF.appendChild(cvF);
+      cellF.appendChild(mkBadge('3×3 + bias = 10', f.cssColor));
+      grid.appendChild(cellF);
+
+      /* Col 2: Conv */
+      const cellC = document.createElement('div');
+      cellC.className = 'cell-map';
+      cellC.style.cssText = `grid-column:3; grid-row:${fi+2};`;
+      const cvC = mkCanvas(`cv-conv-${fi}`, NF*CS_CONV, NF*CS_CONV, '#93c5fd');
+      cvC.addEventListener('click', () => { setSelected(cvC); currentInspectFn = () => inspectMap('conv', fi); inspectMap('conv', fi); });
+      drawHeatmap(cvC, allConv[fi], true);
+      cellC.appendChild(cvC);
+      cellC.appendChild(mkBadge(`7 × 7 = 49`, 'var(--blue)'));
+      grid.appendChild(cellC);
+
+      /* Col 3: ReLU */
+      const cellR = document.createElement('div');
+      cellR.className = 'cell-map';
+      cellR.style.cssText = `grid-column:4; grid-row:${fi+2};`;
+      const cvR = mkCanvas(`cv-relu-${fi}`, NF*CS_CONV, NF*CS_CONV, '#c4b5fd');
+      cvR.addEventListener('click', () => { setSelected(cvR); currentInspectFn = () => inspectMap('relu', fi); inspectMap('relu', fi); });
+      drawHeatmap(cvR, allRelu[fi], false);
+      cellR.appendChild(cvR);
+      cellR.appendChild(mkBadge(`7 × 7 = 49`, 'var(--purple)'));
+      grid.appendChild(cellR);
+
+      /* Col 4: Pool */
+      const cellP = document.createElement('div');
+      cellP.className = 'cell-map';
+      cellP.style.cssText = `grid-column:5; grid-row:${fi+2};`;
+      const cvP = mkCanvas(`cv-pool-${fi}`, NP*CS_POOL, NP*CS_POOL, '#86efac');
+      cvP.addEventListener('click', () => { setSelected(cvP); currentInspectFn = () => inspectPool(fi); inspectPool(fi); });
+      drawHeatmap(cvP, allPool[fi], false);
+      cellP.appendChild(cvP);
+      cellP.appendChild(mkBadge(`3 × 3 = 9`, 'var(--green)'));
+      grid.appendChild(cellP);
+
+      /* Col 5: Flatten (fi=0 only, spans 3 rows) */
+      if (fi === 0) {
+        const cellFl = document.createElement('div');
+        cellFl.className = 'cell-flatten';
+        cellFl.style.cssText = 'grid-column:6; grid-row:2 / span 3;';
+
+        const strip = buildFlatStrip();
+        strip.className += ' inspectable';
+        strip.id = 'flat-strip';
+        strip.addEventListener('click', () => { setSelected(strip); currentInspectFn = inspectFlatten; inspectFlatten(); });
+
+        cellFl.appendChild(strip);
+        cellFl.appendChild(mkBadge('27 × 1', 'var(--yellow)'));
+        grid.appendChild(cellFl);
+      }
+
+      /* Col 6: Dense network (fi=0 only, spans 3 rows) */
+      if (fi === 0) {
+        const cellD = document.createElement('div');
+        cellD.className = 'cell-dense';
+        cellD.style.cssText = 'grid-column:7; grid-row:2 / span 3;';
+
+        const diag = buildDenseDiagram();
+        diag.className += ' inspectable';
+        diag.id = 'dense-diag';
+        diag.addEventListener('click', () => { setSelected(diag); currentInspectFn = inspectDense; inspectDense(); });
+
+        cellD.appendChild(diag);
+      cellD.appendChild(mkBadge('27→4→1 σ', 'var(--orange)'));
+        grid.appendChild(cellD);
+      }
+
+      /* Col 7: Saída (fi=0 only, spans 3 rows) */
+      if (fi === 0) {
+        const cellS = document.createElement('div');
+        cellS.className = 'cell-saida';
+        cellS.style.cssText = 'grid-column:8; grid-row:2 / span 3;';
+
+        const bars = buildOutputBars();
+        bars.id = 'output-bars';
+        bars.className += ' inspectable';
+        bars.addEventListener('click', () => { setSelected(bars); currentInspectFn = inspectOutput; inspectOutput(); });
+
+        cellS.appendChild(bars);
+        cellS.appendChild(mkBadge('σ(z) → P(X)', 'var(--cyan)'));
+        grid.appendChild(cellS);
+      }
+    });
+
+    /* ─────────────────────────────────────────────────────────────────────
+       FLATTEN STRIP BUILDER
+       ───────────────────────────────────────────────────────────────────── */
+    function buildFlatStrip() {
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:0;padding:3px;border:1.5px solid #fde047;border-radius:5px;background:#fefce8;';
+
+      FILTERS.forEach((f, fi) => {
+        if (fi > 0) {
+          const sep = document.createElement('div');
+          sep.className = 'flat-sep';
+          wrap.appendChild(sep);
+        }
+        const vals = allPool[fi].flatMap(row => row);
+        const maxV = Math.max(...vals) || 1;
+        const strip = document.createElement('div');
+        strip.className = 'flat-strip';
+        vals.forEach(v => {
+          const bar = document.createElement('div');
+          bar.className = 'flat-cell-bar';
+          const t = v / maxV;
+          // use filter's hex color with alpha
+          const r = parseInt(f.cssColor.slice(1,3),16);
+          const g2 = parseInt(f.cssColor.slice(3,5),16);
+          const b2 = parseInt(f.cssColor.slice(5,7),16);
+          bar.style.background = v > 0
+            ? `rgba(${r},${g2},${b2},${0.15 + 0.85*t})`
+            : `rgba(30,41,59,0.15)`;
+          bar.style.border = `1px solid rgba(${r},${g2},${b2},0.4)`;
+          strip.appendChild(bar);
+        });
+        wrap.appendChild(strip);
+      });
+      return wrap;
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────
+       DENSE DIAGRAM BUILDER
+       ───────────────────────────────────────────────────────────────────── */
+    function buildDenseDiagram() {
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border:1.5px solid #fdba74;border-radius:5px;background:#fff7ed;';
+
+      const diag = document.createElement('div');
+      diag.className = 'dense-diagram';
+
+      /* Input column (27, show 5 + ...) */
+      const colIn = makeNodeCol('#fdba74', [0,1,2,'…',26], '27');
+      diag.appendChild(colIn);
+
+      const arr1 = document.createElement('div');
+      arr1.className = 'dense-arrow'; arr1.textContent = '→';
+      diag.appendChild(arr1);
+
+      /* Hidden column (4) */
+      const colH = makeNodeCol('#fb923c', [0,1,2,3], '4');
+      diag.appendChild(colH);
+
+      const arr2 = document.createElement('div');
+      arr2.className = 'dense-arrow'; arr2.textContent = '→';
+      diag.appendChild(arr2);
+
+      /* Output column (1 node) */
+      const colOut = makeNodeCol('#67e8f9', [0], '1');
+      diag.appendChild(colOut);
+
+      wrap.appendChild(diag);
+
+      /* Activation values under */
+      const label = document.createElement('div');
+      label.style.cssText = 'font-family:"Fira Code",monospace;font-size:0.58rem;color:var(--text-dim);text-align:center;line-height:1.4;';
+      label.innerHTML = `ReLU → Sigmoid<br>params: 27×4+4 + 4×1+1 = <strong>117</strong>`;
+      wrap.appendChild(label);
+      return wrap;
+    }
+
+    function makeNodeCol(color, indices, label) {
+      const col = document.createElement('div');
+      col.className = 'dense-col';
+      indices.forEach(i => {
+        const el = document.createElement(i === '…' ? 'div' : 'div');
+        if (i === '…') {
+          el.className = 'dense-ellipsis'; el.textContent = '⋮';
+        } else {
+          el.className = 'dense-node';
+          el.style.background = color + '33';
+          el.style.borderColor = color;
+        }
+        col.appendChild(el);
+      });
+      const lbl = document.createElement('div');
+      lbl.className = 'dense-layer-label';
+      lbl.textContent = label;
+      col.appendChild(lbl);
+      return col;
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────
+       OUTPUT BARS BUILDER
+       ───────────────────────────────────────────────────────────────────── */
+    function buildOutputBars() {
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'display:flex;flex-direction:column;justify-content:center;align-items:stretch;gap:0.55rem;padding:8px;border:1.5px solid #67e8f9;border-radius:5px;background:var(--cyan-lt);min-width:100px;';
+
+      CLASS_NAMES.forEach((name, i) => {
+        const pct = Math.round(mlpProbs[i] * 100);
+        const isWinner = i === mlpProbs.indexOf(Math.max(...mlpProbs));
+        const row = document.createElement('div');
+        row.className = 'out-bar-row';
+
+        const lbl = document.createElement('div');
+        lbl.className = 'out-bar-label';
+        lbl.innerHTML = `<span style="font-family:'Fira Code',monospace;font-size:0.65rem;font-weight:700;color:${isWinner?'var(--cyan)':'var(--text-dim)'}">${name.split(' ')[0]}${isWinner?' ✓':''}</span><span style="font-family:'Fira Code',monospace;font-size:0.65rem;font-weight:700;color:${isWinner?'var(--cyan)':'var(--text-dim)'}">${pct}%</span>`;
+
+        const track = document.createElement('div');
+        track.className = 'out-bar-track';
+        const fill = document.createElement('div');
+        fill.className = 'out-bar-fill';
+        fill.style.width = pct + '%';
+        fill.style.background = isWinner ? 'var(--cyan)' : 'var(--text-dim)';
+        track.appendChild(fill);
+
+        row.appendChild(lbl);
+        row.appendChild(track);
+        wrap.appendChild(row);
+      });
+      return wrap;
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────
+       INSPECTOR FUNCTIONS
+       ───────────────────────────────────────────────────────────────────── */
+    const insp = document.getElementById('inspector');
+
+    function setInspector(borderColor, bgColor, contentHTML) {
+      insp.style.borderColor = borderColor;
+      insp.style.background = bgColor;
+      insp.innerHTML = contentHTML;
+    }
+
+    function fmtNum(v) {
+      return typeof v === 'number'
+        ? (Number.isInteger(v) ? v.toString() : v.toFixed(2))
+        : v;
+    }
+
+    /* helper: build a small labeled number grid */
+    function numGridHTML(values2D, colorFn) {
+      const rows = values2D.length, cols = values2D[0].length;
+      let h = `<div class="insp-grid" style="--insp-cols:${cols};">`;
+      values2D.forEach(row => row.forEach(v => {
+        const cls = colorFn ? colorFn(v) : (v > 0 ? 'pos' : v < 0 ? 'neg' : 'zer');
+        h += `<div class="insp-cell ${cls}">${fmtNum(v)}</div>`;
+      }));
+      h += '</div>';
+      return h;
+    }
+
+    function statsOf(m) {
+      const flat = m.flat();
+      const min = Math.min(...flat), max = Math.max(...flat);
+      const mean = flat.reduce((a,b)=>a+b,0)/flat.length;
+      const nPos = flat.filter(v=>v>0).length;
+      const nNeg = flat.filter(v=>v<0).length;
+      const nZer = flat.filter(v=>v===0).length;
+      return {min, max, mean, nPos, nNeg, nZer, n: flat.length};
+    }
+
+    /* ── Input ── */
+    function inspectInput() {
+      const flat = currentInput.flat();
+      const nOn = flat.filter(v=>v>0).length;
+      setInspector('#67e8f9', 'var(--cyan-lt)', `
+        <div class="insp-body">
+          <div style="flex:0 0 auto">
+            <div class="insp-title" style="color:var(--cyan)">🖼️ Entrada <span class="insp-tag" style="color:var(--cyan);border-color:#67e8f9;background:#cffafe">shape: 9 × 9 × 1</span></div>
+            ${numGridHTML(currentInput, v => v>0?'pos':'zer')}
+          </div>
+          <div class="insp-block">
+            <div class="insp-block-title">valores</div>
+            <div class="insp-val">81 pixels</div>
+            <div class="insp-val" style="color:var(--cyan)">${nOn} ativos (branco)</div>
+            <div class="insp-val" style="color:var(--text-dim)">${81-nOn} zeros (fundo)</div>
+          </div>
+          <div class="insp-block">
+            <div class="insp-block-title">nota</div>
+            <div style="font-size:0.8rem;color:var(--text-muted);line-height:1.45">Imagem binária: cada pixel é 0 (fundo) ou 1 (traço). Em imagens reais os valores são de 0 a 255 (ou normalizados para 0–1).</div>
+          </div>
+        </div>
+      `);
+    }
+
+    /* ── Filter ── */
+    function inspectFilter(fi) {
+      const f = FILTERS[fi];
+      const wFlat = f.weights.flat();
+      const nPos = wFlat.filter(v=>v>0).length;
+      const nNeg = wFlat.filter(v=>v<0).length;
+      const nZer = wFlat.filter(v=>v===0).length;
+      let weightHTML = `<div class="insp-weights-grid">`;
+      f.weights.forEach(row => row.forEach(v => {
+        const cls = v>0?'fw-pos':v<0?'fw-neg':'fw-zero';
+        const style = `background:${v>0?'rgba(91,33,182,0.12)':v<0?'rgba(185,28,28,0.1)':'var(--bg3)'};color:${v>0?f.cssColor:v<0?'var(--red)':'var(--text-dim)'};border:1px solid ${v>0?'rgba(91,33,182,0.3)':v<0?'rgba(185,28,28,0.25)':'var(--border2)'};`;
+        weightHTML += `<div class="insp-w" style="${style}">${v>0?'+':''}${v}</div>`;
+      }));
+      weightHTML += `</div>`;
+      setInspector(f.cssColor, '#faf5ff', `
+        <div class="insp-body">
+          <div style="flex:0 0 auto">
+            <div class="insp-title" style="color:${f.cssColor}">⚙️ ${f.name} <span class="insp-tag" style="color:${f.cssColor};border-color:${f.cssColor};background:${f.cssColor}22">3 × 3 = 9 pesos + 1 bias</span></div>
+            ${weightHTML}
+            <div style="margin-top:6px;font-family:'Fira Code',monospace;font-size:0.72rem;padding:3px 8px;border-radius:999px;background:var(--purple-lt);border:1px solid #c4b5fd;color:var(--purple);display:inline-block">b = +0.0</div>
+          </div>
+          <div class="insp-block">
+            <div class="insp-block-title">distribuição</div>
+            <div class="insp-val" style="color:var(--purple)">+1: ${nPos} posições</div>
+            <div class="insp-val" style="color:var(--red)">−1: ${nNeg} posições</div>
+            <div class="insp-val" style="color:var(--text-dim)">0: ${nZer} posições</div>
+          </div>
+          <div class="insp-block">
+            <div class="insp-block-title">função</div>
+            <div style="font-size:0.8rem;color:var(--text-muted);line-height:1.45">${f.desc}. Se a janela contiver o padrão, a soma ponderada é grande e positiva.</div>
+          </div>
+        </div>
+      `);
+    }
+
+    /* ── Conv / ReLU map ── */
+    function inspectMap(type, fi) {
+      const m = type === 'conv' ? allConv[fi] : allRelu[fi];
+      const f = FILTERS[fi];
+      const st = statsOf(m);
+      const isConv = type === 'conv';
+      const color = isConv ? 'var(--blue)' : 'var(--purple)';
+      const borderColor = isConv ? '#93c5fd' : '#c4b5fd';
+      const bgColor = isConv ? 'var(--blue-lt)' : 'var(--purple-lt)';
+      const maxAbs = Math.max(Math.abs(st.min), Math.abs(st.max)) || 1;
+      let gridH = `<div class="insp-grid" style="--insp-cols:${NF};">`;
+      m.forEach(row => row.forEach(v => {
+        const t = Math.abs(v)/maxAbs;
+        const g = Math.round(200*t);
+        let bg, fg, bd;
+        if (v > 0)       { bg=`rgb(${g},${g},${g})`; fg=g>140?'#111':'#fff'; bd=`rgba(180,180,180,0.5)`; }
+        else if (v < 0)  { bg=`rgb(${g},0,0)`; fg='#fff'; bd='rgba(180,0,0,0.4)'; }
+        else             { bg='#111'; fg='rgba(255,255,255,0.3)'; bd='rgba(80,80,80,0.3)'; }
+        gridH += `<div class="insp-cell" style="background:${bg};color:${fg};border-color:${bd};font-size:0.62rem">${fmtNum(v)}</div>`;
+      }));
+      gridH += '</div>';
+      setInspector(borderColor, bgColor, `
+        <div class="insp-body">
+          <div style="flex:0 0 auto">
+            <div class="insp-title" style="color:${color}">${isConv?'⚙️':'⚡'} ${isConv?'Feature Map (Conv)':'Feature Map (ReLU)'} — <span style="color:${f.cssColor}">${f.name}</span> <span class="insp-tag" style="color:${color};border-color:${borderColor};background:${bgColor}">7 × 7 = 49</span></div>
+            ${gridH}
+          </div>
+          <div class="insp-block">
+            <div class="insp-block-title">estatísticas</div>
+            <div class="insp-val">min: ${fmtNum(st.min)}</div>
+            <div class="insp-val">max: ${fmtNum(st.max)}</div>
+            <div class="insp-val">média: ${fmtNum(st.mean)}</div>
+            <div class="insp-val" style="color:var(--blue)">positivos: ${st.nPos}</div>
+            ${isConv?`<div class="insp-val" style="color:var(--red)">negativos: ${st.nNeg}</div>`:''}
+            <div class="insp-val" style="color:var(--text-dim)">zeros: ${st.nZer}</div>
+          </div>
+          ${isConv?`<div class="insp-block"><div class="insp-block-title">nota</div><div style="font-size:0.8rem;color:var(--text-muted);line-height:1.45">Branco = padrão detectado (positivo). Vermelho = padrão oposto (negativo). ReLU irá zerar os negativos.</div></div>`:`<div class="insp-block"><div class="insp-block-title">ativação</div><div style="font-size:0.8rem;color:var(--text-muted);line-height:1.45">Após ReLU: ${st.nZer} valores zerados (${Math.round(100*st.nZer/st.n)}% do mapa). Apenas regiões com detecção positiva sobrevivem.</div></div>`}
+        </div>
+      `);
+    }
+
+    /* ── Pool map ── */
+    function inspectPool(fi) {
+      const pool = allPool[fi];
+      const src = allPoolSrc[fi];
+      const f = FILTERS[fi];
+      const st = statsOf(pool);
+      let gridH = `<div class="insp-grid" style="--insp-cols:${NP};">`;
+      pool.forEach((row, pr) => row.forEach((v, pc) => {
+        const s = src[pr][pc];
+        gridH += `<div class="insp-cell pos" style="border-color:${f.cssColor};color:${f.cssColor};font-size:0.68rem" title="max de janela 2×2 em (${s.r},${s.c})">${fmtNum(v)}</div>`;
+      }));
+      gridH += '</div>';
+      let srcH = `<div class="insp-grid" style="--insp-cols:${NP};">`;
+      src.forEach(row => row.forEach(s => {
+        srcH += `<div class="insp-cell zer" style="font-size:0.65rem">(${s.r},${s.c})</div>`;
+      }));
+      srcH += '</div>';
+      setInspector('#86efac', 'var(--green-lt)', `
+        <div class="insp-body">
+          <div>
+            <div class="insp-title" style="color:var(--green)">🏊 MaxPool 2×2 — <span style="color:${f.cssColor}">${f.name}</span> <span class="insp-tag" style="color:var(--green);border-color:#86efac;background:var(--green-lt)">7×7 → 3×3 = 9</span></div>
+            <div style="display:flex;gap:1.2rem;align-items:flex-start;flex-wrap:wrap">
+              <div>
+                <div class="insp-block-title" style="margin-bottom:4px">valores (3×3)</div>
+                ${gridH}
+              </div>
+              <div>
+                <div class="insp-block-title" style="margin-bottom:4px">origem do max (linha,col)</div>
+                ${srcH}
+              </div>
+            </div>
+          </div>
+          <div class="insp-block">
+            <div class="insp-block-title">estatísticas</div>
+            <div class="insp-val">min: ${fmtNum(st.min)}</div>
+            <div class="insp-val">max: ${fmtNum(st.max)}</div>
+            <div class="insp-val">soma: ${fmtNum(pool.flat().reduce((a,b)=>a+b,0))}</div>
+          </div>
+        </div>
+      `);
+    }
+
+    /* ── Flatten ── */
+    function inspectFlatten() {
+      let html = `<div class="insp-title" style="color:var(--yellow)">📐 Flatten <span class="insp-tag" style="color:var(--yellow);border-color:#fde047;background:var(--yellow-lt)">3 × 9 = 27 valores</span></div>`;
+      html += `<div style="display:flex;flex-direction:column;gap:0.5rem;">`;
+      FILTERS.forEach((f, fi) => {
+        const vals = allPool[fi].flatMap(row => row);
+        const r = parseInt(f.cssColor.slice(1,3),16);
+        const g2 = parseInt(f.cssColor.slice(3,5),16);
+        const b2 = parseInt(f.cssColor.slice(5,7),16);
+        html += `<div>`;
+        html += `<div style="font-size:0.7rem;font-weight:700;color:${f.cssColor};margin-bottom:3px">${f.name} (índices ${fi*9}–${fi*9+8})</div>`;
+        html += `<div class="insp-flat-strip">`;
+        vals.forEach(v => {
+          const t = v / (Math.max(...vals.map(Math.abs)) || 1);
+          const bg = v > 0 ? `rgba(${r},${g2},${b2},${0.15+0.7*t})` : '#1e293b33';
+          html += `<div class="insp-flat-cell" style="background:${bg};border-color:${v>0?f.cssColor:'var(--border2)'};color:${v>0?f.cssColor:'var(--text-dim)'}">${fmtNum(v)}</div>`;
+        });
+        html += `</div></div>`;
+      });
+      html += `</div>`;
+      html += `<div style="margin-top:6px;font-size:0.8rem;color:var(--text-muted)">Total: <strong>${flatVector.length}</strong> valores — soma: <strong>${fmtNum(flatVector.reduce((a,b)=>a+b,0))}</strong> — não-zeros: <strong>${flatVector.filter(v=>v>0).length}</strong>/${flatVector.length}</div>`;
+      setInspector('#fde047', 'var(--yellow-lt)', `<div class="insp-body"><div style="flex:1">${html}</div></div>`);
+    }
+
+    /* ── Dense ── */
+    function inspectDense() {
+      let hiddenHTML = `<div class="insp-flat-strip">`;
+      mlpHidden.forEach(v => {
+        hiddenHTML += `<div class="insp-flat-cell" style="background:${v>0?'rgba(251,146,60,0.2)':'#1e293b33'};border-color:${v>0?'#fb923c':'var(--border2)'};color:${v>0?'var(--orange)':'var(--text-dim)'}">${fmtNum(v)}</div>`;
+      });
+      hiddenHTML += '</div>';
+      setInspector('#fdba74', '#fff7ed', `
+        <div class="insp-body">
+          <div>
+            <div class="insp-title" style="color:var(--orange)">🧠 Rede Densa <span class="insp-tag" style="color:var(--orange);border-color:#fdba74;background:#fff7ed">27 → 4 → 1 · 117 parâmetros</span></div>
+            <div style="display:flex;flex-direction:column;gap:0.4rem">
+              <div>
+                <div class="insp-block-title">camada oculta: hidden (4) após ReLU</div>
+                ${hiddenHTML}
+              </div>
+              <div>
+                <div class="insp-block-title">logit (1) antes do sigmoid</div>
+                <div class="insp-flat-cell" style="background:${mlpLogits[0]>0?'rgba(14,116,144,0.15)':'#b91c1c11'};border-color:${mlpLogits[0]>0?'#67e8f9':'#fca5a5'};border:1px solid;border-radius:3px;color:${mlpLogits[0]>0?'var(--cyan)':'var(--red)'};font-family:'Fira Code',monospace;font-size:0.72rem;font-weight:700;padding:3px 4px;display:inline-block">${fmtNum(mlpLogits[0])}</div>
+                <div style="margin-top:4px;font-size:0.72rem;color:var(--text-muted)">σ(z) = ${(pX*100).toFixed(1)}%</div>
+              </div>
+            </div>
+          </div>
+          <div class="insp-block">
+            <div class="insp-block-title">arquitetura</div>
+            <div class="insp-val">Dense(27→4) + ReLU</div>
+            <div class="insp-val">Dense(4→1) + Sigmoid</div>
+            <div style="margin-top:4px;font-size:0.78rem;color:var(--text-muted)">27×4+4 = 112<br>4×1+1 = 5<br>Total: <strong>117</strong> parâmetros</div>
+          </div>
+        </div>
+      `);
+    }
+
+    /* ── Output ── */
+    function inspectOutput() {
+      let html = `<div class="insp-title" style="color:var(--cyan)">🎯 Saída — Sigmoid <span class="insp-tag" style="color:var(--cyan);border-color:#67e8f9;background:var(--cyan-lt)">classificação binária</span></div>`;
+      html += `<div style="display:flex;flex-direction:column;gap:0.5rem;min-width:220px">`;
+      CLASS_NAMES.forEach((name, i) => {
+        const pct = (mlpProbs[i]*100).toFixed(1);
+        const isW = i === 0;
+        html += `
+          <div class="insp-bar-row">
+            <div class="insp-bar-label" style="color:${isW?'var(--cyan)':'var(--text-dim)'};min-width:80px">${name}${isW?' ✓':''}</div>
+            <div class="insp-bar-track" style="min-width:120px">
+              <div class="insp-bar-fill" style="width:${pct}%;background:${isW?'var(--cyan)':'var(--text-dim)'}"></div>
+            </div>
+            <div style="font-family:'Fira Code',monospace;font-size:0.78rem;font-weight:700;color:${isW?'var(--cyan)':'var(--text-dim)'};min-width:42px">${pct}%</div>
+          </div>
+        `;
+      });
+      html += `</div>`;
+      html += `<div class="insp-block">`;
+      html += `<div class="insp-block-title">logit (pré-sigmoid)</div>`;
+      html += `<div class="insp-val">z = ${fmtNum(mlpLogits[0])}</div>`;
+      html += `<div class="insp-val">σ(z) = ${(pX*100).toFixed(1)}%</div>`;
+      html += `<div style="margin-top:4px;font-size:0.78rem;color:var(--text-muted);line-height:1.4">σ(z) = 1 / (1 + e⁻ᶻ)<br>P(não-X) = 1 − σ(z)</div>`;
+      html += `</div>`;
+      setInspector('#67e8f9', 'var(--cyan-lt)', `<div class="insp-body">${html}</div>`);
+    }
+    /* ─────────────────────────────────────────────────────────────────────
+       REDRAW ALL CANVASES + DYNAMIC ELEMENTS
+       ───────────────────────────────────────────────────────────────────── */
+    /* map from selected element id → inspector function (for refresh) */
+    let currentInspectFn = null;
+
+    function redrawAll() {
+      /* Update Attack Status */
+      if (document.getElementById('status-msg')) {
+          const statusEl = document.getElementById('status-msg');
+          if (pX >= 0.85) {
+            statusEl.className = 'status-msg s-good';
+            statusEl.textContent = '✅ Rede classifica corretamente como X';
+          } else if (pX >= 0.6) {
+            statusEl.className = 'status-msg s-warn';
+            statusEl.textContent = '⚠️ Rede hesitando… P(X) caindo!';
+          } else if (pX >= 0.5) {
+            statusEl.className = 'status-msg s-danger';
+            statusEl.textContent = '🔴 P(X) quase em 50% — rede confusa!';
+          } else {
+            statusEl.className = 'status-msg s-attack';
+            statusEl.textContent = '🎭 Ataque bem-sucedido! Rede classifica como O';
+          }
+      }
+      
+      const cntEl = document.getElementById('mod-count');
+      if (cntEl) {
+          const nmod = modifiedCells.size;
+          cntEl.textContent = nmod;
+          cntEl.className = 'pc-num ' + (nmod === 0 ? 'zero' : nmod <= 2 ? 'few' : nmod <= 4 ? 'many' : 'lots');
+      }
+
+      /* filter-derived canvases */
+      FILTERS.forEach((f, fi) => {
+        drawHeatmap(document.getElementById(`cv-conv-${fi}`), allConv[fi], true);
+        drawHeatmap(document.getElementById(`cv-relu-${fi}`), allRelu[fi], false);
+        drawHeatmap(document.getElementById(`cv-pool-${fi}`), allPool[fi], false);
+      });
+
+      /* rebuild flatten strip in-place */
+      const oldStrip = document.getElementById('flat-strip');
+      if (oldStrip) {
+        const wasSelected = oldStrip.classList.contains('selected');
+        const newStrip = buildFlatStrip();
+        newStrip.id = 'flat-strip';
+        newStrip.className = oldStrip.className;
+        newStrip.addEventListener('click', () => { setSelected(newStrip); currentInspectFn = inspectFlatten; inspectFlatten(); });
+        oldStrip.parentNode.replaceChild(newStrip, oldStrip);
+        if (wasSelected) { selectedEl = newStrip; newStrip.classList.add('selected'); }
+      }
+
+      /* rebuild output bars in-place */
+      const oldBars = document.getElementById('output-bars');
+      if (oldBars) {
+        const wasSelected = oldBars.classList.contains('selected');
+        const newBars = buildOutputBars();
+        newBars.id = 'output-bars';
+        newBars.className = oldBars.className;
+        newBars.addEventListener('click', () => { setSelected(newBars); currentInspectFn = inspectOutput; inspectOutput(); });
+        oldBars.parentNode.replaceChild(newBars, oldBars);
+        if (wasSelected) { selectedEl = newBars; newBars.classList.add('selected'); }
+      }
+
+      /* refresh inspector panel if one was open */
+      if (currentInspectFn) currentInspectFn();
+    }
+
+    // Initialize the attack pixel grid
+    initPixelGrid();
+  </script>
+</body>
+</html>

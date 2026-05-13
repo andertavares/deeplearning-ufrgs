@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GNNs — Índice dos Slides</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f8f9fb; --bg2: #ffffff; --bg3: #f0f2f6;
+      --border: #c7d0e0; --border2: #d1d9e8;
+      --text: #0f1724; --text-muted: #3d4f6e; --text-dim: #6b7fa3;
+      --teal: #0d6e6e; --blue: #1d4ed8; --cyan: #0e7490;
+      --green: #166534; --grad1: linear-gradient(135deg, #0d6e6e, #1d4ed8);
+    }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 3rem 1.5rem 4rem;
+    }
+    .hero { text-align: center; margin-bottom: 3rem; max-width: 640px; }
+    .badge {
+      display: inline-block;
+      padding: 0.3rem 1rem;
+      border-radius: 999px;
+      background: rgba(13,110,110,0.08);
+      border: 1px solid rgba(13,110,110,0.25);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 1.2rem;
+    }
+    h1 {
+      font-size: clamp(1.8rem, 4vw, 2.5rem);
+      font-weight: 800;
+      background: var(--grad1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.75rem;
+      line-height: 1.2;
+    }
+    .hero-prof {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.9rem;
+      color: var(--text-dim);
+      margin: 0.4rem 0 0.7rem;
+    }
+    .hero-sub {
+      color: var(--text-muted);
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+
+    .blocks { display: flex; flex-direction: column; gap: 2.2rem; max-width: 960px; width: 100%; }
+
+    .block-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--teal);
+      margin-bottom: 1rem;
+      padding-left: 0.6rem;
+      border-left: 3px solid var(--teal);
+    }
+
+    .slides-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1rem;
+    }
+
+    .slide-link {
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+      padding: 1.1rem 1.2rem 1rem;
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 14px;
+      text-decoration: none;
+      color: var(--text);
+      transition: all 0.2s;
+      box-shadow: 0 1px 4px rgba(15,23,36,0.06);
+      position: relative;
+    }
+    .slide-link:hover {
+      border-color: var(--teal);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(13,110,110,0.12);
+    }
+    .sl-num {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.68rem;
+      color: var(--text-dim);
+      font-weight: 600;
+    }
+    .sl-icon { font-size: 1.5rem; line-height: 1; }
+    .sl-title {
+      font-size: 0.86rem;
+      font-weight: 700;
+      line-height: 1.35;
+      color: var(--text);
+    }
+    .sl-desc {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      line-height: 1.45;
+      flex: 1;
+    }
+    .sl-tag {
+      align-self: flex-start;
+      padding: 0.15rem 0.55rem;
+      border-radius: 999px;
+      font-size: 0.63rem;
+      font-weight: 600;
+      background: rgba(13,110,110,0.08);
+      border: 1px solid rgba(13,110,110,0.2);
+      color: var(--teal);
+      letter-spacing: 0.04em;
+    }
+
+    footer {
+      margin-top: 3.5rem;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      text-align: center;
+      font-family: 'Fira Code', monospace;
+    }
+
+    @media (max-width: 600px) {
+      .slides-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 420px) {
+      .slides-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="hero">
+    <div class="badge">UFRGS · Deep Learning</div>
+    <h1>GNNs — Graph Neural Networks</h1>
+    <div class="hero-prof">Prof. Anderson Rocha Tavares</div>
+    <p class="hero-sub">Slides interativos para a aula de Graph Neural Networks. Navegue pelos blocos abaixo e clique em qualquer slide para abri-lo.</p>
+  </div>
+
+  <div class="blocks">
+
+    <!-- Bloco 1 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 1 — Motivação e Fundamentos</div>
+      <div class="slides-grid">
+        <a href="slide01.html" class="slide-link">
+          <div class="sl-num">Slide 01</div>
+          <div class="sl-icon">🌐</div>
+          <div class="sl-title">Por que Grafos?</div>
+          <div class="sl-desc">Motivação para dados relacionais e estruturas não-euclidianas — redes sociais, moléculas, grafos de conhecimento.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide02.html" class="slide-link">
+          <div class="sl-num">Slide 02</div>
+          <div class="sl-icon">🔢</div>
+          <div class="sl-title">Representação de Grafos</div>
+          <div class="sl-desc">Matriz de adjacência, lista de adjacência e matriz de incidência — visualização interativa de cada representação.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide03.html" class="slide-link">
+          <div class="sl-num">Slide 03</div>
+          <div class="sl-icon">🏷️</div>
+          <div class="sl-title">Features em Grafos</div>
+          <div class="sl-desc">Features de nós, arestas e grafos — como associar atributos a cada elemento da estrutura.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide04.html" class="slide-link">
+          <div class="sl-num">Slide 04</div>
+          <div class="sl-icon">🎯</div>
+          <div class="sl-title">Tarefas em Grafos</div>
+          <div class="sl-desc">Três tipos de tarefa: classificação de nós, predição de arestas e classificação de grafos — com exemplos reais.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Bloco 2 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 2 — Message Passing</div>
+      <div class="slides-grid">
+        <a href="slide05.html" class="slide-link">
+          <div class="sl-num">Slide 05</div>
+          <div class="sl-icon">📨</div>
+          <div class="sl-title">A Ideia de Message Passing</div>
+          <div class="sl-desc">Intuição da propagação de informação entre vizinhos — analogia com rumores em uma rede social.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide06.html" class="slide-link">
+          <div class="sl-num">Slide 06</div>
+          <div class="sl-icon">⚙️</div>
+          <div class="sl-title">Gather, Aggregate, Update</div>
+          <div class="sl-desc">As três etapas do message passing passo a passo — gather mensagens dos vizinhos, agregar e atualizar o embedding.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide07.html" class="slide-link">
+          <div class="sl-num">Slide 07</div>
+          <div class="sl-icon">🧮</div>
+          <div class="sl-title">GCN: Convolução em Grafos</div>
+          <div class="sl-desc">Graph Convolutional Network — a fórmula H = σ(D⁻¹/²ÃD⁻¹/²HW) explicada passo a passo com exemplo matricial.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide08.html" class="slide-link">
+          <div class="sl-num">Slide 08</div>
+          <div class="sl-icon">📐</div>
+          <div class="sl-title">Normalização por Grau</div>
+          <div class="sl-desc">Por que dividir pelo grau do nó? Visualização do efeito da normalização simétrica D⁻¹/² nos embeddings.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide09.html" class="slide-link">
+          <div class="sl-num">Slide 09</div>
+          <div class="sl-icon">🌊</div>
+          <div class="sl-title">Empilhando Camadas</div>
+          <div class="sl-desc">Campo receptivo cresce com o número de camadas L — visualize como a informação se propaga a distâncias maiores.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide10.html" class="slide-link">
+          <div class="sl-num">Slide 10</div>
+          <div class="sl-icon">🏗️</div>
+          <div class="sl-title">Oversmoothing</div>
+          <div class="sl-desc">O problema de muitas camadas — embeddings convergem para o mesmo valor. Demonstração com L crescente.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Bloco 3 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 3 — Atenção em Grafos</div>
+      <div class="slides-grid">
+        <a href="slide11.html" class="slide-link">
+          <div class="sl-num">Slide 11</div>
+          <div class="sl-icon">🔗</div>
+          <div class="sl-title">GNN como Convolução Generalizada</div>
+          <div class="sl-desc">Comparação CNN vs GNN — kernel em grade regular vs agregação em grafo irregular. CNN é um caso especial de GNN!</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide12.html" class="slide-link">
+          <div class="sl-num">Slide 12</div>
+          <div class="sl-icon">⚖️</div>
+          <div class="sl-title">Limitação do Pooling Uniforme</div>
+          <div class="sl-desc">Por que pesos iguais para todos os vizinhos é problemático — toggle para ver o efeito com e sem atenção.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide13.html" class="slide-link">
+          <div class="sl-num">Slide 13</div>
+          <div class="sl-icon">👁️</div>
+          <div class="sl-title">Graph Attention Network (GAT)</div>
+          <div class="sl-desc">Arquitetura GAT com slider para ajustar scores e ver os pesos de atenção (softmax) atualizarem em tempo real.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide14.html" class="slide-link">
+          <div class="sl-num">Slide 14</div>
+          <div class="sl-icon">👣</div>
+          <div class="sl-title">GAT: Attention Passo a Passo</div>
+          <div class="sl-desc">Walkthrough de 4 passos: inicialização → scores → softmax → agregação ponderada, com animações no grafo.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Bloco 4 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 4 — Conexões e Treinamento</div>
+      <div class="slides-grid">
+        <a href="slide15.html" class="slide-link">
+          <div class="sl-num">Slide 15</div>
+          <div class="sl-icon">🤝</div>
+          <div class="sl-title">Transformers e GNNs são Primos</div>
+          <div class="sl-desc">Self-attention = message passing em grafo completo. Toggle para ver Transformer como GNN esparso.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide16.html" class="slide-link">
+          <div class="sl-num">Slide 16</div>
+          <div class="sl-icon">🔄</div>
+          <div class="sl-title">Indutivo vs Transdutivo</div>
+          <div class="sl-desc">Dois paradigmas de aprendizado em grafos — um único grafo (Cora) vs múltiplos grafos (moléculas, proteínas).</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide17.html" class="slide-link">
+          <div class="sl-num">Slide 17</div>
+          <div class="sl-icon">🔵</div>
+          <div class="sl-title">Classificação de Nós</div>
+          <div class="sl-desc">Splits treino/val/teste em um único grafo — animação de propagação de embeddings dos nós de treino para o restante.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide18.html" class="slide-link">
+          <div class="sl-num">Slide 18</div>
+          <div class="sl-icon">🔗</div>
+          <div class="sl-title">Predição de Arestas</div>
+          <div class="sl-desc">score(u,v) = σ(hᵤ · hᵥ) — calcule scores para pares candidatos e veja a aresta de maior probabilidade ser prevista.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide19.html" class="slide-link">
+          <div class="sl-num">Slide 19</div>
+          <div class="sl-icon">✂️</div>
+          <div class="sl-title">Split Correto em Link Prediction</div>
+          <div class="sl-desc">Abordagem ingênua (data leakage) vs correta — message edges ≠ supervision edges, com SVGs comparativos.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Bloco 5 -->
+    <div class="block-section">
+      <div class="block-title">Bloco 5 — Conclusão</div>
+      <div class="slides-grid">
+        <a href="slide20.html" class="slide-link">
+          <div class="sl-num">Slide 20</div>
+          <div class="sl-icon">🏁</div>
+          <div class="sl-title">Resumo: Graph Neural Networks</div>
+          <div class="sl-desc">Pipeline completo animado, 5 conceitos-chave que aparecem progressivamente, e demo interativa de seleção de tarefa.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide21.html" class="slide-link">
+          <div class="sl-num">Slide 21</div>
+          <div class="sl-icon">🎯</div>
+          <div class="sl-title">Cabeça de Predição: do Embedding à Tarefa</div>
+          <div class="sl-desc">Como o MLP usa os embeddings finais da GNN para tarefas de nível de nó, aresta e grafo — com readout (sum/mean/max) para grafos.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    UFRGS · Curso de Deep Learning · Slides interativos com ❤️
+  </footer>
+</body>
+</html>

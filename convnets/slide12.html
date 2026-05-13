@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 12 – Pooling Passo a Passo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── Overall layout ─────────────────────────────────────────────────── */
+    .pool-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1rem;
+      flex: 1;
+      align-items: start;
+    }
+
+    .pool-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+      box-shadow: var(--shadow);
+    }
+
+    /* ── Canvas labels ──────────────────────────────────────────────────── */
+    .cv-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .cv-label {
+      font-size: 0.72rem;
+      font-family: 'Fira Code', monospace;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    canvas.pool-canvas {
+      image-rendering: pixelated;
+      border: 1.5px solid var(--border2);
+      border-radius: 5px;
+      display: block;
+      cursor: crosshair;
+    }
+
+    /* ── Controls bar ───────────────────────────────────────────────────── */
+    .controls-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+      padding: 0.7rem 0;
+    }
+
+    .ctrl-label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      font-family: 'Fira Code', monospace;
+    }
+
+    .ctrl-select {
+      padding: 0.35rem 0.7rem;
+      border-radius: 999px;
+      border: 1.5px solid var(--border2);
+      background: var(--bg3);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .ctrl-btn {
+      padding: 0.42rem 1.1rem;
+      border-radius: 999px;
+      border: 1.5px solid var(--border2);
+      background: var(--bg3);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+
+    .ctrl-btn:hover { border-color: var(--purple); color: var(--purple); }
+
+    .ctrl-btn.primary {
+      background: var(--purple);
+      border-color: var(--purple);
+      color: #fff;
+    }
+
+    .ctrl-btn.primary:hover { background: #4c1d95; border-color: #4c1d95; }
+    .ctrl-btn.danger  { border-color: #b91c1c; color: #b91c1c; }
+    .ctrl-btn.danger:hover { background: rgba(185,28,28,0.08); }
+
+    .ctrl-btn:disabled { opacity: 0.4; pointer-events: none; }
+
+    .step-counter {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-left: auto;
+    }
+
+    /* ── Progress bar ───────────────────────────────────────────────────── */
+    .progress-wrap {
+      width: 100%;
+      height: 6px;
+      background: var(--bg3);
+      border-radius: 999px;
+      border: 1px solid var(--border2);
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--purple);
+      border-radius: 999px;
+      transition: width 0.22s ease;
+    }
+
+    /* ── Window detail section (middle panel) ───────────────────────────── */
+    .window-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .window-grid {
+      display: grid;
+      gap: 3px;
+    }
+
+    .wc {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.82rem;
+      font-weight: 700;
+      border-radius: 4px;
+      transition: background 0.22s, color 0.22s, box-shadow 0.22s;
+    }
+
+    .wc-normal {
+      background: var(--bg3);
+      color: var(--text-muted);
+      border: 1px solid var(--border2);
+    }
+
+    .wc-max {
+      background: rgba(91,33,182,0.18);
+      color: var(--purple);
+      border: 2px solid var(--purple);
+      box-shadow: 0 0 8px rgba(91,33,182,0.25);
+    }
+
+    .wc-zero {
+      background: var(--bg3);
+      color: var(--text-dim);
+      border: 1px solid var(--border2);
+      opacity: 0.6;
+    }
+
+    .max-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.9rem;
+      border-radius: 999px;
+      font-size: 0.88rem;
+      font-weight: 800;
+      font-family: 'Fira Code', monospace;
+      background: rgba(91,33,182,0.12);
+      border: 2px solid rgba(91,33,182,0.4);
+      color: var(--purple);
+      transition: color 0.2s, background 0.2s;
+    }
+
+    .max-badge-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .calc-placeholder {
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 0.88rem;
+      padding: 1.5rem 0;
+      font-style: italic;
+    }
+
+    .pos-indicator {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    .pos-indicator strong {
+      color: var(--purple);
+      font-size: 0.9rem;
+    }
+
+    /* ── Output pooled cell highlight ───────────────────────────────────── */
+    .done-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.3rem 0.85rem;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      font-family: 'Fira Code', monospace;
+      background: var(--green-lt);
+      border: 1.5px solid var(--green);
+      color: var(--green);
+    }
+
+    /* ── Hover tooltip ──────────────────────────────────────────────────── */
+    .hover-info {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      font-family: 'Fira Code', monospace;
+      text-align: center;
+      min-height: 1.2em;
+    }
+
+    /* ── Output size badge ──────────────────────────────────────────────── */
+    .size-info {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      text-align: center;
+    }
+
+    .size-formula {
+      font-size: 0.72rem;
+      font-family: 'Fira Code', monospace;
+      color: var(--text-muted);
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      border-radius: 6px;
+      padding: 0.35rem 0.7rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Redes Convolucionais</span>
+      <span class="prof-tag" style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 4 · Slide 3 / 3</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Pooling Passo a Passo</h1>
+        <p class="slide-subtitle">Veja como a janela de pooling percorre o feature map e extrai um valor resumido em cada região</p>
+      </div>
+
+      <!-- ── Controls bar (global) ───────────────────────────────────────── -->
+      <div class="controls-bar" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:0.65rem 1rem;box-shadow:var(--shadow);gap:0.8rem;">
+        <span class="ctrl-label">Filtro:</span>
+        <select class="ctrl-select" id="sel-filter" onchange="onSettingsChange()">
+          <option value="0">Diagonal ↘</option>
+          <option value="1">Centro ✖</option>
+          <option value="2">Diagonal ↗</option>
+        </select>
+
+        <span class="ctrl-label" style="margin-left:0.5rem;">Janela:</span>
+        <select class="ctrl-select" id="sel-k" onchange="onSettingsChange()">
+          <option value="2" selected>2 × 2</option>
+          <option value="3">3 × 3</option>
+        </select>
+
+        <span class="ctrl-label">Stride:</span>
+        <select class="ctrl-select" id="sel-s" onchange="onSettingsChange()">
+          <option value="1">1</option>
+          <option value="2" selected>2</option>
+          <option value="3">3</option>
+        </select>
+
+        <span class="ctrl-label" style="margin-left:0.5rem;">Pooling:</span>
+        <select class="ctrl-select" id="sel-pool" onchange="onSettingsChange()">
+          <option value="max">max</option>
+          <option value="mean">média</option>
+          <option value="min">min</option>
+        </select>
+
+        <button class="ctrl-btn" id="btn-reset" onclick="resetAnim()">↺ Reiniciar</button>
+        <button class="ctrl-btn primary" id="btn-step" onclick="doStep()">Próximo passo →</button>
+        <button class="ctrl-btn primary" id="btn-play" onclick="togglePlay()">▶ Executar tudo</button>
+
+        <span class="step-counter" id="step-counter">0 / 0</span>
+      </div>
+
+      <!-- ── Progress bar ────────────────────────────────────────────────── -->
+      <div class="progress-wrap">
+        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+
+      <!-- ── Three-column layout ─────────────────────────────────────────── -->
+      <div class="pool-layout">
+
+        <!-- Column 1: Input feature map -->
+        <div class="pool-panel">
+          <div class="panel-title" id="input-panel-title">Feature map de entrada (7×7)</div>
+
+          <div class="cv-wrap">
+            <canvas id="cv-input" class="pool-canvas"></canvas>
+            <div class="cv-label" id="input-dim-label">7 × 7 = 49 valores</div>
+          </div>
+
+          <div class="pos-indicator" id="pos-indicator">
+            <span id="pos-text">Aguardando início…</span>
+          </div>
+        </div>
+
+        <!-- Column 2: Current window detail -->
+        <div class="pool-panel">
+          <div class="panel-title">Janela atual — detalhes</div>
+
+          <div class="window-section" id="window-section">
+            <div class="calc-placeholder" id="window-placeholder">
+              Clique em "Próximo passo" para iniciar a operação de pooling.
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div style="display:flex;flex-direction:column;gap:0.5rem;">
+            <div class="concept-card" style="--delay:0s;border-color:var(--border2);">
+              <div class="card-icon">🏆</div>
+              <div class="card-text">
+                <strong>Max-Pooling</strong>
+                <p>O <em>maior</em> valor da janela é guardado no mapa de saída.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.05s;border-color:var(--border2);">
+              <div class="card-icon">∅</div>
+              <div class="card-text">
+                <strong>Mean-Pooling</strong>
+                <p>A <em>média</em> dos valores da janela é guardada — menos seletivo, mais suave.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.1s;border-color:var(--border2);">
+              <div class="card-icon">📉</div>
+              <div class="card-text">
+                <strong>Min-Pooling</strong>
+                <p>O <em>menor</em> valor da janela é guardado — destaca regiões de baixa ativação.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.15s;border-color:var(--border2);">
+              <div class="card-icon">📍</div>
+              <div class="card-text">
+                <strong>Posição não importa</strong>
+                <p>Se o padrão se mover dentro da janela, o máximo permanece o mesmo — a rede fica tolerante a pequenas translações.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Column 3: Pooled output -->
+        <div class="pool-panel">
+          <div class="panel-title" id="output-panel-title">Mapa pooled (saída)</div>
+
+          <div class="cv-wrap">
+            <canvas id="cv-output" class="pool-canvas"></canvas>
+            <div class="cv-label" id="output-dim-label">3 × 3 = 9 valores</div>
+          </div>
+
+          <div class="hover-info" id="hover-info">← passe o mouse sobre o mapa pooled para ver a região de origem</div>
+
+          <div id="done-section" style="display:none;">
+            <div class="done-badge">✓ Pooling concluído!</div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="highlight-box purple">
+            <span class="icon">💡</span>
+            <p>Passe o mouse sobre uma célula do mapa pooled para destacar a janela correspondente no feature map de entrada.</p>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide11.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot active"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide13.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    /* ── Filters (same as slides 08/09/10/11) ───────────────────────────── */
+    const FILTERS = [
+      { name:'Diagonal ↘', color:[91,33,182],  cssColor:'#5b21b6', weights:[[ 1,-1,-1],[-1, 1,-1],[-1,-1, 1]] },
+      { name:'Centro ✖',   color:[14,116,144], cssColor:'#0e7490', weights:[[ 1,-1, 1],[-1, 1,-1],[ 1,-1, 1]] },
+      { name:'Diagonal ↗', color:[22,101,52],  cssColor:'#166534', weights:[[-1,-1, 1],[-1, 1,-1],[ 1,-1,-1]] },
+    ];
+
+    const N = 9;
+    const NF = N - 3 + 1; // = 7 (valid convolution output size)
+    const tileX = [
+      [0,0,0,0,0,0,0,0,0],
+      [0,1,0,0,0,0,0,1,0],
+      [0,0,1,0,0,0,1,0,0],
+      [0,0,0,1,0,1,0,0,0],
+      [0,0,0,0,1,0,0,0,0],
+      [0,0,0,1,0,1,0,0,0],
+      [0,0,1,0,0,0,1,0,0],
+      [0,1,0,0,0,0,0,1,0],
+      [0,0,0,0,0,0,0,0,0],
+    ];
+
+    /* ── Convolution (valid — sem padding, saída 7×7) ──────────────────── */
+    function applyFilter(weights) {
+      const F = 3;
+      const out = [];
+      for (let r = 0; r < NF; r++) {
+        out.push([]);
+        for (let c = 0; c < NF; c++) {
+          let s = 0;
+          for (let fr = 0; fr < F; fr++)
+            for (let fc = 0; fc < F; fc++)
+              s += weights[fr][fc] * tileX[r + fr][c + fc];
+          out[r].push(s);
+        }
+      }
+      return out;
+    }
+
+    /* ── State ──────────────────────────────────────────────────────────── */
+    let filterIdx = parseInt(localStorage.getItem('selectedFilter') || '0');
+    let K = 2, S = 2;         // window size, stride
+    let poolType = 'max';     // 'max' | 'mean' | 'min'
+    let NP = 3;               // pooled output size
+    let featureMap = [];      // current feature map (9×9)
+    let pooledOut = [];       // pooled values so far (NP×NP, null = not yet computed)
+    let step = 0;             // current step (0 = not started, 1..NP*NP = done)
+    let totalSteps = 0;
+    let playing = false;
+    let playTimer = null;
+    let hoverCell = null;     // {pr, pc} of hovered cell in output
+
+    /* canvas size config */
+    const CS_IN  = 18;        // px per cell in input canvas (9×18 = 162)
+    const CS_OUT_MAX = 36;    // max px per cell in output canvas
+
+    /* ── DOM elements ──────────────────────────────────────────────────── */
+    const cvIn   = document.getElementById('cv-input');
+    const cvOut  = document.getElementById('cv-output');
+    const selF   = document.getElementById('sel-filter');
+    const selK   = document.getElementById('sel-k');
+    const selS   = document.getElementById('sel-s');
+    const selPool = document.getElementById('sel-pool');
+    const btnStep = document.getElementById('btn-step');
+    const btnPlay = document.getElementById('btn-play');
+    const btnReset = document.getElementById('btn-reset');
+    const stepCtr = document.getElementById('step-counter');
+    const progFill = document.getElementById('progress-fill');
+    const posText  = document.getElementById('pos-text');
+    const winSec   = document.getElementById('window-section');
+    const hoverInfoEl = document.getElementById('hover-info');
+    const doneSec  = document.getElementById('done-section');
+
+    /* ── Initialise ─────────────────────────────────────────────────────── */
+    function init() {
+      filterIdx = parseInt(selF.value);
+      K = parseInt(selK.value);
+      S = parseInt(selS.value);
+      poolType = selPool.value;
+      NP = Math.floor((NF - K) / S) + 1;
+
+      featureMap = applyFilter(FILTERS[filterIdx].weights);
+      pooledOut = Array.from({length: NP}, () => Array(NP).fill(null));
+      step = 0;
+      totalSteps = NP * NP;
+      hoverCell = null;
+      playing = false;
+      if (playTimer) { clearInterval(playTimer); playTimer = null; }
+
+      /* resize canvases */
+      cvIn.width  = NF * CS_IN;
+      cvIn.height = NF * CS_IN;
+
+      const CS_OUT = Math.min(CS_OUT_MAX, Math.floor(NF * CS_IN / NP));
+      cvOut.width  = NP * CS_OUT;
+      cvOut.height = NP * CS_OUT;
+
+      /* update labels */
+      document.getElementById('input-panel-title').textContent =
+        `Feature map — filtro "${FILTERS[filterIdx].name}" (${NF}×${NF})`;
+      document.getElementById('input-dim-label').textContent =
+        `${NF} × ${NF} = ${NF*NF} valores`;
+      document.getElementById('output-panel-title').textContent =
+        `Mapa pooled (${NP}×${NP})`;
+      document.getElementById('output-dim-label').textContent =
+        `${NP} × ${NP} = ${NP*NP} valores`;
+
+      posText.textContent = 'Aguardando início…';
+      winSec.innerHTML = '<div class="calc-placeholder">Clique em "Próximo passo" para iniciar.</div>';
+      doneSec.style.display = 'none';
+      hoverInfoEl.textContent = '← passe o mouse sobre o mapa pooled para ver a região de origem';
+
+      btnStep.disabled = false;
+      btnPlay.textContent = '▶ Executar tudo';
+      btnPlay.disabled = false;
+
+      updateStepUI();
+      drawInput(-1, -1);
+      drawOutput();
+    }
+
+    function onSettingsChange() {
+      stopPlay();
+      init();
+    }
+
+    /* ── Step logic ─────────────────────────────────────────────────────── */
+    function doStep() {
+      if (step >= totalSteps) return;
+
+      const pr = Math.floor(step / NP);
+      const pc = step % NP;
+
+      /* compute pooled value for this window */
+      let poolVal;
+      let selDr = 0, selDc = 0;
+      const vals = [];
+      for (let dr = 0; dr < K; dr++) {
+        for (let dc = 0; dc < K; dc++) {
+          const v = featureMap[pr*S + dr][pc*S + dc];
+          vals.push({ v, dr, dc });
+        }
+      }
+      const allV = vals.map(x => x.v);
+      if (poolType === 'max') {
+        poolVal = Math.max(...allV);
+        const idx = allV.indexOf(poolVal);
+        selDr = Math.floor(idx / K); selDc = idx % K;
+      } else if (poolType === 'min') {
+        poolVal = Math.min(...allV);
+        const idx = allV.indexOf(poolVal);
+        selDr = Math.floor(idx / K); selDc = idx % K;
+      } else { // mean
+        poolVal = allV.reduce((a, b) => a + b, 0) / allV.length;
+        selDr = -1; selDc = -1; // no single selected cell for mean
+      }
+
+      pooledOut[pr][pc] = poolVal;
+      step++;
+
+      updateStepUI();
+      drawInput(pr, pc);
+      drawOutput();
+      updateWindowDetail(pr, pc, vals, poolVal, selDr, selDc);
+
+      posText.textContent = `Janela [${pr},${pc}] — região (${pr*S}–${pr*S+K-1}, ${pc*S}–${pc*S+K-1})`;
+
+      if (step >= totalSteps) {
+        stopPlay();
+        doneSec.style.display = 'block';
+        btnStep.disabled = true;
+        btnPlay.disabled = true;
+        posText.textContent = `Concluído! Todas as ${totalSteps} janelas processadas.`;
+      }
+    }
+
+    function togglePlay() {
+      if (playing) {
+        stopPlay();
+      } else {
+        if (step >= totalSteps) resetAnim();
+        playing = true;
+        btnPlay.textContent = '⏹ Parar';
+        btnPlay.className = 'ctrl-btn danger';
+        btnStep.disabled = true;
+        playTimer = setInterval(() => {
+          if (step < totalSteps) {
+            doStep();
+          } else {
+            stopPlay();
+          }
+        }, 280);
+      }
+    }
+
+    function stopPlay() {
+      playing = false;
+      if (playTimer) { clearInterval(playTimer); playTimer = null; }
+      btnPlay.textContent = '▶ Executar tudo';
+      btnPlay.className = 'ctrl-btn primary';
+      if (step < totalSteps) btnStep.disabled = false;
+    }
+
+    function resetAnim() {
+      stopPlay();
+      init();
+    }
+
+    function updateStepUI() {
+      stepCtr.textContent = `${step} / ${totalSteps}`;
+      const pct = totalSteps > 0 ? (step / totalSteps) * 100 : 0;
+      progFill.style.width = pct.toFixed(1) + '%';
+    }
+
+    /* ── Draw input feature map ─────────────────────────────────────────── */
+    function drawInput(activePR, activePC) {
+      const ctx = cvIn.getContext('2d');
+      let maxAbs = 0;
+      for (let r = 0; r < NF; r++)
+        for (let c = 0; c < NF; c++)
+          if (Math.abs(featureMap[r][c]) > maxAbs) maxAbs = Math.abs(featureMap[r][c]);
+
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, cvIn.width, cvIn.height);
+
+      /* draw heatmap */
+      for (let r = 0; r < NF; r++)
+        for (let c = 0; c < NF; c++) {
+          const v = featureMap[r][c];
+          if (v === 0) continue;
+          const t = maxAbs > 0 ? Math.abs(v) / maxAbs : 0;
+          const g = Math.round(255 * t);
+          ctx.fillStyle = v > 0 ? `rgb(${g},${g},${g})` : `rgb(${g},0,0)`;
+          ctx.fillRect(c * CS_IN, r * CS_IN, CS_IN, CS_IN);
+        }
+
+      /* grid */
+      ctx.strokeStyle = 'rgba(51,65,85,0.4)';
+      ctx.lineWidth = 0.5;
+      for (let i = 0; i <= NF; i++) {
+        ctx.beginPath(); ctx.moveTo(i*CS_IN, 0); ctx.lineTo(i*CS_IN, cvIn.height); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, i*CS_IN); ctx.lineTo(cvIn.width, i*CS_IN); ctx.stroke();
+      }
+
+      /* already-done pool regions (light overlay) */
+      for (let pr = 0; pr < NP; pr++) {
+        for (let pc = 0; pc < NP; pc++) {
+          if (pooledOut[pr][pc] === null) continue;
+          const x = pc*S*CS_IN, y = pr*S*CS_IN;
+          ctx.fillStyle = 'rgba(255,255,255,0.06)';
+          ctx.fillRect(x, y, K*CS_IN, K*CS_IN);
+        }
+      }
+
+      /* highlight hover cell in output (orange tint) */
+      if (hoverCell) {
+        const { pr, pc } = hoverCell;
+        const x = pc*S*CS_IN, y = pr*S*CS_IN;
+        ctx.fillStyle = 'rgba(234,179,8,0.22)';
+        ctx.fillRect(x, y, K*CS_IN, K*CS_IN);
+        ctx.strokeStyle = 'rgba(234,179,8,0.9)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x+1, y+1, K*CS_IN-2, K*CS_IN-2);
+      }
+
+      /* highlight active window (bright purple) */
+      if (activePR >= 0) {
+        const x = activePC*S*CS_IN, y = activePR*S*CS_IN;
+        ctx.strokeStyle = 'rgba(167,139,250,0.95)';
+        ctx.lineWidth = 2.5;
+        ctx.strokeRect(x+1, y+1, K*CS_IN-2, K*CS_IN-2);
+        ctx.fillStyle = 'rgba(91,33,182,0.12)';
+        ctx.fillRect(x, y, K*CS_IN, K*CS_IN);
+      }
+    }
+
+    /* ── Draw pooled output canvas ──────────────────────────────────────── */
+    function drawOutput() {
+      const ctx = cvOut.getContext('2d');
+      const CS_OUT = cvOut.width / NP;
+
+      /* find global maxAbs for consistent colour scale */
+      let maxAbs = 0;
+      for (let r = 0; r < NP; r++)
+        for (let c = 0; c < NP; c++)
+          if (pooledOut[r][c] !== null && Math.abs(pooledOut[r][c]) > maxAbs)
+            maxAbs = Math.abs(pooledOut[r][c]);
+
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, cvOut.width, cvOut.height);
+
+      for (let r = 0; r < NP; r++) {
+        for (let c = 0; c < NP; c++) {
+          const v = pooledOut[r][c];
+          if (v === null) continue;
+          if (v !== 0) {
+            const t = maxAbs > 0 ? Math.abs(v) / maxAbs : 0;
+            const g = Math.round(255 * t);
+            ctx.fillStyle = v > 0 ? `rgb(${g},${g},${g})` : `rgb(${g},0,0)`;
+            ctx.fillRect(c * CS_OUT, r * CS_OUT, CS_OUT, CS_OUT);
+          }
+
+          /* highlight last-computed cell */
+          if (step > 0) {
+            const lastPR = Math.floor((step - 1) / NP);
+            const lastPC = (step - 1) % NP;
+            if (r === lastPR && c === lastPC) {
+              ctx.strokeStyle = 'rgba(167,139,250,0.95)';
+              ctx.lineWidth = 2.5;
+              ctx.strokeRect(c*CS_OUT+1.25, r*CS_OUT+1.25, CS_OUT-2.5, CS_OUT-2.5);
+            }
+          }
+
+          /* hover highlight */
+          if (hoverCell && hoverCell.pr === r && hoverCell.pc === c) {
+            ctx.fillStyle = 'rgba(234,179,8,0.28)';
+            ctx.fillRect(c * CS_OUT, r * CS_OUT, CS_OUT, CS_OUT);
+            ctx.strokeStyle = 'rgba(234,179,8,0.95)';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(c*CS_OUT+1, r*CS_OUT+1, CS_OUT-2, CS_OUT-2);
+          }
+        }
+      }
+
+      /* grid */
+      ctx.strokeStyle = 'rgba(51,65,85,0.5)';
+      ctx.lineWidth = 0.8;
+      for (let i = 0; i <= NP; i++) {
+        ctx.beginPath(); ctx.moveTo(i*CS_OUT, 0); ctx.lineTo(i*CS_OUT, cvOut.height); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, i*CS_OUT); ctx.lineTo(cvOut.width, i*CS_OUT); ctx.stroke();
+      }
+
+      /* value labels on completed cells */
+      ctx.font = `bold ${Math.min(CS_OUT * 0.38, 14)}px 'Fira Code', monospace`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      for (let r = 0; r < NP; r++) {
+        for (let c = 0; c < NP; c++) {
+          if (pooledOut[r][c] === null) continue;
+          const v = pooledOut[r][c];
+          const cx = c * CS_OUT + CS_OUT / 2;
+          const cy = r * CS_OUT + CS_OUT / 2;
+          const labelV = pooledOut[r][c];
+          ctx.fillStyle = (labelV !== null && labelV < 0) ? '#ff8888' : '#ffffff';
+          ctx.fillText(v.toFixed(0), cx, cy);
+        }
+      }
+    }
+
+    /* ── Build window detail cells ──────────────────────────────────────── */
+    function updateWindowDetail(pr, pc, vals, poolVal, selDr, selDc) {
+      const cellSize = 38;
+      const poolLabels = { max: 'valor máximo', mean: 'média', min: 'valor mínimo' };
+      const poolFns    = { max: 'max', mean: 'mean', min: 'min' };
+
+      winSec.innerHTML = '';
+
+      const posDiv = document.createElement('div');
+      posDiv.className = 'pos-indicator';
+      posDiv.innerHTML = `Janela <strong>[${pr},${pc}]</strong> &nbsp;·&nbsp; região ` +
+        `(linha ${pr*S}–${pr*S+K-1}, col ${pc*S}–${pc*S+K-1})`;
+      winSec.appendChild(posDiv);
+
+      /* grid */
+      const grid = document.createElement('div');
+      grid.className = 'window-grid';
+      grid.style.gridTemplateColumns = `repeat(${K}, ${cellSize}px)`;
+      grid.style.gap = '3px';
+
+      /* maxAbs from entire feature map — same scale as canvas */
+      let fmMaxAbs = 0;
+      for (let r = 0; r < NF; r++)
+        for (let c = 0; c < NF; c++)
+          if (Math.abs(featureMap[r][c]) > fmMaxAbs) fmMaxAbs = Math.abs(featureMap[r][c]);
+
+      vals.forEach(({ v, dr, dc }) => {
+        const cell = document.createElement('div');
+        cell.className = 'wc';
+        cell.style.width = cellSize + 'px';
+        cell.style.height = cellSize + 'px';
+
+        /* heatmap colormap — identical to drawInput */
+        let bg, fg;
+        if (v === 0) {
+          bg = '#000000';
+          fg = 'rgba(255,255,255,0.3)';
+        } else {
+          const t = fmMaxAbs > 0 ? Math.abs(v) / fmMaxAbs : 0;
+          const g = Math.round(255 * t);
+          bg = v > 0 ? `rgb(${g},${g},${g})` : `rgb(${g},0,0)`;
+          fg = (v > 0 && g > 140) ? '#111' : '#fff';
+        }
+        cell.style.background = bg;
+        cell.style.color = fg;
+
+        const isSel = (selDr >= 0 && dr === selDr && dc === selDc);
+        if (isSel) {
+          cell.style.border = '2px solid var(--purple)';
+          cell.style.boxShadow = '0 0 8px rgba(91,33,182,0.5)';
+        } else {
+          cell.style.border = '1px solid rgba(255,255,255,0.12)';
+        }
+
+        cell.textContent = v.toFixed(0);
+        if (isSel) {
+          cell.title = poolLabels[poolType];
+          cell.innerHTML = v.toFixed(0) + `<br><span style="font-size:0.55rem;opacity:0.7;">${poolType}</span>`;
+        }
+        grid.appendChild(cell);
+      });
+
+      winSec.appendChild(grid);
+
+      /* result badge */
+      const maxRow = document.createElement('div');
+      maxRow.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:0.3rem;margin-top:0.2rem;';
+
+      const mbLabel = document.createElement('div');
+      mbLabel.className = 'max-badge-label';
+      mbLabel.textContent = `${poolLabels[poolType]} selecionado:`;
+
+      const mb = document.createElement('div');
+      mb.className = 'max-badge';
+      mb.innerHTML = `${poolFns[poolType]} = <strong style="font-size:1.15rem;">${poolVal.toFixed(1)}</strong>`;
+
+      maxRow.appendChild(mbLabel);
+      maxRow.appendChild(mb);
+      winSec.appendChild(maxRow);
+
+      /* breakdown text */
+      const bk = document.createElement('div');
+      bk.style.cssText = 'font-size:0.7rem;color:var(--text-dim);font-family:"Fira Code",monospace;text-align:center;line-height:1.5;';
+      const vList = vals.map(({v, dr, dc}) => {
+        const hi = (selDr >= 0 && dr === selDr && dc === selDc);
+        return hi ? `<strong style="color:var(--purple)">${v.toFixed(0)}</strong>` : v.toFixed(0);
+      }).join(', ');
+      bk.innerHTML = `${poolFns[poolType]}(${vList}) = <strong style="color:var(--purple)">${poolVal.toFixed(1)}</strong>`;
+      winSec.appendChild(bk);
+    }
+
+    /* ── Hover on output canvas ─────────────────────────────────────────── */
+    cvOut.addEventListener('mousemove', (e) => {
+      if (step === 0) return;
+      const CS_OUT = cvOut.width / NP;
+      const rect = cvOut.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const pc = Math.floor(x / CS_OUT);
+      const pr = Math.floor(y / CS_OUT);
+      if (pr >= 0 && pr < NP && pc >= 0 && pc < NP && pooledOut[pr][pc] !== null) {
+        if (!hoverCell || hoverCell.pr !== pr || hoverCell.pc !== pc) {
+          hoverCell = { pr, pc };
+          const v = pooledOut[pr][pc];
+          hoverInfoEl.innerHTML =
+            `Célula [${pr},${pc}] = <strong style="color:var(--purple)">${v.toFixed(0)}</strong> &nbsp;·&nbsp; ` +
+            `região de origem: linhas ${pr*S}–${pr*S+K-1}, colunas ${pc*S}–${pc*S+K-1}`;
+          drawInput(playing ? Math.floor((step-1)/NP) : -1, playing ? (step-1)%NP : -1);
+          drawOutput();
+        }
+      } else {
+        if (hoverCell) {
+          hoverCell = null;
+          hoverInfoEl.textContent = '← passe o mouse sobre o mapa pooled para ver a região de origem';
+          drawInput(playing ? Math.floor((step-1)/NP) : -1, playing ? (step-1)%NP : -1);
+          drawOutput();
+        }
+      }
+    });
+
+    cvOut.addEventListener('mouseleave', () => {
+      if (hoverCell) {
+        hoverCell = null;
+        hoverInfoEl.textContent = '← passe o mouse sobre o mapa pooled para ver a região de origem';
+        drawInput(-1, -1);
+        drawOutput();
+      }
+    });
+
+    /* ── Sync selectors with localStorage ──────────────────────────────── */
+    selF.value = filterIdx;
+    selF.addEventListener('change', () => {
+      localStorage.setItem('selectedFilter', selF.value);
+      onSettingsChange();
+    });
+    selK.addEventListener('change', onSettingsChange);
+    selS.addEventListener('change', onSettingsChange);
+    selPool.addEventListener('change', onSettingsChange);
+
+    /* ── Bootstrap ──────────────────────────────────────────────────────── */
+    init();
+  </script>
+</body>
+</html>

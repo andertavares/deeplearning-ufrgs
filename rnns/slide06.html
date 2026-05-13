@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 06 – Dados Sequenciais: Definição e Exemplos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .domain-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.6rem;
+      margin-bottom: 1rem;
+    }
+    .domain-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.3rem;
+      padding: 0.7rem 0.4rem;
+      border-radius: var(--radius-sm);
+      border: 2px solid var(--border2);
+      background: var(--bg3);
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text);
+      transition: border-color 0.2s, background 0.2s, transform 0.15s;
+    }
+    .domain-btn .d-icon { font-size: 1.4rem; line-height: 1; }
+    .domain-btn:hover { border-color: var(--teal); transform: translateY(-2px); }
+    .domain-btn.active { border-color: var(--teal); background: var(--teal-lt); color: var(--teal); }
+    .domain-desc {
+      min-height: 3rem;
+      padding: 0.7rem 0.9rem;
+      border-radius: var(--radius-sm);
+      background: var(--teal-lt);
+      border-left: 3px solid var(--teal);
+      font-size: 0.9rem;
+      color: var(--text);
+      transition: opacity 0.3s;
+    }
+    .domain-desc.hidden { opacity: 0; pointer-events: none; }
+    .def-block {
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0.9rem 1rem;
+      margin-bottom: 1rem;
+      font-size: 0.95rem;
+      color: var(--text);
+      line-height: 1.6;
+    }
+    .def-block .mono {
+      font-family: 'Fira Code', monospace;
+      color: var(--teal);
+      font-weight: 600;
+    }
+    .seq-vs {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: stretch;
+      gap: 0;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      border: 1.5px solid var(--border2);
+      margin-bottom: 1rem;
+      font-size: 0.85rem;
+    }
+    .seq-vs-col {
+      padding: 0.75rem 0.9rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      background: var(--bg3);
+    }
+    .seq-vs-col.seq   { border-right: none; }
+    .seq-vs-col.ts    { border-left:  none; background: var(--teal-lt); }
+    .seq-vs-divider {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.2rem;
+      background: var(--bg3);
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: var(--text-dim);
+      letter-spacing: 0.06em;
+      border-left: 1px solid var(--border2);
+      border-right: 1px solid var(--border2);
+    }
+    .seq-vs-title {
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+      margin-bottom: 0.2rem;
+    }
+    .seq-vs-col.ts .seq-vs-title { color: var(--teal); }
+    .seq-vs-item {
+      display: flex;
+      gap: 0.4rem;
+      align-items: baseline;
+      color: var(--text-muted);
+      line-height: 1.35;
+    }
+    .seq-vs-item::before { content: '–'; color: var(--border); flex-shrink: 0; }
+    .seq-vs-col.ts .seq-vs-item::before { color: var(--teal); }
+    .seq-vs-note {
+      grid-column: 1 / -1;
+      background: var(--bg2);
+      border-top: 1px dashed var(--border2);
+      padding: 0.5rem 0.9rem;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      text-align: center;
+    }
+    .seq-vs-note strong { color: var(--teal); }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Redes Neurais Recorrentes</span>
+      <span class="prof-tag" style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 3 · Slide 1 / 2</span>
+    </header>
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Dados Sequenciais: Definição e Exemplos</h1>
+        <p class="slide-subtitle">Sequência = coleção ordenada — a ordem carrega o significado</p>
+      </div>
+      <div class="content-split">
+        <!-- LEFT PANEL -->
+        <div class="panel panel-left">
+          <h2 class="panel-title">📋 O Que é um Dado Sequencial?</h2>
+          <div class="def-block">
+            Todo dado em que a <strong>ordem dos elementos é relevante</strong>. Em vez de uma entrada única <span class="mono">x</span>, temos:<br/>
+            <span class="mono" style="font-size:1.05rem;">x₁, x₂, x₃, …, xₜ</span>
+          </div>
+          <!-- Sequence vs Time Series comparison -->
+          <div class="seq-vs">
+            <div class="seq-vs-col seq">
+              <div class="seq-vs-title">Sequência</div>
+              <div class="seq-vs-item">Elementos ordenados</div>
+              <div class="seq-vs-item">Intervalo <em>não</em> precisa ser uniforme</div>
+              <div class="seq-vs-item">Ex.: palavras, ações, DNA</div>
+            </div>
+            <div class="seq-vs-divider">VS</div>
+            <div class="seq-vs-col ts">
+              <div class="seq-vs-title">Série Temporal</div>
+              <div class="seq-vs-item">Indexada por instantes de tempo</div>
+              <div class="seq-vs-item">Intervalo geralmente uniforme</div>
+              <div class="seq-vs-item">Ex.: ECG, preços, temperatura</div>
+            </div>
+            <div class="seq-vs-note">
+              <strong>Toda série temporal é uma sequência</strong> — mas nem toda sequência é uma série temporal.
+            </div>
+          </div>
+
+          <!-- exemplos removidos a pedido do usuário -->
+        </div>
+        <!-- RIGHT PANEL -->
+        <div class="panel panel-right">
+          <h2 class="panel-title">🌐 Onde Encontramos Sequências?</h2>
+          <div class="domain-grid">
+            <button class="domain-btn" data-domain="texto" onclick="selectDomain(this)">
+              <span class="d-icon">📝</span>Texto
+            </button>
+            <button class="domain-btn" data-domain="fala" onclick="selectDomain(this)">
+              <span class="d-icon">🎤</span>Fala
+            </button>
+            <button class="domain-btn" data-domain="sensores" onclick="selectDomain(this)">
+              <span class="d-icon">📡</span>Sensores
+            </button>
+            <button class="domain-btn" data-domain="medicina" onclick="selectDomain(this)">
+              <span class="d-icon">💊</span>Medicina
+            </button>
+            <button class="domain-btn" data-domain="jogos" onclick="selectDomain(this)">
+              <span class="d-icon">🎮</span>Jogos
+            </button>
+            <button class="domain-btn" data-domain="financas" onclick="selectDomain(this)">
+              <span class="d-icon">💹</span>Finanças
+            </button>
+          </div>
+          <div class="domain-desc hidden" id="domain-desc">Clique em um domínio para ver detalhes.</div>
+          <div class="insight-box" style="margin-top:auto">
+            <span class="i-icon">💡</span>
+            <div class="i-text"><strong>O passo temporal importa.</strong> Cada xₜ não vive sozinho — ele é parte de um contexto em evolução. O passo temporal pode mudar a interpretação do próximo elemento.</div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide05.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide07.html'">Próximo →</button>
+    </nav>
+  </div>
+  <script>
+    const domainInfo = {
+      texto:    "Análise de sentimento, tradução automática, resumo de texto.",
+      fala:     "Reconhecimento de voz, síntese de fala.",
+      sensores: "Detecção de anomalias, monitoramento industrial.",
+      medicina: "ECG, séries temporais de sinais vitais.",
+      jogos:    "Sequências de ações do jogador, previsão de estratégia.",
+      financas: "Previsão de preços, detecção de fraude."
+    };
+    function selectDomain(btn) {
+      document.querySelectorAll('.domain-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const desc = document.getElementById('domain-desc');
+      desc.textContent = domainInfo[btn.dataset.domain];
+      desc.classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>

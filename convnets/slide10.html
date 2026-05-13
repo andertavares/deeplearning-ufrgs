@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 10 – Feature Maps</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── Layout ──────────────────────────────────────────────────────────── */
+    .fm-layout {
+      display: grid;
+      grid-template-columns: 1fr 1.6fr;
+      gap: 1.25rem;
+      flex: 1;
+    }
+
+    .fm-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.3rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      box-shadow: var(--shadow);
+    }
+
+    /* ── Filter toggle checkboxes ────────────────────────────────────────── */
+    .filter-toggle-row {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .filter-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: var(--bg3);
+      border: 2px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0.65rem 0.9rem;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      user-select: none;
+    }
+
+    .filter-toggle.active {
+      background: var(--purple-lt);
+      border-color: var(--purple);
+    }
+
+    .filter-toggle input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--purple);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .ft-color-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .ft-name {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--text);
+      flex: 1;
+    }
+
+    .ft-desc {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    /* ── Individual feature map cards ───────────────────────────────────── */
+    .fm-maps-area {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .fm-individual-row {
+      display: flex;
+      gap: 0.85rem;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .fm-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+      background: var(--bg3);
+      border: 2px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0.75rem 0.8rem;
+      transition: border-color 0.25s, opacity 0.25s;
+      min-width: 130px;
+    }
+
+    .fm-card.fm-active {
+      border-color: var(--purple);
+      box-shadow: 0 4px 14px rgba(91,33,182,0.15);
+    }
+
+    .fm-card.fm-inactive {
+      opacity: 0.35;
+    }
+
+    .fm-card-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text);
+      text-align: center;
+    }
+
+    canvas.fm-canvas {
+      image-rendering: pixelated;
+      border-radius: 5px;
+      border: 1.5px solid var(--border2);
+      display: block;
+    }
+
+    .fm-legend {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      margin-top: 0.2rem;
+      width: 100%;
+    }
+
+    .fm-legend-label {
+      font-size: 0.65rem;
+      font-family: 'Fira Code', monospace;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .fm-legend-bar {
+      flex: 1;
+      height: 7px;
+      border-radius: 4px;
+      border: 1px solid var(--border2);
+    }
+
+    /* ── Stack (overlay) canvas ──────────────────────────────────────────── */
+    .fm-stack-section {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .fm-stack-visual {
+      position: relative;
+      display: inline-block;
+    }
+
+    /* The 3D-stacked layers effect */
+    .stack-layer {
+      position: absolute;
+      border: 2px solid var(--border2);
+      border-radius: 6px;
+      overflow: hidden;
+      image-rendering: pixelated;
+    }
+
+    /* ── Input canvas (small, for context) ──────────────────────────────── */
+    .input-context {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .input-context-label {
+      font-size: 0.72rem;
+      font-family: 'Fira Code', monospace;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    /* ── Row with input + arrows + maps ─────────────────────────────────── */
+    .pipeline-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .pipe-arrow {
+      font-size: 1.4rem;
+      color: var(--text-dim);
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    /* ── Overlay heatmap ─────────────────────────────────────────────────── */
+    .overlay-label-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-family: 'Fira Code', monospace;
+    }
+
+    .overlay-color-chip {
+      width: 28px;
+      height: 12px;
+      border-radius: 3px;
+      border: 1px solid var(--border2);
+    }
+
+    .overlay-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .badge-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.2rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      background: var(--purple-lt);
+      border: 1.5px solid #c4b5fd;
+      color: var(--purple);
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Redes Convolucionais</span>
+      <span class="prof-tag" style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 4 · Slide 1 / 3</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Feature Maps</h1>
+        <p class="slide-subtitle">O resultado de aplicar um filtro sobre toda a imagem — onde e com que intensidade o padrão foi detectado</p>
+      </div>
+
+      <div class="fm-layout">
+
+        <!-- Left panel: controls + concept cards -->
+        <div class="fm-panel">
+          <div class="panel-title">Filtros ativos</div>
+
+          <div class="filter-toggle-row" id="filter-toggles">
+            <!-- built by JS -->
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="concept-cards">
+            <div class="concept-card" style="--delay:0.05s;">
+              <div class="card-icon">🗺️</div>
+              <div class="card-text">
+                <strong>Um filtro → um feature map</strong>
+                <p>Cada filtro gera um mapa que indica <em>onde</em> aquela característica foi encontrada e <em>com que intensidade</em>.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.15s;">
+              <div class="card-icon">📦</div>
+              <div class="card-text">
+                <strong>Vários filtros → vários mapas</strong>
+                <p>Camadas convolucionais têm dezenas ou centenas de filtros — cada um especializado em um padrão diferente.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.25s;">
+              <div class="card-icon">🔥</div>
+              <div class="card-text">
+                <strong>Heatmap de ativações</strong>
+                <p>Pixels mais brilhantes no mapa indicam <em>maior ativação</em> — o padrão foi encontrado com alta intensidade naquela região.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="highlight-box purple">
+            <span class="icon">💡</span>
+            <p>Ligue e desligue cada filtro acima para ver como cada um detecta um padrão diferente na mesma imagem.</p>
+          </div>
+        </div>
+
+        <!-- Right panel: visualization -->
+        <div class="fm-panel">
+          <div class="panel-title">Mapas de features — imagem do X (9×9)</div>
+
+          <!-- Pipeline: input → individual maps -->
+          <div class="pipeline-row" id="pipeline-row">
+            <!-- built by JS -->
+          </div>
+
+          <div class="highlight-box blue" style="margin-top:0.25rem;">
+            <span class="icon">📐</span>
+            <p>Em CNNs, os mapas de features de uma camada são <strong>empilhados</strong> e passados como entrada para a próxima camada — não sobrepostos.</p>
+          </div>
+
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide09.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide11.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    /* ── Filters (same as slides 08 / 09) ─────────────────────────────── */
+    const FILTERS = [
+      {
+        name: 'Diagonal ↘',
+        desc: 'Detecta diagonal ↘ (sup-esq → inf-dir)',
+        emoji: '↘',
+        color: [91, 33, 182],    /* purple */
+        cssColor: '#5b21b6',
+        weights: [[ 1, 0,-1],[ 0, 1, 0],[-1, 0, 1]],
+      },
+      {
+        name: 'Centro ✖',
+        desc: 'Detecta padrão X (cruzamento de diagonais)',
+        emoji: '✖',
+        color: [14, 116, 144],   /* cyan */
+        cssColor: '#0e7490',
+        weights: [[ 1,-1, 1],[-1, 1,-1],[ 1,-1, 1]],
+      },
+      {
+        name: 'Diagonal ↗',
+        desc: 'Detecta diagonal ↗ (sup-dir → inf-esq)',
+        emoji: '↗',
+        color: [22, 101, 52],    /* green */
+        cssColor: '#166534',
+        weights: [[-1, 0, 1],[ 0, 1, 0],[ 1, 0,-1]],
+      },
+    ];
+
+    /* ── Input tile (X, 9×9) ─────────────────────────────────────────── */
+    const N = 9;
+    const tileX = [
+      [0,0,0,0,0,0,0,0,0],
+      [0,1,0,0,0,0,0,1,0],
+      [0,0,1,0,0,0,1,0,0],
+      [0,0,0,1,0,1,0,0,0],
+      [0,0,0,0,1,0,0,0,0],
+      [0,0,0,1,0,1,0,0,0],
+      [0,0,1,0,0,0,1,0,0],
+      [0,1,0,0,0,0,0,1,0],
+      [0,0,0,0,0,0,0,0,0],
+    ];
+
+    /* ── State ───────────────────────────────────────────────────────── */
+    const active = [true, true, true];
+
+    /* ── Apply filter (same-padding) ─────────────────────────────────── */
+    function applyFilter(weights) {
+      const F = 3, pad = 1;
+      const out = [];
+      for (let r = 0; r < N; r++) {
+        out.push([]);
+        for (let c = 0; c < N; c++) {
+          let s = 0;
+          for (let fr = 0; fr < F; fr++) {
+            for (let fc = 0; fc < F; fc++) {
+              const ir = r + fr - pad, ic = c + fc - pad;
+              const px = (ir >= 0 && ir < N && ic >= 0 && ic < N) ? tileX[ir][ic] : 0;
+              s += weights[fr][fc] * px;
+            }
+          }
+          out[r].push(s);
+        }
+      }
+      return out;
+    }
+
+    /* Pre-compute all 3 feature maps */
+    const featureMaps = FILTERS.map(f => applyFilter(f.weights));
+
+    /* ── Draw input canvas (small, 108px) ────────────────────────────── */
+    function drawInputSmall(cv) {
+      const ctx = cv.getContext('2d');
+      const CS = cv.width / N;
+      ctx.fillStyle = '#111827';
+      ctx.fillRect(0, 0, cv.width, cv.height);
+      for (let r = 0; r < N; r++) {
+        for (let c = 0; c < N; c++) {
+          if (tileX[r][c]) {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(c * CS, r * CS, CS, CS);
+          }
+        }
+      }
+      ctx.strokeStyle = 'rgba(51,65,85,0.35)';
+      ctx.lineWidth = 0.5;
+      for (let i = 0; i <= N; i++) {
+        ctx.beginPath(); ctx.moveTo(i*CS, 0); ctx.lineTo(i*CS, cv.height); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, i*CS); ctx.lineTo(cv.width, i*CS); ctx.stroke();
+      }
+    }
+
+    /* ── Draw individual feature map heatmap ─────────────────────────── */
+    function drawFeatureMap(cv, resp, rgb, isActive) {
+      const ctx = cv.getContext('2d');
+      const CS = cv.width / N;
+      let maxAbs = 0;
+      for (let r = 0; r < N; r++)
+        for (let c = 0; c < N; c++)
+          if (Math.abs(resp[r][c]) > maxAbs) maxAbs = Math.abs(resp[r][c]);
+
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, cv.width, cv.height);
+      if (isActive) {
+        for (let r = 0; r < N; r++) {
+          for (let c = 0; c < N; c++) {
+            const v = resp[r][c];
+            if (v === 0) continue;
+            const t = maxAbs > 0 ? Math.abs(v) / maxAbs : 0;
+            const g = Math.round(255 * t);
+            ctx.fillStyle = v > 0 ? `rgb(${g},${g},${g})` : `rgb(${g},0,0)`;
+            ctx.fillRect(c * CS, r * CS, CS, CS);
+          }
+        }
+      }
+      ctx.strokeStyle = 'rgba(51,65,85,0.3)';
+      ctx.lineWidth = 0.5;
+      for (let i = 0; i <= N; i++) {
+        ctx.beginPath(); ctx.moveTo(i*CS,0); ctx.lineTo(i*CS,cv.height); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0,i*CS); ctx.lineTo(cv.width,i*CS); ctx.stroke();
+      }
+    }
+
+
+
+    /* ── Refresh all canvases ────────────────────────────────────────── */
+    function refresh() {
+      FILTERS.forEach((f, i) => {
+        const cv = document.getElementById('cv-fm-' + i);
+        if (cv) drawFeatureMap(cv, featureMaps[i], f.color, active[i]);
+
+        // card active state
+        const card = document.getElementById('fm-card-' + i);
+        if (card) {
+          card.classList.toggle('fm-active', active[i]);
+          card.classList.toggle('fm-inactive', !active[i]);
+        }
+
+        // toggle button
+        const tog = document.getElementById('ft-' + i);
+        if (tog) tog.classList.toggle('active', active[i]);
+      });
+    }
+
+    /* ── Build DOM ───────────────────────────────────────────────────── */
+    // Filter toggles
+    const togglesContainer = document.getElementById('filter-toggles');
+    FILTERS.forEach((f, i) => {
+      const label = document.createElement('label');
+      label.className = 'filter-toggle' + (active[i] ? ' active' : '');
+      label.id = 'ft-' + i;
+      label.style.cursor = 'pointer';
+
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = active[i];
+      cb.addEventListener('change', () => {
+        active[i] = cb.checked;
+        refresh();
+      });
+
+      const dot = document.createElement('div');
+      dot.className = 'ft-color-dot';
+      dot.style.background = f.cssColor;
+
+      const nameEl = document.createElement('span');
+      nameEl.className = 'ft-name';
+      nameEl.textContent = f.name;
+
+      const descEl = document.createElement('span');
+      descEl.className = 'ft-desc';
+      descEl.textContent = f.desc;
+
+      label.appendChild(cb);
+      label.appendChild(dot);
+      label.appendChild(nameEl);
+      label.appendChild(descEl);
+      togglesContainer.appendChild(label);
+    });
+
+    // Pipeline row: input → arrow → fm cards
+    const pipeRow = document.getElementById('pipeline-row');
+
+    // Input
+    const inputWrap = document.createElement('div');
+    inputWrap.className = 'input-context';
+    const cvIn = document.createElement('canvas');
+    cvIn.width = 108; cvIn.height = 108;
+    cvIn.className = 'fm-canvas';
+    const inLbl = document.createElement('div');
+    inLbl.className = 'input-context-label';
+    inLbl.textContent = 'entrada (X)';
+    inputWrap.appendChild(cvIn);
+    inputWrap.appendChild(inLbl);
+    pipeRow.appendChild(inputWrap);
+    drawInputSmall(cvIn);
+
+    // Arrow
+    const arrow = document.createElement('div');
+    arrow.className = 'pipe-arrow';
+    arrow.textContent = '→';
+    pipeRow.appendChild(arrow);
+
+    // Feature map cards
+    const cardsWrap = document.createElement('div');
+    cardsWrap.style.cssText = 'display:flex;gap:0.7rem;flex-wrap:wrap;align-items:flex-start;';
+    FILTERS.forEach((f, i) => {
+      const card = document.createElement('div');
+      card.className = 'fm-card' + (active[i] ? ' fm-active' : ' fm-inactive');
+      card.id = 'fm-card-' + i;
+
+      const title = document.createElement('div');
+      title.className = 'fm-card-title';
+      title.innerHTML = `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${f.cssColor};margin-right:5px;vertical-align:middle;"></span>${f.name}`;
+      card.appendChild(title);
+
+      const cv = document.createElement('canvas');
+      cv.id = 'cv-fm-' + i;
+      cv.width = 108; cv.height = 108;
+      cv.className = 'fm-canvas';
+      card.appendChild(cv);
+
+      // Heatmap legend
+      const legend = document.createElement('div');
+      legend.className = 'fm-legend';
+      const lblMin = document.createElement('span');
+      lblMin.className = 'fm-legend-label';
+      lblMin.style.color = '#ff4444';
+      lblMin.textContent = 'mín';
+      const bar = document.createElement('div');
+      bar.className = 'fm-legend-bar';
+      bar.style.background = 'linear-gradient(to right,#ff0000,#000000,#ffffff)';
+      const lblMax = document.createElement('span');
+      lblMax.className = 'fm-legend-label';
+      lblMax.style.color = '#ffffff';
+      lblMax.textContent = 'máx';
+      legend.appendChild(lblMin);
+      legend.appendChild(bar);
+      legend.appendChild(lblMax);
+      card.appendChild(legend);
+
+      cardsWrap.appendChild(card);
+    });
+    pipeRow.appendChild(cardsWrap);
+
+    // Initial render
+    refresh();
+  </script>
+</body>
+</html>

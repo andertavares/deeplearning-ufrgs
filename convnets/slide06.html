@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 6 – O Problema da Translação</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .translation-demo {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.4rem;
+      flex: 1;
+      overflow: visible;
+    }
+
+    .demo-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.3rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      overflow-y: auto;
+      box-shadow: var(--shadow);
+    }
+
+    .canvas-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    #tile-canvas {
+      border: 2px solid var(--border2);
+      border-radius: 8px;
+      image-rendering: pixelated;
+    }
+
+    .slider-row {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+
+    .slider-label {
+      font-size: 0.88rem;
+      font-family: 'Fira Code', monospace;
+      color: var(--text-muted);
+      text-align: center;
+      font-weight: 600;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--purple);
+      cursor: pointer;
+    }
+
+    /* prettyprint matrix */
+    .matrix-code {
+      background: #f8f9fb;
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem 0.8rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.82rem;
+      line-height: 1.7;
+      flex: 1;
+      overflow: auto;
+      color: var(--text);
+      white-space: pre;
+    }
+
+    .pixel-note {
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      font-family: 'Fira Code', monospace;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    /* ---- MLP panel (right) ---- */
+    .mlp-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+    }
+
+    /* logit display */
+    .logit-box {
+      background: #111827;
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0.8rem 1rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.92rem;
+      color: #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .logit-formula {
+      color: #94a3b8;
+      font-size: 0.82rem;
+    }
+    .logit-value {
+      font-size: 1.35rem;
+      font-weight: 700;
+      transition: color 0.3s;
+    }
+    .logit-prob {
+      font-size: 0.88rem;
+      color: #94a3b8;
+    }
+
+    /* sigmoid bar */
+    .sigmoid-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .sigmoid-label {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .sigmoid-track {
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      border-radius: 999px;
+      height: 18px;
+      position: relative;
+      overflow: visible;
+    }
+    .sigmoid-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 0.35s ease, background 0.35s ease;
+    }
+    .sigmoid-needle {
+      position: absolute;
+      top: -5px;
+      width: 3px;
+      height: 28px;
+      background: var(--purple);
+      border-radius: 2px;
+      transform: translateX(-50%);
+      transition: left 0.35s ease;
+    }
+    .sigmoid-ticks {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      font-family: 'Fira Code', monospace;
+      color: var(--text-dim);
+      margin-top: 0.15rem;
+    }
+
+    /* weight/activation side-by-side */
+    .maps-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.6rem;
+    }
+    .map-col {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      align-items: center;
+    }
+    .map-title {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--text);
+      text-align: center;
+    }
+    .map-subtitle {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-align: center;
+      line-height: 1.35;
+    }
+    #weight-canvas, #act-canvas {
+      border-radius: 6px;
+      border: 2px solid var(--border2);
+      display: block;
+      image-rendering: pixelated;
+    }
+    .weight-legend {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.78rem;
+      font-family: 'Fira Code', monospace;
+      color: var(--text-muted);
+    }
+    .legend-grad {
+      flex: 1;
+      height: 10px;
+      border-radius: 4px;
+      background: linear-gradient(to right, #b91c1c, #f8f9fb, #166534);
+      border: 1px solid var(--border2);
+    }
+
+    /* insight */
+    .shift-insight {
+      background: var(--purple-lt);
+      border: 1.5px solid #c4b5fd;
+      border-radius: var(--radius-sm);
+      padding: 0.75rem 1rem;
+      font-size: 0.92rem;
+      color: var(--purple);
+      line-height: 1.55;
+    }
+    .shift-insight strong { color: var(--purple); }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Redes Convolucionais</span>
+      <span class="prof-tag" style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 2 · Slide 1 / 2</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">O Problema da Translação</h1>
+        <p class="slide-subtitle">Para nós é o mesmo X — para o MLP, são entradas completamente diferentes</p>
+      </div>
+
+      <div class="translation-demo">
+        <!-- Left: interactive tile -->
+        <div class="demo-panel">
+          <div class="panel-title">Mova o X com os sliders 🖱️</div>
+
+          <div class="canvas-wrap">
+            <canvas id="tile-canvas" width="162" height="162"></canvas>
+
+            <div class="slider-row">
+              <div class="slider-label">← deslocamento horizontal: <span id="shift-val">0</span> px →</div>
+              <input type="range" id="shift-slider" min="-4" max="4" value="0" step="1" />
+            </div>
+
+            <div class="slider-row">
+              <div class="slider-label">↑ deslocamento vertical: <span id="vshift-val">0</span> px ↓</div>
+              <input type="range" id="vshift-slider" min="-4" max="4" value="0" step="1" />
+            </div>
+          </div>
+
+          <div class="matrix-code" id="matrix-display"><!-- JS --></div>
+          <div class="pixel-note">
+            <span style="color:var(--purple);font-weight:700;">roxo</span> = pixel novo ·
+            <span style="color:var(--orange);">laranja</span> = pixel que sumiu ·
+            1 = ativo · 0 = fundo
+          </div>
+        </div>
+
+        <!-- Right: MLP sem camada oculta -->
+        <div class="demo-panel">
+          <div class="panel-title">MLP sem camada oculta — o que muda?</div>
+
+          <div class="mlp-panel">
+
+            <!-- Logit output -->
+            <div class="logit-box">
+              <div class="logit-formula">logit  =  <strong style="color:#7dd3fc">w</strong> · <strong style="color:#fcd34d">x</strong> + b</div>
+              <div>
+                logit = <span class="logit-value" id="logit-val">—</span>
+              </div>
+              <div class="logit-prob">σ(logit) = <span id="prob-val">—</span> &nbsp;→&nbsp; P(é X)</div>
+            </div>
+
+            <!-- Sigmoid bar -->
+            <div class="sigmoid-wrap">
+              <div class="sigmoid-label">P(é X) = σ(logit)</div>
+              <div class="sigmoid-track">
+                <div class="sigmoid-fill" id="sigmoid-fill"></div>
+                <div class="sigmoid-needle" id="sigmoid-needle"></div>
+              </div>
+              <div class="sigmoid-ticks">
+                <span>0</span><span>0.25</span><span>0.5</span><span>0.75</span><span>1</span>
+              </div>
+            </div>
+
+            <!-- Maps: weight + activation side by side -->
+            <div class="weight-section">
+              <div class="maps-row">
+                <!-- Weight map -->
+                <div class="map-col">
+                  <div class="map-title">Pesos <span style="color:#7dd3fc;font-family:'Fira Code',monospace;">w</span></div>
+                  <div class="map-subtitle">fixos após treino</div>
+                  <canvas id="weight-canvas" width="108" height="108"></canvas>
+                </div>
+                <!-- Activation map -->
+                <div class="map-col">
+                  <div class="map-title">Ativações <span style="color:#fcd34d;font-family:'Fira Code',monospace;">w · x</span></div>
+                  <div class="map-subtitle">muda com o deslocamento</div>
+                  <canvas id="act-canvas" width="108" height="108"></canvas>
+                </div>
+              </div>
+              <div class="weight-legend">
+                <span style="color:var(--red);">−</span>
+                <div class="legend-grad"></div>
+                <span style="color:var(--green);">+</span>
+                <span style="color:var(--text-dim);font-size:0.72rem;margin-left:0.5rem;">verde = contribui positivo · vermelho = penaliza</span>
+              </div>
+            </div>
+
+            <!-- Insight -->
+            <div class="shift-insight" id="shift-insight">
+              Mova o X para ver como o logit muda. Com deslocamento <strong>0</strong>, o X encaixa perfeitamente nos pesos positivos.
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide05.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide07.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    const N = 9;
+    const CELL     = 18;   // tile canvas cell size
+    const CELL_MAP = 12;   // weight/activation map cell size
+
+    // Tile X centrado (mesmo do slide 5)
+    const tileX = [
+      [0,0,0,0,0,0,0,0,0],
+      [0,1,0,0,0,0,0,1,0],
+      [0,0,1,0,0,0,1,0,0],
+      [0,0,0,1,0,1,0,0,0],
+      [0,0,0,0,1,0,0,0,0],
+      [0,0,0,1,0,1,0,0,0],
+      [0,0,1,0,0,0,1,0,0],
+      [0,1,0,0,0,0,0,1,0],
+      [0,0,0,0,0,0,0,0,0],
+    ];
+
+    // MLP linear: w = +1 onde X tem pixel ativo, -0.5 em volta, 0 no resto
+    // b ajustado para que logit ≈ +4 no X centrado
+    const W = [];       // pesos 9×9 como array plano (81 elementos)
+    const BIAS = -2.0;  // bias
+
+    (function buildWeights() {
+      const flatX = tileX.flat();
+      const nActive = flatX.reduce((a, v) => a + v, 0); // 12 pixels ativos
+      for (let i = 0; i < 81; i++) {
+        if (flatX[i] === 1) {
+          W.push(0.5);          // peso positivo nos pixels do X
+        } else {
+          // vizinhos dos pixels ativos recebem peso negativo pequeno
+          const r = Math.floor(i / N);
+          const c = i % N;
+          let neighbor = false;
+          for (const [dr, dc] of [[-1,0],[1,0],[0,-1],[0,1]]) {
+            const nr = r+dr, nc = c+dc;
+            if (nr>=0&&nr<N&&nc>=0&&nc<N && tileX[nr][nc]===1) { neighbor=true; break; }
+          }
+          W.push(neighbor ? -0.15 : 0.02);
+        }
+      }
+    })();
+
+    function sigmoid(z) { return 1 / (1 + Math.exp(-z)); }
+
+    function computeLogit(tile) {
+      const flat = tile.flat();
+      let s = BIAS;
+      for (let i = 0; i < 81; i++) s += W[i] * flat[i];
+      return s;
+    }
+
+    function shiftTile(tile, dx, dy) {
+      const result = Array.from({length: N}, () => Array(N).fill(0));
+      for (let r = 0; r < N; r++) {
+        for (let c = 0; c < N; c++) {
+          const nr = r + dy, nc = c + dx;
+          if (nr >= 0 && nr < N && nc >= 0 && nc < N) result[nr][nc] = tile[r][c];
+        }
+      }
+      return result;
+    }
+
+    // ---- Draw tile canvas ----
+    function drawCanvas(tile) {
+      const canvas = document.getElementById('tile-canvas');
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#111827';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      for (let r = 0; r < N; r++) {
+        for (let c = 0; c < N; c++) {
+          if (tile[r][c] === 1) {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(c * CELL, r * CELL, CELL, CELL);
+          }
+        }
+      }
+      ctx.strokeStyle = 'rgba(51,65,85,0.5)';
+      ctx.lineWidth = 0.5;
+      for (let i = 0; i <= N; i++) {
+        ctx.beginPath(); ctx.moveTo(i*CELL, 0); ctx.lineTo(i*CELL, N*CELL); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, i*CELL); ctx.lineTo(N*CELL, i*CELL); ctx.stroke();
+      }
+    }
+
+    // ---- Draw weight heatmap ----
+    // Maps a value in [-maxVal, +maxVal] to an RGB via red-white-green
+    function valToRGB(v, maxVal) {
+      const t = Math.max(-1, Math.min(1, v / maxVal));  // clamp -1..+1
+      let R, G, B;
+      if (t > 0) {
+        R = Math.round(248 - t * (248 - 22));
+        G = Math.round(249 - t * (249 - 101));
+        B = Math.round(251 - t * (251 - 52));
+      } else {
+        const a = -t;
+        R = Math.round(248 - a * (248 - 185));
+        G = Math.round(249 - a * (249 - 28));
+        B = Math.round(251 - a * (251 - 28));
+      }
+      return `rgb(${R},${G},${B})`;
+    }
+
+    function drawHeatmap(canvasId, values, maxVal) {
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let r = 0; r < N; r++) {
+        for (let c = 0; c < N; c++) {
+          ctx.fillStyle = valToRGB(values[r * N + c], maxVal);
+          ctx.fillRect(c * CELL_MAP, r * CELL_MAP, CELL_MAP, CELL_MAP);
+        }
+      }
+      ctx.strokeStyle = 'rgba(100,116,139,0.3)';
+      ctx.lineWidth = 0.5;
+      for (let i = 0; i <= N; i++) {
+        ctx.beginPath(); ctx.moveTo(i*CELL_MAP, 0); ctx.lineTo(i*CELL_MAP, N*CELL_MAP); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, i*CELL_MAP); ctx.lineTo(N*CELL_MAP, i*CELL_MAP); ctx.stroke();
+      }
+    }
+
+    function drawWeights() {
+      const maxW = Math.max(...W.map(Math.abs));
+      drawHeatmap('weight-canvas', W, maxW);
+    }
+
+    function drawActivations(tile) {
+      const flat = tile.flat();
+      // a[i] = w[i] * x[i]  — nonzero only where x[i]=1
+      const acts = W.map((w, i) => w * flat[i]);
+      const maxA = Math.max(...acts.map(Math.abs), 1e-9);
+      drawHeatmap('act-canvas', acts, maxA);
+    }
+
+    // ---- Prettyprint matrix ----
+    function renderMatrix(tile, dx, dy) {
+      let html = '';
+      const shifted = (dx !== 0 || dy !== 0);
+      const labelShift = shifted ? ` (Δcol=${dx>0?'+':''}${dx}, Δlin=${dy>0?'+':''}${dy})` : '';
+      html += `<span style="color:var(--text-muted)">X_deslocado${labelShift} =\n</span>`;
+      for (let r = 0; r < N; r++) {
+        const outerOpen  = (r === 0)     ? '[' : ' ';
+        const outerClose = (r === N - 1) ? ']' : ' ';
+        html += `<span style="color:#94a3b8">${outerOpen}[</span>`;
+        for (let c = 0; c < N; c++) {
+          if (c > 0) html += ' ';
+          const v    = tile[r][c];
+          const orig = tileX[r][c];
+          const changed = (v !== orig);
+          if (v === 1) {
+            const style = changed
+              ? 'color:#7c3aed;font-weight:700;background:rgba(124,58,237,0.15);border-radius:2px;padding:0 1px'
+              : 'color:var(--text);font-weight:700';
+            html += `<span style="${style}">1</span>`;
+          } else {
+            const style = changed
+              ? 'color:var(--orange);font-weight:700'
+              : 'color:#94a3b8';
+            html += `<span style="${style}">0</span>`;
+          }
+        }
+        html += `<span style="color:#94a3b8">]${outerClose}</span>\n`;
+      }
+      document.getElementById('matrix-display').innerHTML = html;
+    }
+
+    // ---- Update MLP logit display ----
+    function updateMLP(tile, dx, dy) {
+      const logit = computeLogit(tile);
+      const prob  = sigmoid(logit);
+
+      // Logit value + color
+      const lv = document.getElementById('logit-val');
+      lv.textContent = logit.toFixed(3);
+      if      (logit >  1.5) lv.style.color = '#22c55e';
+      else if (logit >  0.0) lv.style.color = '#86efac';
+      else if (logit > -1.5) lv.style.color = '#fb923c';
+      else                   lv.style.color = '#ef4444';
+
+      // Prob text
+      document.getElementById('prob-val').textContent = prob.toFixed(3);
+
+      // Sigmoid bar
+      const pct = prob * 100;
+      const fill = document.getElementById('sigmoid-fill');
+      fill.style.width = pct + '%';
+      if      (prob > 0.65) fill.style.background = '#166534';
+      else if (prob > 0.40) fill.style.background = '#ca8a04';
+      else                  fill.style.background = '#b91c1c';
+      document.getElementById('sigmoid-needle').style.left = pct + '%';
+
+      // Insight text
+      const shifted = Math.abs(dx) + Math.abs(dy);
+      const ins = document.getElementById('shift-insight');
+      if (shifted === 0) {
+        ins.innerHTML = `X centralizado: os pixels ativos <em>encaixam</em> exatamente nos pesos positivos → logit alto, P(é X) alta.`;
+      } else if (shifted <= 2) {
+        ins.innerHTML = `Pequeno deslocamento: alguns pixels saem dos pesos positivos e entram em pesos <span style="color:var(--red)">negativos</span> → logit começa a cair.`;
+      } else if (shifted <= 5) {
+        ins.innerHTML = `Deslocamento médio: grande parte dos pixels ativos está em posições de <span style="color:var(--red)">peso negativo</span> → logit bem menor, rede hesita.`;
+      } else {
+        ins.innerHTML = `Deslocamento grande: pixels quase todos fora do padrão esperado → logit <span style="color:var(--red)">negativo</span>, rede <strong>classifica como "não é X"</strong> — embora seja o <em>mesmo</em> símbolo!`;
+      }
+    }
+
+    function update() {
+      const dx = parseInt(document.getElementById('shift-slider').value);
+      const dy = parseInt(document.getElementById('vshift-slider').value);
+      document.getElementById('shift-val').textContent = dx > 0 ? '+' + dx : dx;
+      document.getElementById('vshift-val').textContent = dy > 0 ? '+' + dy : dy;
+      const shifted = shiftTile(tileX, dx, dy);
+      drawCanvas(shifted);
+      renderMatrix(shifted, dx, dy);
+      updateMLP(shifted, dx, dy);
+      drawActivations(shifted);
+    }
+
+    document.getElementById('shift-slider').addEventListener('input', update);
+    document.getElementById('vshift-slider').addEventListener('input', update);
+
+    drawWeights();
+    update();
+  </script>
+</body>
+</html>

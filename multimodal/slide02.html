@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 02 – CLIP: um espaço compartilhado</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .toggle-group { display:flex; gap:0.4rem; margin-bottom:0.8rem; }
+    canvas { border-radius: var(--radius-sm); border: 1px solid var(--border2); display:block; }
+    .canvas-legend { font-size:0.78rem; color:var(--text-dim); margin-top:0.4rem; text-align:center; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Multimodal</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 2 · Slide 2 / 7</span>
+    </header>
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">CLIP: um espaço compartilhado</h1>
+        <p class="slide-subtitle">Bloco 2 — CLIP (Contrastive Language–Image Pre-training) · O grande avanço no aprendizado multimodal</p>
+      </div>
+      <div class="content-split">
+        <!-- LEFT PANEL -->
+        <div class="panel">
+          <div class="panel-title">O grande avanço: CLIP (2021)</div>
+          <div class="concept-cards">
+            <div class="concept-card" style="--delay:0s">
+              <span class="card-icon">🎯</span>
+              <div class="card-text">
+                <strong>O objetivo</strong>
+                <p>O CLIP busca mapear imagens e textos no MESMO espaço semântico: textos relacionados a uma imagem ficam próximos a ela nesse espaço.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.1s">
+              <span class="card-icon">🌐</span>
+              <div class="card-text">
+                <strong>De onde vem a supervisão?</strong>
+                <p>Das centenas de milhões de imagens da internet com suas descrições, captions e alt texts. Esse dado já existe naturalmente!</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.2s">
+              <span class="card-icon">🔗</span>
+              <div class="card-text">
+                <strong>A ideia central</strong>
+                <p>Dois encoders (um para imagem, outro para texto) são treinados para gerar embeddings comparáveis — pares corretos ficam próximos, errados ficam distantes.</p>
+              </div>
+            </div>
+          </div>
+          <div class="highlight-box teal">
+            💡 CLIP não precisa de anotações manuais — usa a supervisão natural que já existe na web.
+          </div>
+        </div>
+        <!-- RIGHT PANEL -->
+        <div class="panel">
+          <div class="panel-title">Espaço de embeddings CLIP</div>
+          <div class="toggle-group">
+            <button class="btn-toggle active" id="btnBefore" onclick="switchClip('before')">Sem alinhamento</button>
+            <button class="btn-toggle" id="btnAfter" onclick="switchClip('after')">Com CLIP</button>
+          </div>
+          <canvas id="clipCanvas" width="380" height="260"></canvas>
+          <div class="canvas-legend">○ Imagem &nbsp; □ Texto &nbsp;|&nbsp; <span style="color:#1d4ed8">■</span> cão/cachorro &nbsp; <span style="color:#0d6e6e">■</span> praia/mar &nbsp; <span style="color:#c2410c">■</span> cidade</div>
+        </div>
+      </div>
+    </main>
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide01.html'">← Anterior</button>
+      <div class="nav-dots">
+        <div class="dot" onclick="location.href='slide01.html'" title="Slide 1"></div>
+        <div class="dot active" onclick="location.href='slide02.html'" title="Slide 2"></div>
+        <div class="dot" onclick="location.href='slide03.html'" title="Slide 3"></div>
+        <div class="dot" onclick="location.href='slide04.html'" title="Slide 4"></div>
+        <div class="dot" onclick="location.href='slide05.html'" title="Slide 5"></div>
+        <div class="dot" onclick="location.href='slide06.html'" title="Slide 6"></div>
+        <div class="dot" onclick="location.href='slide07.html'" title="Slide 7"></div>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide03.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    let clipState = 'before';
+
+    const beforeData = {
+      title: 'Sem alinhamento (encoders separados)',
+      images: [
+        { emoji: '🐕', x: 0.15, y: 0.8, color: '#1d4ed8' },
+        { emoji: '🌊', x: 0.85, y: 0.75, color: '#0d6e6e' },
+        { emoji: '🌆', x: 0.5, y: 0.85, color: '#c2410c' },
+      ],
+      texts: [
+        { label: 'cachorro', x: 0.7, y: 0.2, color: '#dc2626' },
+        { label: 'praia', x: 0.2, y: 0.3, color: '#dc2626' },
+        { label: 'cidade', x: 0.85, y: 0.4, color: '#dc2626' },
+      ],
+      imgColor: '#1d4ed8',
+      txtColor: '#dc2626',
+      pairs: [],
+    };
+
+    const afterData = {
+      title: 'Com CLIP (espaço compartilhado)',
+      images: [
+        { emoji: '🐕', x: 0.2, y: 0.75, color: '#1d4ed8' },
+        { emoji: '🌊', x: 0.75, y: 0.75, color: '#0d6e6e' },
+        { emoji: '🌆', x: 0.5, y: 0.25, color: '#c2410c' },
+      ],
+      texts: [
+        { label: 'cachorro', x: 0.25, y: 0.7, color: '#1d4ed8' },
+        { label: 'praia', x: 0.8, y: 0.7, color: '#0d6e6e' },
+        { label: 'cidade', x: 0.55, y: 0.2, color: '#c2410c' },
+      ],
+      pairs: [[0,0],[1,1],[2,2]],
+    };
+
+    function switchClip(state) {
+      clipState = state;
+      document.getElementById('btnBefore').classList.toggle('active', state === 'before');
+      document.getElementById('btnAfter').classList.toggle('active', state === 'after');
+      drawClipCanvas();
+    }
+
+    function drawClipCanvas() {
+      const canvas = document.getElementById('clipCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width, H = canvas.height;
+      ctx.clearRect(0, 0, W, H);
+
+      ctx.fillStyle = '#f8f9fb';
+      ctx.fillRect(0, 0, W, H);
+
+      const data = clipState === 'before' ? beforeData : afterData;
+
+      // Title
+      ctx.fillStyle = '#3d4f6e';
+      ctx.font = '600 11px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(data.title, W/2, 16);
+
+      function cx(x) { return x * W; }
+      function cy(y) { return (1 - y) * (H - 30) + 25; }
+
+      // Draw dashed pair lines (after state)
+      if (data.pairs && data.pairs.length > 0) {
+        ctx.setLineDash([5, 4]);
+        ctx.lineWidth = 1.5;
+        data.pairs.forEach(([ii, ti]) => {
+          const img = data.images[ii], txt = data.texts[ti];
+          ctx.strokeStyle = img.color + 'aa';
+          ctx.beginPath();
+          ctx.moveTo(cx(img.x), cy(img.y));
+          ctx.lineTo(cx(txt.x), cy(txt.y));
+          ctx.stroke();
+        });
+        ctx.setLineDash([]);
+      }
+
+      // Draw image circles
+      data.images.forEach(pt => {
+        const px = cx(pt.x), py = cy(pt.y);
+        ctx.beginPath();
+        ctx.arc(px, py, 18, 0, Math.PI * 2);
+        ctx.fillStyle = pt.color + '22';
+        ctx.fill();
+        ctx.strokeStyle = pt.color;
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+        ctx.font = '18px serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(pt.emoji, px, py);
+      });
+
+      // Draw text squares
+      data.texts.forEach(pt => {
+        const px = cx(pt.x), py = cy(pt.y);
+        const s = 12;
+        ctx.fillStyle = pt.color + '22';
+        ctx.fillRect(px - s/2, py - s/2, s, s);
+        ctx.strokeStyle = pt.color;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(px - s/2, py - s/2, s, s);
+        ctx.fillStyle = pt.color;
+        ctx.font = '600 10px Inter, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(pt.label, px + s/2 + 4, py);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', drawClipCanvas);
+  </script>
+</body>
+</html>

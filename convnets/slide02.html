@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 2 – Arquitetura de Duas Partes</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Redes Convolucionais</span>
+      <span class="prof-tag" style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 1 · Slide 2 / 5</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">A Rede Neural de Duas Partes</h1>
+        <p class="slide-subtitle">Extração de representação + classificação, fim-a-fim</p>
+      </div>
+
+      <!-- Architecture Diagram -->
+      <div style="background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; flex-shrink:0;">
+        <div class="arch-diagram" id="arch-diagram">
+
+          <!-- Input -->
+          <div class="arch-block">
+            <div class="arch-box input" id="block-input">
+              <div class="box-icon">🖼️</div>
+              <div class="box-title">Dado Bruto</div>
+              <div class="box-sub">imagem, texto,<br>áudio…</div>
+            </div>
+            <div class="arch-label">entrada</div>
+          </div>
+
+          <!-- Arrow 1 -->
+          <div class="arch-arrow">
+            <svg class="arrow-svg" viewBox="0 0 50 24">
+              <defs>
+                <marker id="ah1" markerWidth="6" markerHeight="4" refX="6" refY="2" orient="auto">
+                  <polygon points="0 0, 6 2, 0 4" fill="#a78bfa"/>
+                </marker>
+              </defs>
+              <line x1="2" y1="12" x2="42" y2="12" stroke="#a78bfa" stroke-width="2" marker-end="url(#ah1)" stroke-dasharray="5,3" class="animated-dash"/>
+            </svg>
+          </div>
+
+          <!-- Extractor -->
+          <div class="arch-block">
+            <div class="arch-box extractor" id="block-ext">
+              <div class="box-icon">🧠</div>
+              <div class="box-title">Extrator de Representação</div>
+              <div class="box-sub">CNN, Transformer,<br>RNN…</div>
+            </div>
+            <div class="arch-label">parte 1</div>
+          </div>
+
+          <!-- Arrow 2 -->
+          <div class="arch-arrow">
+            <svg class="arrow-svg" viewBox="0 0 50 24">
+              <defs>
+                <marker id="ah2" markerWidth="6" markerHeight="4" refX="6" refY="2" orient="auto">
+                  <polygon points="0 0, 6 2, 0 4" fill="#60a5fa"/>
+                </marker>
+              </defs>
+              <line x1="2" y1="12" x2="42" y2="12" stroke="#60a5fa" stroke-width="2" marker-end="url(#ah2)" stroke-dasharray="5,3" class="animated-dash"/>
+              <text x="25" y="8" text-anchor="middle" fill="#94a3b8" font-size="7" font-family="Fira Code, monospace">vetor</text>
+            </svg>
+          </div>
+
+          <!-- MLP -->
+          <div class="arch-block">
+            <div class="arch-box mlp" id="block-mlp">
+              <div class="box-icon">📊</div>
+              <div class="box-title">MLP</div>
+              <div class="box-sub">classificador<br>ou regressor</div>
+            </div>
+            <div class="arch-label">parte 2</div>
+          </div>
+
+          <!-- Arrow 3 -->
+          <div class="arch-arrow">
+            <svg class="arrow-svg" viewBox="0 0 50 24">
+              <defs>
+                <marker id="ah3" markerWidth="6" markerHeight="4" refX="6" refY="2" orient="auto">
+                  <polygon points="0 0, 6 2, 0 4" fill="#34d399"/>
+                </marker>
+              </defs>
+              <line x1="2" y1="12" x2="42" y2="12" stroke="#34d399" stroke-width="2" marker-end="url(#ah3)" stroke-dasharray="5,3" class="animated-dash"/>
+            </svg>
+          </div>
+
+          <!-- Output -->
+          <div class="arch-block">
+            <div class="arch-box output" id="block-out">
+              <div class="box-icon">🏷️</div>
+              <div class="box-title">Predição</div>
+              <div class="box-sub">classe, valor,<br>…</div>
+            </div>
+            <div class="arch-label">saída</div>
+          </div>
+
+        </div>
+
+        <!-- Backprop badge -->
+        <div style="display:flex; justify-content:center; margin-top:0.75rem;">
+          <div class="e2e-badge">
+            <span>🔄</span>
+            Treinamento fim-a-fim via <strong style="margin-left:4px">Backpropagation + Descida de Gradiente</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Annotation cards below pipeline -->
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.9rem; flex:1; align-content:start;">
+
+        <div style="background:var(--cyan-lt); border:1.5px solid #a5f3fc; border-radius:var(--radius-sm); padding:0.85rem 1rem; display:flex; flex-direction:column; gap:0.35rem; animation:cardSlide 0.4s ease 0.05s both;">
+          <div style="font-size:0.78rem; font-weight:800; color:var(--cyan);">📥 Dado Bruto</div>
+          <div style="font-size:0.75rem; color:var(--text-muted); line-height:1.45;">Imagem, texto, áudio… <br>A rede recebe o dado <em>sem feature engineering</em> manual.</div>
+        </div>
+
+        <div style="background:var(--purple-lt); border:1.5px solid #c4b5fd; border-radius:var(--radius-sm); padding:0.85rem 1rem; display:flex; flex-direction:column; gap:0.35rem; animation:cardSlide 0.4s ease 0.15s both;">
+          <div style="font-size:0.78rem; font-weight:800; color:var(--purple);">🧠 Extrator de Representação</div>
+          <div style="font-size:0.75rem; color:var(--text-muted); line-height:1.45;">CNN (imagens), Transformer (texto/áudio)… Converte o dado bruto em um <strong>vetor de features</strong> compacto e rico.</div>
+        </div>
+
+        <div style="background:var(--blue-lt); border:1.5px solid #93c5fd; border-radius:var(--radius-sm); padding:0.85rem 1rem; display:flex; flex-direction:column; gap:0.35rem; animation:cardSlide 0.4s ease 0.25s both;">
+          <div style="font-size:0.78rem; font-weight:800; color:var(--blue);">📊 MLP Final</div>
+          <div style="font-size:0.75rem; color:var(--text-muted); line-height:1.45;">Recebe o vetor de features e realiza a tarefa: classificação, regressão, detecção…</div>
+        </div>
+
+        <div style="grid-column:1/-1; background:var(--green-lt); border:1.5px solid #86efac; border-radius:var(--radius-sm); padding:0.85rem 1.1rem; display:flex; gap:0.75rem; align-items:flex-start; animation:cardSlide 0.4s ease 0.35s both;">
+          <span style="font-size:1.4rem; flex-shrink:0;">🔄</span>
+          <div>
+            <div style="font-size:0.82rem; font-weight:800; color:var(--green); margin-bottom:0.25rem;">Treinamento fim-a-fim (End-to-End)</div>
+            <div style="font-size:0.78rem; color:var(--text-muted); line-height:1.5;">O gradiente do erro flui de ponta a ponta — do MLP final até a primeira camada do extrator. <strong style="color:var(--green);">Ambas as partes aprendem juntas</strong>, via backpropagation + descida de gradiente, sem nenhuma intervenção manual.</div>
+          </div>
+        </div>
+
+        <div style="grid-column:1/-1;" class="insight-box">
+          <span class="i-icon">💡</span>
+          <div class="i-text">
+            A ideia central: <strong>aprender a representação certa</strong> é o que torna o MLP final capaz de resolver tarefas difíceis. Para imagens, essa representação é aprendida por uma <strong>CNN</strong> — tema desta aula.
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide01.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide03.html'">Próximo →</button>
+    </nav>
+  </div>
+</body>
+</html>

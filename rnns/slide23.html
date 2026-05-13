@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 23 – Fechamento Conceitual</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .timeline { display:flex; flex-direction:column; gap:0; padding:0.3rem 0; }
+    .tl-item { display:flex; align-items:flex-start; gap:0.8rem; opacity:0;
+               animation:fadeInLeft 0.5s ease forwards; }
+    .tl-item:nth-child(1) { animation-delay:0s; }
+    .tl-item:nth-child(2) { animation-delay:0.2s; }
+    .tl-item:nth-child(3) { animation-delay:0.4s; }
+    .tl-item:nth-child(4) { animation-delay:0.6s; }
+    .tl-item:nth-child(5) { animation-delay:0.8s; }
+    @keyframes fadeInLeft {
+      from { opacity:0; transform:translateX(-20px); }
+      to   { opacity:1; transform:translateX(0); }
+    }
+    .tl-connector { display:flex; flex-direction:column; align-items:center; flex-shrink:0; }
+    .tl-dot { width:14px; height:14px; border-radius:50%; flex-shrink:0; margin-top:0.2rem; }
+    .tl-line { width:2px; flex:1; min-height:18px; }
+    .tl-content { padding-bottom:0.6rem; flex:1; }
+    .tl-chip { display:inline-block; padding:0.25rem 0.7rem; border-radius:20px;
+               font-size:0.82rem; font-weight:700; margin-bottom:0.15rem; }
+    .chip-blue   { background:var(--blue-lt);  color:#1d4ed8; }
+    .chip-teal   { background:var(--teal-lt);  color:#0d6e6e; }
+    .chip-green  { background:var(--green-lt); color:#16a34a; }
+    .chip-yellow { background:var(--yellow-lt);color:#ca8a04; }
+    .chip-bold   { background:var(--teal);     color:#fff; font-size:0.88rem; }
+    .tl-icon { font-size:1rem; }
+    .quote-block { background:var(--bg3); border-left:4px solid var(--teal);
+                   border-radius:0 var(--radius-sm) var(--radius-sm) 0;
+                   padding:0.8rem 1rem; margin-bottom:0.8rem; }
+    .quote-block p { font-size:0.95rem; font-style:italic; color:var(--text); line-height:1.5;
+                     margin:0; font-weight:500; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Redes Neurais Recorrentes</span>
+      <span class="prof-tag" style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 15 · Slide 1 / 1</span>
+    </header>
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Fechamento Conceitual</h1>
+        <p class="slide-subtitle">O ganho de expressividade: do regime sem memória à memória controlada</p>
+      </div>
+      <div class="content-split">
+        <div class="panel panel-left">
+          <h2 class="panel-title">📈 A Progressão da Aula</h2>
+          <div class="timeline">
+            <div class="tl-item">
+              <div class="tl-connector">
+                <div class="tl-dot" style="background:#1d4ed8;"></div>
+                <div class="tl-line" style="background:var(--border2);"></div>
+              </div>
+              <div class="tl-content">
+                <span class="tl-icon">➡️</span>
+                <span class="tl-chip chip-blue">Redes Feedforward</span>
+                <div style="font-size:0.8rem;color:var(--text-muted);">entradas independentes</div>
+              </div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-connector">
+                <div class="tl-dot" style="background:#0d6e6e;"></div>
+                <div class="tl-line" style="background:var(--border2);"></div>
+              </div>
+              <div class="tl-content">
+                <span class="tl-icon">📈</span>
+                <span class="tl-chip chip-teal">Dados Sequenciais</span>
+                <div style="font-size:0.8rem;color:var(--text-muted);">a ordem importa</div>
+              </div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-connector">
+                <div class="tl-dot" style="background:#16a34a;"></div>
+                <div class="tl-line" style="background:var(--border2);"></div>
+              </div>
+              <div class="tl-content">
+                <span class="tl-icon">🔄</span>
+                <span class="tl-chip chip-green">RNN</span>
+                <div style="font-size:0.8rem;color:var(--text-muted);">estado oculto e recorrência</div>
+              </div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-connector">
+                <div class="tl-dot" style="background:#ca8a04;"></div>
+                <div class="tl-line" style="background:var(--border2);"></div>
+              </div>
+              <div class="tl-content">
+                <span class="tl-icon">⚠️</span>
+                <span class="tl-chip chip-yellow">Vanishing Gradient</span>
+                <div style="font-size:0.8rem;color:var(--text-muted);">dependências longas falham</div>
+              </div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-connector">
+                <div class="tl-dot" style="background:var(--teal);"></div>
+              </div>
+              <div class="tl-content">
+                <span class="tl-icon">🔑</span>
+                <span class="tl-chip chip-bold">LSTM</span>
+                <div style="font-size:0.8rem;color:var(--text-muted);">memória controlada por portas</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="panel panel-right">
+          <h2 class="panel-title">💡 A Mensagem Central</h2>
+          <div class="quote-block">
+            <p>"Em problemas sequenciais, a entrada atual sozinha não basta. O modelo precisa carregar contexto."</p>
+          </div>
+          <div class="concept-cards">
+            <div class="concept-card" style="--delay:0s">
+              <span class="card-icon">🎓</span>
+              <div class="card-text"><strong>Feedforward &#8594; RNN</strong><p>Introduzimos memória via estado oculto.</p></div>
+            </div>
+            <div class="concept-card" style="--delay:0.1s">
+              <span class="card-icon">📚</span>
+              <div class="card-text"><strong>RNN &#8594; LSTM</strong><p>Tornamos a memória controlável e estável.</p></div>
+            </div>
+            <div class="concept-card" style="--delay:0.2s">
+              <span class="card-icon">🚀</span>
+              <div class="card-text"><strong>LSTM</strong><p>Permite aprender dependências de longo prazo — a base de muitas aplicações modernas.</p></div>
+            </div>
+          </div>
+          <div class="highlight-box green" style="margin-top:0.8rem;">
+            <span class="icon">💡</span>
+            <span>O grande salto conceitual: em sequências, o modelo não processa entrada por entrada de forma isolada — ele acumula, filtra e expõe contexto ao longo do tempo.</span>
+          </div>
+        </div>
+      </div>
+    </main>
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide22.html'">&#8592; Anterior</button>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='index.html'">Índice &#8593;</button>
+    </nav>
+  </div>
+</body>
+</html>

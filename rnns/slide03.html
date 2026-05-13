@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 3 – Bola em Movimento: o Passado Importa</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ---- Ball demo ---- */
+    #ball-canvas {
+      border: 2px solid var(--border2);
+      border-radius: var(--radius-sm);
+      background: #0f172a;
+      display: block;
+      width: 100%;
+      max-height: 260px;
+    }
+    .context-slider-row {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      padding: 0.5rem 0;
+    }
+    .context-slider-row label {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+    #context-range {
+      flex: 1;
+      accent-color: var(--teal);
+      cursor: pointer;
+    }
+    #context-val {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--teal);
+      min-width: 1.5rem;
+      text-align: right;
+    }
+    .prediction-box {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      padding: 0.7rem 1rem;
+      border-radius: var(--radius-sm);
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      transition: border-color 0.3s, background 0.3s;
+      font-size: 0.95rem;
+    }
+    .prediction-box.certain {
+      background: var(--teal-lt);
+      border-color: var(--teal);
+    }
+    .pred-icon { font-size: 1.3rem; }
+    .pred-text { color: var(--text-muted); line-height: 1.4; }
+    .pred-text strong { color: var(--text); }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <!-- Header -->
+    <header class="slide-header">
+      <span class="course-tag">Redes Neurais Recorrentes</span>
+      <span class="prof-tag" style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 2 · Slide 3 / 5</span>
+    </header>
+
+    <!-- Content -->
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">O Passado Importa</h1>
+        <p class="slide-subtitle">Uma posição isolada não revela o movimento — o contexto temporal sim</p>
+      </div>
+
+      <div class="content-split">
+        <!-- Left: interactive ball demo -->
+        <div class="panel panel-left">
+          <h2 class="panel-title">🎾 Bola em Movimento</h2>
+
+          <canvas id="ball-canvas" height="260"></canvas>
+
+          <div class="context-slider-row">
+            <label>Posições visíveis:</label>
+            <input type="range" id="context-range" min="1" max="5" value="1" />
+            <span id="context-val">1</span>
+          </div>
+
+          <div class="prediction-box" id="pred-box">
+            <span class="pred-icon">🤔</span>
+            <span class="pred-text" id="pred-text">
+              <strong>Com 1 posição:</strong> impossível prever a direção.
+            </span>
+          </div>
+
+          <div class="highlight-box blue" style="font-size:0.88rem;">
+            <span class="icon">💡</span>
+            <span>Arraste o controle para revelar mais posições e observe como a trajetória se torna clara.</span>
+          </div>
+        </div>
+
+        <!-- Right: explanation -->
+        <div class="panel panel-right">
+          <h2 class="panel-title">📌 Por que o histórico importa?</h2>
+
+          <div class="concept-cards">
+            <div class="concept-card" style="--delay:0.05s">
+              <span class="card-icon">📍</span>
+              <div class="card-text">
+                <strong>Uma posição = uma foto</strong>
+                <p>Saber onde a bola está em t=5 não diz nada sobre para onde ela vai. A informação de direção está na <em>diferença</em> entre posições.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.15s">
+              <span class="card-icon">🎬</span>
+              <div class="card-text">
+                <strong>Sequência = velocidade + trajetória</strong>
+                <p>Com 2 ou mais posições, podemos estimar velocidade e curvatura — e antecipar a próxima posição com muito mais confiança.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.25s">
+              <span class="card-icon">🧠</span>
+              <div class="card-text">
+                <strong>O modelo precisa de memória</strong>
+                <p>Uma rede sem memória vê apenas o instante atual. Para prever bem, ela precisa de acesso ao histórico de estados anteriores.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="insight-box" style="margin-top:auto;">
+            <span class="i-icon">🔑</span>
+            <span class="i-text">
+              <strong>Ponto-chave:</strong> em dados temporais, o valor presente
+              depende do histórico. Modelos sem memória jogam fora essa informação.
+            </span>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Navigation -->
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide02.html'">← Anterior</button>
+      <div class="nav-dots">
+        <div class="dot"></div><div class="dot"></div>
+        <div class="dot active"></div>
+        <div class="dot"></div><div class="dot"></div>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide04.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    /* ── trajectory data ── */
+    const W = 560, H = 260;
+    const trajectory = [
+      { x: 0.10, y: 0.75 },
+      { x: 0.22, y: 0.62 },
+      { x: 0.35, y: 0.48 },
+      { x: 0.48, y: 0.38 },
+      { x: 0.61, y: 0.32 },
+      // "future" points not yet shown
+      { x: 0.74, y: 0.30 },
+      { x: 0.87, y: 0.32 },
+    ];
+    const VISIBLE_HISTORY = 5; // max positions the slider can reveal
+    const TEAL = '#0d9488';
+    const TEAL_DIM = 'rgba(13,148,136,0.3)';
+    const WHITE = '#f8fafc';
+    const GOLD  = '#fbbf24';
+
+    const canvas = document.getElementById('ball-canvas');
+    const ctx    = canvas.getContext('2d');
+    const range  = document.getElementById('context-range');
+    const valEl  = document.getElementById('context-val');
+    const predBox = document.getElementById('pred-box');
+    const predText = document.getElementById('pred-text');
+
+    function toCanvas(pt) {
+      return { x: pt.x * canvas.width, y: pt.y * canvas.height };
+    }
+
+    // Phantom trajectory configs per nVisible:
+    //   each entry: [ { angleDeg, curveSign, steps }, ... ]
+    //   angleDeg: direction from last known point (0=right, -90=up, etc.)
+    //   curveSign: +1 curves down, -1 curves up, 0 straight
+    //   steps: how many segments to draw
+    const PHANTOM_SETS = {
+      1: [
+        { angleDeg: -90,  curveSign:  0 },  // straight up
+        { angleDeg: -60,  curveSign: -1 },  // up-right curving up
+        { angleDeg: -30,  curveSign:  1 },  // shallow up-right curving down
+        { angleDeg:   0,  curveSign:  0 },  // straight right
+        { angleDeg:  30,  curveSign:  1 },  // shallow down-right
+        { angleDeg:  60,  curveSign:  1 },  // down-right
+        { angleDeg:  90,  curveSign:  0 },  // straight down
+        { angleDeg: 150,  curveSign: -1 },  // back-left
+        { angleDeg: 180,  curveSign:  0 },  // straight left
+      ],
+      2: [
+        { angleDeg: -55,  curveSign: -1 },  // high arc up
+        { angleDeg: -30,  curveSign:  0 },  // straight up-right
+        { angleDeg:   5,  curveSign:  1 },  // nearly flat
+        { angleDeg:  40,  curveSign:  1 },  // curving down
+      ],
+      3: [
+        { angleDeg: -40,  curveSign: -1 },  // slightly above actual
+        { angleDeg:  10,  curveSign:  1 },  // slightly below actual
+      ],
+    };
+
+    function drawPhantomTrajectories(nVisible, fromPt) {
+      const configs = PHANTOM_SETS[nVisible];
+      if (!configs) return;
+
+      // opacity fades as context grows
+      const baseAlpha = [0, 0.45, 0.30, 0.18][nVisible] || 0;
+      const stepLen = canvas.width * 0.12;
+      const numSteps = 4;
+
+      configs.forEach(({ angleDeg, curveSign }) => {
+        const rad = angleDeg * Math.PI / 180;
+        let cx = fromPt.x, cy = fromPt.y;
+        let angle = rad;
+
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        for (let s = 0; s < numSteps; s++) {
+          angle += curveSign * 0.18;
+          cx += Math.cos(angle) * stepLen;
+          cy += Math.sin(angle) * stepLen;
+          ctx.lineTo(cx, cy);
+        }
+        ctx.strokeStyle = `rgba(148,163,184,${baseAlpha})`;
+        ctx.lineWidth = 1.8;
+        ctx.setLineDash([5, 5]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // ghost ball at end of phantom path
+        ctx.beginPath();
+        ctx.arc(cx, cy, 7, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(148,163,184,${baseAlpha * 0.6})`;
+        ctx.fill();
+        ctx.strokeStyle = `rgba(148,163,184,${baseAlpha})`;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      });
+    }
+
+    function drawScene(nVisible) {
+      canvas.width  = canvas.offsetWidth  || W;
+      canvas.height = parseInt(canvas.getAttribute('height')) || H;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // background grid
+      ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+      ctx.lineWidth = 1;
+      for (let gx = 0; gx < canvas.width; gx += 40) {
+        ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, canvas.height); ctx.stroke();
+      }
+      for (let gy = 0; gy < canvas.height; gy += 40) {
+        ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(canvas.width, gy); ctx.stroke();
+      }
+
+      const pts = trajectory.slice(0, nVisible).map(toCanvas);
+      const lastPt = pts[pts.length - 1];
+
+      // draw phantom possible trajectories (before drawing the real trail on top)
+      drawPhantomTrajectories(nVisible, lastPt);
+
+      // draw real trail
+      if (pts.length > 1) {
+        for (let i = 1; i < pts.length; i++) {
+          const alpha = 0.2 + 0.8 * (i / (pts.length - 1));
+          ctx.beginPath();
+          ctx.moveTo(pts[i-1].x, pts[i-1].y);
+          ctx.lineTo(pts[i].x, pts[i].y);
+          ctx.strokeStyle = `rgba(13,148,136,${alpha})`;
+          ctx.lineWidth = 3;
+          ctx.stroke();
+        }
+      }
+
+      // draw ghost future ball (faint) — the "?" destination along the real path
+      if (nVisible < trajectory.length) {
+        const future = toCanvas(trajectory[nVisible]);
+        ctx.beginPath();
+        ctx.arc(future.x, future.y, 12, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(251,191,36,0.15)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(251,191,36,0.25)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 4]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // draw prediction arrow if enough context
+      if (nVisible >= 2) {
+        const last = pts[pts.length - 1];
+        const prev = pts[pts.length - 2];
+        const dx = last.x - prev.x;
+        const dy = last.y - prev.y;
+        const len = Math.sqrt(dx*dx + dy*dy);
+        const nx = dx / len, ny = dy / len;
+        const arrowLen = 45 + nVisible * 8;
+        const ex = last.x + nx * arrowLen;
+        const ey = last.y + ny * arrowLen;
+
+        const arrowAlpha = Math.min(1, 0.3 + nVisible * 0.15);
+        ctx.strokeStyle = `rgba(251,191,36,${arrowAlpha})`;
+        ctx.fillStyle   = `rgba(251,191,36,${arrowAlpha})`;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(last.x, last.y);
+        ctx.lineTo(ex, ey);
+        ctx.stroke();
+        // arrowhead
+        const angle = Math.atan2(ey - last.y, ex - last.x);
+        ctx.beginPath();
+        ctx.moveTo(ex, ey);
+        ctx.lineTo(ex - 12 * Math.cos(angle - 0.4), ey - 12 * Math.sin(angle - 0.4));
+        ctx.lineTo(ex - 12 * Math.cos(angle + 0.4), ey - 12 * Math.sin(angle + 0.4));
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // draw visible balls (oldest to newest)
+      pts.forEach((pt, i) => {
+        const isCurrent = (i === pts.length - 1);
+        const alpha = 0.25 + 0.75 * ((i + 1) / pts.length);
+        const r = isCurrent ? 13 : 8;
+
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, r, 0, Math.PI * 2);
+        ctx.fillStyle = isCurrent ? TEAL : `rgba(13,148,136,${alpha})`;
+        ctx.fill();
+        if (isCurrent) {
+          ctx.strokeStyle = WHITE;
+          ctx.lineWidth = 2.5;
+          ctx.stroke();
+        }
+
+        // time label
+        ctx.fillStyle = WHITE;
+        ctx.font = `bold ${isCurrent ? 11 : 9}px 'Fira Code', monospace`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('t' + (i - pts.length + 1), pt.x, pt.y - r - 10);
+      });
+
+      // "?" label for the ghost future ball on the real path
+      if (nVisible < trajectory.length) {
+        const qPt = toCanvas(trajectory[nVisible]);
+        ctx.fillStyle = GOLD;
+        ctx.font = 'bold 18px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('?', qPt.x, qPt.y);
+      }
+    }
+
+    const messages = [
+      { txt: '<strong>Com 1 posição:</strong> impossível prever a direção.', certain: false },
+      { txt: '<strong>Com 2 posições:</strong> direção aproximada, mas curvatura incerta.', certain: false },
+      { txt: '<strong>Com 3 posições:</strong> trajetória emerge — confiança moderada.', certain: false },
+      { txt: '<strong>Com 4 posições:</strong> trajetória bem definida, boa previsão.', certain: true },
+      { txt: '<strong>Com 5 posições:</strong> trajetória clara — previsão precisa! 🎯', certain: true },
+    ];
+
+    function update() {
+      const n = parseInt(range.value);
+      valEl.textContent = n;
+      drawScene(n);
+      const msg = messages[n - 1];
+      predText.innerHTML = msg.txt;
+      predBox.classList.toggle('certain', msg.certain);
+    }
+
+    range.addEventListener('input', update);
+
+    // resize-aware redraw
+    const ro = new ResizeObserver(() => update());
+    ro.observe(canvas);
+
+    update();
+  </script>
+</body>
+</html>

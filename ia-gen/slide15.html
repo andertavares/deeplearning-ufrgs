@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 15 – O espaço latente tem buracos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .canvas-wrap { display: flex; flex-direction: column; align-items: center; gap: 0.4rem; }
+    canvas { border-radius: var(--radius-sm); border: 1px solid var(--border); cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">IA Generativa</span>
+      <span style="font-size:0.9rem;color:var(--text-muted);font-weight:500;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 7 · Slide 15 / 24</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">O espaço latente tem buracos</h1>
+        <p class="slide-subtitle">Clique em diferentes regiões do espaço latente para ver o resultado</p>
+      </div>
+
+      <div style="display:flex;gap:1.4rem;flex-wrap:wrap;justify-content:center;align-items:flex-start;flex:1;">
+        <div class="canvas-wrap">
+          <canvas id="holes-canvas" width="300" height="270"></canvas>
+          <span style="font-size:0.78rem;color:var(--text-dim);">Espaço latente 2D — clique para explorar</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.8rem;max-width:220px;">
+          <div class="panel" style="padding:0.9rem;">
+            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.4rem;">
+              <span style="color:var(--teal);font-size:1rem;">●</span>
+              <strong style="font-size:0.88rem;">Boa região</strong>
+            </div>
+            <p style="font-size:0.78rem;color:var(--text-muted);">Vetores vistos durante treino → geram saídas coerentes.</p>
+          </div>
+          <div class="panel" style="padding:0.9rem;">
+            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.4rem;">
+              <span style="color:var(--red);font-size:1rem;">✗</span>
+              <strong style="font-size:0.88rem;">Região vazia</strong>
+            </div>
+            <p style="font-size:0.78rem;color:var(--text-muted);">Vetores nunca vistos → saídas sem sentido.</p>
+          </div>
+          <div class="panel" id="holes-msg-box" style="padding:0.8rem;text-align:center;min-height:48px;">
+            <span id="holes-msg" style="font-size:0.85rem;color:var(--text-dim);">← Clique no mapa</span>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide14.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide16.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    const GOOD_REGIONS = [
+      { x: 70,  y: 80,  r: 35, label: 'boa região', shape: 'circle',   color: '#0d6e6e' },
+      { x: 200, y: 60,  r: 30, label: 'boa região', shape: 'square',   color: '#1d4ed8' },
+      { x: 250, y: 180, r: 28, label: 'boa região', shape: 'triangle', color: '#854d0e' },
+      { x: 80,  y: 220, r: 30, label: 'boa região', shape: 'circle',   color: '#6d28d9' },
+      { x: 160, y: 150, r: 25, label: 'boa região', shape: 'square',   color: '#065f46' },
+    ];
+    const BAD_REGIONS = [
+      { x: 140, y: 90  },
+      { x: 230, y: 120 },
+      { x: 110, y: 170 },
+    ];
+
+    function drawHolesMap(selIdx, showBad) {
+      const canvas = document.getElementById('holes-canvas');
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width, h = canvas.height;
+      ctx.fillStyle = '#f0f2f6';
+      ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = 'rgba(0,0,0,0.05)';
+      ctx.lineWidth = 1;
+      for (let x = 0; x < w; x += 25) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
+      for (let y = 0; y < h; y += 25) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
+      GOOD_REGIONS.forEach((g, i) => {
+        const sel = i === selIdx;
+        ctx.beginPath(); ctx.arc(g.x, g.y, g.r, 0, Math.PI*2);
+        ctx.fillStyle   = g.color + (sel ? '40' : '20');
+        ctx.strokeStyle = g.color;
+        ctx.lineWidth = sel ? 3 : 1.5;
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = g.color;
+        ctx.font = 'bold 11px sans-serif';
+        ctx.fillText('✔', g.x - 5, g.y + 4);
+      });
+      BAD_REGIONS.forEach(b => {
+        ctx.strokeStyle = '#b91c1c99';
+        ctx.lineWidth = 2;
+        const s = 10;
+        ctx.beginPath(); ctx.moveTo(b.x-s, b.y-s); ctx.lineTo(b.x+s, b.y+s); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(b.x+s, b.y-s); ctx.lineTo(b.x-s, b.y+s); ctx.stroke();
+        ctx.fillStyle = '#b91c1c';
+        ctx.font = '10px sans-serif';
+        ctx.fillText('✗', b.x + 12, b.y + 4);
+      });
+      if (showBad) {
+        ctx.fillStyle = 'rgba(185,28,28,0.07)';
+        ctx.fillRect(0, 0, w, h);
+      }
+      ctx.fillStyle = '#6b7fa3';
+      ctx.font = '11px sans-serif';
+      ctx.fillText('z₁ →', w - 28, h - 6);
+      ctx.fillText('↑ z₂', 4, 14);
+    }
+
+    (function init() {
+      drawHolesMap(-1, false);
+      const canvas = document.getElementById('holes-canvas');
+      canvas.onclick = (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const mx = (e.clientX - rect.left) * (canvas.width / rect.width);
+        const my = (e.clientY - rect.top)  * (canvas.height / rect.height);
+        let hit = null;
+        GOOD_REGIONS.forEach((g, i) => {
+          if (Math.hypot(mx - g.x, my - g.y) < g.r + 10) hit = i;
+        });
+        drawHolesMap(hit, hit === null);
+        const msg = document.getElementById('holes-msg');
+        if (hit !== null) {
+          msg.style.color = GOOD_REGIONS[hit].color;
+          msg.textContent = `✔ Região conhecida → saída coerente`;
+        } else {
+          msg.style.color = '#b91c1c';
+          msg.textContent = '✗ Região vazia → saída incoerente 😕';
+        }
+      };
+    })();
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') location.href = 'slide16.html';
+      if (e.key === 'ArrowLeft'  || e.key === 'PageUp')   location.href = 'slide14.html';
+    });
+  </script>
+</body>
+</html>

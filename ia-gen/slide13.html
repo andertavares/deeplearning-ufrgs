@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 13 – Explorar geração</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .slider-wrap label {
+      display: flex; justify-content: space-between; align-items: baseline;
+      font-size: 0.92rem; font-weight: 600; color: var(--text); margin-bottom: 0.5rem;
+    }
+    .slider-wrap input[type=range] { width: 100%; accent-color: var(--teal); }
+    .canvas-wrap { display: flex; flex-direction: column; align-items: center; gap: 0.4rem; }
+    canvas { border-radius: var(--radius-sm); border: 1px solid var(--border); }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">IA Generativa</span>
+      <span style="font-size:0.9rem;color:var(--text-muted);font-weight:500;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 6 · Slide 13 / 24</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Explorar geração</h1>
+        <p class="slide-subtitle">Controle os dois valores do vetor latente e veja como a saída muda</p>
+      </div>
+
+      <div style="display:flex;gap:1.4rem;flex-wrap:wrap;justify-content:center;align-items:flex-start;flex:1;">
+        <div style="display:flex;flex-direction:column;gap:0.8rem;flex:1;min-width:200px;max-width:300px;">
+          <div class="panel" style="gap:0.7rem;">
+            <div class="slider-wrap">
+              <label>
+                <span>z₁ — forma</span>
+                <span id="z1-val" style="color:var(--teal);font-family:'Fira Code',monospace;">50</span>
+              </label>
+              <input type="range" id="z1-slider" min="0" max="100" value="50" oninput="drawGenShape()" />
+              <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:var(--text-dim);">
+                <span>círculo</span><span>quadrado</span>
+              </div>
+            </div>
+          </div>
+          <div class="panel" style="gap:0.7rem;">
+            <div class="slider-wrap">
+              <label>
+                <span>z₂ — cor</span>
+                <span id="z2-val" style="color:var(--teal);font-family:'Fira Code',monospace;">50</span>
+              </label>
+              <input type="range" id="z2-slider" min="0" max="100" value="50" oninput="drawGenShape()" />
+              <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:var(--text-dim);">
+                <span>roxo</span><span>vermelho</span>
+              </div>
+            </div>
+          </div>
+          <div class="panel" style="text-align:center;padding:0.8rem;">
+            <code id="z-label" style="font-size:1rem;color:var(--teal);font-family:'Fira Code',monospace;">z = [50, 50]</code>
+          </div>
+        </div>
+        <div class="canvas-wrap">
+          <canvas id="gen-canvas" width="200" height="200"></canvas>
+          <span style="font-size:0.82rem;color:var(--text-dim);">Saída decodificada</span>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide12.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide14.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    function lerpColor(a, b, t) {
+      const ah = parseInt(a.slice(1), 16), bh = parseInt(b.slice(1), 16);
+      const ar = (ah>>16)&0xff, ag=(ah>>8)&0xff, ab=ah&0xff;
+      const br = (bh>>16)&0xff, bg=(bh>>8)&0xff, bb=bh&0xff;
+      return `rgb(${Math.round(ar+(br-ar)*t)},${Math.round(ag+(bg-ag)*t)},${Math.round(ab+(bb-ab)*t)})`;
+    }
+    function interpolateColors(stops, t) {
+      const seg = (stops.length - 1) * t;
+      const i = Math.min(Math.floor(seg), stops.length - 2);
+      return lerpColor(stops[i], stops[i + 1], seg - i);
+    }
+    function roundRect(ctx, x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    }
+    function drawGenShape() {
+      const z1 = parseInt(document.getElementById('z1-slider').value) / 100;
+      const z2 = parseInt(document.getElementById('z2-slider').value) / 100;
+      document.getElementById('z1-val').textContent = document.getElementById('z1-slider').value;
+      document.getElementById('z2-val').textContent = document.getElementById('z2-slider').value;
+      document.getElementById('z-label').textContent =
+        `z = [${document.getElementById('z1-slider').value}, ${document.getElementById('z2-slider').value}]`;
+      const canvas = document.getElementById('gen-canvas');
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width, h = canvas.height;
+      ctx.fillStyle = '#f0f2f6';
+      ctx.fillRect(0, 0, w, h);
+      const stops = ['#6d28d9','#0e7490','#854d0e','#b91c1c'];
+      const color = interpolateColors(stops, z2);
+      const cx = w/2, cy = h/2;
+      const size = 20 + z1 * 50;
+      ctx.fillStyle = color;
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 14;
+      if (z1 < 0.33) {
+        ctx.beginPath(); ctx.arc(cx, cy, size, 0, Math.PI*2); ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = '#3d4f6e'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText('círculo', cx, h - 12);
+      } else if (z1 < 0.66) {
+        const r = size * (1 - (z1 - 0.33) / 0.33);
+        roundRect(ctx, cx - size, cy - size, size*2, size*2, Math.max(2, r));
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = '#3d4f6e'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText('transição', cx, h - 12);
+      } else {
+        ctx.fillRect(cx - size, cy - size, size*2, size*2);
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = '#3d4f6e'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText('quadrado', cx, h - 12);
+      }
+      ctx.textAlign = 'left';
+    }
+    drawGenShape();
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') location.href = 'slide14.html';
+      if (e.key === 'ArrowLeft'  || e.key === 'PageUp')   location.href = 'slide12.html';
+    });
+  </script>
+</body>
+</html>

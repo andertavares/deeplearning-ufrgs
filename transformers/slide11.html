@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 11 – Pipeline Completo da Atenção</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* Override slide-main to allow more content */
+    .slide-main { gap:0.5rem; }
+
+    /* Pipeline stepper */
+    .pipeline-bar {
+      display:flex;
+      align-items:center;
+      gap:0;
+      overflow-x:auto;
+      padding:0.2rem 0 0.4rem;
+      scrollbar-width:thin;
+    }
+    .pipe-step {
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:0.15rem;
+      padding:0.35rem 0.5rem;
+      border-radius:var(--radius-sm);
+      cursor:pointer;
+      border:2px solid var(--border2);
+      background:var(--bg3);
+      min-width:3rem;
+      flex-shrink:0;
+      transition:all 0.18s;
+      user-select:none;
+    }
+    .pipe-step:hover { border-color:var(--teal); }
+    .pipe-step.done {
+      background:var(--teal-lt);
+      border-color:#5eead4;
+    }
+    .pipe-step.active {
+      background:var(--teal);
+      border-color:var(--teal);
+      color:white;
+      box-shadow:0 2px 8px rgba(13,110,110,0.3);
+    }
+    .pipe-step.future {
+      opacity:0.4;
+    }
+    .pipe-step-num {
+      font-family:'Fira Code',monospace;
+      font-size:0.65rem;
+      font-weight:700;
+    }
+    .pipe-step.active .pipe-step-num { color:rgba(255,255,255,0.7); }
+    .pipe-step.done .pipe-step-num { color:var(--teal); }
+    .pipe-step-lbl {
+      font-family:'Fira Code',monospace;
+      font-size:0.74rem;
+      font-weight:700;
+      white-space:nowrap;
+    }
+    .pipe-arrow {
+      color:var(--border);
+      font-size:0.9rem;
+      padding:0 0.1rem;
+      flex-shrink:0;
+    }
+    .pipe-arrow.done-arrow { color:var(--teal); }
+
+    .step-content-area {
+      border:1.5px solid var(--border2);
+      border-radius:var(--radius);
+      padding:0.5rem;
+      display:flex;
+      flex-direction:row;
+      gap:0.5rem;
+      overflow-x:auto;
+      overflow-y:hidden;
+      background:var(--bg3);
+      align-items:flex-start;
+      min-height:10rem;
+      scrollbar-width:thin;
+    }
+    .step-card {
+      background:var(--bg2);
+      border:1.5px solid var(--border2);
+      border-radius:var(--radius-sm);
+      padding:0.5rem 0.65rem;
+      flex-shrink:0;
+      display:flex;
+      flex-direction:column;
+      gap:0.25rem;
+      transition:border-color 0.18s, box-shadow 0.18s;
+    }
+    .step-card-active {
+      border-color:var(--teal) !important;
+      box-shadow:0 0 0 3px rgba(13,110,110,0.10);
+    }
+    .step-card-done { opacity:0.78; }
+
+    /* Small matrix display for pipeline */
+    .pipe-mat {
+      font-family:'Fira Code',monospace;
+      font-size:0.76rem;
+      border-collapse:collapse;
+    }
+    .pipe-mat th {
+      font-size:0.65rem;
+      color:var(--text-dim);
+      font-weight:600;
+      padding:0.08rem 0.35rem;
+      text-align:right;
+    }
+    .pipe-mat td {
+      padding:0.18rem 0.38rem;
+      text-align:right;
+      min-width:2.8rem;
+      border-radius:3px;
+    }
+    .pipe-mat td.row-lbl {
+      text-align:left;
+      font-weight:600;
+      color:var(--text-dim);
+      min-width:2rem;
+    }
+    .pipe-mat tr.hl-row td { background:var(--teal-lt); color:var(--teal); }
+    .pipe-mat tr.hl-row td.row-lbl { color:var(--teal); }
+
+    .mat-trio {
+      display:flex;
+      gap:0.8rem;
+      flex-wrap:wrap;
+      align-items:flex-start;
+    }
+    .mat-trio-item { display:flex; flex-direction:column; gap:0.2rem; }
+    .mat-trio-lbl {
+      font-family:'Fira Code',monospace;
+      font-size:0.78rem;
+      font-weight:700;
+      padding:0.1rem 0.4rem;
+      border-radius:5px;
+      display:inline-block;
+      margin-bottom:0.1rem;
+    }
+
+    /* Heatmap small */
+    .hm-mini { display:flex; flex-direction:column; gap:0; }
+    .hm-mini-row { display:flex; align-items:center; }
+    .hm-mini-lbl {
+      font-family:'Fira Code',monospace;
+      font-size:0.7rem;
+      font-weight:600;
+      color:var(--text-muted);
+      width:2.3rem;
+      text-align:right;
+      padding-right:0.3rem;
+      flex-shrink:0;
+    }
+    .hm-mini-cell {
+      width:2.8rem;
+      height:2.1rem;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-family:'Fira Code',monospace;
+      font-size:0.68rem;
+      font-weight:600;
+      border-radius:4px;
+    }
+    .hm-mini-col-lbl {
+      font-family:'Fira Code',monospace;
+      font-size:0.68rem;
+      color:var(--text-dim);
+      font-weight:600;
+      width:2.8rem;
+      text-align:center;
+    }
+
+    /* Token chips */
+    .t-chip {
+      padding:0.25rem 0.7rem;
+      border-radius:999px;
+      font-family:'Fira Code',monospace;
+      font-size:0.82rem;
+      font-weight:600;
+      border:2px solid var(--border);
+      background:var(--bg3);
+      color:var(--text-muted);
+      cursor:default;
+    }
+    .t-chip-row { display:flex; gap:0.35rem; flex-wrap:wrap; }
+
+    /* Comparison section */
+    .compare-section {
+      background:var(--bg2);
+      border:1.5px solid var(--border2);
+      border-radius:var(--radius);
+      padding:0.65rem 0.8rem;
+      display:flex;
+      flex-direction:column;
+      gap:0.5rem;
+    }
+    .compare-cols {
+      display:flex;
+      gap:0.7rem;
+      overflow-x:auto;
+      scrollbar-width:thin;
+    }
+    .compare-col {
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      gap:0.4rem;
+      min-width:0;
+    }
+    .compare-col-title {
+      font-family:'Fira Code',monospace;
+      font-size:0.8rem;
+      font-weight:700;
+      color:var(--teal);
+      text-align:center;
+      padding:0.2rem 0.4rem;
+      background:var(--teal-lt);
+      border-radius:6px;
+    }
+
+    .compare-token-btns {
+      display:flex;
+      gap:0.35rem;
+      justify-content:center;
+      flex-wrap:wrap;
+    }
+    .cmp-tok-btn {
+      padding:0.2rem 0.5rem;
+      border-radius:999px;
+      font-family:'Fira Code',monospace;
+      font-size:0.75rem;
+      font-weight:600;
+      border:1.5px solid var(--border);
+      background:var(--bg3);
+      color:var(--text-muted);
+      cursor:pointer;
+      transition:all 0.15s;
+    }
+    .cmp-tok-btn.active { background:var(--teal-lt); border-color:var(--teal); color:var(--teal); }
+
+    .z-vec-display {
+      font-family:'Fira Code',monospace;
+      font-size:0.78rem;
+      text-align:center;
+      color:var(--teal);
+      font-weight:700;
+      padding:0.25rem;
+      background:var(--teal-lt);
+      border-radius:5px;
+    }
+
+    .btn-compare {
+      display:inline-flex;
+      align-items:center;
+      gap:0.4rem;
+      padding:0.4rem 0.9rem;
+      border-radius:var(--radius-sm);
+      border:2px solid var(--blue);
+      background:var(--bg2);
+      color:var(--blue);
+      font-weight:700;
+      font-size:0.85rem;
+      cursor:pointer;
+      transition:all 0.18s;
+    }
+    .btn-compare:hover { background:var(--blue-lt); }
+
+    .btn-advance {
+      display:inline-flex;
+      align-items:center;
+      gap:0.4rem;
+      padding:0.4rem 0.9rem;
+      border-radius:var(--radius-sm);
+      border:2px solid var(--teal);
+      background:var(--bg2);
+      color:var(--teal);
+      font-weight:700;
+      font-size:0.85rem;
+      cursor:pointer;
+      transition:all 0.18s;
+    }
+    .btn-advance:hover { background:var(--teal-lt); }
+
+    .step-nav-row {
+      display:flex;
+      align-items:center;
+      gap:0.6rem;
+      flex-wrap:wrap;
+    }
+    .step-counter {
+      font-family:'Fira Code',monospace;
+      font-size:0.82rem;
+      color:var(--text-dim);
+      font-weight:600;
+    }
+
+    @keyframes fadeIn {
+      from { opacity:0; transform:translateY(4px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    .fade-in { animation:fadeIn 0.25s ease both; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Transformers</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 11 · Slide 11 / 14</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Pipeline Completo da Atenção</h1>
+        <p class="slide-subtitle">Da sequência de tokens ao embedding contextual — passo a passo</p>
+      </div>
+
+      <!-- Section 1: Pipeline stepper -->
+      <div style="display:flex;flex-direction:column;gap:0.5rem;">
+        <!-- phrase toggle + stepper controls -->
+        <div style="display:flex;align-items:center;gap:0.8rem;flex-wrap:wrap;">
+          <div class="toggle-group" id="phrase-toggle">
+            <button class="btn-toggle active" onclick="setPhrase(0)">Ela saiu só</button>
+            <button class="btn-toggle" onclick="setPhrase(1)">Só ela saiu</button>
+            <button class="btn-toggle" onclick="setPhrase(2)">Ela só saiu</button>
+          </div>
+          <div class="step-nav-row">
+            <button class="btn-advance" onclick="advanceStep()">Avançar →</button>
+            <span class="step-counter" id="step-counter">Passo 1 / 10</span>
+            <button class="btn-advance" style="border-color:var(--text-dim);color:var(--text-dim);" onclick="resetPipeline()">↺ Reiniciar</button>
+          </div>
+        </div>
+
+        <!-- Pipeline bar -->
+        <div class="pipeline-bar" id="pipeline-bar"></div>
+
+        <!-- Step content -->
+        <div class="step-content-area fade-in" id="step-content"></div>
+      </div>
+
+      <!-- Section 2: Compare button + comparison -->
+      <div style="display:flex;align-items:center;gap:0.8rem;">
+        <button class="btn-compare" onclick="toggleCompare()">
+          <span id="compare-btn-txt">Comparar frases →</span>
+        </button>
+        <span style="font-size:0.82rem;color:var(--text-dim);">Ver diferenças nas matrizes de atenção entre as 3 frases</span>
+      </div>
+
+      <div id="compare-section" style="display:none;">
+        <!-- Comparison token selector -->
+        <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;margin-bottom:0.4rem;">
+          <span style="font-size:0.8rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.06em;">Destacar token:</span>
+          <button class="cmp-tok-btn active" onclick="setCmpToken(0)">ela/Ela</button>
+          <button class="cmp-tok-btn" onclick="setCmpToken(1)">saiu</button>
+          <button class="cmp-tok-btn" onclick="setCmpToken(2)">só/Só</button>
+        </div>
+
+        <div class="compare-section">
+          <div class="compare-cols" id="compare-cols"></div>
+          <div class="insight-box" style="margin-top:0.2rem;">
+            <div class="i-icon">🎓</div>
+            <div class="i-text">
+              A ordem das palavras muda X, muda Q/K/V, muda os alinhamentos e muda os embeddings contextuais.
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide10.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide12.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    // Nota: na prática, embeddings têm centenas de dimensões (ex.: 768 ou 1024)
+    const EMB_LEX = {
+      'Ela':  [1,  2],
+      'ela':  [1,  2],
+      'saiu': [3, -1],
+      'só':   [-1, 2],
+      'Só':   [-1, 2],
+    };
+    function round2(x) { return Math.round(x * 100) / 100; }
+    function computePE(pos) {
+      return [
+        Math.sin(pos / Math.pow(10000, 0/2)),
+        Math.cos(pos / Math.pow(10000, 0/2)),
+      ].map(v => round2(v));
+    }
+    const POS_ENC = [computePE(0), computePE(1), computePE(2)];
+    const WQ = [[1, 0], [0, 1]];   // identity (2×2): Q = X
+    const WK = [[0, 1], [1, 0]];   // swap dims (2×2): K has swapped components
+    const WV = [[1, 1], [0, 1]];   // upper triangular (2×2): V adds context
+
+    function getMatrices(tokens) {
+      const X = tokens.map((t,i) => EMB_LEX[t].map((v,j) => round2(v + POS_ENC[i][j])));
+      const Q = X.map(row => [0,1].map(j => round2(row.reduce((s,v,k)=>s+v*WQ[k][j],0))));
+      const K = X.map(row => [0,1].map(j => round2(row.reduce((s,v,k)=>s+v*WK[k][j],0))));
+      const V = X.map(row => [0,1].map(j => round2(row.reduce((s,v,k)=>s+v*WV[k][j],0))));
+      return {X, Q, K, V};
+    }
+    function computeQKT(Q, K) {
+      return Q.map(qi => K.map(kj => round2(qi.reduce((s,v,i)=>s+v*kj[i],0))));
+    }
+    function softmaxRow(row) {
+      const max = Math.max(...row);
+      const exps = row.map(x => Math.exp(x - max));
+      const sum = exps.reduce((a,b)=>a+b,0);
+      return exps.map(e => round2(e/sum));
+    }
+    function computeAttention(tokens, dk=2) {
+      const {X, Q, K, V} = getMatrices(tokens);
+      const scores = computeQKT(Q, K);
+      const scaled = scores.map(row => row.map(s => round2(s / Math.sqrt(dk))));
+      const S = scaled.map(row => softmaxRow(row));
+      const A = S.map(si => [0,1].map(j => round2(si.reduce((s,a,k)=>s+a*V[k][j],0))));
+      return {X, Q, K, V, scores, scaled, S, A};
+    }
+    function scoreToColor(val, min, max) {
+      const t = Math.min(1, Math.max(0, (val - min) / (max - min + 0.001)));
+      if (t < 0.5) {
+        const f = t / 0.5;
+        return `rgb(${Math.round(254-f*14)}, ${Math.round(226-f*20)}, ${Math.round(226+f*10)})`;
+      } else {
+        const f = (t - 0.5) / 0.5;
+        return `rgb(${Math.round(240-f*89)}, ${Math.round(250-f*4)}, ${Math.round(236-f*10)})`;
+      }
+    }
+    function attnToColor(val) {
+      const r = Math.round(255 - val * (255 - 13));
+      const g = Math.round(255 - val * (255 - 110));
+      const b = Math.round(255 - val * (255 - 110));
+      return `rgb(${r},${g},${b})`;
+    }
+
+    const PHRASES = [
+      ['Ela', 'saiu', 'só'],
+      ['Só',  'ela',  'saiu'],
+      ['Ela', 'só',   'saiu'],
+    ];
+    const PHRASE_LABELS = ['Ela saiu só', 'Só ela saiu', 'Ela só saiu'];
+
+    const STEP_NAMES = ['Tokens','E','X=E+P','Q,K,V','QKᵀ','÷√dₖ','Softmax','S·V','A'];
+    const NUM_STEPS = 9;
+
+    let currentPhrase = 0;
+    let currentStep = 0;  // 0-indexed
+    let showCompare = false;
+    let cmpToken = 0;  // which token highlighted in comparison (0=ela, 1=saiu, 2=só)
+
+    function fmt(v) { return (v >= 0 ? ' ' : '') + v.toFixed(2); }
+    function fmtVec(arr) { return '[ ' + arr.map(v => fmt(v)).join(',  ') + ' ]'; }
+
+    function renderPipelineBar() {
+      const bar = document.getElementById('pipeline-bar');
+      let html = '';
+      STEP_NAMES.forEach((name, i) => {
+        let cls = 'future';
+        if (i < currentStep) cls = 'done';
+        else if (i === currentStep) cls = 'active';
+
+        if (i > 0) {
+          const arrowCls = i <= currentStep ? 'done-arrow' : '';
+          html += `<div class="pipe-arrow ${arrowCls}">→</div>`;
+        }
+        html += `<div class="pipe-step ${cls}" onclick="jumpToStep(${i})">
+          <div class="pipe-step-num">${i < currentStep ? '✓' : (i+1)}</div>
+          <div class="pipe-step-lbl">${name}</div>
+        </div>`;
+      });
+      bar.innerHTML = html;
+      document.getElementById('step-counter').textContent = `Passo ${currentStep+1} / ${NUM_STEPS}`;
+    }
+
+    function buildMatrixTable(tokens, data, colorFn, hlRow, dim4) {
+      const colLabels = dim4 ? ['d₁','d₂','d₃','d₄'] : ['d₁','d₂'];
+      let html = `<table class="pipe-mat"><thead><tr><th></th>`;
+      colLabels.forEach(c => html += `<th>${c}</th>`);
+      html += '</tr></thead><tbody>';
+      tokens.forEach((t, i) => {
+        const hlCls = (hlRow === i) ? 'hl-row' : '';
+        html += `<tr class="${hlCls}"><td class="row-lbl">${t.toLowerCase()}</td>`;
+        data[i].forEach(v => {
+          const color = v >= 0 ? '#0d6e6e' : '#c2410c';
+          html += `<td style="color:${color};">${fmt(v)}</td>`;
+        });
+        html += '</tr>';
+      });
+      html += '</tbody></table>';
+      return html;
+    }
+
+    function buildHeatmapMini(tokens, matrix, colorFn) {
+      const allVals = matrix.flat();
+      const minV = Math.min(...allVals);
+      const maxV = Math.max(...allVals);
+      let html = '<div class="hm-mini">';
+      // col header
+      html += '<div class="hm-mini-row"><div class="hm-mini-lbl"></div>';
+      tokens.forEach(t => html += `<div class="hm-mini-col-lbl">${t}</div>`);
+      html += '</div>';
+      tokens.forEach((rt, i) => {
+        html += '<div class="hm-mini-row">';
+        html += `<div class="hm-mini-lbl">${rt}</div>`;
+        tokens.forEach((ct, j) => {
+          const val = matrix[i][j];
+          const bg = colorFn ? colorFn(val) : scoreToColor(val, minV, maxV);
+          const textColor = colorFn ? (val > 0.5 ? 'white' : 'var(--text)') : (val < (minV+maxV)/2 ? '#7f1d1d' : '#064e3b');
+          html += `<div class="hm-mini-cell" style="background:${bg};color:${textColor};">${val.toFixed(2)}</div>`;
+        });
+        html += '</div>';
+      });
+      html += '</div>';
+      return html;
+    }
+
+    const STEP_COLORS = ['var(--teal)','var(--purple)','var(--blue)','var(--text-muted)','var(--text-muted)','var(--text-muted)','var(--text-muted)','var(--text-muted)','var(--teal)'];
+
+    function renderCompactStep(step, tokens, data) {
+      const {X, Q, K, V, scores, scaled, S, A} = data;
+      const E = tokens.map(t => EMB_LEX[t]);
+      const P = POS_ENC.slice(0, tokens.length);
+      const color = STEP_COLORS[step];
+      const Plbls = tokens.map((_,i) => ['\u2081','\u2082','\u2083'].map(s => 'p'+s)[i]);
+      let body = '';
+
+      if (step === 0) {
+        body = '<div style="display:flex;flex-direction:column;gap:0.25rem;">'
+          + tokens.map(t =>
+              `<div style="font-family:'Fira Code',monospace;font-size:0.8rem;font-weight:600;color:var(--teal);background:var(--teal-lt);border-radius:999px;padding:0.12rem 0.55rem;text-align:center;">${t}</div>`
+            ).join('')
+          + '</div>';
+
+      } else if (step === 1) {
+        body = buildMatrixTable(tokens, E, null, -1, false);
+
+      } else if (step === 2) {
+        body = '<div style="display:flex;gap:0.35rem;align-items:flex-start;flex-wrap:wrap;">'
+          + `<div><div class="mat-trio-lbl" style="background:var(--purple-lt);color:var(--purple);">E</div>${buildMatrixTable(tokens, E, null, -1, false)}</div>`
+          + `<div style="align-self:center;font-weight:700;color:var(--text-dim);padding:0 0.1rem;">+</div>`
+          + `<div><div class="mat-trio-lbl" style="background:var(--blue-lt);color:var(--blue);">P</div>${buildMatrixTable(Plbls, P, null, -1, false)}</div>`
+          + `<div style="align-self:center;font-weight:700;color:var(--teal);padding:0 0.1rem;">=</div>`
+          + `<div><div class="mat-trio-lbl" style="background:var(--teal-lt);color:var(--teal);">X</div>${buildMatrixTable(tokens, X, null, -1, false)}</div>`
+          + '</div>';
+
+      } else if (step === 3) {
+        body = '<div style="display:flex;gap:0.4rem;align-items:flex-start;flex-wrap:wrap;">'
+          + [{lbl:'Q',data:Q,c:'var(--blue)',bg:'var(--blue-lt)'},
+             {lbl:'K',data:K,c:'var(--purple)',bg:'var(--purple-lt)'},
+             {lbl:'V',data:V,c:'var(--green)',bg:'var(--green-lt)'}].map(m =>
+              `<div><div class="mat-trio-lbl" style="background:${m.bg};color:${m.c};">${m.lbl}</div>${buildMatrixTable(tokens, m.data, null, -1, false)}</div>`
+            ).join('')
+          + '</div>';
+
+      } else if (step === 4) {
+        body = buildHeatmapMini(tokens, scores, null);
+
+      } else if (step === 5) {
+        body = '<div style="display:flex;gap:0.35rem;align-items:flex-start;flex-wrap:wrap;">'
+          + `<div><div class="mat-trio-lbl" style="background:var(--bg3);color:var(--text-muted);">QK\u1d40</div>${buildHeatmapMini(tokens, scores, null)}</div>`
+          + `<div style="align-self:center;font-size:0.82rem;font-weight:700;color:var(--text-dim);white-space:nowrap;">\u00f7\u221a2 =</div>`
+          + `<div><div class="mat-trio-lbl" style="background:var(--teal-lt);color:var(--teal);">escal.</div>${buildHeatmapMini(tokens, scaled, null)}</div>`
+          + '</div>';
+
+      } else if (step === 6) {
+        body = '<div style="display:flex;gap:0.35rem;align-items:flex-start;flex-wrap:wrap;">'
+          + `<div><div class="mat-trio-lbl" style="background:var(--bg3);color:var(--text-muted);">escal.</div>${buildHeatmapMini(tokens, scaled, null)}</div>`
+          + `<div style="align-self:center;font-size:0.85rem;font-weight:700;color:var(--text-dim);">\u2192</div>`
+          + `<div><div class="mat-trio-lbl" style="background:var(--teal-lt);color:var(--teal);">S</div>${buildHeatmapMini(tokens, S, attnToColor)}</div>`
+          + '</div>';
+
+      } else if (step === 7) {
+        body = '<div style="display:flex;gap:0.35rem;align-items:flex-start;flex-wrap:wrap;">'
+          + `<div><div class="mat-trio-lbl" style="background:var(--teal-lt);color:var(--teal);">S</div>${buildHeatmapMini(tokens, S, attnToColor)}</div>`
+          + `<div style="align-self:center;font-size:1rem;font-weight:700;color:var(--text-dim);">\u00d7</div>`
+          + `<div><div class="mat-trio-lbl" style="background:var(--green-lt);color:var(--green);">V</div>${buildMatrixTable(tokens, V, null, -1, false)}</div>`
+          + `<div style="align-self:center;font-size:1rem;font-weight:700;color:var(--text-dim);">=</div>`
+          + `<div><div class="mat-trio-lbl" style="background:var(--blue-lt);color:var(--blue);">A</div>${buildMatrixTable(tokens, A, null, -1, false)}</div>`
+          + '</div>';
+
+      } else if (step === 8) {
+        body = buildMatrixTable(tokens, A, null, -1, false)
+          + `<div style="font-size:0.72rem;color:var(--teal);font-weight:600;margin-top:0.25rem;">\u2713 Pipeline completo</div>`;
+      }
+
+      return `<div style="font-size:0.75rem;font-weight:700;color:${color};margin-bottom:0.25rem;white-space:nowrap;">${step+1}. ${STEP_NAMES[step]}</div>` + body;
+    }
+
+    function renderStepContent() {
+      const tokens = PHRASES[currentPhrase];
+      const data = computeAttention(tokens);
+      const area = document.getElementById('step-content');
+      let html = '';
+      for (let s = 0; s <= currentStep; s++) {
+        const isActive = s === currentStep;
+        html += `<div class="step-card ${isActive ? 'step-card-active' : 'step-card-done'} fade-in">`;
+        html += renderCompactStep(s, tokens, data);
+        html += '</div>';
+      }
+      area.innerHTML = html;
+      setTimeout(() => { area.scrollLeft = area.scrollWidth; }, 50);
+    }
+
+    function jumpToStep(i) {
+      currentStep = i;
+      renderPipelineBar();
+      renderStepContent();
+    }
+
+    function advanceStep() {
+      currentStep = (currentStep + 1) % NUM_STEPS;
+      renderPipelineBar();
+      renderStepContent();
+    }
+
+    function resetPipeline() {
+      currentStep = 0;
+      renderPipelineBar();
+      renderStepContent();
+    }
+
+    // ---------- Comparison section ----------
+    // Map cmpToken (0=ela, 1=saiu, 2=só) to phrase-specific index
+    // phrase 0: ['Ela','saiu','só'] → 0,1,2
+    // phrase 1: ['Só','ela','saiu'] → 1,2,0  (ela=1, saiu=2, só=0)
+    // phrase 2: ['Ela','só','saiu'] → 0,2,1  (ela=0, saiu=2, só=1)
+    const CMP_TOKEN_MAP = [
+      [0, 1, 2],  // phrase 0
+      [1, 2, 0],  // phrase 1
+      [0, 2, 1],  // phrase 2
+    ];
+
+    function renderCompare() {
+      if (!showCompare) return;
+      const cols = document.getElementById('compare-cols');
+      let html = '';
+      PHRASES.forEach((tokens, pi) => {
+        const {S, A} = computeAttention(tokens);
+        const hlIdx = CMP_TOKEN_MAP[pi][cmpToken];
+        const phraseLbl = PHRASE_LABELS[pi];
+
+        const sHtml = buildHeatmapMini(tokens, S, attnToColor);
+        const aHtml = buildMatrixTable(tokens, A, null, hlIdx, false);
+
+        html += `<div class="compare-col">
+          <div class="compare-col-title">${phraseLbl}</div>
+          <div style="display:flex;gap:0.5rem;align-items:flex-start;flex-wrap:wrap;">
+            <div>
+              <div style="font-family:'Fira Code',monospace;font-size:0.68rem;font-weight:700;color:var(--teal);margin-bottom:0.15rem;">S</div>
+              ${sHtml}
+            </div>
+            <div>
+              <div style="font-family:'Fira Code',monospace;font-size:0.68rem;font-weight:700;color:var(--blue);margin-bottom:0.15rem;">A</div>
+              ${aHtml}
+            </div>
+          </div>
+          <div style="font-family:'Fira Code',monospace;font-size:0.72rem;color:var(--text-dim);margin-top:0.1rem;">destacado: <strong style="color:var(--teal);">${tokens[hlIdx]}</strong> (pos ${hlIdx+1})</div>
+        </div>`;
+      });
+      cols.innerHTML = html;
+    }
+
+    function toggleCompare() {
+      showCompare = !showCompare;
+      const sec = document.getElementById('compare-section');
+      const btn = document.getElementById('compare-btn-txt');
+      sec.style.display = showCompare ? 'block' : 'none';
+      btn.textContent = showCompare ? 'Ocultar comparação ←' : 'Comparar frases →';
+      if (showCompare) renderCompare();
+    }
+
+    function setCmpToken(i) {
+      cmpToken = i;
+      document.querySelectorAll('.cmp-tok-btn').forEach((b, k) => b.classList.toggle('active', k === i));
+      renderCompare();
+    }
+
+    function setPhrase(idx) {
+      currentPhrase = idx;
+      document.querySelectorAll('#phrase-toggle .btn-toggle').forEach((b,i) => b.classList.toggle('active', i===idx));
+      renderPipelineBar();
+      renderStepContent();
+    }
+
+    // Init
+    renderPipelineBar();
+    renderStepContent();
+  </script>
+</body>
+</html>

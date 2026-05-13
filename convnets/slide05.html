@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 5 – Caso de Estudo: Tiles do Jogo da Velha</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .study-case-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      overflow: visible;
+    }
+    .case-split {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 1.4rem;
+      flex: 1;
+      overflow: visible;
+    }
+    .case-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.3rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+      overflow-y: auto;
+      box-shadow: var(--shadow);
+    }
+
+    /* Tile Styles */
+    .tile-showcase {
+      display: flex;
+      gap: 1.8rem;
+      align-items: flex-start;
+      justify-content: center;
+      flex-wrap: wrap;
+      flex: 0 0 auto;
+    }
+    .tile-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.7rem;
+      cursor: pointer;
+      animation: cardSlide 0.4s ease both;
+      animation-delay: var(--delay, 0s);
+    }
+    .tile-card:hover canvas { transform: scale(1.1); box-shadow: 0 0 20px rgba(167,139,250,0.4); }
+    .tile-card canvas { 
+      border-radius: 8px; 
+      border: 2px solid var(--border2); 
+      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+      cursor: pointer;
+      image-rendering: pixelated;
+      background: #111827;
+    }
+    .tile-card.x-card canvas { border-color: var(--purple); }
+    .tile-card.o-card canvas { border-color: var(--blue); }
+
+    .tile-title {
+      font-size: 1rem !important;
+      font-weight: 700;
+      font-family: 'Fira Code', monospace;
+      color: var(--text);
+    }
+    .tx { color: var(--purple) !important; }
+    .to { color: var(--blue)   !important; }
+
+    .matrix-toggle-area {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .matrix-label {
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      font-family: 'Fira Code', monospace;
+      text-align: center;
+    }
+    .mini-matrix {
+      display: grid;
+      grid-template-columns: repeat(9, 1fr);
+      gap: 1px;
+      background: var(--border2);
+      border-radius: 4px;
+      overflow: hidden;
+      border: 1px solid var(--border2);
+    }
+    .mini-cell {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.52rem;
+      font-family: 'Fira Code', monospace;
+      aspect-ratio: 1;
+      color: var(--text-muted);
+    }
+    .mini-cell.val1 { color: var(--purple); font-weight: 700; }
+
+    /* Tabs */
+    .tile-tabs {
+      display: flex;
+      gap: 0.5rem;
+      flex-shrink: 0;
+    }
+    .ttab {
+      padding: 0.4rem 1rem;
+      border-radius: 999px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      font-family: 'Fira Code', monospace;
+      cursor: pointer;
+      border: 1.5px solid var(--border2);
+      background: var(--bg3);
+      color: var(--text-muted);
+      transition: all 0.2s;
+    }
+    .ttab.active-x { background: var(--purple-lt); border-color: var(--purple); color: var(--purple); }
+    .ttab.active-o { background: var(--blue-lt);   border-color: var(--blue);   color: var(--blue); }
+
+    .matrix-view {
+      background: #111827;
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0.7rem 0.9rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.88rem;
+      line-height: 1.8;
+      flex: 1;
+      overflow: auto;
+      transition: all 0.3s;
+      color: #e2e8f0;
+      white-space: pre;
+    }
+
+    /* Tasks / Classification */
+    .task-spec {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      flex: 1;
+    }
+    .binary-class {
+      background: linear-gradient(135deg, var(--purple-lt), var(--blue-lt));
+      border: 1.5px solid #c4b5fd;
+      border-radius: var(--radius-sm);
+      padding: 1rem 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+    }
+    .class-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--purple);
+      letter-spacing: 0.03em;
+    }
+    .class-rows {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .class-row {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      font-size: 1rem;
+    }
+    .class-input {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .arr { color: var(--text-dim); flex-shrink: 0; font-size: 1.1rem; }
+    .tag-x {
+      padding: 0.28rem 0.9rem;
+      border-radius: 999px;
+      background: var(--purple-lt);
+      border: 1.5px solid #c4b5fd;
+      color: var(--purple);
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+    .tag-notx {
+      padding: 0.28rem 0.9rem;
+      border-radius: 999px;
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+
+    .specs-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+    }
+    .spec-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.97rem;
+      padding: 0.55rem 0.9rem;
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      animation: cardSlide 0.4s ease both;
+      animation-delay: var(--delay, 0s);
+    }
+    .spec-icon { font-size: 1.2rem; flex-shrink: 0; }
+    .spec-val  { font-family: 'Fira Code', monospace; color: var(--cyan); font-weight: 700; }
+    .spec-desc { color: var(--text-muted); font-size: 0.92rem; }
+
+    .pixel-scale-note {
+      font-size: 0.88rem;
+      text-align: center;
+      color: var(--text-dim);
+      font-family: 'Fira Code', monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Redes Convolucionais</span>
+      <span class="prof-tag" style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 1 · Slide 5 / 5</span>
+    </header>
+
+    <main class="slide-main study-case-main">
+      <div class="title-block">
+        <h1 class="slide-title">Caso de Estudo: Tiles do Jogo da Velha</h1>
+        <p class="slide-subtitle">Nosso problema didático: classificação binária de imagens <span class="mono" style="color:var(--cyan);">9 × 9</span> binárias</p>
+      </div>
+
+      <div class="case-split">
+        <!-- Left: Tile visualization -->
+        <div class="case-panel">
+          <div class="panel-title">Os dois tiles — clique para ver a matriz</div>
+
+          <div class="tile-showcase">
+            <!-- X Tile -->
+            <div class="tile-card x-card" style="--delay:0.0s" onclick="showTile('x')">
+              <canvas id="canvas-x" width="108" height="108"></canvas>
+              <div class="tile-title tx">Tile X</div>
+            </div>
+            <!-- O Tile -->
+            <div class="tile-card o-card" style="--delay:0.1s" onclick="showTile('o')">
+              <canvas id="canvas-o" width="108" height="108"></canvas>
+              <div class="tile-title to">Tile O</div>
+            </div>
+          </div>
+
+          <div style="flex-shrink:0;">
+            <div class="tile-tabs" id="tile-tabs">
+              <span class="ttab active-x" onclick="showTile('x')" id="tab-x">[ X ]</span>
+              <span class="ttab" onclick="showTile('o')" id="tab-o">[ O ]</span>
+            </div>
+          </div>
+          <div class="matrix-view" id="matrix-view"><!-- JS --></div>
+          <div class="pixel-scale-note">↑ Cada número é um pixel: 0 = preto (fundo) · 1 = branco (traço)</div>
+        </div>
+
+        <!-- Right: Task specification -->
+        <div class="case-panel scrollable">
+          <div class="panel-title">A tarefa de classificação</div>
+
+          <div class="task-spec">
+            <div class="binary-class">
+              <div class="class-title">🎯 Classificação Binária — Detectar o X</div>
+              <div class="class-rows">
+                <div class="class-row">
+                  <div class="class-input">
+                    <canvas id="mini-x" width="36" height="36" style="border-radius:4px;border:1.5px solid var(--purple);image-rendering:pixelated;background:#111827;"></canvas>
+                    <span style="font-family:'Fira Code',monospace; font-size:0.8rem; font-weight:700;">X</span>
+                  </div>
+                  <span class="arr">→</span>
+                  <span class="tag-x">classe 1 — é X</span>
+                </div>
+                <div class="class-row">
+                  <div class="class-input">
+                    <canvas id="mini-o" width="36" height="36" style="border-radius:4px;border:1.5px solid var(--border2);image-rendering:pixelated;background:#111827;"></canvas>
+                    <span style="font-family:'Fira Code',monospace; font-size:0.8rem; font-weight:700;">O</span>
+                  </div>
+                  <span class="arr">→</span>
+                  <span class="tag-notx">classe 0 — não é X</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="specs-list">
+              <div class="spec-item" style="--delay:0.05s">
+                <span class="spec-icon">📏</span>
+                <span>Tamanho: </span>
+                <span class="spec-val">9 × 9 pixels</span>
+                <span class="spec-desc">= 81 valores por imagem</span>
+              </div>
+              <div class="spec-item" style="--delay:0.15s">
+                <span class="spec-icon">⚫</span>
+                <span>Tipo: </span>
+                <span class="spec-val">binário</span>
+                <span class="spec-desc">pixels ∈ {0, 1}</span>
+              </div>
+              <div class="spec-item" style="--delay:0.25s">
+                <span class="spec-icon">🎨</span>
+                <span>Canais: </span>
+                <span class="spec-val">1 canal</span>
+                <span class="spec-desc">escala de cinza</span>
+              </div>
+              <div class="spec-item" style="--delay:0.35s">
+                <span class="spec-icon">🏷️</span>
+                <span>Saída: </span>
+                <span class="spec-val">1 neurônio</span>
+                <span class="spec-desc">sigmoid → P(é X)</span>
+              </div>
+            </div>
+
+            <div class="highlight-box yellow">
+              <span class="icon">🎓</span>
+              <p>Usaremos esse exemplo <strong>muito simples</strong> para entender <em>por que</em> um MLP tem dificuldades e como CNNs resolvem isso — nos próximos blocos!</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide04.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot active"></span>
+      </div>
+      <button class="btn-nav btn-next" style="background:var(--purple);border-color:var(--purple);color:#fff;" onclick="location.href='slide06.html'">Próximo Bloco →</button>
+    </nav>
+  </div>
+
+  <script>
+    const N = 9;
+
+    // --- Tile data (9x9 binary) ---
+    // X: starts at row/col 1, ends at row/col 7 (border left free)
+    const tileX = [
+      [0,0,0,0,0,0,0,0,0],
+      [0,1,0,0,0,0,0,1,0],
+      [0,0,1,0,0,0,1,0,0],
+      [0,0,0,1,0,1,0,0,0],
+      [0,0,0,0,1,0,0,0,0],
+      [0,0,0,1,0,1,0,0,0],
+      [0,0,1,0,0,0,1,0,0],
+      [0,1,0,0,0,0,0,1,0],
+      [0,0,0,0,0,0,0,0,0],
+    ];
+
+    // O: border row/col left free, oval fits inside [1..7]
+    const tileO = [
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,1,1,1,1,1,0,0],
+      [0,1,0,0,0,0,0,1,0],
+      [0,1,0,0,0,0,0,1,0],
+      [0,1,0,0,0,0,0,1,0],
+      [0,1,0,0,0,0,0,1,0],
+      [0,1,0,0,0,0,0,1,0],
+      [0,0,1,1,1,1,1,0,0],
+      [0,0,0,0,0,0,0,0,0],
+    ];
+
+    const tileE = Array(9).fill(null).map(() => Array(9).fill(0));
+
+    const tiles = { x: tileX, o: tileO, e: tileE };
+    // Both X and O drawn in WHITE (grayscale) on dark background
+    const TILE_BG  = '#111827';
+    const TILE_FG  = '#ffffff';
+
+    function drawTile(canvasId, data) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const cellSize = canvas.width / N;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = TILE_BG;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      for (let i = 0; i < N; i++) {
+        for (let j = 0; j < N; j++) {
+          if (data[i][j] === 1) {
+            ctx.fillStyle = TILE_FG;
+            ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+          }
+        }
+      }
+    }
+
+    // Draw all tiles (grayscale: white on dark)
+    drawTile('canvas-x', tileX);
+    drawTile('canvas-o', tileO);
+    drawTile('canvas-e', tileE);
+    drawTile('mini-x', tileX);
+    drawTile('mini-o', tileO);
+
+    // Matrix display
+    let currentTile = 'x';
+
+    function showTile(name) {
+      currentTile = name;
+      const data = tiles[name];
+
+      // Update tabs (only x and o tabs exist)
+      ['x','o'].forEach(t => {
+        const tab = document.getElementById(`tab-${t}`);
+        if (!tab) return;
+        tab.className = 'ttab';
+        if (t === name) {
+          tab.classList.add(t === 'x' ? 'active-x' : 'active-o');
+        }
+      });
+
+      // Render matrix — numpy prettyprint style
+      // Looks like:
+      //   tile_X =
+      //   [[0 0 0 0 0 0 0 0 0]
+      //    [0 1 0 0 0 0 0 1 0]
+      //    ...               ]
+      let html = '';
+      const label = name === 'e' ? 'tile_empty' : `tile_${name.toUpperCase()}`;
+      html += `<span style="color:#94a3b8">${label} =\n</span>`;
+      for (let i = 0; i < N; i++) {
+        // outer bracket: '[' for first row, ' ' for others; close ']' on last
+        const outerOpen  = (i === 0)     ? '[' : ' ';
+        const outerClose = (i === N - 1) ? ']' : ' ';
+        html += `<span style="color:#64748b">${outerOpen}[</span>`;
+        for (let j = 0; j < N; j++) {
+          const v = data[i][j];
+          if (j > 0) html += ' ';   // single space between columns
+          if (v === 1) {
+            html += `<span style="color:#ffffff;font-weight:700;">1</span>`;
+          } else {
+            html += `<span style="color:#334155">0</span>`;
+          }
+        }
+        html += `<span style="color:#64748b">]${outerClose}</span>\n`;
+      }
+      html += `<span style="color:#475569"># shape: (9, 9), dtype=int</span>`;
+      document.getElementById('matrix-view').innerHTML = html;
+    }
+
+    showTile('x');
+  </script>
+</body>
+</html>

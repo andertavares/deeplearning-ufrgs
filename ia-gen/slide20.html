@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 20 – Simulação de treinamento</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .epoch-display {
+      font-size: 3rem; font-weight: 800; font-family: 'Fira Code', monospace;
+      background: var(--grad1); -webkit-background-clip: text;
+      background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .loss-display { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .loss-card {
+      background: var(--bg2); border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm); padding: 0.9rem 1.3rem;
+      text-align: center; min-width: 140px;
+      box-shadow: var(--shadow);
+    }
+    .loss-label { font-size: 0.78rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+    .loss-value { font-size: 1.8rem; font-weight: 800; font-family: 'Fira Code', monospace; margin-top: 0.2rem; }
+    .score-bar-bg { flex: 1; height: 10px; background: var(--bg3); border-radius: 5px; overflow: hidden; border: 1px solid var(--border2); }
+    .score-bar-fill { height: 100%; border-radius: 5px; transition: width 0.6s; }
+    .fill-d { background: linear-gradient(90deg, var(--cyan), var(--blue)); }
+    .fill-g { background: linear-gradient(90deg, var(--red), #c2410c); }
+    .score-row { display: flex; align-items: center; gap: 0.6rem; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">IA Generativa</span>
+      <span style="font-size:0.9rem;color:var(--text-muted);font-weight:500;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 10 · Slide 20 / 24</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Simulação de treinamento</h1>
+        <p class="slide-subtitle">Avance as épocas para ver a convergência da GAN</p>
+      </div>
+
+      <div style="display:flex;align-items:baseline;gap:0.6rem;justify-content:center;">
+        <span style="font-size:0.9rem;color:var(--text-muted);">Época</span>
+        <span class="epoch-display" id="s20-epoch">1</span>
+        <span style="font-size:0.9rem;color:var(--text-muted);">/ 7</span>
+      </div>
+
+      <div class="loss-display">
+        <div class="loss-card">
+          <div class="loss-label">Loss Discriminador</div>
+          <div class="loss-value" id="s20-d-loss" style="color:var(--yellow);">1.20</div>
+        </div>
+        <div class="loss-card">
+          <div class="loss-label">Loss Gerador</div>
+          <div class="loss-value" id="s20-g-loss" style="color:var(--red);">2.80</div>
+        </div>
+      </div>
+
+      <div class="panel" style="max-width:540px;margin:0 auto;gap:0.7rem;">
+        <div class="score-row">
+          <span style="min-width:60px;font-size:0.82rem;color:var(--cyan);font-weight:600;">Loss D</span>
+          <div class="score-bar-bg"><div class="score-bar-fill fill-d" id="s20-d-fill" style="width:48%;"></div></div>
+        </div>
+        <div class="score-row">
+          <span style="min-width:60px;font-size:0.82rem;color:var(--red);font-weight:600;">Loss G</span>
+          <div class="score-bar-bg"><div class="score-bar-fill fill-g" id="s20-g-fill" style="width:62%;"></div></div>
+        </div>
+      </div>
+
+      <div class="panel" style="max-width:480px;margin:0 auto;text-align:center;padding:0.75rem;">
+        <span id="s20-note" style="font-size:0.88rem;color:var(--text-muted);">D aprende a distinguir facilmente</span>
+      </div>
+
+      <div style="text-align:center;">
+        <button class="btn-step" id="s20-btn" onclick="nextEpoch()">▶ Próxima rodada</button>
+      </div>
+
+      <p style="font-size:0.78rem;color:var(--text-dim);text-align:center;">
+        Ideal: D_loss ≈ 0.69 (ln 2) — D não distingue melhor que 50%
+      </p>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide19.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide21.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    const S20_DATA = [
+      { dLoss: 1.20, gLoss: 2.80, note: 'D aprende a distinguir facilmente' },
+      { dLoss: 0.85, gLoss: 2.20, note: 'G começa a melhorar' },
+      { dLoss: 0.75, gLoss: 1.80, note: 'Competição aumenta' },
+      { dLoss: 0.68, gLoss: 1.40, note: 'G produz amostras mais realistas' },
+      { dLoss: 0.70, gLoss: 1.10, note: 'Equilíbrio se aproxima' },
+      { dLoss: 0.69, gLoss: 0.85, note: 'G engana D com mais frequência' },
+      { dLoss: 0.69, gLoss: 0.72, note: 'Convergência: D ≈ 0.5 para amostras G' },
+    ];
+    let epoch = 0;
+
+    function updateDisplay() {
+      const d = S20_DATA[epoch];
+      document.getElementById('s20-epoch').textContent  = epoch + 1;
+      document.getElementById('s20-d-loss').textContent = d.dLoss.toFixed(2);
+      document.getElementById('s20-g-loss').textContent = d.gLoss.toFixed(2);
+      document.getElementById('s20-note').textContent   = d.note;
+      document.getElementById('s20-d-fill').style.width = Math.min(100, d.dLoss * 40) + '%';
+      document.getElementById('s20-g-fill').style.width = Math.min(100, d.gLoss * 22) + '%';
+      document.getElementById('s20-d-loss').style.color = d.dLoss < 0.72 ? 'var(--teal)' : 'var(--yellow)';
+      document.getElementById('s20-g-loss').style.color = d.gLoss < 1.0  ? 'var(--teal)' : 'var(--red)';
+      document.getElementById('s20-btn').disabled = epoch >= S20_DATA.length - 1;
+    }
+
+    function nextEpoch() {
+      if (epoch < S20_DATA.length - 1) epoch++;
+      updateDisplay();
+    }
+
+    updateDisplay();
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') location.href = 'slide21.html';
+      if (e.key === 'ArrowLeft'  || e.key === 'PageUp')   location.href = 'slide19.html';
+    });
+  </script>
+</body>
+</html>

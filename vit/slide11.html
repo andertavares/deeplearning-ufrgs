@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 11 – ViT versus CNN</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+
+    /* Grid demo */
+    .grid-demo-wrap {
+      display: flex;
+      gap: 1.2rem;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+    .grid4 {
+      display: grid;
+      grid-template-columns: repeat(4, 48px);
+      grid-template-rows: repeat(4, 48px);
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .grid2 {
+      display: grid;
+      grid-template-columns: repeat(2, 96px);
+      grid-template-rows: repeat(2, 96px);
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .grid8 {
+      display: grid;
+      grid-template-columns: repeat(8, 22px);
+      grid-template-rows: repeat(8, 22px);
+      gap: 3px;
+      flex-shrink: 0;
+    }
+    .gcell {
+      width: 48px; height: 48px;
+      border-radius: 7px;
+      border: 2px solid var(--border2);
+      background-color: var(--bg3);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      transition: all 0.3s;
+      font-weight: 600;
+    }
+    .gcell.kernel-active {
+      background-color: var(--blue-lt);
+      background-image: none !important;
+      border-color: var(--blue);
+      color: var(--blue);
+      box-shadow: 0 0 0 2px #93c5fd;
+    }
+    .gcell.kernel-center {
+      background-color: var(--blue);
+      background-image: none !important;
+      color: #fff;
+      border-color: var(--blue);
+    }
+    .gcell.attn-source {
+      border-color: var(--teal);
+      box-shadow: inset 0 0 0 3px var(--teal), 0 0 0 3px rgba(13,110,110,0.3);
+      transform: scale(1.04);
+    }
+    .gcell.attn-target {
+      border-color: var(--teal);
+    }
+
+    .grid-explanation {
+      flex: 1;
+      min-width: 160px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+    }
+    .grid-note {
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem 0.9rem;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .hier-row {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    .hier-arrow { color: var(--blue); font-size: 1rem; }
+
+    /* CNN kernel slide animation */
+    .kernel-pos { transition: all 0.6s ease; }
+
+    /* SVG overlay for ViT attention lines */
+    .grid-wrap-rel {
+      position: relative;
+      display: inline-block;
+    }
+    .attn-svg-overlay {
+      position: absolute;
+      top: 0; left: 0;
+      pointer-events: none;
+      overflow: visible;
+    }
+
+    .bottom-insight {
+      background: linear-gradient(135deg, #f0fdf4, #dbeafe);
+      border: 1.5px solid #86efac;
+      border-radius: var(--radius);
+      padding: 0.85rem 1.2rem;
+      font-size: 0.97rem;
+      line-height: 1.6;
+      color: var(--text);
+      display: flex;
+      gap: 0.7rem;
+      align-items: flex-start;
+    }
+
+    .mini-cards-row {
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+    .mini-card {
+      flex: 1; min-width: 110px;
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem 0.8rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      transition: border-color 0.2s;
+    }
+    .mini-card:hover { border-color: var(--teal); }
+    .mini-card-icon { font-size: 1.3rem; }
+    .mini-card-title { font-size: 0.9rem; font-weight: 700; color: var(--text); }
+    .mini-card-desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; }
+
+    /* CNN kernel controls */
+    .kernel-controls {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    /* Feature map */
+    .fmap-section {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-shrink: 0;
+    }
+    .fmap-arrow {
+      font-size: 1.6rem;
+      color: var(--blue);
+      font-weight: 700;
+      line-height: 1;
+    }
+    .fmap-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-align: center;
+      margin-bottom: 4px;
+      font-family: 'Fira Code', monospace;
+    }
+    .fmap-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 56px);
+      grid-template-rows: repeat(2, 56px);
+      gap: 4px;
+    }
+    .fmap-cell {
+      width: 56px; height: 56px;
+      border-radius: 6px;
+      border: 1.5px solid var(--border2);
+      background: var(--bg3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      transition: background-color 0.4s ease, color 0.3s ease;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">ViT</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 5 · Slide 4 / 4</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">ViT versus CNN</h1>
+        <p class="slide-subtitle">Bloco 5 — ViT e CNN &nbsp;·&nbsp; Duas filosofias de processar imagens</p>
+      </div>
+
+      <!-- CNN + ViT Panels -->
+      <div class="content-split">
+        <div class="panel">
+          <div class="panel-title">🔲 CNN — visão local e hierárquica</div>
+          <div style="display:flex;gap:0.9rem;align-items:flex-end;flex-wrap:wrap;">
+            <!-- Input canvas -->
+            <div style="display:flex;flex-direction:column;align-items:center;gap:0.3rem;">
+              <canvas id="cv-input" width="144" height="144" style="image-rendering:pixelated;border:1.5px solid var(--border2);border-radius:5px;display:block;"></canvas>
+              <div style="font-size:0.7rem;font-family:'Fira Code',monospace;color:var(--text-muted);">entrada 9×9</div>
+            </div>
+            <!-- Filter + arrow -->
+            <div style="display:flex;flex-direction:column;align-items:center;gap:0.4rem;padding-bottom:1.4rem;">
+              <div style="font-size:0.7rem;font-family:'Fira Code',monospace;color:var(--text-muted);">filtro 3×3</div>
+              <div id="cnn-filter-display" style="display:grid;grid-template-columns:repeat(3,26px);gap:2px;"></div>
+              <div style="font-size:1.3rem;color:var(--blue);font-weight:700;margin-top:0.3rem;">→</div>
+            </div>
+            <!-- Output canvas -->
+            <div style="display:flex;flex-direction:column;align-items:center;gap:0.3rem;">
+              <canvas id="cv-output" width="126" height="126" style="image-rendering:pixelated;border:1.5px solid var(--border2);border-radius:5px;display:block;"></canvas>
+              <div style="font-size:0.7rem;font-family:'Fira Code',monospace;color:var(--text-muted);">feature map 7×7</div>
+            </div>
+            <!-- Controls -->
+            <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;padding-bottom:1.4rem;">
+              <button class="btn-step" style="font-size:0.85rem;padding:0.4rem 0.9rem" onclick="slideKernel()">▶ Executar</button>
+              <button class="btn-step" style="font-size:0.85rem;padding:0.4rem 0.9rem;background:var(--text-dim)" onclick="resetKernel()">↺</button>
+              <span id="cnn-step-counter" style="font-family:'Fira Code',monospace;font-size:0.8rem;color:var(--text-muted);">0 / 49</span>
+            </div>
+          </div>
+          <!-- Explanation notes below canvases -->
+          <div style="display:flex;gap:0.6rem;flex-wrap:wrap;">
+            <div class="grid-note" style="flex:1;min-width:160px;">
+              <strong style="color:var(--blue)">Kernel 3×3</strong> desliza sobre pixels — cada posição vê apenas vizinhos imediatos.
+            </div>
+            <div class="grid-note" style="flex:1;min-width:160px;font-size:0.82rem;">
+              Camadas mais profundas combinam padrões locais em contexto mais amplo — construção <em>hierárquica</em>.
+            </div>
+          </div>
+          <!-- Hierarchy bar spanning full panel width -->
+          <div style="display:flex;align-items:center;justify-content:center;gap:0;background:var(--bg3);border:1.5px solid var(--border2);border-radius:var(--radius-sm);padding:0.5rem 1rem;">
+            <span style="font-size:0.82rem;font-weight:700;color:var(--text-muted);">Pixel</span>
+            <span style="margin:0 0.5rem;color:var(--blue);font-weight:700;">→</span>
+            <span style="font-size:0.82rem;font-weight:700;color:var(--text-muted);">Borda</span>
+            <span style="margin:0 0.5rem;color:var(--blue);font-weight:700;">→</span>
+            <span style="font-size:0.82rem;font-weight:700;color:var(--text-muted);">Textura</span>
+            <span style="margin:0 0.5rem;color:var(--blue);font-weight:700;">→</span>
+            <span style="font-size:0.82rem;font-weight:700;color:var(--text-muted);">Parte</span>
+            <span style="margin:0 0.5rem;color:var(--blue);font-weight:700;">→</span>
+            <span style="font-size:0.82rem;font-weight:700;color:var(--blue);">Objeto</span>
+          </div>
+          <div class="mini-cards-row">
+            <div class="mini-card">
+              <span class="mini-card-icon">📍</span>
+              <span class="mini-card-title">Localidade</span>
+              <span class="mini-card-desc">Opera em janelas de pixels vizinhos</span>
+            </div>
+            <div class="mini-card">
+              <span class="mini-card-icon">🏗️</span>
+              <span class="mini-card-title">Hierarquia</span>
+              <span class="mini-card-desc">Empilha representações locais</span>
+            </div>
+            <div class="mini-card">
+              <span class="mini-card-icon">↔️</span>
+              <span class="mini-card-title">Equivariância</span>
+              <span class="mini-card-desc">Translação não muda as ativações</span>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">🔷 ViT — atenção global desde o início</div>
+          <div class="grid-demo-wrap">
+            <div class="grid-wrap-rel">
+              <div class="grid8" id="vitGrid"></div>
+              <svg id="attnSvg" class="attn-svg-overlay" width="197" height="197"></svg>
+            </div>
+            <div class="grid-explanation">
+              <div class="grid-note">
+                <strong style="color:var(--teal)">Atenção global</strong> — qualquer patch pode atender a qualquer outro desde a primeira camada. <em style="font-size:0.79rem;color:var(--text-dim)">Clique em um patch para explorar.</em>
+              </div>
+              <div class="grid-note" style="font-size:0.82rem">
+                Linha <span style="color:#f59e0b;font-weight:700">dourada</span>: atenção a longa distância — patches distantes podem ter alta relevância sem hierarquia.
+              </div>
+              
+            </div>
+          </div>
+          <div class="mini-cards-row">
+            <div class="mini-card">
+              <span class="mini-card-icon">🌐</span>
+              <span class="mini-card-title">Global desde o início</span>
+              <span class="mini-card-desc">Qualquer par de patches se relaciona</span>
+            </div>
+            <div class="mini-card">
+              <span class="mini-card-icon">🚫</span>
+              <span class="mini-card-title">Sem viés local</span>
+              <span class="mini-card-desc">Nenhuma indução de vizinhança</span>
+            </div>
+            <div class="mini-card">
+              <span class="mini-card-icon">📊</span>
+              <span class="mini-card-title">Data hungry</span>
+              <span class="mini-card-desc">Precisa de muito dado para aprender</span>
+            </div>
+          </div>
+
+          <!-- Cost comparison section -->
+          <div style="display:flex;flex-direction:column;gap:0.5rem;margin-top:0.1rem;">
+            <div style="font-size:0.78rem;font-weight:700;color:var(--text-dim);letter-spacing:0.04em;text-transform:uppercase;">Custo real (paper original, Dosovitskiy et al. 2021)</div>
+
+            <!-- Accuracy vs dataset size bars -->
+            <div style="background:var(--bg3);border:1.5px solid var(--border2);border-radius:var(--radius-sm);padding:0.6rem 0.8rem;display:flex;flex-direction:column;gap:0.45rem;">
+              <div style="font-size:0.78rem;font-weight:700;color:var(--text-muted);margin-bottom:0.1rem;">Top-1 ImageNet — quanto dado cada modelo precisou</div>
+              <!-- ResNet50 -->
+              <div style="display:flex;align-items:center;gap:0.5rem;">
+                <span style="font-family:'Fira Code',monospace;font-size:0.7rem;color:var(--blue);width:90px;flex-shrink:0;">ResNet-50</span>
+                <div style="flex:1;background:var(--bg2);border-radius:4px;height:14px;overflow:hidden;border:1px solid var(--border2);">
+                  <div style="width:12%;height:100%;background:#3b82f6;border-radius:4px;" title="~1.2 M imagens (ImageNet)"></div>
+                </div>
+                <span style="font-family:'Fira Code',monospace;font-size:0.7rem;color:var(--text-muted);width:52px;text-align:right;">79.8%</span>
+                <span style="font-size:0.68rem;color:var(--text-dim);width:64px;">1.2 M imgs</span>
+              </div>
+              <!-- ViT-B/16 ImageNet only -->
+              <div style="display:flex;align-items:center;gap:0.5rem;">
+                <span style="font-family:'Fira Code',monospace;font-size:0.7rem;color:#f59e0b;width:90px;flex-shrink:0;">ViT-B/16 ❌</span>
+                <div style="flex:1;background:var(--bg2);border-radius:4px;height:14px;overflow:hidden;border:1px solid var(--border2);">
+                  <div style="width:9%;height:100%;background:#f59e0b;border-radius:4px;" title="~1.2 M imagens (ImageNet)"></div>
+                </div>
+                <span style="font-family:'Fira Code',monospace;font-size:0.7rem;color:var(--text-muted);width:52px;text-align:right;">77.9%</span>
+                <span style="font-size:0.68rem;color:var(--text-dim);width:64px;">1.2 M imgs</span>
+              </div>
+              <!-- ViT-B/16 JFT -->
+              <div style="display:flex;align-items:center;gap:0.5rem;">
+                <span style="font-family:'Fira Code',monospace;font-size:0.7rem;color:#10b981;width:90px;flex-shrink:0;">ViT-B/16 ✅</span>
+                <div style="flex:1;background:var(--bg2);border-radius:4px;height:14px;overflow:hidden;border:1px solid var(--border2);">
+                  <div style="width:100%;height:100%;background:#10b981;border-radius:4px;" title="pré-treino em JFT-300M, fine-tune em ImageNet"></div>
+                </div>
+                <span style="font-family:'Fira Code',monospace;font-size:0.7rem;color:var(--text-muted);width:52px;text-align:right;">84.2%</span>
+                <span style="font-size:0.68rem;color:var(--text-dim);width:64px;">JFT-300M</span>
+              </div>
+              <!-- JFT note -->
+              <div style="background:rgba(16,185,129,0.07);border:1px solid rgba(16,185,129,0.25);border-radius:4px;padding:0.4rem 0.6rem;font-size:0.7rem;color:var(--text-dim);line-height:1.5;">
+                <strong style="color:#10b981;">JFT-300M</strong> é um dataset <em>diferente</em> e muito maior, interno do Google — <strong style="color:var(--text);">300 milhões de imagens</strong> com ~18 mil categorias (vs. 1 mil do ImageNet). Não são múltiplas épocas do mesmo dado: é simplesmente 250× mais imagens de domínios variados. O modelo foi pré-treinado ali e depois <em>fine-tunado</em> no ImageNet.
+              </div>
+              <div style="font-size:0.7rem;color:var(--text-dim);border-top:1px solid var(--border2);padding-top:0.35rem;margin-top:0.1rem;">
+                Sem pré-treino massivo, ViT fica <em>abaixo</em> de uma ResNet treinada apenas no ImageNet.
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom insight -->
+      <div class="bottom-insight">
+        <span style="font-size:1.4rem;flex-shrink:0">⚖️</span>
+        <span><strong>Não é uma disputa</strong> — são filosofias diferentes. <strong>CNNs</strong> são boas com menos dados e têm forte viés indutivo; <strong>ViTs escalam melhor</strong> com grandes datasets e tarefas que exigem contexto global.</span>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide10.html'">← Anterior</button>
+      <div class="nav-dots">
+        <div class="dot"></div>
+        <div class="dot active"></div>
+      </div>
+      <button class="btn-nav btn-next" disabled>Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    // --- CNN convolution (9×9 input, 3×3 diagonal filter → 7×7 feature map) ---
+    const NI = 9, F = 3, NO = 7;
+    const CELL_IN = 16, CELL_OUT = 18;
+
+    const tileX = [
+      [0,0,0,0,0,0,0,0,0],
+      [0,1,0,0,0,0,0,1,0],
+      [0,0,1,0,0,0,1,0,0],
+      [0,0,0,1,0,1,0,0,0],
+      [0,0,0,0,1,0,0,0,0],
+      [0,0,0,1,0,1,0,0,0],
+      [0,0,1,0,0,0,1,0,0],
+      [0,1,0,0,0,0,0,1,0],
+      [0,0,0,0,0,0,0,0,0],
+    ];
+
+    const cnnWeights = [[ 1,-1,-1],[-1, 1,-1],[-1,-1, 1]]; // diagonal ↘
+
+    function buildFilterDisplay() {
+      const el = document.getElementById('cnn-filter-display');
+      if (!el) return;
+      el.innerHTML = '';
+      cnnWeights.forEach(row => row.forEach(v => {
+        const cell = document.createElement('div');
+        cell.style.cssText = `width:26px;height:26px;display:flex;align-items:center;justify-content:center;
+          font-family:'Fira Code',monospace;font-size:0.72rem;font-weight:700;border-radius:3px;
+          background:${v>0?'rgba(59,130,246,0.15)':v<0?'rgba(185,28,28,0.12)':'var(--bg3)'};
+          color:${v>0?'var(--blue)':v<0?'var(--red)':'var(--text-dim)'};
+          border:1px solid ${v>0?'rgba(59,130,246,0.3)':v<0?'rgba(185,28,28,0.25)':'var(--border2)'};`;
+        cell.textContent = v;
+        el.appendChild(cell);
+      }));
+    }
+
+    function drawCnnInput(hr, hc) {
+      const cv = document.getElementById('cv-input');
+      const ctx = cv.getContext('2d');
+      ctx.fillStyle = '#111827';
+      ctx.fillRect(0, 0, cv.width, cv.height);
+      for (let r = 0; r < NI; r++) for (let c = 0; c < NI; c++) {
+        if (tileX[r][c]) { ctx.fillStyle = '#fff'; ctx.fillRect(c*CELL_IN, r*CELL_IN, CELL_IN, CELL_IN); }
+      }
+      ctx.strokeStyle = 'rgba(51,65,85,0.4)'; ctx.lineWidth = 0.5;
+      for (let i = 0; i <= NI; i++) {
+        ctx.beginPath(); ctx.moveTo(i*CELL_IN, 0); ctx.lineTo(i*CELL_IN, cv.height); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, i*CELL_IN); ctx.lineTo(cv.width, i*CELL_IN); ctx.stroke();
+      }
+      if (hr !== undefined) {
+        ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 2;
+        ctx.strokeRect(hc*CELL_IN+1, hr*CELL_IN+1, F*CELL_IN-2, F*CELL_IN-2);
+        ctx.fillStyle = 'rgba(59,130,246,0.12)';
+        ctx.fillRect(hc*CELL_IN+1, hr*CELL_IN+1, F*CELL_IN-2, F*CELL_IN-2);
+      }
+    }
+
+    let cnnOutputMap = [];
+
+    function drawCnnOutput(hr, hc) {
+      const cv = document.getElementById('cv-output');
+      const ctx = cv.getContext('2d');
+      ctx.fillStyle = '#000'; ctx.fillRect(0, 0, cv.width, cv.height);
+      let maxAbs = 0;
+      cnnOutputMap.forEach(row => row && row.forEach(v => { if (Math.abs(v) > maxAbs) maxAbs = Math.abs(v); }));
+      if (maxAbs === 0) maxAbs = 1;
+      for (let r = 0; r < NO; r++) for (let c = 0; c < NO; c++) {
+        if (cnnOutputMap[r]?.[c] !== undefined) {
+          const v = cnnOutputMap[r][c];
+          const t = Math.abs(v) / maxAbs;
+          const g = Math.round(255 * t);
+          ctx.fillStyle = v > 0 ? `rgb(${g},${g},${g})` : `rgb(${g},0,0)`;
+          ctx.fillRect(c*CELL_OUT, r*CELL_OUT, CELL_OUT, CELL_OUT);
+        }
+      }
+      ctx.strokeStyle = 'rgba(51,65,85,0.25)'; ctx.lineWidth = 0.5;
+      for (let i = 0; i <= NO; i++) {
+        ctx.beginPath(); ctx.moveTo(i*CELL_OUT, 0); ctx.lineTo(i*CELL_OUT, cv.height); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, i*CELL_OUT); ctx.lineTo(cv.width, i*CELL_OUT); ctx.stroke();
+      }
+      if (hr !== undefined) {
+        ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 2;
+        ctx.strokeRect(hc*CELL_OUT+1, hr*CELL_OUT+1, CELL_OUT-2, CELL_OUT-2);
+      }
+    }
+
+    function computeCnnConv(r, c) {
+      let s = 0;
+      for (let kr = 0; kr < F; kr++) for (let kc = 0; kc < F; kc++)
+        s += tileX[r+kr][c+kc] * cnnWeights[kr][kc];
+      return s;
+    }
+
+    let cnnStep = -1, cnnAnimating = false;
+    const totalCnnSteps = NO * NO;
+
+    function updateCnnCounter() {
+      const el = document.getElementById('cnn-step-counter');
+      if (el) el.textContent = `${Math.max(0, cnnStep + 1)} / 49`;
+    }
+
+    function slideKernel() {
+      if (cnnAnimating) return;
+      cnnAnimating = true;
+      cnnStep = -1;
+      cnnOutputMap = [];
+      drawCnnOutput();
+      updateCnnCounter();
+      function step() {
+        cnnStep++;
+        if (cnnStep >= totalCnnSteps) { cnnAnimating = false; return; }
+        const r = Math.floor(cnnStep / NO), c = cnnStep % NO;
+        drawCnnInput(r, c);
+        const v = computeCnnConv(r, c);
+        if (!cnnOutputMap[r]) cnnOutputMap[r] = [];
+        cnnOutputMap[r][c] = v;
+        drawCnnOutput(r, c);
+        updateCnnCounter();
+        setTimeout(step, 80);
+      }
+      step();
+    }
+
+    function resetKernel() {
+      cnnAnimating = false;
+      cnnStep = -1;
+      cnnOutputMap = [];
+      drawCnnInput();
+      drawCnnOutput();
+      updateCnnCounter();
+    }
+
+    buildFilterDisplay();
+    drawCnnInput();
+    drawCnnOutput();
+
+    // --- ViT 8×8 patch grid (hypothetical attention demonstrating long-range) ---
+    const GRID_N = 8;
+    const CELL_VIT = 22;
+    const GAP_VIT = 3;
+    const STEP_VIT = CELL_VIT + GAP_VIT; // 25px
+    const GRID_TOTAL_VIT = GRID_N * CELL_VIT + (GRID_N - 1) * GAP_VIT; // 197px
+
+    function buildVitGrid() {
+      const grid = document.getElementById('vitGrid');
+      grid.innerHTML = '';
+      for (let r = 0; r < GRID_N; r++) {
+        for (let c = 0; c < GRID_N; c++) {
+          const cell = document.createElement('div');
+          cell.className = 'gcell';
+          cell.id = `vitGrid_${r}_${c}`;
+          cell.style.width = `${CELL_VIT}px`;
+          cell.style.height = `${CELL_VIT}px`;
+          cell.style.backgroundImage = `url('illusion.png')`;
+          cell.style.backgroundSize = `${GRID_TOTAL_VIT}px ${GRID_TOTAL_VIT}px`;
+          cell.style.backgroundPosition = `${-(c * STEP_VIT)}px ${-(r * STEP_VIT)}px`;
+          cell.style.borderRadius = '3px';
+          cell.style.fontSize = '0';
+          cell.addEventListener('click', () => selectVitPatch(r, c));
+          cell.style.cursor = 'pointer';
+          cell.title = 'Clique para ver a atenção deste patch';
+          grid.appendChild(cell);
+        }
+      }
+    }
+    buildVitGrid();
+
+    // Generate hypothetical attention weights that demonstrate long-range attention
+    function getAttnWeights(srcR, srcC) {
+      const w = Array.from({length: GRID_N}, () => Array(GRID_N).fill(0));
+      for (let i = 0; i < GRID_N; i++) {
+        for (let j = 0; j < GRID_N; j++) {
+          // Noise floor with position-dependent variation
+          let val = 0.05 + 0.1 * Math.abs(Math.sin(i * 2.3 + srcR) * Math.cos(j * 1.7 + srcC));
+          // Self-attention: moderate
+          if (i === srcR && j === srcC) val += 4;
+          // Primary distant "semantic" match: half-grid away — key demo of long-range
+          const dstR = (srcR + 4) % GRID_N;
+          const dstC = (srcC + 4) % GRID_N;
+          val += 8 * Math.exp(-Math.sqrt((i - dstR) ** 2 + (j - dstC) ** 2) * 1.2);
+          // Secondary distant peak: mirrored corner
+          const mir2R = GRID_N - 1 - srcR;
+          const mir2C = GRID_N - 1 - srcC;
+          val += 4 * Math.exp(-Math.sqrt((i - mir2R) ** 2 + (j - mir2C) ** 2) * 1.5);
+          w[i][j] = Math.max(0.001, val);
+        }
+      }
+      let total = 0;
+      w.forEach(row => row.forEach(v => total += v));
+      w.forEach((row, ri) => row.forEach((v, ci) => w[ri][ci] = v / total));
+      return w;
+    }
+
+    const ATTN_TOP_K = 12;
+    let vitSelected = null;
+
+    function selectVitPatch(r, c) {
+      vitSelected = {r, c};
+      showVitAttn();
+    }
+
+    function showVitAttn() {
+      if (!vitSelected) vitSelected = {r: 1, c: 1};
+      const {r, c} = vitSelected;
+      const svg = document.getElementById('attnSvg');
+      svg.innerHTML = '';
+
+      // Dim all cells initially
+      for (let i = 0; i < GRID_N; i++) {
+        for (let j = 0; j < GRID_N; j++) {
+          const el = document.getElementById(`vitGrid_${i}_${j}`);
+          el.classList.remove('attn-source', 'attn-target');
+          el.style.filter = 'brightness(0.3)';
+        }
+      }
+
+      const srcEl = document.getElementById(`vitGrid_${r}_${c}`);
+      srcEl.classList.add('attn-source');
+      srcEl.style.filter = '';
+
+      const weights = getAttnWeights(r, c);
+
+      // Flatten non-self patches sorted by weight descending
+      const flat = [];
+      for (let i = 0; i < GRID_N; i++) {
+        for (let j = 0; j < GRID_N; j++) {
+          if (i === r && j === c) continue;
+          flat.push({i, j, w: weights[i][j]});
+        }
+      }
+      flat.sort((a, b) => b.w - a.w);
+      const topK = flat.slice(0, ATTN_TOP_K);
+      const maxW = flat[0].w;
+
+      const cx = c * STEP_VIT + CELL_VIT / 2;
+      const cy = r * STEP_VIT + CELL_VIT / 2;
+
+      topK.forEach(({i, j, w}, idx) => {
+        const t = w / maxW;
+        const el = document.getElementById(`vitGrid_${i}_${j}`);
+        el.classList.add('attn-target');
+        el.style.filter = `brightness(${(0.4 + t * 0.6).toFixed(2)})`;
+
+        const tx = j * STEP_VIT + CELL_VIT / 2;
+        const ty = i * STEP_VIT + CELL_VIT / 2;
+        const dist = Math.sqrt((i - r) ** 2 + (j - c) ** 2);
+        const isTopDistant = idx === 0 && dist > 3.5;
+        const color = isTopDistant ? '#f59e0b' : '#0d9488';
+
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', cx); line.setAttribute('y1', cy);
+        line.setAttribute('x2', tx); line.setAttribute('y2', ty);
+        line.setAttribute('stroke', color);
+        line.setAttribute('stroke-width', (0.5 + t * 3.5).toFixed(2));
+        line.setAttribute('stroke-dasharray', t > 0.45 ? 'none' : '4 3');
+        line.setAttribute('opacity', (0.3 + t * 0.7).toFixed(2));
+        svg.appendChild(line);
+
+        // Golden ring on top-1 distant patch to highlight long-range attention
+        if (isTopDistant) {
+          const ring = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          ring.setAttribute('cx', tx); ring.setAttribute('cy', ty);
+          ring.setAttribute('r', CELL_VIT / 2 + 4);
+          ring.setAttribute('fill', 'none');
+          ring.setAttribute('stroke', '#f59e0b');
+          ring.setAttribute('stroke-width', '2');
+          ring.setAttribute('opacity', '0.9');
+          svg.appendChild(ring);
+        }
+      });
+
+      // Self-attention ring around source patch
+      const tSelf = weights[r][c] / maxW;
+      const selfRing = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      selfRing.setAttribute('cx', cx); selfRing.setAttribute('cy', cy);
+      selfRing.setAttribute('r', CELL_VIT / 2 + 3);
+      selfRing.setAttribute('fill', 'none');
+      selfRing.setAttribute('stroke', '#0d9488');
+      selfRing.setAttribute('stroke-width', (0.5 + tSelf * 2).toFixed(2));
+      selfRing.setAttribute('opacity', '0.7');
+      svg.appendChild(selfRing);
+    }
+
+    function resetVit() {
+      vitSelected = null;
+      document.getElementById('attnSvg').innerHTML = '';
+      for (let i = 0; i < GRID_N; i++) {
+        for (let j = 0; j < GRID_N; j++) {
+          const el = document.getElementById(`vitGrid_${i}_${j}`);
+          el.classList.remove('attn-source', 'attn-target');
+          el.style.filter = '';
+        }
+      }
+    }
+
+    // Auto-demonstrate long-range attention on load
+    selectVitPatch(1, 1);
+
+
+  </script>
+</body>
+</html>

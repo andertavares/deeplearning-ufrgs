@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 02 – A Intuição: Termodinâmica e a Gota de Tinta</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .sim-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.9rem;
+    }
+    canvas#particleCanvas {
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border2);
+      background: #0f172a;
+      display: block;
+    }
+    .slider-row {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .slider-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+    }
+    input[type=range] {
+      width: 100%;
+      accent-color: var(--teal);
+      cursor: pointer;
+    }
+    .state-label {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.88rem;
+      color: var(--cyan);
+      text-align: center;
+      font-weight: 600;
+      min-height: 1.4em;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Difusão</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 2 · Slide 1 / 1</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <div class="slide-title">A Intuição: Termodinâmica e a Gota de Tinta</div>
+        <div class="slide-subtitle">Bloco 2 — A Intuição</div>
+      </div>
+
+      <div class="content-split">
+
+        <!-- Left: Particle Simulation -->
+        <div class="panel sim-panel">
+          <div class="panel-title">🎨 Simulação de Difusão</div>
+          <canvas id="particleCanvas" width="300" height="300"></canvas>
+          <div class="slider-row">
+            <div class="slider-label">
+              <span>Linha do Tempo (t)</span>
+              <span id="tValue">t = 0</span>
+            </div>
+            <input type="range" id="tSlider" min="0" max="100" value="0" />
+          </div>
+          <div class="state-label" id="stateLabel">t=0: Gota de tinta (ordem)</div>
+        </div>
+
+        <!-- Right: Explanation Cards -->
+        <div class="panel">
+          <div class="panel-title">🌊 A Física da Difusão</div>
+          <div class="concept-cards">
+            <div class="concept-card" style="--delay:0.05s">
+              <div class="card-icon">�</div>
+              <div class="card-text">
+                <p><strong>Gota concentrada:</strong> informação "organizada"</p> 
+                <p><strong>Gota difusa:</strong> informação espalhada</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.12s">
+              <div class="card-icon">🖼️</div>
+              <div class="card-text">
+                <p><strong>Imagem de ruído (difusa):</strong> informação espalhada</p>
+                <p><strong>Imagem inteligível:</strong> informação organizada</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.20s">
+              <div class="card-icon">🎯</div>
+              <div class="card-text">
+                <p><strong>Objetivo:</strong> aprender a desfazer a difusão na imagem</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide01.html'">← Anterior</button>
+      <div class="nav-dots">
+        <div class="dot active"></div>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide03.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('particleCanvas');
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    const cx = W / 2, cy = H / 2;
+    const slider = document.getElementById('tSlider');
+    const tValueEl = document.getElementById('tValue');
+    const stateLabel = document.getElementById('stateLabel');
+
+    const colors = [
+      '#38bdf8','#818cf8','#34d399','#60a5fa','#a78bfa',
+      '#2dd4bf','#67e8f9','#7c3aed','#0ea5e9','#6366f1'
+    ];
+
+    // Create 80 particles with cluster and spread positions
+    const N = 80;
+    const particles = [];
+    for (let i = 0; i < N; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const r = Math.random() * 30;
+      particles.push({
+        cx: cx + Math.cos(angle) * r,
+        cy: cy + Math.sin(angle) * r,
+        rx: 10 + Math.random() * (W - 20),
+        ry: 10 + Math.random() * (H - 20),
+        color: colors[Math.floor(Math.random() * colors.length)],
+        radius: 3 + Math.random() * 2
+      });
+    }
+
+    function draw(t) {
+      ctx.clearRect(0, 0, W, H);
+
+      // Background gradient
+      const grd = ctx.createRadialGradient(cx, cy, 0, cx, cy, W * 0.6);
+      grd.addColorStop(0, '#1e293b');
+      grd.addColorStop(1, '#0f172a');
+      ctx.fillStyle = grd;
+      ctx.fillRect(0, 0, W, H);
+
+      const alpha = t / 100;
+
+      particles.forEach(p => {
+        const x = p.cx + (p.rx - p.cx) * alpha;
+        const y = p.cy + (p.ry - p.cy) * alpha;
+
+        // Glow effect
+        ctx.beginPath();
+        ctx.arc(x, y, p.radius * 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = p.color + '30';
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(x, y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+      });
+
+      // Draw "ink drop" indicator when clustered
+      if (alpha < 0.15) {
+        ctx.beginPath();
+        ctx.arc(cx, cy, 38, 0, Math.PI * 2);
+        ctx.strokeStyle = '#38bdf840';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
+    }
+
+    function update() {
+      const t = parseInt(slider.value);
+      tValueEl.textContent = `t = ${t}`;
+      if (t === 0) {
+        stateLabel.textContent = 't=0: Gota de tinta (ordem)';
+      } else if (t < 30) {
+        stateLabel.textContent = `t=${t}: Difusão iniciando…`;
+      } else if (t < 70) {
+        stateLabel.textContent = `t=${t}: Difundindo pelo meio…`;
+      } else if (t < 100) {
+        stateLabel.textContent = `t=${t}: Quase uniformemente distribuído`;
+      } else {
+        stateLabel.textContent = 't=100: Ruído / Caos (distribuição uniforme)';
+      }
+      draw(t);
+    }
+
+    slider.addEventListener('input', update);
+    update();
+  </script>
+</body>
+</html>

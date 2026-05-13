@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 11 – Por que Max-Pooling?</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── Layout ──────────────────────────────────────────────────────────── */
+    .pool-intro-layout {
+      display: grid;
+      grid-template-columns: 1fr 1.65fr;
+      gap: 1.25rem;
+      flex: 1;
+    }
+
+    .pool-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.3rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      box-shadow: var(--shadow);
+    }
+
+    /* ── Stats row ───────────────────────────────────────────────────────── */
+    .stats-row {
+      display: flex;
+      gap: 0.65rem;
+      flex-wrap: wrap;
+    }
+
+    .stat-card {
+      flex: 1;
+      min-width: 90px;
+      background: var(--bg3);
+      border: 2px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0.75rem 0.8rem;
+      text-align: center;
+      transition: border-color 0.2s;
+    }
+
+    .stat-num {
+      font-family: 'Fira Code', monospace;
+      font-size: 1.7rem;
+      font-weight: 800;
+      line-height: 1.05;
+    }
+
+    .stat-label {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+      line-height: 1.35;
+    }
+
+    .stat-card.before  { border-color: #c2410c; }
+    .stat-card.before .stat-num { color: #c2410c; }
+    .stat-card.after   { border-color: var(--green); }
+    .stat-card.after  .stat-num { color: var(--green); }
+    .stat-card.ratio   { border-color: var(--purple); }
+    .stat-card.ratio  .stat-num { color: var(--purple); }
+
+    /* ── Visualization area ──────────────────────────────────────────────── */
+    .viz-comparison {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .viz-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .viz-group-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      font-family: 'Fira Code', monospace;
+      text-align: center;
+    }
+
+    .maps-row {
+      display: flex;
+      gap: 0.45rem;
+      align-items: flex-end;
+    }
+
+    .map-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.22rem;
+    }
+
+    .map-label {
+      font-size: 0.65rem;
+      font-family: 'Fira Code', monospace;
+      color: var(--text-dim);
+      text-align: center;
+    }
+
+    canvas.pool-canvas {
+      image-rendering: pixelated;
+      border-radius: 5px;
+      border: 1.5px solid var(--border2);
+      display: block;
+    }
+
+    .viz-arrow {
+      font-size: 1.8rem;
+      color: var(--text-dim);
+      align-self: center;
+      padding-top: 1.5rem;
+      font-weight: 700;
+    }
+
+    .size-badge {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      border-radius: 999px;
+      padding: 0.15rem 0.6rem;
+    }
+
+    /* ── Pool regions drawn on feature maps ─────────────────────────────── */
+    .pool-region-legend {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-family: 'Fira Code', monospace;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .legend-line {
+      width: 24px;
+      height: 2px;
+      background: var(--text-dim);
+      border-radius: 1px;
+    }
+
+    /* ── Translation demo (within-window) ──────────────────────────────────── */
+    .transl-demo {
+      display: flex;
+      gap: 0.6rem;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .transl-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .transl-label {
+      font-size: 0.7rem;
+      font-family: 'Fira Code', monospace;
+      color: var(--text-muted);
+      text-align: center;
+      max-width: 90px;
+      line-height: 1.3;
+    }
+
+    .transl-result {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.88rem;
+      font-weight: 800;
+      color: var(--green);
+      background: var(--green-lt);
+      border: 1.5px solid var(--green);
+      border-radius: 999px;
+      padding: 0.1rem 0.6rem;
+    }
+
+    .transl-sep {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      align-self: center;
+      padding-bottom: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Redes Convolucionais</span>
+      <span class="prof-tag" style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 4 · Slide 2 / 3</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Por que Max-Pooling?</h1>
+        <p class="slide-subtitle">Resumir os feature maps, reduzir a resolução e ganhar tolerância a pequenas variações de posição</p>
+      </div>
+
+      <div class="pool-intro-layout">
+
+        <!-- ── Left: Motivation ───────────────────────────────────────── -->
+        <div class="pool-panel">
+          <div class="panel-title">Motivação</div>
+
+          <div class="stats-row">
+            <div class="stat-card before">
+              <div class="stat-num">81</div>
+              <div class="stat-label">valores na entrada<br>(imagem 9×9)</div>
+            </div>
+            <div class="stat-card after">
+              <div class="stat-num">147</div>
+              <div class="stat-label">valores sem pooling<br>(3 mapas × 7×7)</div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="concept-cards">
+            <div class="concept-card" style="--delay:0.05s;">
+              <div class="card-icon">📦</div>
+              <div class="card-text">
+                <strong>Compressão da informação</strong>
+                <p>Após a convolução, cada filtro gera um mapa inteiro. O max-pooling resume cada região num <em>único valor</em> — o máximo —, mantendo apenas a informação mais relevante.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.15s;">
+              <div class="card-icon">📍</div>
+              <div class="card-text">
+                <strong>Tolerância à posição exata</strong>
+                <p>Se o padrão se mover levemente dentro da janela de pooling, o valor máximo <em>permanece o mesmo</em>. A rede fica menos sensível ao local exato da feature.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.25s;">
+              <div class="card-icon">🔄</div>
+              <div class="card-text">
+                <strong>Robustez a translações e rotações pequenas</strong>
+                <p>Pequenos deslocamentos ou rotações que mantêm o padrão dentro da mesma janela não alteram a saída do pooling.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="highlight-box purple">
+            <span class="icon">💡</span>
+            <p>O max-pooling <em>não tem pesos aprendíveis</em> — é uma operação fixa. Ela extrai o valor mais alto em cada janela da imagem.</p>
+          </div>
+        </div>
+
+        <!-- ── Right: Visualization ───────────────────────────────────── -->
+        <div class="pool-panel">
+          <div class="panel-title">Feature maps 7×7 → mapas pooled 3×3 &nbsp;(janela 2×2, stride 2)</div>
+
+          <div class="viz-comparison">
+            <!-- Before pooling -->
+            <div class="viz-group">
+              <div class="viz-group-title">Antes do pooling</div>
+              <div class="maps-row" id="input-maps-row">
+                <!-- built by JS -->
+              </div>
+              <div class="size-badge">7 × 7 por mapa</div>
+            </div>
+
+            <div class="viz-arrow">→</div>
+
+            <!-- After pooling -->
+            <div class="viz-group">
+              <div class="viz-group-title">Após max-pooling</div>
+              <div class="maps-row" id="pooled-maps-row">
+                <!-- built by JS -->
+              </div>
+              <div class="size-badge">3 × 3 por mapa</div>
+            </div>
+          </div>
+
+          <div class="pool-region-legend">
+            <div class="legend-line"></div>
+            <span>grades = janelas de pooling 2×2</span>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- Translation tolerance demo: within-window -->
+          <div class="panel-title">Dentro da janela 2×2: posição não importa para o max</div>
+          <div class="transl-demo" id="transl-demo">
+            <!-- built by JS -->
+          </div>
+
+          <div class="highlight-box blue">
+            <span class="icon">ℹ️</span>
+            <p>Cada célula do mapa pooled captura o <strong>valor máximo</strong> de uma região inteira do feature map — a <em>presença</em> do padrão, independente da posição exata. O próximo slide mostra este processo passo a passo.</p>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide10.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide12.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    /* ── Filters (same as slides 08/09/10) ─────────────────────────────── */
+    const FILTERS = [
+      { name:'Diagonal ↘', color:[91,33,182],  cssColor:'#5b21b6', weights:[[ 1, 0,-1],[ 0, 1, 0],[-1, 0, 1]] },
+      { name:'Centro ✖',   color:[14,116,144], cssColor:'#0e7490', weights:[[ 1,-1, 1],[-1, 1,-1],[ 1,-1, 1]] },
+      { name:'Diagonal ↗', color:[22,101,52],  cssColor:'#166534', weights:[[-1, 0, 1],[ 0, 1, 0],[ 1, 0,-1]] },
+    ];
+
+    /* ── Input tile (X, 9×9) ────────────────────────────────────────────── */
+    const N = 9;
+    const tileX = [
+      [0,0,0,0,0,0,0,0,0],
+      [0,1,0,0,0,0,0,1,0],
+      [0,0,1,0,0,0,1,0,0],
+      [0,0,0,1,0,1,0,0,0],
+      [0,0,0,0,1,0,0,0,0],
+      [0,0,0,1,0,1,0,0,0],
+      [0,0,1,0,0,0,1,0,0],
+      [0,1,0,0,0,0,0,1,0],
+      [0,0,0,0,0,0,0,0,0],
+    ];
+
+    /* ── Convolution (valid — sem padding, saída 7×7) ──────────────────── */
+    function applyFilter(weights, tile) {
+      const F = 3;
+      const NF = N - F + 1; // = 7
+      const out = [];
+      for (let r = 0; r < NF; r++) {
+        out.push([]);
+        for (let c = 0; c < NF; c++) {
+          let s = 0;
+          for (let fr = 0; fr < F; fr++)
+            for (let fc = 0; fc < F; fc++)
+              s += weights[fr][fc] * tile[r + fr][c + fc];
+          out[r].push(s);
+        }
+      }
+      return out;
+    }
+
+    /* ── Max pooling ────────────────────────────────────────────────────── */
+    function maxPool(resp, K, S) {
+      const NP = Math.floor((resp.length - K) / S) + 1;
+      const pooled = [];
+      for (let pr = 0; pr < NP; pr++) {
+        pooled.push([]);
+        for (let pc = 0; pc < NP; pc++) {
+          let maxV = -Infinity;
+          for (let dr = 0; dr < K; dr++)
+            for (let dc = 0; dc < K; dc++)
+              maxV = Math.max(maxV, resp[pr*S+dr][pc*S+dc]);
+          pooled[pr].push(maxV);
+        }
+      }
+      return pooled;
+    }
+
+    /* ── Compute all maps ───────────────────────────────────────────────── */
+    const NF = N - 3 + 1;                              // = 7 (valid conv)
+    const POOL_K = 2, POOL_S = 2;
+    const NP = Math.floor((NF - POOL_K) / POOL_S) + 1; // = 3
+
+    const featureMaps = FILTERS.map(f => applyFilter(f.weights, tileX));
+    const pooledMaps  = featureMaps.map(fm => maxPool(fm, POOL_K, POOL_S));
+
+    /* ── Draw heatmap on canvas ─────────────────────────────────────────── */
+    function drawHeatmap(cv, resp, rgb, opts) {
+      opts = opts || {};
+      const ctx = cv.getContext('2d');
+      const rows = resp.length, cols = resp[0].length;
+      const CS = cv.width / cols;
+      let maxAbs = 0;
+      for (let r = 0; r < rows; r++)
+        for (let c = 0; c < cols; c++)
+          if (Math.abs(resp[r][c]) > maxAbs) maxAbs = Math.abs(resp[r][c]);
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, cv.width, cv.height);
+      for (let r = 0; r < rows; r++)
+        for (let c = 0; c < cols; c++) {
+          const v = resp[r][c];
+          if (v === 0) continue;
+          const t = maxAbs > 0 ? Math.abs(v) / maxAbs : 0;
+          const g = Math.round(255 * t);
+          ctx.fillStyle = v > 0 ? `rgb(${g},${g},${g})` : `rgb(${g},0,0)`;
+          ctx.fillRect(c * CS, r * CS, CS, CS);
+        }
+      ctx.strokeStyle = 'rgba(51,65,85,0.35)';
+      ctx.lineWidth = 0.5;
+      for (let i = 0; i <= cols; i++) {
+        ctx.beginPath(); ctx.moveTo(i*CS, 0); ctx.lineTo(i*CS, cv.height); ctx.stroke();
+      }
+      for (let i = 0; i <= rows; i++) {
+        ctx.beginPath(); ctx.moveTo(0, i*CS); ctx.lineTo(cv.width, i*CS); ctx.stroke();
+      }
+      /* draw pool region grid on full-size maps */
+      if (opts.showPoolGrid) {
+        ctx.strokeStyle = 'rgba(255,255,255,0.50)';
+        ctx.lineWidth = 1.5;
+        for (let pr = 0; pr <= NP; pr++) {
+          const y = pr * POOL_S * CS;
+          ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(cv.width, y); ctx.stroke();
+        }
+        for (let pc = 0; pc <= NP; pc++) {
+          const x = pc * POOL_S * CS;
+          ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, cv.height); ctx.stroke();
+        }
+      }
+    }
+
+    /* ── Build input maps (7×7, with pool grid) ─────────────────────────── */
+    const CS_IN = 14;    // 14px per cell → 7×14 = 98px
+    const CS_OUT = 14;   // 14px per cell → 3×14 = 42px
+
+    const inputRow = document.getElementById('input-maps-row');
+    FILTERS.forEach((f, i) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'map-wrap';
+      const cv = document.createElement('canvas');
+      cv.width = NF * CS_IN; cv.height = NF * CS_IN;
+      cv.className = 'pool-canvas';
+      const lbl = document.createElement('div');
+      lbl.className = 'map-label';
+      lbl.textContent = f.name;
+      lbl.style.color = f.cssColor;
+      lbl.style.fontWeight = '700';
+      wrap.appendChild(cv);
+      wrap.appendChild(lbl);
+      inputRow.appendChild(wrap);
+      drawHeatmap(cv, featureMaps[i], f.color, { showPoolGrid: true });
+    });
+
+    /* ── Build pooled maps (3×3) ────────────────────────────────────────── */
+    const pooledRow = document.getElementById('pooled-maps-row');
+    FILTERS.forEach((f, i) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'map-wrap';
+      const cv = document.createElement('canvas');
+      cv.width = NP * CS_OUT; cv.height = NP * CS_OUT;
+      cv.className = 'pool-canvas';
+      const lbl = document.createElement('div');
+      lbl.className = 'map-label';
+      lbl.textContent = f.name;
+      lbl.style.color = f.cssColor;
+      lbl.style.fontWeight = '700';
+      wrap.appendChild(cv);
+      wrap.appendChild(lbl);
+      pooledRow.appendChild(wrap);
+      drawHeatmap(cv, pooledMaps[i], f.color);
+    });
+
+    /* ── Translation demo: within-window shifting ───────────────────────── */
+    // Three 3×3 pool windows showing the same max value at different positions.
+    // Values are illustrative but realistic (inspired by filter 0's center region).
+    const WIN_SIZE = 40; // px per cell
+    const windowExamples = [
+      {
+        label: 'Padrão no canto sup-esq',
+        vals: [[3, 1],[0, 0]],
+      },
+      {
+        label: 'Padrão deslocado (+1)',
+        vals: [[1, 3],[0, 0]],
+      },
+      {
+        label: 'Padrão no canto inf-dir',
+        vals: [[0, 0],[1, 3]],
+      },
+    ];
+
+    function drawWindowExample(cv, vals) {
+      const ctx = cv.getContext('2d');
+      const K = 2;
+      const CS = WIN_SIZE;
+      let maxV = -Infinity;
+      for (let r = 0; r < K; r++)
+        for (let c = 0; c < K; c++)
+          if (vals[r][c] > maxV) maxV = vals[r][c];
+
+      ctx.fillStyle = '#111827';
+      ctx.fillRect(0, 0, cv.width, cv.height);
+
+      for (let r = 0; r < K; r++) {
+        for (let c = 0; c < K; c++) {
+          const v = vals[r][c];
+          const isMax = (v === maxV && v > 0);
+          if (isMax) {
+            ctx.fillStyle = 'rgba(91,33,182,0.70)';
+            ctx.fillRect(c*CS, r*CS, CS, CS);
+          } else if (v > 0) {
+            ctx.fillStyle = `rgba(91,33,182,${(v / maxV * 0.25).toFixed(2)})`;
+            ctx.fillRect(c*CS, r*CS, CS, CS);
+          }
+          /* value label */
+          ctx.font = `bold ${CS * 0.38}px 'Fira Code', monospace`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle = isMax ? '#fff' : (v > 0 ? 'rgba(167,139,250,0.8)' : 'rgba(255,255,255,0.2)');
+          ctx.fillText(v, c*CS + CS/2, r*CS + CS/2);
+        }
+      }
+
+      /* grid */
+      ctx.strokeStyle = 'rgba(51,65,85,0.5)';
+      ctx.lineWidth = 0.8;
+      for (let i = 0; i <= K; i++) {
+        ctx.beginPath(); ctx.moveTo(i*CS, 0); ctx.lineTo(i*CS, cv.height); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, i*CS); ctx.lineTo(cv.width, i*CS); ctx.stroke();
+      }
+    }
+
+    const demo = document.getElementById('transl-demo');
+    windowExamples.forEach((ex, idx) => {
+      const col = document.createElement('div');
+      col.className = 'transl-col';
+
+      const lbl = document.createElement('div');
+      lbl.className = 'transl-label';
+      lbl.textContent = ex.label;
+
+      const cv = document.createElement('canvas');
+      cv.width = 2 * WIN_SIZE; cv.height = 2 * WIN_SIZE;
+      cv.className = 'pool-canvas';
+
+      let maxV = -Infinity;
+      for (let r = 0; r < 2; r++)
+        for (let c = 0; c < 2; c++)
+          if (ex.vals[r][c] > maxV) maxV = ex.vals[r][c];
+
+      const res = document.createElement('div');
+      res.className = 'transl-result';
+      res.textContent = `max = ${maxV}`;
+
+      col.appendChild(lbl);
+      col.appendChild(cv);
+      col.appendChild(res);
+      demo.appendChild(col);
+      drawWindowExample(cv, ex.vals);
+
+      if (idx < windowExamples.length - 1) {
+        const sep = document.createElement('div');
+        sep.className = 'transl-sep';
+        sep.textContent = '→';
+        demo.appendChild(sep);
+      }
+    });
+  </script>
+</body>
+</html>

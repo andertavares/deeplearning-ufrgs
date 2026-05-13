@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 05 – Autoencoder: diagrama</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .pipeline {
+      display: flex; align-items: center; justify-content: center;
+      gap: 0.4rem; flex-wrap: wrap; padding: 1rem 0.5rem;
+    }
+    .pipeline-box {
+      padding: 0.75rem 1rem; border-radius: var(--radius-sm); font-weight: 700;
+      font-size: 0.95rem; text-align: center; min-width: 82px;
+      border: 2px solid var(--border2); background: var(--bg3);
+      color: var(--text-muted); opacity: 0; transform: scale(0.85);
+      transition: opacity 0.35s, transform 0.35s, border-color 0.35s, background 0.35s;
+    }
+    .pipeline-box.teal  { border-color: var(--teal); background: var(--teal-lt); color: var(--teal); }
+    .pipeline-box.accent { border-color: var(--cyan); background: var(--cyan-lt); color: var(--cyan); }
+    .pipeline-box.narrow { min-width: 55px; }
+    .pipeline-box.visible { opacity: 1; transform: scale(1); }
+    .pipe-arrow {
+      font-size: 1.4rem; font-weight: 900; opacity: 0; transform: scale(0.7);
+      transition: opacity 0.35s, transform 0.35s;
+    }
+    .pipe-arrow.teal   { color: var(--teal); }
+    .pipe-arrow.accent { color: var(--cyan); }
+    .pipe-arrow.visible { opacity: 1; transform: scale(1); }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">IA Generativa</span>
+      <span style="font-size:0.9rem;color:var(--text-muted);font-weight:500;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 2 · Slide 5 / 24</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Autoencoder: diagrama</h1>
+        <p class="slide-subtitle">Clique para revelar cada etapa do pipeline</p>
+      </div>
+
+      <div class="panel">
+        <div class="pipeline" id="ae-pipeline">
+          <div class="pipeline-box accent" id="pb-0">Input<br/><small style="font-weight:400;color:var(--text-dim);">x ∈ ℝⁿ</small></div>
+          <div class="pipe-arrow teal" id="pa-1">→</div>
+          <div class="pipeline-box teal" id="pb-1">Encoder<br/><small style="font-weight:400;color:var(--text-dim);">f_θ(x)</small></div>
+          <div class="pipe-arrow teal" id="pa-2">→</div>
+          <div class="pipeline-box teal narrow" id="pb-2">z<br/><small style="font-weight:400;color:var(--text-dim);">latente</small></div>
+          <div class="pipe-arrow accent" id="pa-3">→</div>
+          <div class="pipeline-box accent" id="pb-3">Decoder<br/><small style="font-weight:400;color:var(--text-dim);">g_φ(z)</small></div>
+          <div class="pipe-arrow accent" id="pa-4">→</div>
+          <div class="pipeline-box accent" id="pb-4">x̂<br/><small style="font-weight:400;color:var(--text-dim);">reconstrução</small></div>
+        </div>
+
+        <div style="text-align:center;">
+          <button class="btn-step" id="reveal-btn" onclick="revealNext()">▶ Revelar etapas</button>
+        </div>
+      </div>
+
+      <div class="highlight-box teal" style="max-width:580px;margin:0 auto;">
+        <span class="icon">ℒ</span>
+        <div>
+          <strong>Função de perda</strong><br/>
+          <code style="font-family:'Fira Code',monospace;font-size:0.95rem;">ℒ = ||x − x̂||²</code>
+          — quanto a reconstrução difere da entrada original
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide04.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide06.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    const SEQ = [
+      ['pb-0'],
+      ['pa-1','pb-1'],
+      ['pa-2','pb-2'],
+      ['pa-3','pb-3'],
+      ['pa-4','pb-4'],
+    ];
+    let step = 0;
+    function revealNext() {
+      if (step < SEQ.length) {
+        SEQ[step].forEach(id => document.getElementById(id).classList.add('visible'));
+        step++;
+      }
+      const btn = document.getElementById('reveal-btn');
+      if (step >= SEQ.length) btn.textContent = '✓ Completo';
+      else btn.textContent = `▶ Revelar etapas (${step}/${SEQ.length})`;
+    }
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') location.href = 'slide06.html';
+      if (e.key === 'ArrowLeft'  || e.key === 'PageUp')   location.href = 'slide04.html';
+    });
+  </script>
+</body>
+</html>

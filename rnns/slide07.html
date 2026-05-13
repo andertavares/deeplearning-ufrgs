@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 07 – Tipos de Mapeamento Sequencial</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .task-pills {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .task-pill {
+      padding: 0.55rem 1rem;
+      border-radius: 20px;
+      border: 2px solid var(--border2);
+      background: var(--bg3);
+      font-family: 'Fira Code', monospace;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: left;
+    }
+    .task-pill:hover { border-color: var(--teal); color: var(--text); }
+    .task-pill.active { border-color: var(--teal); background: var(--teal-lt); color: var(--teal); }
+    .task-diagram { width: 100%; height: 90px; display: block; margin-bottom: 0.5rem; }
+    .task-desc-card {
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 1rem;
+      margin-bottom: 0.8rem;
+    }
+    .task-desc-card h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--teal);
+      margin: 0 0 0.4rem;
+    }
+    .task-desc-card p { font-size: 0.9rem; color: var(--text-muted); margin: 0 0 0.4rem; }
+    .task-example {
+      font-size: 0.85rem;
+      font-style: italic;
+      color: var(--text-dim);
+      border-left: 3px solid var(--teal);
+      padding-left: 0.6rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Redes Neurais Recorrentes</span>
+      <span class="prof-tag" style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 3 · Slide 2 / 2</span>
+    </header>
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Tipos de Mapeamento</h1>
+        <p class="slide-subtitle">Problemas sequenciais variam no formato de entrada e saída</p>
+      </div>
+      <div class="content-split">
+        <!-- LEFT PANEL -->
+        <div class="panel panel-left">
+          <h2 class="panel-title">🗂️ Selecione o Tipo de Tarefa</h2>
+          <div class="task-pills">
+            <button class="task-pill active" data-task="one-one" onclick="selectTask(this)">Um → Um</button>
+            <button class="task-pill" data-task="one-many" onclick="selectTask(this)">Um → Muitos</button>
+            <button class="task-pill" data-task="many-one" onclick="selectTask(this)">Muitos → Um</button>
+            <button class="task-pill" data-task="many-many-eq" onclick="selectTask(this)">Muitos → Muitos =</button>
+            <button class="task-pill" data-task="many-many-ne" onclick="selectTask(this)">Muitos → Muitos ≠</button>
+          </div>
+          <svg id="task-svg" class="task-diagram" viewBox="0 0 340 90" xmlns="http://www.w3.org/2000/svg"></svg>
+        </div>
+        <!-- RIGHT PANEL -->
+        <div class="panel panel-right">
+          <h2 class="panel-title">📖 Descrição da Tarefa</h2>
+          <div class="task-desc-card">
+            <h3 id="task-title">Um para Um</h3>
+            <p id="task-desc">Entrada única → Saída única.</p>
+            <div class="task-example" id="task-example">Classificação de um documento curto.</div>
+          </div>
+          <div class="highlight-box teal">
+            <span class="icon">💬</span>
+            <span>Agora vamos pensar: como modificar uma rede neural para que ela <strong>retenha informação do passado</strong>?</span>
+          </div>
+        </div>
+      </div>
+    </main>
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide06.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide08.html'">Próximo →</button>
+    </nav>
+  </div>
+  <script>
+    const tasks = {
+      'one-one':      { title:'Um para Um',                  desc:'Entrada única → Saída única.',                                         example:'Classificação de imagem (não é uma sequência).',  inputs:1, outputs:1 },
+      'one-many':     { title:'Um para Muitos',               desc:'Uma entrada → Sequência de saídas.',                                   example:'Legenda automática de imagem (image captioning).', inputs:1, outputs:4 },
+      'many-one':     { title:'Muitos para Um',               desc:'Sequência de entradas → Uma saída.',                                   example:'Análise de sentimento de uma frase.',           inputs:4, outputs:1 },
+      'many-many-eq': { title:'Muitos para Muitos (alinhado)', desc:'Sequência → Sequência do mesmo tamanho.',                             example:'Etiquetagem gramatical (POS tagging).',         inputs:4, outputs:4 },
+      'many-many-ne': { title:'Muitos para Muitos (não-alinhado)', desc:'Sequência de entrada → Sequência de saída de tamanho diferente.', example:'Tradução automática.',                          inputs:4, outputs:3 }
+    };
+
+    function drawDiagram(inputs, outputs) {
+      const svg = document.getElementById('task-svg');
+      const W = 340, H = 90;
+      const boxW = 30, boxH = 30;
+      const inputColor = '#1d4ed8', outputColor = '#0d6e6e';
+      const totalCols = Math.max(inputs, outputs);
+      const gap = W / (totalCols + 1);
+
+      let html = '';
+      // Inputs
+      for (let i = 0; i < inputs; i++) {
+        const x = gap * (i + 1) + (totalCols - inputs) * gap / 2 - boxW / 2;
+        html += `<rect x="${x}" y="10" width="${boxW}" height="${boxH}" rx="5" fill="${inputColor}" opacity="0.85"/>`;
+        html += `<text x="${x + boxW/2}" y="30" text-anchor="middle" fill="white" font-size="11" font-family="Fira Code,monospace" font-weight="600">x${i+1}</text>`;
+      }
+      // Arrow middle
+      const midY1 = 40, midY2 = 50;
+      html += `<line x1="${W/2}" y1="${midY1}" x2="${W/2}" y2="${midY2}" stroke="#888" stroke-width="1.5" marker-end="url(#arr)"/>`;
+
+      // Outputs
+      for (let i = 0; i < outputs; i++) {
+        const x = gap * (i + 1) + (totalCols - outputs) * gap / 2 - boxW / 2;
+        html += `<rect x="${x}" y="52" width="${boxW}" height="${boxH}" rx="5" fill="${outputColor}" opacity="0.85"/>`;
+        html += `<text x="${x + boxW/2}" y="72" text-anchor="middle" fill="white" font-size="11" font-family="Fira Code,monospace" font-weight="600">y${i+1}</text>`;
+      }
+
+      svg.innerHTML = `<defs><marker id="arr" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#888"/></marker></defs>${html}`;
+    }
+
+    function selectTask(btn) {
+      document.querySelectorAll('.task-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const t = tasks[btn.dataset.task];
+      document.getElementById('task-title').textContent   = t.title;
+      document.getElementById('task-desc').textContent    = t.desc;
+      document.getElementById('task-example').textContent = t.example;
+      drawDiagram(t.inputs, t.outputs);
+    }
+
+    drawDiagram(1, 1);
+  </script>
+</body>
+</html>

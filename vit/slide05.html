@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 05 – Projeções Q, K, V nos Patches</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ---- Patch chips ---- */
+    .patch-chips { display:flex; gap:0.4rem; flex-wrap:wrap; }
+    .patch-chip {
+      padding:0.3rem 0.85rem;
+      border-radius:999px;
+      font-family:'Fira Code',monospace;
+      font-size:0.88rem;
+      font-weight:600;
+      cursor:pointer;
+      border:2px solid var(--border);
+      background:var(--bg3);
+      color:var(--text-muted);
+      transition:all 0.18s;
+    }
+    .patch-chip:hover { border-color:var(--teal); color:var(--teal); }
+    .patch-chip.active { background:var(--teal-lt); border-color:var(--teal); color:var(--teal); }
+
+    /* ---- Matrices ---- */
+    .mat-block { display:flex; flex-direction:column; align-items:flex-start; gap:0.25rem; margin-bottom:0.4rem; }
+    .mat-label {
+      font-family:'Fira Code',monospace;
+      font-size:0.78rem;
+      font-weight:700;
+      padding:0.1rem 0.5rem;
+      border-radius:6px;
+    }
+    .mat-lbl-x  { background:var(--teal-lt);   color:var(--teal);   }
+    .mat-lbl-q  { background:var(--blue-lt);   color:var(--blue);   }
+    .mat-lbl-k  { background:var(--purple-lt); color:var(--purple); }
+    .mat-lbl-v  { background:var(--green-lt);  color:var(--green);  }
+
+    .mat-table {
+      font-family:'Fira Code',monospace;
+      font-size:0.88rem;
+      border-collapse:collapse;
+    }
+    .mat-table th {
+      color:var(--text-dim);
+      font-weight:600;
+      font-size:0.75rem;
+      padding:0.12rem 0.38rem;
+      text-align:right;
+    }
+    .mat-table td {
+      padding:0.22rem 0.45rem;
+      text-align:right;
+      border-radius:3px;
+      min-width:2.8rem;
+    }
+    .mat-table tr.row-hl td { background:var(--teal-lt) !important; }
+    .mat-table td.lbl-cell {
+      font-weight:600;
+      color:var(--text-dim);
+      text-align:left;
+      min-width:3rem;
+    }
+    .mat-table tr.row-hl td.lbl-cell { color:var(--teal); }
+
+    .bracket-wrap { display:flex; align-items:stretch; }
+    .bracket-l {
+      border-left:3px solid; border-top:3px solid; border-bottom:3px solid;
+      border-radius:4px 0 0 4px; width:7px;
+    }
+    .bracket-r {
+      border-right:3px solid; border-top:3px solid; border-bottom:3px solid;
+      border-radius:0 4px 4px 0; width:7px;
+    }
+    .bc-x { border-color:var(--teal); }
+    .bc-q { border-color:var(--blue); }
+    .bc-k { border-color:var(--purple); }
+    .bc-v { border-color:var(--green); }
+
+    /* ---- Formula strip ---- */
+    .formula-strip {
+      display:flex; gap:0.8rem; flex-wrap:wrap;
+      background:var(--bg3); border:1px solid var(--border2);
+      border-radius:var(--radius-sm); padding:0.5rem 0.8rem; align-items:center;
+    }
+
+    /* ---- Role cards ---- */
+    .role-card {
+      padding:0.6rem 0.8rem;
+      border-radius:var(--radius-sm);
+      border:1.5px solid var(--border2);
+      background:var(--bg2);
+      display:flex; flex-direction:column; gap:0.25rem; flex:1;
+    }
+    .role-card-header {
+      display:flex; align-items:center; gap:0.5rem;
+      font-weight:700; font-size:0.88rem;
+    }
+    .role-card-desc { font-size:0.79rem; color:var(--text-muted); line-height:1.4; }
+    .role-card-vec {
+      font-family:'Fira Code',monospace; font-size:0.78rem;
+      padding:0.22rem 0.45rem; border-radius:6px; margin-top:0.15rem;
+      word-break:break-all;
+    }
+    .rvc-q { background:var(--blue-lt);   color:var(--blue);   }
+    .rvc-k { background:var(--purple-lt); color:var(--purple); }
+    .rvc-v { background:var(--green-lt);  color:var(--green);  }
+    .role-card-placeholder { font-size:0.78rem; color:var(--text-dim); font-style:italic; }
+
+    @keyframes fadeIn {
+      from { opacity:0; transform:translateY(4px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    .fade-in { animation:fadeIn 0.25s ease both; }
+
+    /* ---- Layout ---- */
+    .projections-row { display:flex; gap:0.8rem; }
+    .proj-col { flex:1; display:flex; flex-direction:column; gap:0.55rem; }
+    .fan-section { display:flex; flex-direction:column; gap:0.2rem; padding:0 0.5rem; }
+    .wlabels-row { display:flex; justify-content:space-around; }
+    .x-panel { display:flex; flex-direction:column; gap:0.55rem; }
+
+    /* ---- Patch grid ---- */
+    .patch-grid-wrap {
+      display:flex; flex-direction:column; align-items:center; gap:0.4rem;
+    }
+    .patch-grid {
+      display:grid;
+      grid-template-columns:repeat(2, 90px);
+      grid-template-rows:repeat(2, 90px);
+      gap:3px;
+      background-color:#dc2626;
+      border:2px solid #dc2626;
+      border-radius:8px;
+      overflow:hidden;
+      box-shadow:var(--shadow);
+    }
+    .patch-cell {
+      width:90px; height:90px; cursor:pointer;
+      display:flex; align-items:flex-end; justify-content:flex-start;
+      font-family:'Fira Code',monospace; font-size:0.72rem; font-weight:700;
+      color:#fff; text-shadow:0 1px 4px rgba(0,0,0,0.85);
+      border:2.5px solid transparent;
+      transition:border-color 0.18s, transform 0.15s, box-shadow 0.18s;
+      user-select:none;
+      background-image:url('illusion.png');
+      background-size:200% 200%;
+      padding:3px 5px;
+    }
+    .patch-cell:hover { opacity:0.88; }
+    .patch-cell.selected {
+      border-color:#5eead4;
+      box-shadow:inset 0 0 0 3px #5eead4;
+      outline:3px solid #0d6e6e;
+      outline-offset:-3px;
+      z-index:2;
+    }
+    .patch-grid-label {
+      font-size:0.72rem; color:var(--text-dim); text-align:center; font-style:italic;
+    }
+
+    /* ---- W buttons ---- */
+    .w-btn {
+      background:none; border:none; cursor:pointer;
+      font-family:'Fira Code',monospace; font-weight:700; font-size:0.86rem;
+      padding:0.22rem 0.55rem; border-radius:6px; transition:opacity 0.15s;
+      text-decoration:underline dotted 1.5px; text-underline-offset:3px;
+    }
+    .w-btn:hover { opacity:0.65; }
+    .w-btn-q { color:var(--blue);   background:var(--blue-lt);   }
+    .w-btn-k { color:var(--purple); background:var(--purple-lt); }
+    .w-btn-v { color:var(--green);  background:var(--green-lt);  }
+
+    /* ---- W modal ---- */
+    .w-overlay {
+      position:fixed; inset:0; background:rgba(10,20,45,0.45); z-index:200;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .w-card {
+      background:var(--bg2); border-radius:var(--radius); padding:1.3rem 1.5rem;
+      box-shadow:0 10px 48px rgba(0,0,0,0.22); max-width:500px; width:92%;
+      display:flex; flex-direction:column; gap:0.85rem;
+    }
+    .w-card-header { display:flex; align-items:center; gap:0.6rem; }
+    .w-card-title  { font-weight:800; font-size:1.02rem; flex:1; }
+    .w-dim-badge {
+      font-size:0.75rem; font-family:'Fira Code',monospace;
+      background:var(--bg3); color:var(--text-muted);
+      padding:0.18rem 0.5rem; border-radius:5px;
+    }
+    .w-card-close {
+      background:none; border:none; cursor:pointer; font-size:1.02rem;
+      color:var(--text-dim); padding:0.12rem 0.38rem; border-radius:4px;
+    }
+    .w-card-close:hover { background:var(--bg3); }
+    .w-card-desc { font-size:0.82rem; color:var(--text-muted); margin:0; line-height:1.5; }
+    .w-cell-input {
+      width:2.8rem;
+      font-family:'Fira Code',monospace;
+      font-size:0.88rem;
+      font-weight:600;
+      text-align:right;
+      background:transparent;
+      border:none;
+      border-bottom:1.5px solid var(--border2);
+      border-radius:0;
+      padding:0.1rem 0.2rem;
+      outline:none;
+      transition:border-color 0.15s, background 0.15s;
+      display:block;
+      margin-left:auto;
+    }
+    .w-cell-input:focus {
+      border-bottom-color:var(--teal);
+      background:var(--bg3);
+      border-radius:3px;
+    }
+    .w-dmodel-note {
+      font-size:0.8rem; color:var(--text-muted); line-height:1.55;
+      background:var(--bg3); border-radius:var(--radius-sm);
+      padding:0.55rem 0.8rem; border-left:3px solid var(--teal);
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">ViT</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 4 · Slide 1 / 4</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Projeções Q, K, V nos Patches</h1>
+        <p class="slide-subtitle">Os mesmos patch embeddings X projetados em três papéis distintos</p>
+      </div>
+
+      <!-- Input panel: image selector + patch grid + X matrix -->
+      <div class="panel x-panel">
+        <h2 class="panel-title">Os patch embeddings X</h2>
+        <div style="display:flex;gap:1.5rem;align-items:flex-start;flex-wrap:wrap;">
+          <div style="display:flex;flex-direction:column;gap:0.4rem;">
+            <div style="font-size:0.75rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.07em;">Imagem:</div>
+            <div style="font-size:0.8rem;color:var(--text-muted);font-style:italic;">illusion.png — dividida em 4 patches</div>
+          </div>
+          <div class="formula-strip" style="flex:1;align-self:center;">
+            <button class="w-btn w-btn-q" onclick="showWModal('q')">Q = X W<sup>Q</sup></button>
+            <span style="color:var(--border2);font-size:1rem;">|</span>
+            <button class="w-btn w-btn-k" onclick="showWModal('k')">K = X W<sup>K</sup></button>
+            <span style="color:var(--border2);font-size:1rem;">|</span>
+            <button class="w-btn w-btn-v" onclick="showWModal('v')">V = X W<sup>V</sup></button>
+          </div>
+        </div>
+        <div style="display:flex;gap:2rem;align-items:flex-start;justify-content:center;flex-wrap:wrap;">
+          <!-- Mini patch grid -->
+          <div class="patch-grid-wrap">
+            <div class="patch-grid" id="patch-grid"></div>
+            <div class="patch-grid-label">Imagem dividida em 4 patches (grade 2×2)</div>
+          </div>
+          <!-- X matrix -->
+          <div id="x-matrix-area"></div>
+        </div>
+      </div>
+
+      <!-- Arrow fan: X → Q, K, V -->
+      <div class="fan-section">
+        <svg viewBox="0 0 120 44" preserveAspectRatio="none"
+             style="width:100%;height:50px;display:block;">
+          <defs>
+            <marker id="ah-q" viewBox="0 0 10 10" refX="9" refY="5"
+                    markerWidth="5" markerHeight="5" orient="auto">
+              <path d="M0,1.5 L9,5 L0,8.5" fill="none" stroke="#1d4ed8" stroke-width="1.8"/>
+            </marker>
+            <marker id="ah-k" viewBox="0 0 10 10" refX="9" refY="5"
+                    markerWidth="5" markerHeight="5" orient="auto">
+              <path d="M0,1.5 L9,5 L0,8.5" fill="none" stroke="#6d28d9" stroke-width="1.8"/>
+            </marker>
+            <marker id="ah-v" viewBox="0 0 10 10" refX="9" refY="5"
+                    markerWidth="5" markerHeight="5" orient="auto">
+              <path d="M0,1.5 L9,5 L0,8.5" fill="none" stroke="#065f46" stroke-width="1.8"/>
+            </marker>
+          </defs>
+          <line x1="60" y1="2" x2="22" y2="40" stroke="#1d4ed8" stroke-width="2"
+                stroke-dasharray="5,3" marker-end="url(#ah-q)"/>
+          <line x1="60" y1="2" x2="60" y2="40" stroke="#6d28d9" stroke-width="2"
+                stroke-dasharray="5,3" marker-end="url(#ah-k)"/>
+          <line x1="60" y1="2" x2="98" y2="40" stroke="#065f46" stroke-width="2"
+                stroke-dasharray="5,3" marker-end="url(#ah-v)"/>
+        </svg>
+        <div class="wlabels-row">
+          <button class="w-btn w-btn-q" onclick="showWModal('q')">× W<sup>Q</sup></button>
+          <button class="w-btn w-btn-k" onclick="showWModal('k')">× W<sup>K</sup></button>
+          <button class="w-btn w-btn-v" onclick="showWModal('v')">× W<sup>V</sup></button>
+        </div>
+      </div>
+
+      <!-- Q, K, V projection panels -->
+      <div class="projections-row">
+        <div class="panel proj-col">
+          <h2 class="panel-title" style="color:var(--blue);border-color:#bfdbfe;">Q — Query</h2>
+          <div id="q-matrix-area"></div>
+          <div id="q-role" style="margin-top:auto;"></div>
+        </div>
+        <div class="panel proj-col">
+          <h2 class="panel-title" style="color:var(--purple);border-color:#ddd6fe;">K — Key</h2>
+          <div id="k-matrix-area"></div>
+          <div id="k-role" style="margin-top:auto;"></div>
+        </div>
+        <div class="panel proj-col">
+          <h2 class="panel-title" style="color:var(--green);border-color:#bbf7d0;">V — Value</h2>
+          <div id="v-matrix-area"></div>
+          <div id="v-role" style="margin-top:auto;"></div>
+        </div>
+      </div>
+
+      <!-- Patch selection chips -->
+      <div style="display:flex;align-items:center;gap:1rem;padding:0.3rem 0.2rem;flex-wrap:wrap;">
+        <div style="font-size:0.75rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.07em;white-space:nowrap;">Patch selecionado:</div>
+        <div class="patch-chips" id="patch-chips"></div>
+      </div>
+
+      <!-- Insight box -->
+      <div class="insight-box">
+        <div class="i-icon">🎓</div>
+        <div class="i-text">
+          Q, K e V vêm da mesma matriz X de patch embeddings — mas projetadas de formas diferentes para papéis distintos no cálculo da atenção.
+          <br><br>
+          <strong>📌 Nota:</strong> Neste exemplo, d_model = 2 (2 valores por patch). Na prática, embeddings têm centenas de dimensões (ex.: 768 no ViT-Base), e W<sup>Q</sup>, W<sup>K</sup>, W<sup>V</sup> são matrizes aprendidas com shape d_model × d_k.
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide04.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide06.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <!-- W matrix info modal -->
+  <div class="w-overlay" id="w-overlay" style="display:none;"
+       onclick="if(event.target===this)hideWModal()">
+    <div class="w-card">
+      <div class="w-card-header">
+        <div class="w-card-title" id="w-modal-title"></div>
+        <span class="w-dim-badge" id="w-modal-dim"></span>
+        <button class="w-card-close" onclick="hideWModal()">✕</button>
+      </div>
+      <div id="w-modal-matrix"></div>
+      <div id="w-modal-actions" style="display:flex;justify-content:flex-end;"></div>
+      <p class="w-card-desc" id="w-modal-desc"></p>
+      <div class="w-dmodel-note" id="w-modal-note"></div>
+    </div>
+  </div>
+
+  <script>
+    // d_model = 2: cada patch tem 2 dimensões de embedding
+    // Positional encoding (sinusoidal) para 4 posições, 2 dims
+    function computePE4(pos) {
+      return [
+        Math.sin(pos / Math.pow(10000, 0 / 2)),
+        Math.cos(pos / Math.pow(10000, 0 / 2)),
+      ].map(v => Math.round(v * 100) / 100);
+    }
+    const POS_ENC = [0, 1, 2, 3].map(i => computePE4(i));
+
+    // 4 patches da illusion.png × 4-dim embeddings
+    // Regiões: P₀=topo-esq (pessoa alta), P₁=topo-dir (quadro+parede),
+    //          P₂=base-esq (piso+pés), P₃=base-dir (piso+pessoa pequena)
+    const SCENES = [
+      {
+        name: 'illusion.png',
+        // background-position para cada quadrante 2×2
+        bgPos: ['0% 0%', '100% 0%', '0% 100%', '100% 100%'],
+        labels: ['P1', 'P2', 'P3', 'P4'],
+        desc: [
+          'topo-esq (pessoa alta)',
+          'topo-dir (pessoa pequena)',
+          'base-esq (pernas + piso)',
+          'base-dir (corpo + piso)',
+        ],
+        emb: [[2, 1], [1, 2], [0, 1], [1, 0]],
+      },
+    ];
+
+    // Weight matrices 2×2
+    const WQ = [[1,0],[0,1]];   // identidade
+    const WK = [[0,1],[1,0]];   // troca dims
+    const WV = [[1,1],[0,1]];   // triangular superior (adiciona contexto)
+
+    // Valores padrão para reset
+    const W_DEFAULTS = {
+      q: [[1,0],[0,1]],
+      k: [[0,1],[1,0]],
+      v: [[1,1],[0,1]],
+    };
+
+    let currentScene = 0;
+    let selectedPatch = null;
+    let currentModalType = null;
+
+    function round2(x) { return Math.round(x * 100) / 100; }
+
+    function getMatrices(sceneIdx) {
+      const emb = SCENES[sceneIdx].emb;
+      const X = emb.map((row, i) => row.map((v, j) => round2(v + POS_ENC[i][j])));
+      const matMul = (rows, W) =>
+        rows.map(row => W[0].map((_, j) => round2(row.reduce((s, v, k) => s + v * W[k][j], 0))));
+      return { X, Q: matMul(X, WQ), K: matMul(X, WK), V: matMul(X, WV) };
+    }
+
+    function fmt(v) {
+      return (v >= 0 ? ' ' : '-') + Math.abs(v).toFixed(1);
+    }
+
+    function buildMatrixHTML(type, sceneIdx, data, hlRow) {
+      const labels = SCENES[sceneIdx].labels;
+      const bcCls = `bc-${type}`;
+      const colLabels = ['d₁', 'd₂', 'd₃', 'd₄'].slice(0, data[0].length);
+      const lblMap = { x: 'X', q: 'Q = X · W<sup>Q</sup>', k: 'K = X · W<sup>K</sup>', v: 'V = X · W<sup>V</sup>' };
+
+      let html = `<div class="mat-block">`;
+      if (lblMap[type]) html += `<div class="mat-label mat-lbl-${type}">${lblMap[type]}</div>`;
+      html += `<div class="bracket-wrap">`;
+      html += `<div class="bracket-l ${bcCls}"></div>`;
+      html += `<table class="mat-table"><thead><tr><th></th>`;
+      colLabels.forEach(c => { html += `<th>${c}</th>`; });
+      html += `</tr></thead><tbody>`;
+      labels.forEach((lbl, i) => {
+        const hl = hlRow === i ? 'row-hl' : '';
+        html += `<tr class="${hl}"><td class="lbl-cell">${lbl}</td>`;
+        data[i].forEach(v => {
+          html += `<td style="color:${v >= 0 ? '#0d6e6e' : '#c2410c'}">${fmt(v)}</td>`;
+        });
+        html += `</tr>`;
+      });
+      html += `</tbody></table>`;
+      html += `<div class="bracket-r ${bcCls}"></div>`;
+      html += `</div></div>`;
+      return html;
+    }
+
+    function renderMatrices() {
+      const { X, Q, K, V } = getMatrices(currentScene);
+      const hl = selectedPatch;
+      document.getElementById('x-matrix-area').innerHTML =
+        `<div class="fade-in">${buildMatrixHTML('x', currentScene, X, hl)}</div>`;
+      document.getElementById('q-matrix-area').innerHTML =
+        `<div class="fade-in">${buildMatrixHTML('q', currentScene, Q, hl)}</div>`;
+      document.getElementById('k-matrix-area').innerHTML =
+        `<div class="fade-in">${buildMatrixHTML('k', currentScene, K, hl)}</div>`;
+      document.getElementById('v-matrix-area').innerHTML =
+        `<div class="fade-in">${buildMatrixHTML('v', currentScene, V, hl)}</div>`;
+    }
+
+    function vecStr(arr) {
+      return '[ ' + arr.map(v => fmt(v)).join(',  ') + ' ]';
+    }
+
+    function renderRoleCards() {
+      const { Q, K, V } = getMatrices(currentScene);
+      const i = selectedPatch;
+      const hasSel = i !== null;
+      const patchDesc = hasSel ? ` (${SCENES[currentScene].desc[i]})` : '';
+
+      const roles = [
+        { id: 'q-role', icon: '🔍', name: 'Query (Q)', rvc: 'rvc-q',
+          desc: 'Como este patch busca contexto nos demais patches da imagem',
+          vec: hasSel ? `q = ${vecStr(Q[i])}` : null },
+        { id: 'k-role', icon: '🔑', name: 'Key (K)',   rvc: 'rvc-k',
+          desc: 'Como este patch se oferece para atenção de outros patches',
+          vec: hasSel ? `k = ${vecStr(K[i])}` : null },
+        { id: 'v-role', icon: '📦', name: 'Value (V)', rvc: 'rvc-v',
+          desc: 'Qual informação visual este patch fornece quando é atendido',
+          vec: hasSel ? `v = ${vecStr(V[i])}` : null },
+      ];
+
+      roles.forEach(r => {
+        document.getElementById(r.id).innerHTML = `
+          <div class="role-card fade-in">
+            <div class="role-card-header"><span>${r.icon}</span><span>${r.name}</span></div>
+            <div class="role-card-desc">${r.desc}${patchDesc ? `<br><em>${patchDesc}</em>` : ''}</div>
+            ${r.vec
+              ? `<div class="role-card-vec ${r.rvc}">${r.vec}</div>`
+              : `<div class="role-card-placeholder">Clique em um patch →</div>`}
+          </div>`;
+      });
+    }
+
+    function renderPatchChips() {
+      const scene = SCENES[currentScene];
+      document.getElementById('patch-chips').innerHTML = scene.labels.map((lbl, i) =>
+        `<button class="patch-chip${selectedPatch === i ? ' active' : ''}"
+                 onclick="selectPatch(${i})">${lbl}</button>`
+      ).join('');
+    }
+
+    function renderPatchGrid() {
+      const scene = SCENES[currentScene];
+      document.getElementById('patch-grid').innerHTML = scene.labels.map((lbl, i) =>
+        `<div class="patch-cell${selectedPatch === i ? ' selected' : ''}"
+              style="background-position:${scene.bgPos[i]};"
+              onclick="selectPatch(${i})"
+              title="${scene.desc[i]}">${lbl}</div>`
+      ).join('');
+    }
+
+    function selectPatch(i) {
+      selectedPatch = selectedPatch === i ? null : i;
+      renderPatchChips();
+      renderPatchGrid();
+      renderMatrices();
+      renderRoleCards();
+    }
+
+    function setScene(idx) {
+      currentScene = idx;
+      selectedPatch = null;
+      renderPatchChips();
+      renderPatchGrid();
+      renderMatrices();
+      renderRoleCards();
+    }
+
+    // ---- W matrix modal ----
+    const W_META = {
+      q: { title: 'W<sup>Q</sup> — Query projection', cls: 'q', color: 'var(--blue)',
+           mat: WQ, desc: 'Projeta X no espaço de <em>queries</em>: "O que este patch quer encontrar nos outros patches?"' },
+      k: { title: 'W<sup>K</sup> — Key projection',   cls: 'k', color: 'var(--purple)',
+           mat: WK, desc: 'Projeta X no espaço de <em>keys</em>: "Como este patch se apresenta para comparação?"' },
+      v: { title: 'W<sup>V</sup> — Value projection', cls: 'v', color: 'var(--green)',
+           mat: WV, desc: 'Projeta X no espaço de <em>values</em>: "Qual conteúdo visual este patch carrega?"' },
+    };
+
+    function updateW(type, i, j, input) {
+      const val = parseFloat(input.value);
+      if (isNaN(val)) return;
+      const matMap = { q: WQ, k: WK, v: WV };
+      matMap[type][i][j] = val;
+      input.style.color = val >= 0 ? '#0d6e6e' : '#c2410c';
+      renderMatrices();
+      renderRoleCards();
+    }
+
+    function resetW(type) {
+      const def = W_DEFAULTS[type];
+      const matMap = { q: WQ, k: WK, v: WV };
+      def.forEach((row, i) => row.forEach((v, j) => { matMap[type][i][j] = v; }));
+      showWModal(type);
+      renderMatrices();
+      renderRoleCards();
+    }
+
+    function fmtW(v) { return (v >= 0 ? ' ' : '') + v.toFixed(0); }
+
+    function buildWMatrixHTML(cls, mat, type) {
+      const sub = ['₁', '₂', '₃', '₄'];
+      const rowLbls = sub.slice(0, mat.length).map(s => `d${s}`);
+      const colLbls = sub.slice(0, mat[0].length).map(s => `d${s}`);
+      let html = `<div class="mat-block"><div class="bracket-wrap">`;
+      html += `<div class="bracket-l bc-${cls}"></div>`;
+      html += `<table class="mat-table"><thead><tr><th></th>`;
+      colLbls.forEach(l => { html += `<th>${l}</th>`; });
+      html += `</tr></thead><tbody>`;
+      mat.forEach((row, i) => {
+        html += `<tr><td class="lbl-cell">${rowLbls[i]}</td>`;
+        row.forEach((v, j) => {
+          html += `<td><input class="w-cell-input"
+            value="${v}"
+            style="color:${v >= 0 ? '#0d6e6e' : '#c2410c'}"
+            oninput="updateW('${type}',${i},${j},this)"
+            type="number" step="any"/></td>`;
+        });
+        html += `</tr>`;
+      });
+      html += `</tbody></table><div class="bracket-r bc-${cls}"></div></div></div>`;
+      return html;
+    }
+
+    function showWModal(type) {
+      const d = W_META[type];
+      const rows = d.mat.length, cols = d.mat[0].length;
+      document.getElementById('w-modal-title').innerHTML =
+        `<span style="color:${d.color};">${d.title}</span>`;
+      document.getElementById('w-modal-dim').textContent = `${rows} × ${cols}`;
+      currentModalType = type;
+      document.getElementById('w-modal-matrix').innerHTML = buildWMatrixHTML(d.cls, d.mat, type);
+      document.getElementById('w-modal-actions').innerHTML =
+        `<button class="btn-toggle" onclick="resetW('${type}')">↩ Restaurar padrão</button>`;
+      document.getElementById('w-modal-desc').innerHTML = d.desc;
+      document.getElementById('w-modal-note').innerHTML =
+        `<strong>d_model = ${rows}</strong> é a dimensão dos patch embeddings — quantos valores numéricos representam cada patch. ` +
+        `Neste exemplo, d_model = ${rows} (simplificado). Em modelos reais: ` +
+        `ViT-Base usa d_model = 768; ViT-Large usa d_model = 1024.<br><br>` +
+        `W<sup>Q</sup>, W<sup>K</sup>, W<sup>V</sup> têm forma d_model × d_k, onde d_k = d_model / n_heads ` +
+        `(em Multi-Head Attention). Neste exemplo simplificado, d_k = d_model = ${rows}.`;
+      document.getElementById('w-overlay').style.display = 'flex';
+    }
+
+    function hideWModal() {
+      document.getElementById('w-overlay').style.display = 'none';
+    }
+
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') hideWModal(); });
+
+    // Init
+    renderPatchChips();
+    renderPatchGrid();
+    renderMatrices();
+    renderRoleCards();
+  </script>
+</body>
+</html>

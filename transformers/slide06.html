@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 6 – Positional Encoding dentro da Matriz de Entrada</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ---- Equation display (E + P = X) — one matrix per row ---- */
+    .equation-area {
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+    }
+    .eq-row {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+    }
+    .eq-row-label {
+      font-family: 'Fira Code', monospace;
+      font-size: 1.15rem;
+      font-weight: 700;
+      width: 2rem;
+      flex-shrink: 0;
+    }
+    .eq-label-e { color: var(--purple); }
+    .eq-label-p { color: var(--blue); }
+    .eq-label-x { color: var(--teal); }
+    .eq-operator {
+      font-family: 'Fira Code', monospace;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    /* ---- Matrix block (label + bracketed table) ---- */
+    .mat-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.3rem;
+      flex-shrink: 0;
+    }
+    .mat-block-label {
+      font-family: 'Fira Code', monospace;
+      font-size: 1rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .mat-name-e  { color: var(--purple); }
+    .mat-name-p  { color: var(--blue); }
+    .mat-name-x  { color: var(--teal); }
+
+    /* ---- Bracketed matrix ---- */
+    .mat-bwrap {
+      display: flex;
+      align-items: stretch;
+    }
+    .mat-bracket-l {
+      border-left: 3px solid var(--text-muted);
+      border-top: 3px solid var(--text-muted);
+      border-bottom: 3px solid var(--text-muted);
+      border-radius: 4px 0 0 4px;
+      width: 8px;
+      flex-shrink: 0;
+    }
+    .mat-bracket-r {
+      border-right: 3px solid var(--text-muted);
+      border-top: 3px solid var(--text-muted);
+      border-bottom: 3px solid var(--text-muted);
+      border-radius: 0 4px 4px 0;
+      width: 8px;
+      flex-shrink: 0;
+    }
+    .mat-inner {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      padding: 0.35rem 0.4rem;
+      border-top: 1px solid var(--border2);
+      border-bottom: 1px solid var(--border2);
+    }
+
+    .mat-col-header {
+      display: flex;
+      gap: 0.2rem;
+      padding-bottom: 0.2rem;
+      border-bottom: 1px dashed var(--border2);
+      margin-bottom: 0.1rem;
+    }
+    .mat-lbl-spacer { width: 3rem; flex-shrink: 0; }
+    .mat-col-lbl {
+      flex: 1;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      font-weight: 600;
+      text-align: right;
+      min-width: 3rem;
+    }
+
+    .mat-row {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.32rem 0.15rem;
+      border-radius: 4px;
+      transition: background 0.2s;
+      cursor: default;
+    }
+    .mat-row:hover { background: rgba(13,110,110,0.08); }
+    .mat-row.changed {
+      animation: rowFlash 0.6s ease;
+    }
+    @keyframes rowFlash {
+      0%   { background: rgba(29,78,216,0.18); }
+      60%  { background: rgba(29,78,216,0.08); }
+      100% { background: transparent; }
+    }
+    .mat-row-lbl {
+      width: 3rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.95rem;
+      color: var(--text-dim);
+      font-weight: 600;
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .mat-cell {
+      flex: 1;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.95rem;
+      text-align: right;
+      padding: 0 0.15rem;
+      min-width: 3rem;
+    }
+    /* Color theme per matrix */
+    .mat-e .mat-cell.pos { color: var(--purple); }
+    .mat-e .mat-cell.neg { color: #a16207; }
+    .mat-e .mat-bracket-l,
+    .mat-e .mat-bracket-r { border-color: var(--purple); }
+
+    .mat-p .mat-cell.pos { color: var(--blue); }
+    .mat-p .mat-cell.neg { color: var(--orange); }
+    .mat-p .mat-bracket-l,
+    .mat-p .mat-bracket-r { border-color: var(--blue); }
+    .mat-p .mat-row.fixed {
+      background: rgba(29,78,216,0.05);
+    }
+
+    .mat-x .mat-cell.pos { color: var(--teal); }
+    .mat-x .mat-cell.neg { color: var(--orange); }
+    .mat-x .mat-bracket-l,
+    .mat-x .mat-bracket-r { border-color: var(--teal); }
+
+    /* ---- Legend chip ---- */
+    .legend-row {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .legend-chip {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.7rem;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+    .lc-e { background: var(--purple-lt); color: var(--purple); border: 1px solid #c4b5fd; }
+    .lc-p { background: var(--blue-lt);   color: var(--blue);   border: 1px solid #93c5fd; }
+    .lc-x { background: var(--teal-lt);   color: var(--teal);   border: 1px solid #5eead4; }
+
+    /* ---- Change indicator ---- */
+    .change-indicator {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+    .ci-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.65rem;
+      padding: 0.55rem 0.85rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+    .ci-same {
+      background: var(--green-lt);
+      border: 1.5px solid #86efac;
+      color: var(--green);
+    }
+    .ci-diff {
+      background: #fff7ed;
+      border: 1.5px solid #fed7aa;
+      color: var(--orange);
+    }
+    .ci-icon { font-size: 1.1rem; flex-shrink: 0; }
+
+    /* ---- Fade-in animation ---- */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in { animation: fadeIn 0.3s ease both; }
+
+    /* ---- Phrase name label ---- */
+    .active-phrase-label {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--teal);
+      text-align: center;
+      padding: 0.25rem 0.8rem;
+      background: var(--teal-lt);
+      border: 1.5px solid #5eead4;
+      border-radius: 999px;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <!-- Header -->
+    <header class="slide-header">
+      <span class="course-tag">Transformers</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 6 · Slide 6 / 11</span>
+    </header>
+
+    <!-- Content -->
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Positional Encoding</h1>
+        <p class="slide-subtitle">X = E + P — identidade do token + posição na sequência</p>
+      </div>
+
+      <div class="content-split">
+        <!-- Left: matrices E + P = X with toggle -->
+        <div class="panel panel-left">
+          <h2 class="panel-title">A equação da entrada</h2>
+
+          <!-- Phrase toggle -->
+          <div style="display:flex;flex-direction:column;gap:0.4rem;">
+            <div style="font-size:0.8rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.07em;">Frase:</div>
+            <div class="toggle-group" id="phrase-toggle">
+              <button class="btn-toggle active" onclick="setPhrase(0)">Ela saiu só</button>
+              <button class="btn-toggle" onclick="setPhrase(1)">Só ela saiu</button>
+            </div>
+            <div style="text-align:center;">
+              <span class="active-phrase-label" id="active-phrase-label">Ela saiu só</span>
+            </div>
+          </div>
+
+          <!-- Equation area: E + P = X -->
+          <div class="equation-area" id="equation-area"></div>
+
+          <!-- Color legend -->
+          <div class="legend-row">
+            <span class="legend-chip lc-e">E — léxico</span>
+            <span class="legend-chip lc-p">P — posição</span>
+            <span class="legend-chip lc-x">X = E + P — entrada</span>
+          </div>
+
+          <!-- Hint -->
+          <div style="font-size:0.82rem;color:var(--text-dim);font-style:italic;">
+            💡 Alterne entre as frases para ver o que muda e o que permanece igual.
+          </div>
+        </div>
+
+        <!-- Right: explanation + insight -->
+        <div class="panel panel-right">
+          <h2 class="panel-title">O que muda ao trocar a frase?</h2>
+
+          <div class="change-indicator" id="change-indicator">
+            <!-- injected by JS -->
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="concept-cards">
+            <div class="concept-card" style="--delay:0.05s">
+              <div class="card-icon">📍</div>
+              <div class="card-text">
+                <strong>P: estático ou aprendível</strong>
+                <p>No artigo original, P usa funções seno e cosseno de frequências variadas — cada posição recebe um "endereço" determinístico. Variantes modernas aprendem P durante o treino.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.15s">
+              <div class="card-icon">🔢</div>
+              <div class="card-text">
+                <strong>Posição 1 é sempre a mesma</strong>
+                <p>p₁ é idêntico para qualquer frase — o que muda é <em>qual token</em> está nessa posição, logo X muda.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.25s">
+              <div class="card-icon">🧩</div>
+              <div class="card-text">
+                <strong>X = léxico + posição</strong>
+                <p>A linha i de X combina o vetor léxico do token com o vetor posicional — o modelo recebe ambas as informações fundidas em uma única representação.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Full-width insight strip -->
+      <div class="insight-box">
+        <div class="i-icon">🎓</div>
+        <div class="i-text">
+          "O Transformer não recebe só <em>quais</em> palavras apareceram. Ele recebe uma matriz
+          em que cada linha já combina a <strong>identidade do token</strong> com sua
+          <strong>posição na sequência</strong>."
+        </div>
+      </div>
+    </main>
+
+    <!-- Navigation -->
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide05.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide07.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    // ---- Token embedding data (2D integers) ----
+    // Nota: na prática, embeddings têm centenas de dimensões (ex.: 768 ou 1024)
+    const EMB_LEX = {
+      'Ela':  [1,  2],
+      'ela':  [1,  2],
+      'saiu': [3, -1],
+      'só':   [-1, 2],
+      'Só':   [-1, 2],
+    };
+
+    // Sinusoidal positional encodings (d=2)
+    // PE(pos, 0) = sin(pos / 10000^(0/2))
+    // PE(pos, 1) = cos(pos / 10000^(0/2))
+    function computePE(pos) {
+      return [
+        Math.sin(pos / Math.pow(10000, 0/2)),
+        Math.cos(pos / Math.pow(10000, 0/2)),
+      ].map(v => Math.round(v * 100) / 100);
+    }
+
+    const POS_ENC = [computePE(0), computePE(1), computePE(2)];
+
+    const PHRASES = [
+      { label: 'Ela saiu só',  tokens: ['Ela', 'saiu', 'só']  },
+      { label: 'Só ela saiu',  tokens: ['Só',  'ela',  'saiu'] },
+    ];
+
+    const COLS = ['d₁','d₂'];
+    let currentPhrase = 0;
+    let prevPhrase = null;
+
+    // ---- Build matrix HTML ----
+    function matrixHTML(type, tokens, data, extraCls) {
+      // type: 'e', 'p', 'x'
+      const colorCls = `mat-${type}`;
+      // decimals: 0 for E, 1 for P and X
+      const decimals = type === 'e' ? 0 : 1;
+      let html = `<div class="mat-bwrap ${colorCls}">`;
+      html += '<div class="mat-bracket-l"></div>';
+      html += '<div class="mat-inner">';
+
+      // Header row
+      html += '<div class="mat-col-header"><div class="mat-lbl-spacer"></div>';
+      COLS.forEach(c => { html += `<div class="mat-col-lbl">${c}</div>`; });
+      html += '</div>';
+
+      // Data rows
+      tokens.forEach((tok, i) => {
+        const vals = data[i];
+        const changed = (extraCls && extraCls[i]) ? 'changed' : '';
+        html += `<div class="mat-row ${changed}" id="mrow-${type}-${i}">`;
+        html += `<div class="mat-row-lbl">${tok.toLowerCase()}</div>`;
+        vals.forEach(v => {
+          const cls = v >= 0 ? 'pos' : 'neg';
+          html += `<div class="mat-cell ${cls}">${v >= 0 ? ' ' : ''}${v.toFixed(decimals)}</div>`;
+        });
+        html += '</div>';
+      });
+
+      html += '</div>';
+      html += '<div class="mat-bracket-r"></div>';
+      html += '</div>';
+      return html;
+    }
+
+    // ---- Render equation E + P = X — one matrix per row ----
+    function renderEquation(phraseIdx, animate) {
+      const phrase = PHRASES[phraseIdx];
+      const tokens = phrase.tokens;
+
+      // Compute matrices
+      const E_data = tokens.map(t => EMB_LEX[t]);
+      const P_data = POS_ENC.slice(0, tokens.length);
+      const X_data = tokens.map((_, i) =>
+        E_data[i].map((v, j) => Math.round((v + P_data[i][j]) * 10) / 10)
+      );
+
+      // Determine which rows changed compared to prev phrase
+      let changedRows = null;
+      if (animate && prevPhrase !== null && prevPhrase !== phraseIdx) {
+        const prevTokens = PHRASES[prevPhrase].tokens;
+        changedRows = tokens.map((t, i) => t !== prevTokens[i]);
+      }
+
+      const area = document.getElementById('equation-area');
+      const P_labels = ['p₁','p₂','p₃'];
+
+      function matRow(type, cls, id, labelText, vals, decimals, changed) {
+        let r = `<div class="mat-row ${cls}" id="${id}">`;
+        r += `<div class="mat-row-lbl">${labelText}</div>`;
+        vals.forEach(v => {
+          const c = v >= 0 ? 'pos' : 'neg';
+          r += `<div class="mat-cell ${c}">${v >= 0 ? ' ' : ''}${v.toFixed(decimals)}</div>`;
+        });
+        r += '</div>';
+        return r;
+      }
+
+      function fullMatrix(type, rowsHTML, colorCls) {
+        let h = `<div class="mat-bwrap ${colorCls}">`;
+        h += '<div class="mat-bracket-l"></div>';
+        h += '<div class="mat-inner">';
+        h += '<div class="mat-col-header"><div class="mat-lbl-spacer"></div>';
+        COLS.forEach(c => { h += `<div class="mat-col-lbl">${c}</div>`; });
+        h += '</div>';
+        h += rowsHTML;
+        h += '</div><div class="mat-bracket-r"></div></div>';
+        return h;
+      }
+
+      // E matrix
+      const eRows = tokens.map((tok, i) => {
+        const changed = (changedRows && changedRows[i]) ? 'changed' : '';
+        return matRow('e', changed, `mrow-e-${i}`, tok.toLowerCase(), E_data[i], 0, false);
+      }).join('');
+
+      // P matrix (fixed, position labels)
+      const pRows = P_data.map((vals, i) =>
+        matRow('p', 'fixed', `mrow-p-${i}`, P_labels[i], vals, 1, false)
+      ).join('');
+
+      // X matrix
+      const xRows = tokens.map((tok, i) => {
+        const changed = (changedRows && changedRows[i]) ? 'changed' : '';
+        return matRow('x', changed, `mrow-x-${i}`, tok.toLowerCase(), X_data[i], 1, false);
+      }).join('');
+
+      let html = '<div class="fade-in" style="display:flex;flex-direction:column;gap:0.7rem;">';
+
+      // Row E
+      html += '<div class="eq-row">';
+      html += '<div class="eq-row-label eq-label-e">E</div>';
+      html += fullMatrix('e', eRows, 'mat-e');
+      html += '</div>';
+
+      // + operator
+      html += '<div style="font-family:\'Fira Code\',monospace;font-size:1.4rem;font-weight:700;color:var(--text-muted);padding-left:2rem;">+</div>';
+
+      // Row P
+      html += '<div class="eq-row">';
+      html += '<div class="eq-row-label eq-label-p">P</div>';
+      html += fullMatrix('p', pRows, 'mat-p');
+      html += '</div>';
+
+      // = operator
+      html += '<div style="font-family:\'Fira Code\',monospace;font-size:1.4rem;font-weight:700;color:var(--text-muted);padding-left:2rem;">=</div>';
+
+      // Row X
+      html += '<div class="eq-row">';
+      html += '<div class="eq-row-label eq-label-x">X</div>';
+      html += fullMatrix('x', xRows, 'mat-x');
+      html += '</div>';
+
+      html += '</div>';
+      area.innerHTML = html;
+
+      // Trigger change animation
+      if (animate && changedRows) {
+        setTimeout(() => {
+          changedRows.forEach((changed, i) => {
+            if (changed) {
+              ['e','x'].forEach(t => {
+                const el = document.getElementById(`mrow-${t}-${i}`);
+                if (el) { el.classList.remove('changed'); void el.offsetWidth; el.classList.add('changed'); }
+              });
+            }
+          });
+        }, 50);
+      }
+    }
+
+    // ---- Render change indicator ----
+    function renderChangeIndicator(phraseIdx) {
+      const tokens = PHRASES[phraseIdx].tokens;
+      const container = document.getElementById('change-indicator');
+
+      const eRows = tokens.map((t, i) => `${t.toLowerCase()} (pos ${i+1})`).join(', ');
+      const xRows = tokens.map((t, i) => `e_${t.toLowerCase()} + p${i+1}`).join(', ');
+
+      container.innerHTML = `
+        <div class="fade-in">
+          <div style="font-size:0.78rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:0.5rem;">Ao trocar a frase:</div>
+          <div class="ci-row ci-diff">
+            <span class="ci-icon">🔄</span>
+            <div>
+              <strong>E muda</strong> — as linhas são reordenadas: ${eRows}.
+              Cada token ocupa uma posição diferente na sequência.
+            </div>
+          </div>
+          <div class="ci-row ci-diff">
+            <span class="ci-icon">🔄</span>
+            <div>
+              <strong>X muda</strong> — porque E mudou, a soma X = E + P é diferente.
+              Mesmo tokens com o mesmo vetor léxico recebem codificações distintas quando em posições diferentes.
+            </div>
+          </div>
+        </div>`;
+    }
+
+    // ---- Phrase toggle ----
+    function setPhrase(idx) {
+      prevPhrase = currentPhrase;
+      currentPhrase = idx;
+
+      document.querySelectorAll('#phrase-toggle .btn-toggle').forEach((btn, i) => {
+        btn.classList.toggle('active', i === idx);
+      });
+
+      document.getElementById('active-phrase-label').textContent = PHRASES[idx].label;
+
+      renderEquation(idx, true);
+      renderChangeIndicator(idx);
+    }
+
+    // ---- Init ----
+    renderEquation(0, false);
+    renderChangeIndicator(0);
+  </script>
+</body>
+</html>

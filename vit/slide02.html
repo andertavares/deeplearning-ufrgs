@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 02 – Como a imagem vira sequência?</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .image-grid {
+      display: grid;
+      gap: 2px;
+      background: var(--bg3);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 2px;
+      width: 256px;
+      height: 256px;
+      flex-shrink: 0;
+    }
+    .grid-cell {
+      border-radius: 2px;
+      box-shadow: 0 0 0 1.5px #e11d48; /* vermelho */
+      transition: outline 0.25s;
+    }
+    .patch-outline { outline: 2.5px solid #0d6e6e; outline-offset: -1px; }
+
+    .patch-seq {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 6px;
+      align-items: center;
+      justify-content: flex-start;
+      margin-top: 0.4rem;
+      overflow-x: auto;
+      padding-bottom: 0.3rem;
+      max-width: 100%;
+      scrollbar-color: #e11d48 #f3f4f6;
+      scrollbar-width: thin;
+    }
+    .patch-seq-box {
+      width: 36px;
+      height: 36px;
+      border-radius: 5px;
+      border: 2px solid var(--teal);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #fff;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.75);
+      background: var(--teal-lt);
+    }
+    .seq-arrow {
+      font-size: 1.1rem;
+      color: var(--text-dim);
+      font-weight: 700;
+    }
+    .seq-label {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      font-family: 'Fira Code', monospace;
+      text-align: center;
+      margin-top: 0.3rem;
+    }
+    .grid-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .stat-badge {
+      display: inline-block;
+      background: var(--teal-lt);
+      border: 1.5px solid #5eead4;
+      border-radius: var(--radius-sm);
+      padding: 0.3rem 0.9rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--teal);
+    }
+    .patch-size-info {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">ViT</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 2 · Slide 1 / 2</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Como a imagem vira sequência?</h1>
+        <p class="slide-subtitle">Bloco 2 — Patches</p>
+      </div>
+
+      <div class="content-split" style="align-items:start;">
+        <!-- Left: Interactive grid -->
+        <div class="panel">
+          <span class="panel-title">Imagem → Patches</span>
+
+          <div style="display:flex;gap:0.6rem;align-items:center;flex-wrap:wrap;">
+            <span style="font-size:0.9rem;font-weight:600;color:var(--text-muted);">Número de patches:</span>
+            <div class="toggle-group">
+              <button class="btn-toggle" id="btn-4" onclick="setNumPatches(4)">2×2</button>
+              <button class="btn-toggle active" id="btn-16" onclick="setNumPatches(16)">4×4</button>
+              <button class="btn-toggle" id="btn-64" onclick="setNumPatches(64)">8×8</button>
+              <button class="btn-toggle" id="btn-256" onclick="setNumPatches(256)">16×16</button>
+            </div>
+          </div>
+
+          <div class="grid-wrap">
+            <div class="image-grid" id="img-grid"></div>
+            <div>
+              <span class="stat-badge" id="patch-count">Nº de patches: 16</span>
+            </div>
+            <p class="patch-size-info" id="patch-size-info">Cada patch: 64×64 px</p>
+            <p class="patch-size-info" style="margin-top:0.4rem;font-size:0.8em;color:var(--text-dim);text-align:center;">Imagem obtida em: <a href="https://g1.globo.com/planeta-bizarro/noticia/2013/08/exposicao-permite-fotos-divertidas-criando-gigantes-com-ilusao-de-otica.html" target="_blank" rel="noopener" style="color:var(--teal);text-decoration:underline;">g1.globo.com</a></p>
+          </div>
+
+          <!-- Sequence representation -->
+          <div class="divider"></div>
+          <p style="font-size:0.85rem;font-weight:700;color:var(--text-muted);text-align:center;">Sequência resultante</p>
+          <div class="patch-seq" id="patch-seq-row"></div>
+          <div style="display:flex;align-items:center;justify-content:center;gap:0.4rem;margin-top:0.3rem;">
+            <svg width="180" height="20" viewBox="0 0 180 20">
+              <defs>
+                <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+                  <polygon points="0 0, 8 3, 0 6" fill="#6b7fa3"/>
+                </marker>
+              </defs>
+              <line x1="4" y1="10" x2="172" y2="10" stroke="#6b7fa3" stroke-width="2" marker-end="url(#arrowhead)" stroke-dasharray="5,3"/>
+            </svg>
+          </div>
+          <p class="seq-label">Sequência de patches →</p>
+        </div>
+
+        <!-- Right: Concept panel -->
+        <div class="panel">
+          <span class="panel-title">Por que quebrar em patches?</span>
+          <div class="concept-cards">
+            <div class="concept-card" style="--delay:0.0s">
+              <span class="card-icon">🖼️</span>
+              <div class="card-text">
+                <strong>Imagem como sequência</strong>
+                <p>Transformers processam listas de tokens. Patches convertem a imagem em exatamente isso.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.1s">
+              <span class="card-icon">📐</span>
+              <div class="card-text">
+                <strong>Tamanho fixo</strong>
+                <p>Cada patch tem dimensões iguais — fácil de achatar e projetar para um vetor de embedding.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.2s">
+              <span class="card-icon">📏</span>
+              <div class="card-text">
+                <strong>Trade-off de resolução</strong>
+                <p>Patches menores = mais tokens = maior detalhe, maior custo na atenção.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.3s">
+              <span class="card-icon">🔢</span>
+              <div class="card-text">
+                <strong>Fórmula simples</strong>
+                <p style="font-family:'Fira Code',monospace;">N = (H/P) × (W/P)<br>
+                  onde:<br>
+                  <span style="font-size:0.95em;">H = altura da imagem<br>W = largura da imagem<br>P = tamanho do patch</span>
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="highlight-box teal">
+            <span class="icon">💡</span>
+            <span>Em ViT, a imagem é quebrada em patches e passa a ser tratada como <strong>sequência</strong> — como palavras em uma frase.</span>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide01.html'">← Anterior</button>
+      <div class="nav-dots">
+        <div class="dot active"></div>
+        <div class="dot"></div>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide03.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    const GRID_PX = 256; // matches .image-grid dimensions (256×256 px)
+    const SEQ_BOX = 36;  // sequence thumbnail box size in px
+
+    function buildGrid(sideN) {
+      const cellPx = GRID_PX / sideN;
+      const grid = document.getElementById('img-grid');
+      grid.innerHTML = '';
+      grid.style.gridTemplateColumns = `repeat(${sideN}, 1fr)`;
+      grid.style.gridTemplateRows = `repeat(${sideN}, 1fr)`;
+      for (let r = 0; r < sideN; r++) {
+        for (let c = 0; c < sideN; c++) {
+          const cell = document.createElement('div');
+          cell.className = 'grid-cell';
+          cell.style.backgroundImage = `url('illusion.png')`;
+          cell.style.backgroundSize = `${GRID_PX}px ${GRID_PX}px`;
+          cell.style.backgroundPosition = `${-(c * cellPx)}px ${-(r * cellPx)}px`;
+          grid.appendChild(cell);
+        }
+      }
+    }
+
+    function setNumPatches(n) {
+      const sideN = Math.round(Math.sqrt(n));
+      ['btn-4', 'btn-16', 'btn-64', 'btn-256'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('active');
+      });
+      const map = {4: 'btn-4', 16: 'btn-16', 64: 'btn-64', 256: 'btn-256'};
+      document.getElementById(map[n]).classList.add('active');
+      buildGrid(sideN);
+      document.getElementById('patch-count').textContent = `Nº de patches: ${n}`;
+      const patchPx = GRID_PX / sideN;
+      document.getElementById('patch-size-info').textContent = `Cada patch: ${patchPx}×${patchPx} px`;
+      updateSequence(n, sideN);
+    }
+
+    function updateSequence(n, sideN) {
+      const seq = document.getElementById('patch-seq-row');
+      seq.innerHTML = '';
+      const imgSize = SEQ_BOX * sideN;
+      for (let i = 0; i < n; i++) {
+        const r = Math.floor(i / sideN);
+        const c = i % sideN;
+        const box = document.createElement('div');
+        box.className = 'patch-seq-box';
+        box.style.cssText = `background-image:url('illusion.png');background-size:${imgSize}px ${imgSize}px;background-position:${-(c * SEQ_BOX)}px ${-(r * SEQ_BOX)}px;background-color:transparent;`;
+        box.textContent = `P${i + 1}`;
+        seq.appendChild(box);
+      }
+    }
+
+    setNumPatches(16);
+  </script>
+</body>
+</html>

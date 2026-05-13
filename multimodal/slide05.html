@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 05 – Classificação zero-shot</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .img-selector { display:flex; gap:0.5rem; margin-bottom:0.8rem; flex-wrap:wrap; }
+    .img-card { display:flex; flex-direction:column; align-items:center; gap:0.2rem; padding:0.4rem 0.6rem; border:2px solid var(--border2); border-radius:var(--radius-sm); cursor:pointer; background:var(--bg3); transition:all 0.2s; }
+    .img-card:hover { border-color:var(--blue); background:var(--blue-lt); }
+    .img-card.active { border-color:var(--teal); background:var(--teal-lt); }
+    .img-card .ci-emoji { font-size:1.6rem; }
+    .img-card .ci-label { font-size:0.7rem; font-weight:600; color:var(--text-dim); }
+    .diagram-flow { display:flex; flex-direction:column; gap:0.5rem; }
+    .diag-selected-img { display:flex; align-items:center; gap:0.6rem; padding:0.5rem 0.8rem; background:var(--bg3); border:1.5px solid var(--border2); border-radius:var(--radius-sm); }
+    .diag-big-emoji { font-size:2rem; }
+    .diag-img-label { font-size:0.82rem; font-weight:600; color:var(--text-muted); }
+    .diag-enc-block { padding:0.35rem 0.8rem; border-radius:6px; font-weight:700; font-size:0.78rem; }
+    .diag-enc-img { background:#dbeafe; color:#1d4ed8; border:1.5px solid #1d4ed8; }
+    .diag-enc-txt { background:#ccfbf1; color:#0d6e6e; border:1.5px solid #0d6e6e; }
+    .diag-arrow { color:var(--text-dim); font-size:0.9rem; margin:0 0.2rem; }
+    .sim-rows { display:flex; flex-direction:column; gap:0.35rem; }
+    .sim-row { display:flex; align-items:center; gap:0.5rem; }
+    .sim-row-label { font-size:0.78rem; color:var(--text-muted); min-width:130px; }
+    .sim-bar-wrap { flex:1; background:var(--bg3); border-radius:4px; height:18px; overflow:hidden; border:1px solid var(--border2); }
+    .sim-bar { height:100%; background:var(--blue-lt); border-radius:4px; transition:width 0.6s ease; width:0%; }
+    .sim-bar.winner { background:var(--teal); }
+    .sim-val { font-size:0.78rem; font-weight:700; color:var(--text-muted); min-width:32px; text-align:right; }
+    .sim-row.winner-row .sim-row-label { color:var(--teal); font-weight:700; }
+    .sim-row.winner-row .sim-val { color:var(--teal); }
+    .enc-arrow-down { text-align:center; color:var(--text-dim); font-size:0.9rem; margin:0.1rem 0; }
+    .softmax-label { text-align:center; font-size:0.75rem; color:var(--text-dim); font-weight:600; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Multimodal</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 4 · Slide 5 / 7</span>
+    </header>
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Classificação zero-shot</h1>
+        <p class="slide-subtitle">Bloco 4 — Zero-shot · Como o CLIP classifica sem treino específico</p>
+      </div>
+      <div class="content-split">
+        <!-- LEFT PANEL -->
+        <div class="panel">
+          <div class="panel-title">Diagrama de classificação</div>
+          <div class="img-selector" id="imgSelector">
+            <div class="img-card" onclick="selectImage(0)">
+              <span class="ci-emoji">🐕</span>
+              <span class="ci-label">cachorro</span>
+            </div>
+            <div class="img-card" onclick="selectImage(1)">
+              <span class="ci-emoji">🐱</span>
+              <span class="ci-label">gato</span>
+            </div>
+            <div class="img-card" onclick="selectImage(2)">
+              <span class="ci-emoji">🚗</span>
+              <span class="ci-label">carro</span>
+            </div>
+            <div class="img-card" onclick="selectImage(3)">
+              <span class="ci-emoji">🦋</span>
+              <span class="ci-label">borboleta</span>
+            </div>
+          </div>
+          <div class="diagram-flow" id="diagramFlow">
+            <div id="selectedDisplay" style="display:none;">
+              <div class="diag-selected-img">
+                <span id="selEmoji" class="diag-big-emoji">❓</span>
+                <div>
+                  <div class="diag-img-label" id="selLabel">Selecione uma imagem</div>
+                  <div style="display:flex;align-items:center;gap:0.4rem;margin-top:0.3rem;">
+                    <span class="diag-arrow">→</span>
+                    <span class="diag-enc-block diag-enc-img">Encoder de Imagem</span>
+                    <span class="diag-arrow">→</span>
+                    <span style="font-family:'Fira Code',monospace;font-size:0.75rem;color:var(--text-dim);">[v₁…vₙ]</span>
+                  </div>
+                </div>
+              </div>
+              <div class="enc-arrow-down">↓ similaridade de cosseno</div>
+              <div class="sim-rows" id="simRows"></div>
+              <div class="softmax-label" id="argmaxLabel" style="margin-top:0.4rem;"></div>
+            </div>
+            <div id="placeholder" style="color:var(--text-dim);font-size:0.85rem;text-align:center;padding:1rem;">
+              👆 Clique em uma imagem acima para classificar
+            </div>
+          </div>
+        </div>
+        <!-- RIGHT PANEL -->
+        <div class="panel">
+          <div class="panel-title">Como funciona o zero-shot</div>
+          <div class="concept-cards">
+            <div class="concept-card" style="--delay:0s">
+              <span class="card-icon">🖼️</span>
+              <div class="card-text">
+                <strong>Passo 1: Encode a imagem</strong>
+                <p>A imagem passa pelo encoder visual e gera um embedding de alta dimensão.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.1s">
+              <span class="card-icon">📝</span>
+              <div class="card-text">
+                <strong>Passo 2: Encode os textos candidatos</strong>
+                <p>Cada descrição candidata ("a photo of a dog", etc.) passa pelo encoder de texto.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.2s">
+              <span class="card-icon">📐</span>
+              <div class="card-text">
+                <strong>Passo 3: Calcule similaridades</strong>
+                <p>Computa-se a similaridade de cosseno entre o embedding da imagem e cada embedding de texto.</p>
+              </div>
+            </div>
+            <div class="concept-card" style="--delay:0.3s">
+              <span class="card-icon">🏆</span>
+              <div class="card-text">
+                <strong>Passo 4: Softmax → Argmax</strong>
+                <p>As similaridades são normalizadas via softmax para obter probabilidades por classe. A classe com maior probabilidade é a predição.</p>
+              </div>
+            </div>
+          </div>
+          <div class="highlight-box teal">
+            🚀 Zero-shot: o modelo nunca viu estas classes durante o treino de classificação! Basta criar descrições das classes em texto.
+          </div>
+          <div class="insight-box" style="margin-top:0.6rem;">
+            💡 Prompt engineering: "a photo of a {class}" funciona melhor que apenas "{class}" — contextualizar o texto melhora os resultados.
+          </div>
+        </div>
+      </div>
+    </main>
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide04.html'">← Anterior</button>
+      <div class="nav-dots">
+        <div class="dot" onclick="location.href='slide01.html'" title="Slide 1"></div>
+        <div class="dot" onclick="location.href='slide02.html'" title="Slide 2"></div>
+        <div class="dot" onclick="location.href='slide03.html'" title="Slide 3"></div>
+        <div class="dot" onclick="location.href='slide04.html'" title="Slide 4"></div>
+        <div class="dot active" onclick="location.href='slide05.html'" title="Slide 5"></div>
+        <div class="dot" onclick="location.href='slide06.html'" title="Slide 6"></div>
+        <div class="dot" onclick="location.href='slide07.html'" title="Slide 7"></div>
+      </div>
+      <button class="btn-nav btn-next" onclick="location.href='slide06.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    const images = [
+      { emoji: '🐕', label: 'cachorro', ptLabel: 'Cachorro' },
+      { emoji: '🐱', label: 'gato', ptLabel: 'Gato' },
+      { emoji: '🚗', label: 'carro', ptLabel: 'Carro' },
+      { emoji: '🦋', label: 'borboleta', ptLabel: 'Borboleta' },
+    ];
+    const classes = [
+      { prompt: 'a photo of a dog', ptLabel: 'cachorro' },
+      { prompt: 'a photo of a cat', ptLabel: 'gato' },
+      { prompt: 'a photo of a car', ptLabel: 'carro' },
+      { prompt: 'a photo of a butterfly', ptLabel: 'borboleta' },
+    ];
+    const simData = [
+      [0.87, 0.08, 0.04, 0.06], // dog selected
+      [0.07, 0.89, 0.05, 0.06], // cat selected
+      [0.05, 0.04, 0.91, 0.06], // car selected
+      [0.06, 0.05, 0.04, 0.88], // butterfly selected
+    ];
+
+    function softmax(arr) {
+      const TEMPERATURE = 0.5; // temperatura de demonstração (o CLIP real usa ~0.07, mas valores menores colapsam em 100%)
+      const maxVal = Math.max(...arr);
+      const exps = arr.map(x => Math.exp((x - maxVal) / TEMPERATURE));
+      const sum = exps.reduce((a, b) => a + b, 0);
+      return exps.map(x => x / sum);
+    }
+
+    function selectImage(idx) {
+      // Update cards
+      document.querySelectorAll('.img-card').forEach((c, i) => {
+        c.classList.toggle('active', i === idx);
+      });
+      document.getElementById('placeholder').style.display = 'none';
+      document.getElementById('selectedDisplay').style.display = '';
+      document.getElementById('selEmoji').textContent = images[idx].emoji;
+      document.getElementById('selLabel').textContent = images[idx].ptLabel;
+
+      const sims = simData[idx];
+      const probs = softmax(sims);
+      const winnerIdx = probs.indexOf(Math.max(...probs));
+      const simRowsEl = document.getElementById('simRows');
+      simRowsEl.innerHTML = '';
+
+      classes.forEach((cls, i) => {
+        const row = document.createElement('div');
+        row.className = 'sim-row' + (i === winnerIdx ? ' winner-row' : '');
+        row.innerHTML = `
+          <div class="sim-row-label">
+            <span style="font-size:0.7rem;font-family:'Fira Code',monospace;color:var(--text-dim);">"${cls.prompt}"</span><br>
+            → <span class="diag-enc-block diag-enc-txt" style="display:inline-block;font-size:0.7rem;padding:0.1rem 0.4rem;">Encoder Texto</span>
+          </div>
+          <div class="sim-bar-wrap">
+            <div class="sim-bar${i === winnerIdx ? ' winner' : ''}" id="bar${i}" style="width:0%"></div>
+          </div>
+          <div class="sim-val" id="val${i}">0%</div>
+        `;
+        simRowsEl.appendChild(row);
+      });
+
+      // Animate bars
+      setTimeout(() => {
+        probs.forEach((p, i) => {
+          document.getElementById('bar' + i).style.width = (p * 100) + '%';
+          document.getElementById('val' + i).textContent = (p * 100).toFixed(1) + '%';
+        });
+        document.getElementById('argmaxLabel').innerHTML =
+          `📊 Softmax (τ=0.5) → 🏆 Argmax → <strong style="color:var(--teal)">${classes[winnerIdx].ptLabel}</strong>`;    
+      }, 50);
+    }
+  </script>
+</body>
+</html>

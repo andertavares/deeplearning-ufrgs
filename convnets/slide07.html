@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 7 – De Pixels a Padrões</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .patterns-demo {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 1.4rem;
+      flex: 1;
+      overflow: visible;
+    }
+
+    .demo-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.3rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      overflow-y: auto;
+      box-shadow: var(--shadow);
+    }
+
+    /* --- Slider row --- */
+    .slider-row {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+    .slider-label {
+      font-size: 0.88rem;
+      font-family: 'Fira Code', monospace;
+      color: var(--text-muted);
+      text-align: center;
+      font-weight: 600;
+    }
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--purple);
+      cursor: pointer;
+    }
+
+    /* --- Canvas layout --- */
+    .maps-grid {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 1rem;
+      align-items: start;
+      justify-items: center;
+    }
+    .canvas-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .canvas-block-label {
+      font-size: 0.85rem;
+      font-family: 'Fira Code', monospace;
+      color: var(--text-muted);
+      text-align: center;
+      font-weight: 600;
+    }
+    .canvas-block-sublabel {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      text-align: center;
+      line-height: 1.3;
+    }
+    canvas {
+      image-rendering: pixelated;
+      border-radius: 6px;
+      border: 2px solid var(--border2);
+      display: block;
+    }
+    .arrow-divider {
+      font-size: 1.8rem;
+      color: var(--text-dim);
+      font-weight: 700;
+      align-self: center;
+      padding-top: 1.2rem;
+    }
+
+    /* pool region overlay annotation */
+    .pool-annotation {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      font-family: 'Fira Code', monospace;
+      text-align: center;
+    }
+
+    /* Score summary */
+    .score-row {
+      display: flex;
+      gap: 0.9rem;
+      align-items: stretch;
+    }
+    .score-card {
+      flex: 1;
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem 0.8rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .score-card-label {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .score-card-val {
+      font-family: 'Fira Code', monospace;
+      font-size: 1.1rem;
+      font-weight: 700;
+      transition: color 0.3s;
+    }
+    .score-bar-wrap {
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 999px;
+      height: 8px;
+      overflow: hidden;
+      margin-top: 0.2rem;
+    }
+    .score-bar {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 0.35s ease, background 0.35s ease;
+    }
+
+    /* Right panel */
+    .stability-visual {
+      display: flex;
+      gap: 0.6rem;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      padding: 0.5rem 0;
+    }
+    .sv-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.78rem;
+      font-family: 'Fira Code', monospace;
+      color: var(--text-muted);
+    }
+    .sv-arrow {
+      font-size: 1.4rem;
+      color: var(--text-dim);
+      align-self: center;
+      padding-top: 0.6rem;
+    }
+    canvas.sv-canvas {
+      border-radius: 4px;
+      border: 1.5px solid var(--border2);
+    }
+
+    .step-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+    }
+    .step-item {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0.7rem 0.9rem;
+      animation: cardSlide 0.4s ease both;
+      animation-delay: var(--delay, 0s);
+    }
+    .step-num {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--purple);
+      min-width: 1.4rem;
+      font-family: 'Fira Code', monospace;
+    }
+    .step-text strong {
+      display: block;
+      font-size: 0.95rem;
+      color: var(--text);
+      margin-bottom: 0.2rem;
+    }
+    .step-text p {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">Redes Convolucionais</span>
+      <span class="prof-tag" style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Bloco 2 · Slide 2 / 2</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">De Pixels a Padrões</h1>
+        <p class="slide-subtitle">Precisamos de representações mais estáveis que pixels individuais</p>
+      </div>
+
+      <div class="patterns-demo">
+        <!-- Left: interactive demo -->
+        <div class="demo-panel">
+          <div class="panel-title">Mova o X e observe a estabilidade 🖱️</div>
+
+          <!-- Sliders -->
+          <div class="slider-row">
+            <div class="slider-label">← deslocamento horizontal: <span id="shift-val">0</span> px →</div>
+            <input type="range" id="shift-slider" min="-3" max="3" value="0" step="1" />
+          </div>
+          <div class="slider-row">
+            <div class="slider-label">↑ deslocamento vertical: <span id="vshift-val">0</span> px ↓</div>
+            <input type="range" id="vshift-slider" min="-3" max="3" value="0" step="1" />
+          </div>
+
+          <!-- Input + Robust response -->
+          <div class="maps-grid">
+            <div class="canvas-block">
+              <canvas id="canvas-input" width="108" height="108"></canvas>
+              <div class="canvas-block-label">entrada (X deslocado)</div>
+              <div class="canvas-block-sublabel">9 × 9 pixels<br>sensível à posição</div>
+            </div>
+            <div class="arrow-divider">→</div>
+            <div class="canvas-block">
+              <canvas id="canvas-pool" width="108" height="108"></canvas>
+              <div class="canvas-block-label">resposta robusta</div>
+              <div class="canvas-block-sublabel">3 × 3 regiões<br>estável à posição</div>
+            </div>
+          </div>
+          <div class="pool-annotation">
+            cada célula = intensidade máxima detectada em uma região da imagem
+          </div>
+
+          <div class="score-row">
+            <div class="score-card">
+              <div class="score-card-label">X original</div>
+              <div class="score-card-val" id="resp-orig" style="color:var(--purple);">—</div>
+              <div class="score-bar-wrap"><div class="score-bar" id="bar-orig" style="background:var(--purple); width:100%;"></div></div>
+            </div>
+            <div class="score-card">
+              <div class="score-card-label">X deslocado (bruto)</div>
+              <div class="score-card-val" id="resp-shifted" style="color:var(--blue);">—</div>
+              <div class="score-bar-wrap"><div class="score-bar" id="bar-shifted" style="background:var(--blue);"></div></div>
+            </div>
+            <div class="score-card">
+              <div class="score-card-label">resposta robusta (deslocado)</div>
+              <div class="score-card-val" id="resp-pool" style="color:var(--green);">—</div>
+              <div class="score-bar-wrap"><div class="score-bar" id="bar-pool" style="background:var(--green);"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: concept explanation -->
+        <div class="demo-panel">
+          <div class="panel-title">Por que isso funciona?</div>
+
+          <div class="step-list">
+            <div class="step-item" style="--delay:0.05s; border-color:#fca5a5; background:#fff5f5;">
+              <div class="step-num" style="color:var(--red);">1</div>
+              <div class="step-text">
+                <strong style="color:var(--red);">Problema: pixels isolados são frágeis</strong>
+                <p>Deslocar o X muda <em>quais</em> posições têm valor 1. Um sistema que compara pixels um a um não reconhece que é o mesmo objeto.</p>
+              </div>
+            </div>
+            <div class="step-item" style="--delay:0.15s;">
+              <div class="step-num">2</div>
+              <div class="step-text">
+                <strong>Solução: detecção de características</strong>
+                <p>Ao invés de olhar pixels individualmente, vamos buscar <em>características</em> (e.g. diagonais) em regiões da imagem, tornando a detecção mais robusta.</p>
+              </div>
+            </div>
+            <div class="step-item" style="--delay:0.35s; border-color:#86efac; background:#f0fdf4;">
+              <div class="step-num" style="color:var(--green);">3</div>
+              <div class="step-text">
+                <strong style="color:var(--green);">Resultado: representação compacta e estável</strong>
+                <p>Mova o X nos sliders. Os pixels mudam de posição, mas a <strong>resposta robusta</strong> (3×3) permanece semelhante — capturando <strong>o que</strong> está na imagem, não <strong>onde exatamente</strong>.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="highlight-box purple">
+            <span class="icon">💡</span>
+            <p><strong>Ideia central:</strong> comprimir a imagem numa grade de <em>intensidades regionais</em> torna a representação muito menos sensível à posição exata dos pixels — e muito mais útil para reconhecer objetos. O próximo bloco mostra como redes neurais implementam isso automaticamente.</p>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide06.html'">← Anterior</button>
+      <div class="nav-dots">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+      </div>
+      <button class="btn-nav btn-next"
+        style="background:var(--purple);border-color:var(--purple);color:#fff;"
+        onclick="location.href='slide08.html'">
+        Próximo Bloco →
+      </button>
+    </nav>
+  </div>
+
+  <script>
+    const N = 9;
+    const CELL_R = 12;   // response canvas (9×9 grid → 108px)
+    const POOL   = 3;    // pool size and stride
+    const NP     = N / POOL;  // = 3 pool regions per axis
+
+    // Original X tile (same as slide 5 & 6)
+    const tileX = [
+      [0,0,0,0,0,0,0,0,0],
+      [0,1,0,0,0,0,0,1,0],
+      [0,0,1,0,0,0,1,0,0],
+      [0,0,0,1,0,1,0,0,0],
+      [0,0,0,0,1,0,0,0,0],
+      [0,0,0,1,0,1,0,0,0],
+      [0,0,1,0,0,0,1,0,0],
+      [0,1,0,0,0,0,0,1,0],
+      [0,0,0,0,0,0,0,0,0],
+    ];
+
+    // Diagonal detector kernel (3×3) — matches X's diagonal strokes
+    const kernel = [
+      [ 1,  0, -1],
+      [ 0,  1,  0],
+      [-1,  0,  1],
+    ];
+
+    function shiftTile(dx, dy) {
+      const result = Array.from({length: N}, () => Array(N).fill(0));
+      for (let r = 0; r < N; r++) {
+        for (let c = 0; c < N; c++) {
+          const nr = r + dy, nc = c + dx;
+          if (nr >= 0 && nr < N && nc >= 0 && nc < N)
+            result[nr][nc] = tileX[r][c];
+        }
+      }
+      return result;
+    }
+
+    // Convolution-like response map (same-padding)
+    function computeResponse(tile) {
+      const F   = kernel.length;
+      const pad = Math.floor(F / 2);
+      const resp = Array.from({length: N}, () => Array(N).fill(0));
+      for (let r = 0; r < N; r++) {
+        for (let c = 0; c < N; c++) {
+          let sum = 0;
+          for (let fr = 0; fr < F; fr++) {
+            for (let fc = 0; fc < F; fc++) {
+              const ir = r + fr - pad, ic = c + fc - pad;
+              const px = (ir >= 0 && ir < N && ic >= 0 && ic < N) ? tile[ir][ic] : 0;
+              sum += kernel[fr][fc] * px;
+            }
+          }
+          // ReLU: only keep positive responses
+          resp[r][c] = Math.max(0, sum);
+        }
+      }
+      return resp;
+    }
+
+    // 3×3 max-pool with stride 3 → NP×NP output
+    function maxPool(resp) {
+      const pooled = Array.from({length: NP}, () => Array(NP).fill(0));
+      for (let pr = 0; pr < NP; pr++) {
+        for (let pc = 0; pc < NP; pc++) {
+          let maxV = 0;
+          for (let dr = 0; dr < POOL; dr++)
+            for (let dc = 0; dc < POOL; dc++)
+              maxV = Math.max(maxV, resp[pr*POOL+dr][pc*POOL+dc]);
+          pooled[pr][pc] = maxV;
+        }
+      }
+      return pooled;
+    }
+
+    function totalResp(resp) {
+      let s = 0;
+      for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) s += resp[r][c];
+      return s;
+    }
+    function totalPool(pooled) {
+      let s = 0;
+      for (let pr = 0; pr < NP; pr++) for (let pc = 0; pc < NP; pc++) s += pooled[pr][pc];
+      return s;
+    }
+
+    // ---- Draw input tile (white on dark, like slide 05/06) ----
+    function drawInput(tile) {
+      const canvas = document.getElementById('canvas-input');
+      const ctx    = canvas.getContext('2d');
+      ctx.fillStyle = '#111827';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      for (let r = 0; r < N; r++) {
+        for (let c = 0; c < N; c++) {
+          if (tile[r][c] === 1) {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(c*CELL_R, r*CELL_R, CELL_R, CELL_R);
+          }
+        }
+      }
+      ctx.strokeStyle = 'rgba(51,65,85,0.4)';
+      ctx.lineWidth   = 0.5;
+      for (let i = 0; i <= N; i++) {
+        ctx.beginPath(); ctx.moveTo(i*CELL_R,0); ctx.lineTo(i*CELL_R,N*CELL_R); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0,i*CELL_R); ctx.lineTo(N*CELL_R,i*CELL_R); ctx.stroke();
+      }
+    }
+
+    // ---- Draw max-pooled map (3×3 cells, each 36×36 in 108px canvas) ----
+    function drawPooled(pooled) {
+      const canvas  = document.getElementById('canvas-pool');
+      const ctx     = canvas.getContext('2d');
+      const CELL_P  = 108 / NP;   // 36px per pooled cell
+      let maxVal    = 0;
+      for (let pr = 0; pr < NP; pr++)
+        for (let pc = 0; pc < NP; pc++)
+          if (pooled[pr][pc] > maxVal) maxVal = pooled[pr][pc];
+
+      ctx.fillStyle = '#111827';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      for (let pr = 0; pr < NP; pr++) {
+        for (let pc = 0; pc < NP; pc++) {
+          const v = pooled[pr][pc];
+          const t = maxVal > 0 ? v / maxVal : 0;
+          // Fill cell with purple intensity
+          ctx.fillStyle = `rgba(167,139,250,${t.toFixed(2)})`;
+          ctx.fillRect(pc*CELL_P, pr*CELL_P, CELL_P, CELL_P);
+          // Show numeric value
+          if (t > 0) {
+            ctx.fillStyle = t > 0.5 ? '#ffffff' : '#c4b5fd';
+            ctx.font = `bold ${Math.round(CELL_P * 0.28)}px Fira Code, monospace`;
+            ctx.textAlign    = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(v.toFixed(1), pc*CELL_P + CELL_P/2, pr*CELL_P + CELL_P/2);
+          }
+        }
+      }
+      // Bold grid separating the 3 pool regions
+      ctx.strokeStyle = 'rgba(100,116,139,0.6)';
+      ctx.lineWidth   = 1.5;
+      for (let i = 0; i <= NP; i++) {
+        ctx.beginPath(); ctx.moveTo(i*CELL_P, 0); ctx.lineTo(i*CELL_P, 108); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, i*CELL_P); ctx.lineTo(108, i*CELL_P); ctx.stroke();
+      }
+    }
+
+    // Active pixel count (for score bar)
+    function countPixels(tile) {
+      return tile.flat().reduce((s, v) => s + v, 0);
+    }
+
+    const origPixels    = countPixels(tileX);
+    const origPoolTotal = totalPool(maxPool(computeResponse(tileX)));
+
+    function update() {
+      const dx = parseInt(document.getElementById('shift-slider').value);
+      const dy = parseInt(document.getElementById('vshift-slider').value);
+      document.getElementById('shift-val').textContent  = dx > 0 ? '+' + dx : dx;
+      document.getElementById('vshift-val').textContent = dy > 0 ? '+' + dy : dy;
+
+      const shifted = shiftTile(dx, dy);
+      const resp    = computeResponse(shifted);
+      const pooled  = maxPool(resp);
+
+      drawInput(shifted);
+      drawPooled(pooled);
+
+      const shiftedPixels = countPixels(shifted);
+      const poolTotal     = totalPool(pooled);
+
+      // Scores: original pixels, shifted pixels (always same = 12), pool signal
+      document.getElementById('resp-orig').textContent    = origPixels + ' px ativos';
+      document.getElementById('resp-shifted').textContent = shiftedPixels + ' px ativos';
+      document.getElementById('resp-pool').textContent    = poolTotal.toFixed(1);
+
+      // bar-orig always 100%
+      const pctPool = origPoolTotal > 0 ? Math.min(100, Math.round(poolTotal / origPoolTotal * 100)) : 0;
+
+      const barS = document.getElementById('bar-shifted');
+      barS.style.width      = '100%';
+      barS.style.background = 'var(--blue)';
+
+      const barP = document.getElementById('bar-pool');
+      barP.style.width      = pctPool + '%';
+      barP.style.background = pctPool >= 80 ? '#166534' : pctPool >= 50 ? 'var(--blue)' : 'var(--orange)';
+
+      const poolVal = document.getElementById('resp-pool');
+      poolVal.style.color = pctPool >= 80 ? 'var(--green)' : pctPool >= 50 ? 'var(--blue)' : 'var(--orange)';
+    }
+
+    document.getElementById('shift-slider').addEventListener('input', update);
+    document.getElementById('vshift-slider').addEventListener('input', update);
+    update();
+  </script>
+</body>
+</html>
