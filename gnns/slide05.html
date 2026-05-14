@@ -21,6 +21,10 @@
     .sn-user:hover, .sn-bot:hover, .sn-unknown:hover { stroke-width: 3.5; filter: drop-shadow(0 0 6px rgba(0,0,0,0.18)); }
     .sn-label  { font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 700; pointer-events: none; }
     .sn-edge   { stroke: #cbd5e1; stroke-width: 1.8; }
+    .attr-box-user    { fill: #f0fdf9; stroke: #0d6e6e; stroke-width: 1.2; }
+    .attr-box-bot     { fill: #fff5f5; stroke: #b91c1c; stroke-width: 1.2; }
+    .attr-box-unknown { fill: #f9fafb; stroke: #9ca3af; stroke-width: 1.2; }
+    .attr-box-text    { font-family: 'Fira Code', monospace; font-size: 8px; pointer-events: none; }
     .info-panel { display: flex; flex-direction: column; gap: 0.8rem; }
     .node-detail { background: var(--bg3); border: 2px solid var(--border2); border-radius: var(--radius); padding: 0.9rem 1.1rem; transition: border-color 0.2s; }
     .node-detail.user  { border-color: #0d6e6e; background: #f0fdf9; }
@@ -55,53 +59,70 @@
     <main class="slide-main">
       <div class="title-block">
         <h1 class="slide-title">Detecção de Bots em Redes Sociais</h1>
-        <p class="slide-subtitle">Bloco 1 — Exemplo de Node Classification</p>
+        <p class="slide-subtitle">Bloco 1 — Exemplo de trabalho: Node Classification</p>
       </div>
 
       <div class="main-layout">
         <!-- Graph -->
         <div class="panel graph-wrap">
           <div class="panel-title">Grafo da rede social — clique em um nó para ver seus atributos</div>
-          <svg class="bot-graph" viewBox="0 0 420 300" id="botSvg">
+          <svg class="bot-graph" viewBox="0 0 460 290" id="botSvg">
             <!-- Edges -->
-            <line class="sn-edge" x1="80"  y1="80"  x2="200" y2="60"/>
-            <line class="sn-edge" x1="80"  y1="80"  x2="150" y2="180"/>
-            <line class="sn-edge" x1="200" y1="60"  x2="310" y2="90"/>
-            <line class="sn-edge" x1="200" y1="60"  x2="150" y2="180"/>
-            <line class="sn-edge" x1="310" y1="90"  x2="360" y2="200"/>
-            <line class="sn-edge" x1="310" y1="90"  x2="230" y2="200"/>
-            <line class="sn-edge" x1="150" y1="180" x2="230" y2="200"/>
-            <line class="sn-edge" x1="230" y1="200" x2="360" y2="200"/>
-            <line class="sn-edge" x1="80"  y1="80"  x2="60"  y2="210"/>
-            <line class="sn-edge" x1="60"  y1="210" x2="150" y2="180"/>
-            <!-- U1: usuário legítimo, idade=28, posts_7d=4 -->
-            <circle id="node-U1" class="sn-user" cx="80" cy="80" r="26" onclick="showNode('U1')"/>
-            <text class="sn-label" x="80" y="76" text-anchor="middle" fill="#0d6e6e">U1</text>
-            <text class="sn-label" x="80" y="90" text-anchor="middle" font-size="10" fill="#0d6e6e">✓</text>
-            <!-- U2: usuário legítimo, idade=35, posts_7d=2 -->
-            <circle id="node-U2" class="sn-user" cx="200" cy="60" r="26" onclick="showNode('U2')"/>
-            <text class="sn-label" x="200" y="56" text-anchor="middle" fill="#0d6e6e">U2</text>
-            <text class="sn-label" x="200" y="70" text-anchor="middle" font-size="10" fill="#0d6e6e">✓</text>
-            <!-- B1: bot, idade=1, posts_7d=312 -->
-            <circle id="node-B1" class="sn-bot" cx="310" cy="90" r="26" onclick="showNode('B1')"/>
-            <text class="sn-label" x="310" y="86" text-anchor="middle" fill="#b91c1c">B1</text>
-            <text class="sn-label" x="310" y="100" text-anchor="middle" font-size="10" fill="#b91c1c">✗</text>
-            <!-- U3: usuário legítimo, idade=22, posts_7d=7 -->
-            <circle id="node-U3" class="sn-user" cx="150" cy="180" r="26" onclick="showNode('U3')"/>
-            <text class="sn-label" x="150" y="176" text-anchor="middle" fill="#0d6e6e">U3</text>
-            <text class="sn-label" x="150" y="190" text-anchor="middle" font-size="10" fill="#0d6e6e">✓</text>
-            <!-- B2: bot, idade=0, posts_7d=498 -->
-            <circle id="node-B2" class="sn-bot" cx="360" cy="200" r="26" onclick="showNode('B2')"/>
-            <text class="sn-label" x="360" y="196" text-anchor="middle" fill="#b91c1c">B2</text>
-            <text class="sn-label" x="360" y="210" text-anchor="middle" font-size="10" fill="#b91c1c">✗</text>
-            <!-- X: desconhecido, a classificar, idade=2, posts_7d=187 -->
-            <circle id="node-X" class="sn-unknown" cx="230" cy="200" r="26" onclick="showNode('X')"/>
-            <text class="sn-label" x="230" y="196" text-anchor="middle" fill="#6b7fa3">X</text>
-            <text class="sn-label" x="230" y="210" text-anchor="middle" font-size="10" fill="#6b7fa3">?</text>
-            <!-- U4: usuário legítimo, idade=41, posts_7d=3 -->
-            <circle id="node-U4" class="sn-user" cx="60" cy="210" r="26" onclick="showNode('U4')"/>
-            <text class="sn-label" x="60" y="206" text-anchor="middle" fill="#0d6e6e">U4</text>
-            <text class="sn-label" x="60" y="220" text-anchor="middle" font-size="10" fill="#0d6e6e">✓</text>
+            <line class="sn-edge" x1="90"  y1="120" x2="90"  y2="245"/>
+            <line class="sn-edge" x1="90"  y1="120" x2="230" y2="185"/>
+            <line class="sn-edge" x1="370" y1="120" x2="370" y2="245"/>
+            <line class="sn-edge" x1="370" y1="120" x2="230" y2="185"/>
+            <line class="sn-edge" x1="370" y1="245" x2="230" y2="185"/>
+
+            <!-- U1 attribute box: x=58, y=64, w=64, h=28 -->
+            <rect x="58" y="64" width="64" height="28" rx="4" class="attr-box-user"/>
+            <text x="90" y="75" text-anchor="middle" class="attr-box-text" fill="#0d6e6e">840d</text>
+            <text x="90" y="87" text-anchor="middle" class="attr-box-text" fill="#0d6e6e">5 posts</text>
+
+            <!-- U2 attribute box: x=58, y=189, w=64, h=28 -->
+            <rect x="58" y="189" width="64" height="28" rx="4" class="attr-box-user"/>
+            <text x="90" y="200" text-anchor="middle" class="attr-box-text" fill="#0d6e6e">620d</text>
+            <text x="90" y="212" text-anchor="middle" class="attr-box-text" fill="#0d6e6e">7 posts</text>
+
+            <!-- B1 attribute box: x=338, y=64, w=64, h=28 -->
+            <rect x="338" y="64" width="64" height="28" rx="4" class="attr-box-bot"/>
+            <text x="370" y="75" text-anchor="middle" class="attr-box-text" fill="#b91c1c">38d</text>
+            <text x="370" y="87" text-anchor="middle" class="attr-box-text" fill="#b91c1c">14 posts</text>
+
+            <!-- B2 attribute box: x=338, y=189, w=64, h=28 -->
+            <rect x="338" y="189" width="64" height="28" rx="4" class="attr-box-bot"/>
+            <text x="370" y="200" text-anchor="middle" class="attr-box-text" fill="#b91c1c">22d</text>
+            <text x="370" y="212" text-anchor="middle" class="attr-box-text" fill="#b91c1c">19 posts</text>
+
+            <!-- X attribute box: x=198, y=129, w=64, h=28 -->
+            <rect x="198" y="129" width="64" height="28" rx="4" class="attr-box-unknown"/>
+            <text x="230" y="140" text-anchor="middle" class="attr-box-text" fill="#6b7fa3">30d</text>
+            <text x="230" y="152" text-anchor="middle" class="attr-box-text" fill="#6b7fa3">12 posts</text>
+
+            <!-- U1: usuário legítimo, cadastro=840d, posts_7d=5 -->
+            <circle id="node-U1" class="sn-user" cx="90" cy="120" r="22" onclick="showNode('U1')"/>
+            <text class="sn-label" x="90" y="116" text-anchor="middle" fill="#0d6e6e">U1</text>
+            <text class="sn-label" x="90" y="129" text-anchor="middle" font-size="11" fill="#0d6e6e">✓</text>
+
+            <!-- U2: usuário legítimo, cadastro=620d, posts_7d=7 -->
+            <circle id="node-U2" class="sn-user" cx="90" cy="245" r="22" onclick="showNode('U2')"/>
+            <text class="sn-label" x="90" y="241" text-anchor="middle" fill="#0d6e6e">U2</text>
+            <text class="sn-label" x="90" y="254" text-anchor="middle" font-size="11" fill="#0d6e6e">✓</text>
+
+            <!-- B1: bot, cadastro=38d, posts_7d=14 -->
+            <circle id="node-B1" class="sn-bot" cx="370" cy="120" r="22" onclick="showNode('B1')"/>
+            <text class="sn-label" x="370" y="116" text-anchor="middle" fill="#b91c1c">B1</text>
+            <text class="sn-label" x="370" y="129" text-anchor="middle" font-size="11" fill="#b91c1c">✗</text>
+
+            <!-- B2: bot, cadastro=22d, posts_7d=19 -->
+            <circle id="node-B2" class="sn-bot" cx="370" cy="245" r="22" onclick="showNode('B2')"/>
+            <text class="sn-label" x="370" y="241" text-anchor="middle" fill="#b91c1c">B2</text>
+            <text class="sn-label" x="370" y="254" text-anchor="middle" font-size="11" fill="#b91c1c">✗</text>
+
+            <!-- X: desconhecido, cadastro=30d, posts_7d=12 -->
+            <circle id="node-X" class="sn-unknown" cx="230" cy="185" r="22" onclick="showNode('X')"/>
+            <text class="sn-label" x="230" y="181" text-anchor="middle" fill="#6b7fa3">X</text>
+            <text class="sn-label" x="230" y="194" text-anchor="middle" font-size="11" fill="#6b7fa3">?</text>
           </svg>
           <div class="legend">
             <div class="legend-item"><div class="legend-dot user"></div> Usuário legítimo (✓)</div>
@@ -117,32 +138,34 @@
             <span><strong>Tarefa:</strong> classificar cada nó como <em>usuário legítimo</em> (✓) ou <em>bot</em> (✗) usando atributos e estrutura do grafo.</span>
           </div>
 
-          <div class="panel" id="nodeCard" style="min-height:160px;">
+          <!-- Features por Nó FIRST -->
+          <div class="panel">
+            <div class="panel-title">🏷️ Features por Nó</div>
+            <div class="attr-row">
+              <span class="attr-key">x<sub>v</sub>[0] &nbsp;cadastro</span>
+              <span class="attr-val">inteiro (dias)</span>
+            </div>
+            <div class="attr-row">
+              <span class="attr-key">x<sub>v</sub>[1] &nbsp;posts_7d</span>
+              <span class="attr-val">nº posts (7 dias)</span>
+            </div>
+            <div style="margin-top:0.6rem; font-size:0.85rem; color:var(--text-muted); line-height:1.6;">
+              Vetor do nó v: &nbsp;<code style="font-family:'Fira Code',monospace;color:var(--teal);font-size:0.9rem;">x<sub>v</sub> = [cadastro, posts_7d]</code>
+            </div>
+          </div>
+
+          <!-- Atributos do Nó SECOND (shown on click) -->
+          <div class="panel" id="nodeCard" style="min-height:130px;">
             <div class="panel-title">Atributos do Nó</div>
             <p class="placeholder-text" id="placeholderText">← Clique em um nó para ver seus atributos</p>
             <div id="nodeDetail" style="display:none;"></div>
           </div>
 
-          <div class="panel">
-            <div class="panel-title">🏷️ Features por Nó</div>
-            <div class="attr-row">
-              <span class="attr-key">x_v[0] &nbsp;idade</span>
-              <span class="attr-val">inteiro (anos)</span>
-            </div>
-            <div class="attr-row">
-              <span class="attr-key">x_v[1] &nbsp;posts_7d</span>
-              <span class="attr-val">nº posts (7 dias)</span>
-            </div>
-            <div style="margin-top:0.6rem; font-size:0.85rem; color:var(--text-muted); line-height:1.6;">
-              Vetor do nó v: &nbsp;<code style="font-family:'Fira Code',monospace;color:var(--teal);font-size:0.9rem;">x_v = [idade, posts_7d]</code>
-            </div>
-          </div>
-
           <div class="insight-box">
             <span class="i-icon">💡</span>
             <span class="i-text">
-              Bots: <strong>conta nova</strong> (idade ≈ 0–1) e <strong>muitos posts</strong> (centenas por semana).<br>
-              A GNN combina os atributos do nó <em>e</em> dos seus vizinhos para classificar.
+              X tem cadastro=30d e posts=12 — <strong>ambíguo!</strong><br>
+              As conexões (B1, B2) revelam que X provavelmente é um bot.
             </span>
           </div>
         </div>
@@ -158,13 +181,11 @@
 
   <script>
     const nodeData = {
-      'U1': { type: 'user',    title: 'Usuário Legítimo',  idade: 28,  posts_7d: 4   },
-      'U2': { type: 'user',    title: 'Usuário Legítimo',  idade: 35,  posts_7d: 2   },
-      'U3': { type: 'user',    title: 'Usuário Legítimo',  idade: 22,  posts_7d: 7   },
-      'U4': { type: 'user',    title: 'Usuário Legítimo',  idade: 41,  posts_7d: 3   },
-      'B1': { type: 'bot',     title: 'Bot',               idade: 1,   posts_7d: 312 },
-      'B2': { type: 'bot',     title: 'Bot',               idade: 0,   posts_7d: 498 },
-      'X':  { type: 'unknown', title: 'Nó desconhecido',   idade: 2,   posts_7d: 187 }
+      'U1': { type: 'user',    title: 'Usuário Legítimo',  cadastro: 840, posts_7d: 5  },
+      'U2': { type: 'user',    title: 'Usuário Legítimo',  cadastro: 620, posts_7d: 7  },
+      'B1': { type: 'bot',     title: 'Bot',               cadastro: 38,  posts_7d: 14 },
+      'B2': { type: 'bot',     title: 'Bot',               cadastro: 22,  posts_7d: 19 },
+      'X':  { type: 'unknown', title: 'Nó desconhecido',   cadastro: 30,  posts_7d: 12 }
     };
 
     function showNode(id) {
@@ -178,16 +199,16 @@
         <div class="node-detail ${tc}">
           <div class="node-detail-title ${tc}">${icon}${d.title} — Nó ${id}</div>
           <div class="attr-row">
-            <span class="attr-key">x_v[0] &nbsp;idade</span>
-            <span class="attr-val ${tc}">${d.idade} anos</span>
+            <span class="attr-key">x<sub>v</sub>[0] &nbsp;cadastro</span>
+            <span class="attr-val ${tc}">${d.cadastro}d</span>
           </div>
           <div class="attr-row">
-            <span class="attr-key">x_v[1] &nbsp;posts_7d</span>
+            <span class="attr-key">x<sub>v</sub>[1] &nbsp;posts_7d</span>
             <span class="attr-val ${tc}">${d.posts_7d} posts</span>
           </div>
           <div class="attr-row" style="border:none;margin-top:0.3rem;">
-            <span class="attr-key">vetor x_v</span>
-            <span style="font-family:'Fira Code',monospace;font-weight:700;color:var(--teal);">[${d.idade}, ${d.posts_7d}]</span>
+            <span class="attr-key">vetor x<sub>v</sub></span>
+            <span style="font-family:'Fira Code',monospace;font-weight:700;color:var(--teal);">[${d.cadastro}, ${d.posts_7d}]</span>
           </div>
         </div>`;
     }
