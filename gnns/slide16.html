@@ -3,21 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Slide 16 – Indutivo vs Transdutivo</title>
+  <title>Slide 16 – Transformers e GNNs são Primos</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
   <style>
     .cmp-layout { display:grid; grid-template-columns:1fr 1fr; gap:1.2rem; flex:1; }
-    .compare-table { width:100%; border-collapse:collapse; font-size:0.85rem; }
-    .compare-table th { background:var(--bg3); color:var(--text-muted); font-weight:700;
-      text-transform:uppercase; letter-spacing:0.06em; font-size:0.72rem; padding:0.45rem 0.6rem;
-      border:1px solid var(--border2); text-align:left; }
-    .compare-table td { padding:0.45rem 0.6rem; border:1px solid var(--border2); color:var(--text-muted); vertical-align:top; }
-    .compare-table tr:nth-child(even) td { background:var(--bg3); }
-    .td-hl { color:var(--teal); font-weight:600; }
-    .legend-row { display:flex; gap:1rem; flex-wrap:wrap; font-size:0.82rem; }
-    .legend-item { display:flex; align-items:center; gap:0.35rem; }
-    .legend-dot { width:12px; height:12px; border-radius:50%; flex-shrink:0; }
+    .formula-eq { font-family:'Fira Code',monospace; font-size:0.88rem; color:var(--text);
+      background:var(--bg3); border:1px solid var(--border2); border-radius:var(--radius-sm);
+      padding:0.55rem 0.75rem; line-height:1.6; }
+    .token-seq { display:flex; gap:0.4rem; flex-wrap:wrap; justify-content:center; margin:0.4rem 0; }
+    .tok { padding:0.3rem 0.6rem; background:var(--blue-lt); border:1.5px solid #93c5fd;
+      border-radius:6px; font-family:'Fira Code',monospace; font-size:0.88rem; font-weight:700; color:var(--blue); }
+    .tok.teal { background:var(--teal-lt); border-color:#5eead4; color:var(--teal); }
+    .toggle-row { display:flex; gap:0.5rem; justify-content:center; }
+    .big-insight { background:linear-gradient(135deg,#ede9fe,#dbeafe); border:1.5px solid #c4b5fd;
+      border-radius:var(--radius); padding:0.9rem 1.2rem; display:flex; gap:0.7rem; align-items:flex-start; }
   </style>
 </head>
 <body>
@@ -25,151 +25,105 @@
     <header class="slide-header">
       <span class="course-tag">GNNs</span>
       <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
-      <span class="slide-counter">Slide 16 / 20</span>
+      <span class="slide-counter">Slide 16 / 22</span>
     </header>
 
     <main class="slide-main">
       <div class="title-block">
-        <h1 class="slide-title">Indutivo vs Transdutivo</h1>
-        <p class="slide-subtitle">Bloco 4 — Tipos de Aprendizado</p>
+        <h1 class="slide-title">Transformers e GNNs são Primos</h1>
+        <p class="slide-subtitle">Bloco 4 — Conexões</p>
+      </div>
+
+      <div class="toggle-row">
+        <button class="btn-toggle active" id="btnTf" onclick="setView('transformer')">Ver como Transformer</button>
+        <button class="btn-toggle" id="btnGNN" onclick="setView('gnn')">Ver como GNN (esparso)</button>
       </div>
 
       <div class="cmp-layout">
-        <!-- Transdutivo -->
+        <!-- LEFT: Transformer -->
         <div class="panel">
-          <div class="panel-title">🔒 Transdutivo</div>
-
-          <div class="legend-row">
-            <span class="legend-item"><span class="legend-dot" style="background:#16a34a;"></span>Rotulado (treino)</span>
-            <span class="legend-item"><span class="legend-dot" style="background:#d97706;"></span>Rotulado (val)</span>
-            <span class="legend-item"><span class="legend-dot" style="background:#94a3b8;"></span>Sem rótulo (?)</span>
+          <div class="panel-title">⚡ Transformer Self-Attention</div>
+          <div class="token-seq">
+            <span class="tok">T₁</span>
+            <span class="tok">T₂</span>
+            <span class="tok">T₃</span>
+            <span class="tok">T₄</span>
           </div>
 
-          <svg viewBox="0 0 240 170" style="width:100%;max-height:170px;display:block;margin:0 auto;">
-            <!-- Arestas -->
-            <line x1="60"  y1="60"  x2="120" y2="60"  stroke="#c7d0e0" stroke-width="1.5"/>
-            <line x1="120" y1="60"  x2="180" y2="60"  stroke="#c7d0e0" stroke-width="1.5"/>
-            <line x1="60"  y1="60"  x2="60"  y2="120" stroke="#c7d0e0" stroke-width="1.5"/>
-            <line x1="120" y1="60"  x2="120" y2="120" stroke="#c7d0e0" stroke-width="1.5"/>
-            <line x1="180" y1="60"  x2="180" y2="120" stroke="#c7d0e0" stroke-width="1.5"/>
-            <line x1="60"  y1="120" x2="120" y2="120" stroke="#c7d0e0" stroke-width="1.5"/>
-            <line x1="120" y1="120" x2="180" y2="120" stroke="#c7d0e0" stroke-width="1.5"/>
-            <line x1="60"  y1="120" x2="120" y2="60"  stroke="#c7d0e0" stroke-width="1" stroke-dasharray="3,2"/>
-            <line x1="180" y1="60"  x2="120" y2="120" stroke="#c7d0e0" stroke-width="1" stroke-dasharray="3,2"/>
-            <!-- Nós rotulados treino (verde) -->
-            <circle cx="60"  cy="60"  r="16" fill="#dcfce7" stroke="#16a34a" stroke-width="2.5"/>
-            <circle cx="180" cy="120" r="16" fill="#dcfce7" stroke="#16a34a" stroke-width="2.5"/>
-            <circle cx="60"  cy="120" r="16" fill="#dcfce7" stroke="#16a34a" stroke-width="2.5"/>
-            <!-- Nó validação (amarelo) -->
-            <circle cx="180" cy="60"  r="16" fill="#fef9c3" stroke="#d97706" stroke-width="2.5"/>
-            <!-- Nós sem rótulo (cinza) -->
-            <circle cx="120" cy="60"  r="16" fill="#f1f5f9" stroke="#94a3b8" stroke-width="2"/>
-            <circle cx="120" cy="120" r="16" fill="#f1f5f9" stroke="#94a3b8" stroke-width="2"/>
-            <!-- Labels -->
-            <text x="60"  y="64"  font-size="10" font-weight="700" fill="#16a34a" text-anchor="middle">A</text>
-            <text x="120" y="64"  font-size="10" fill="#64748b" text-anchor="middle">?</text>
-            <text x="180" y="64"  font-size="10" font-weight="700" fill="#d97706" text-anchor="middle">B</text>
-            <text x="60"  y="124" font-size="10" font-weight="700" fill="#16a34a" text-anchor="middle">A</text>
-            <text x="120" y="124" font-size="10" fill="#64748b" text-anchor="middle">?</text>
-            <text x="180" y="124" font-size="10" font-weight="700" fill="#16a34a" text-anchor="middle">B</text>
-            <text x="120" y="158" font-size="8" fill="#6b7fa3" font-family="Fira Code" text-anchor="middle">UM único grafo — treino e teste juntos</text>
+          <!-- SVG grafo completo do Transformer -->
+          <svg viewBox="0 0 200 160" style="width:100%;max-height:160px;display:block;margin:0 auto;" id="svgTf">
+            <!-- Todas as arestas (grafo completo) -->
+            <!-- T1-T2, T1-T3, T1-T4, T2-T3, T2-T4, T3-T4 -->
+            <line x1="40" y1="40"  x2="160" y2="40"  stroke="#93c5fd" stroke-width="1.5" class="tf-edge"/>
+            <line x1="40" y1="40"  x2="40"  y2="130" stroke="#93c5fd" stroke-width="1.5" class="tf-edge"/>
+            <line x1="40" y1="40"  x2="160" y2="130" stroke="#93c5fd" stroke-width="1.5" class="tf-edge"/>
+            <line x1="160" y1="40" x2="40"  y2="130" stroke="#93c5fd" stroke-width="1.5" class="tf-edge"/>
+            <line x1="160" y1="40" x2="160" y2="130" stroke="#93c5fd" stroke-width="1.5" class="tf-edge"/>
+            <line x1="40" y1="130" x2="160" y2="130" stroke="#93c5fd" stroke-width="1.5" class="tf-edge"/>
+            <!-- Auto-loops (self) -->
+            <circle cx="40"  cy="40"  r="18" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+            <circle cx="160" cy="40"  r="18" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+            <circle cx="40"  cy="130" r="18" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+            <circle cx="160" cy="130" r="18" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+            <text x="40"  y="44"  font-size="11" font-weight="700" fill="#1d4ed8" text-anchor="middle">T₁</text>
+            <text x="160" y="44"  font-size="11" font-weight="700" fill="#1d4ed8" text-anchor="middle">T₂</text>
+            <text x="40"  y="134" font-size="11" font-weight="700" fill="#1d4ed8" text-anchor="middle">T₃</text>
+            <text x="160" y="134" font-size="11" font-weight="700" fill="#1d4ed8" text-anchor="middle">T₄</text>
+            <text x="100" y="90"  font-size="8" fill="#6b7fa3" font-family="Fira Code" text-anchor="middle">grafo completo</text>
           </svg>
 
-          <ul style="list-style:none;display:flex;flex-direction:column;gap:0.35rem;font-size:0.85rem;">
-            <li>📌 Modelo vê <strong>todo o grafo</strong> durante treino</li>
-            <li>📌 Nós de teste presentes, mas <em>sem rótulo</em></li>
-            <li>📌 Propaga embeddings em TODO o grafo</li>
-            <li>📦 Exemplos: <strong>Cora, Citeseer, PubMed</strong></li>
-          </ul>
+          <div class="formula-eq">Attention(Q,K,V) = softmax(QKᵀ/√d)·V</div>
+          <div style="font-size:0.85rem;color:var(--text-muted);">
+            ↳ Cada token atende a <strong>TODOS</strong> os outros tokens (O(n²))
+          </div>
         </div>
 
-        <!-- Indutivo -->
+        <!-- RIGHT: GNN com atenção -->
         <div class="panel">
-          <div class="panel-title">🚀 Indutivo</div>
-
-          <div class="legend-row">
-            <span class="legend-item"><span class="legend-dot" style="background:#1d4ed8;border:1px solid #93c5fd;"></span>Grafo de treino</span>
-            <span class="legend-item"><span class="legend-dot" style="background:#8b5cf6;border:1px solid #c4b5fd;"></span>Grafo de teste (novo)</span>
+          <div class="panel-title">🕸️ GNN com Atenção (GAT)</div>
+          <div class="token-seq">
+            <span class="tok teal">T₁</span>
+            <span class="tok teal">T₂</span>
+            <span class="tok teal">T₃</span>
+            <span class="tok teal">T₄</span>
           </div>
 
-          <svg viewBox="0 0 240 170" style="width:100%;max-height:170px;display:block;margin:0 auto;">
-            <!-- Grafos de treino (2 pequenos à esquerda) -->
-            <!-- Grafo 1 -->
-            <line x1="30" y1="50" x2="70" y2="50" stroke="#93c5fd" stroke-width="2"/>
-            <line x1="30" y1="50" x2="50" y2="85" stroke="#93c5fd" stroke-width="2"/>
-            <line x1="70" y1="50" x2="50" y2="85" stroke="#93c5fd" stroke-width="2"/>
-            <circle cx="30" cy="50" r="13" fill="#dbeafe" stroke="#1d4ed8" stroke-width="2"/>
-            <circle cx="70" cy="50" r="13" fill="#dbeafe" stroke="#1d4ed8" stroke-width="2"/>
-            <circle cx="50" cy="85" r="13" fill="#dbeafe" stroke="#1d4ed8" stroke-width="2"/>
-            <text x="30" y="54" font-size="9" font-weight="700" fill="#1d4ed8" text-anchor="middle">A</text>
-            <text x="70" y="54" font-size="9" font-weight="700" fill="#1d4ed8" text-anchor="middle">B</text>
-            <text x="50" y="89" font-size="9" font-weight="700" fill="#1d4ed8" text-anchor="middle">A</text>
-            <!-- Grafo 2 -->
-            <line x1="30" y1="115" x2="70" y2="130" stroke="#93c5fd" stroke-width="2"/>
-            <line x1="70" y1="130" x2="50" y2="155" stroke="#93c5fd" stroke-width="2"/>
-            <circle cx="30" cy="115" r="13" fill="#dbeafe" stroke="#1d4ed8" stroke-width="2"/>
-            <circle cx="70" cy="130" r="13" fill="#dbeafe" stroke="#1d4ed8" stroke-width="2"/>
-            <circle cx="50" cy="155" r="13" fill="#dbeafe" stroke="#1d4ed8" stroke-width="2"/>
-            <text x="30" y="119" font-size="9" font-weight="700" fill="#1d4ed8" text-anchor="middle">B</text>
-            <text x="70" y="134" font-size="9" font-weight="700" fill="#1d4ed8" text-anchor="middle">A</text>
-            <text x="50" y="159" font-size="9" font-weight="700" fill="#1d4ed8" text-anchor="middle">B</text>
-            <text x="50"  y="22" font-size="8" fill="#1d4ed8" font-family="Fira Code" text-anchor="middle" font-weight="700">TREINO</text>
-
-            <!-- Divisor -->
-            <line x1="115" y1="15" x2="115" y2="165" stroke="#c7d0e0" stroke-width="1" stroke-dasharray="5,4"/>
-
-            <!-- Grafo de teste (novo) -->
-            <line x1="155" y1="50" x2="210" y2="50"  stroke="#c4b5fd" stroke-width="2"/>
-            <line x1="155" y1="50" x2="175" y2="95"  stroke="#c4b5fd" stroke-width="2"/>
-            <line x1="210" y1="50" x2="175" y2="95"  stroke="#c4b5fd" stroke-width="2"/>
-            <line x1="175" y1="95" x2="210" y2="130" stroke="#c4b5fd" stroke-width="2"/>
-            <circle cx="155" cy="50"  r="13" fill="#ede9fe" stroke="#8b5cf6" stroke-width="2"/>
-            <circle cx="210" cy="50"  r="13" fill="#ede9fe" stroke="#8b5cf6" stroke-width="2"/>
-            <circle cx="175" cy="95"  r="13" fill="#ede9fe" stroke="#8b5cf6" stroke-width="2"/>
-            <circle cx="210" cy="130" r="13" fill="#ede9fe" stroke="#8b5cf6" stroke-width="2"/>
-            <text x="155" y="54" font-size="9" fill="#64748b" text-anchor="middle">?</text>
-            <text x="210" y="54" font-size="9" fill="#64748b" text-anchor="middle">?</text>
-            <text x="175" y="99" font-size="9" fill="#64748b" text-anchor="middle">?</text>
-            <text x="210" y="134" font-size="9" fill="#64748b" text-anchor="middle">?</text>
-            <text x="182" y="22" font-size="8" fill="#8b5cf6" font-family="Fira Code" text-anchor="middle" font-weight="700">TESTE (novo)</text>
+          <!-- SVG grafo esparso do GNN -->
+          <svg viewBox="0 0 200 160" style="width:100%;max-height:160px;display:block;margin:0 auto;" id="svgGNN">
+            <!-- Apenas algumas arestas (grafo esparso) -->
+            <line x1="40" y1="40"  x2="160" y2="40"  stroke="#5eead4" stroke-width="2" class="gnn-edge"/>
+            <line x1="40" y1="40"  x2="40"  y2="130" stroke="#5eead4" stroke-width="2" class="gnn-edge"/>
+            <!-- Arestas ocultas do transformer (tracejadas) -->
+            <line x1="40"  y1="40"  x2="160" y2="130" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3,3" class="hidden-edge" id="he1"/>
+            <line x1="160" y1="40"  x2="40"  y2="130" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3,3" class="hidden-edge" id="he2"/>
+            <line x1="160" y1="40"  x2="160" y2="130" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3,3" class="hidden-edge" id="he3"/>
+            <line x1="40"  y1="130" x2="160" y2="130" stroke="#5eead4" stroke-width="2" class="gnn-edge"/>
+            <!-- Nós -->
+            <circle cx="40"  cy="40"  r="18" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="2"/>
+            <circle cx="160" cy="40"  r="18" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="2"/>
+            <circle cx="40"  cy="130" r="18" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="2"/>
+            <circle cx="160" cy="130" r="18" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="2"/>
+            <text x="40"  y="44"  font-size="11" font-weight="700" fill="#0d6e6e" text-anchor="middle">T₁</text>
+            <text x="160" y="44"  font-size="11" font-weight="700" fill="#0d6e6e" text-anchor="middle">T₂</text>
+            <text x="40"  y="134" font-size="11" font-weight="700" fill="#0d6e6e" text-anchor="middle">T₃</text>
+            <text x="160" y="134" font-size="11" font-weight="700" fill="#0d6e6e" text-anchor="middle">T₄</text>
+            <text x="100" y="90"  font-size="8" fill="#6b7fa3" font-family="Fira Code" text-anchor="middle">grafo esparso</text>
           </svg>
 
-          <ul style="list-style:none;display:flex;flex-direction:column;gap:0.35rem;font-size:0.85rem;">
-            <li>📌 Modelo aprende em grafos de <strong>treinamento</strong></li>
-            <li>📌 Infere em grafos <em>nunca vistos</em></li>
-            <li>📌 Generaliza a estrutura aprendida</li>
-            <li>📦 Exemplos: <strong>GraphSAGE</strong>, moléculas, proteínas</li>
-          </ul>
+          <div class="formula-eq">h<sub>v</sub> = Σ<sub>u∈N(v)</sub> α<sub>vu</sub> W h<sub>u</sub></div>
+          <div style="font-size:0.85rem;color:var(--text-muted);">
+            ↳ Cada nó atende apenas aos seus <strong>VIZINHOS</strong> (inductive bias)
+          </div>
         </div>
       </div>
 
-      <!-- Tabela comparativa -->
-      <table class="compare-table">
-        <thead>
-          <tr>
-            <th>Aspecto</th>
-            <th>Transdutivo</th>
-            <th>Indutivo</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Visto no treino</td>
-            <td>Todo o grafo (sem labels de teste)</td>
-            <td class="td-hl">Só grafos de treino</td>
-          </tr>
-          <tr>
-            <td>Generalização</td>
-            <td>Nós novos = difícil</td>
-            <td class="td-hl">Novos grafos = OK</td>
-          </tr>
-          <tr>
-            <td>Datasets típicos</td>
-            <td>Cora, Citeseer, PubMed</td>
-            <td class="td-hl">OGB, PPI, Reddit</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="big-insight">
+        <span style="font-size:1.4rem;">🔗</span>
+        <span style="font-size:0.97rem;line-height:1.6;color:var(--text);">
+          <strong>Transformer = GAT em grafo completo.</strong><br/>
+          GNN = Transformer com estrutura esparsa (<em>inductive bias</em> relacional). A esparsidade reduz O(n²) para O(E), onde E é o número de arestas.
+        </span>
+      </div>
     </main>
 
     <nav class="slide-nav">
@@ -180,9 +134,27 @@
   </div>
 
   <script>
+    function setView(mode) {
+      const isTf = mode === 'transformer';
+      document.getElementById('btnTf').classList.toggle('active', isTf);
+      document.getElementById('btnGNN').classList.toggle('active', !isTf);
+
+      // When "ver como GNN", hide some transformer edges
+      document.querySelectorAll('.hidden-edge').forEach(el => {
+        el.style.opacity = isTf ? '1' : '0';
+        el.setAttribute('stroke', isTf ? '#93c5fd' : '#e2e8f0');
+        el.setAttribute('stroke-width', isTf ? '1.5' : '1');
+      });
+      document.querySelectorAll('.tf-edge').forEach(el => {
+        el.setAttribute('stroke', isTf ? '#93c5fd' : '#c7d0e0');
+        el.setAttribute('stroke-width', isTf ? '1.5' : '1');
+        el.setAttribute('stroke-dasharray', isTf ? '' : '3,3');
+      });
+    }
+
     (function(){
       const container = document.getElementById('navDots');
-      const CURRENT = 16, TOTAL = 20;
+      const CURRENT = 16, TOTAL = 22;
       for (let i = 1; i <= TOTAL; i++) {
         const dot = document.createElement('div');
         dot.className = 'dot' + (i === CURRENT ? ' active' : '');

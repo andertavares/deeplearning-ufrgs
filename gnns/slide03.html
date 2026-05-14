@@ -25,8 +25,9 @@
     .node-circle.selected  { fill: #fed7aa; stroke: #c2410c; }
     .node-circle.neighbor  { fill: #ccfbf1; stroke: #0d6e6e; }
     .node-label { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 14px; pointer-events: none; fill: var(--text); }
-    .edge-line { stroke: var(--border); stroke-width: 2; }
+    .edge-line { stroke: var(--border); stroke-width: 2; transition: stroke 0.2s, stroke-width 0.2s; }
     .edge-line.highlight { stroke: #0d6e6e; stroke-width: 2.5; }
+    .edge-weight { font-family: 'Fira Code', monospace; font-size: 10px; fill: #1d4ed8; font-weight: 700; pointer-events: none; }
 
     /* Adjacency list */
     .adj-list-body { font-family: 'Fira Code', monospace; font-size: 0.85rem; }
@@ -42,8 +43,8 @@
     .matrix-table th { background: var(--bg3); font-weight: 700; color: var(--text-muted); font-size: 0.78rem; }
     .matrix-table td { color: var(--text); background: var(--bg2); }
     .matrix-table td.one { color: var(--teal); font-weight: 700; background: var(--teal-lt); }
-    .matrix-table td.sel-cell { background: #fed7aa; color: var(--orange); font-weight: 700; }
-    .matrix-table tr.sel-row td, .matrix-table td.sel-col { background: #fff3e0; }
+    /* Only highlight the specific neighbor cells, not whole rows */
+    .matrix-table td.nbr-cell { background: #fed7aa; color: var(--orange); font-weight: 700; border: 2px solid #f97316; }
 
     .formula-box {
       background: var(--bg3);
@@ -57,6 +58,17 @@
     }
     .formula-box span { color: var(--teal); font-weight: 700; }
     .hint { font-size: 0.82rem; color: var(--text-dim); text-align: center; margin-top: 0.3rem; }
+    .attrs-badge {
+      display: inline-flex; align-items: center; gap: 0.3rem;
+      background: var(--yellow-lt); border: 1.5px solid #fde047;
+      border-radius: var(--radius-sm); padding: 0.3rem 0.7rem;
+      font-size: 0.82rem; color: var(--yellow); font-weight: 600;
+      margin-top: 0.4rem;
+    }
+    .toggle-row {
+      display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;
+      justify-content: center; margin-bottom: 0.3rem;
+    }
   </style>
 </head>
 <body>
@@ -64,7 +76,7 @@
     <header class="slide-header">
       <span class="course-tag">GNNs</span>
       <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
-      <span class="slide-counter">Slide 03 / 20</span>
+      <span class="slide-counter">Slide 03 / 22</span>
     </header>
 
     <main class="slide-main">
@@ -73,12 +85,24 @@
         <p class="slide-subtitle">Bloco 1 — Fundamentos</p>
       </div>
 
+      <!-- Toggle controls -->
+      <div class="toggle-row">
+        <button class="btn-toggle" id="btnDir" onclick="toggleDir()">↗ Grafo Direcionado</button>
+        <button class="btn-toggle" id="btnWgt" onclick="toggleWgt()">⚖ Grafo Ponderado</button>
+        <span class="attrs-badge">🏷️ Nós podem ter atributos: ex. <strong>cor</strong>, <strong>peso</strong>, <strong>rótulo</strong></span>
+      </div>
+
       <div class="three-col" style="flex:1;">
         <!-- LEFT: SVG graph -->
         <div class="panel graph-panel" style="gap:0.5rem;">
           <div class="panel-title">Grafo G</div>
-          <p class="hint">Clique em um nó para ver seus vizinhos</p>
+          <p class="hint" id="graphHint">Clique em um nó para ver seus vizinhos</p>
           <svg class="main-graph" viewBox="0 0 320 240" id="graphSvg">
+            <defs>
+              <marker id="arrowDir" markerWidth="8" markerHeight="8" refX="20" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 Z" fill="#0d6e6e"/>
+              </marker>
+            </defs>
             <!-- Edges drawn first -->
             <line id="eAB" class="edge-line" x1="110" y1="70" x2="200" y2="50"/>
             <line id="eBC" class="edge-line" x1="200" y1="50" x2="275" y2="130"/>
@@ -86,6 +110,13 @@
             <line id="eDE" class="edge-line" x1="185" y1="190" x2="65" y2="170"/>
             <line id="eAE" class="edge-line" x1="110" y1="70" x2="65" y2="170"/>
             <line id="eBD" class="edge-line" x1="200" y1="50" x2="185" y2="190"/>
+            <!-- Edge weight labels (hidden by default) -->
+            <text id="wAB" class="edge-weight" x="158" y="53" visibility="hidden">3</text>
+            <text id="wBC" class="edge-weight" x="243" y="84" visibility="hidden">1</text>
+            <text id="wCD" class="edge-weight" x="236" y="166" visibility="hidden">2</text>
+            <text id="wDE" class="edge-weight" x="122" y="188" visibility="hidden">4</text>
+            <text id="wAE" class="edge-weight" x="78" y="118" visibility="hidden">1</text>
+            <text id="wBD" class="edge-weight" x="196" y="120" visibility="hidden">5</text>
             <!-- Nodes -->
             <circle id="nA" class="node-circle" cx="110" cy="70" r="22" onclick="selectNode('A')"/>
             <text class="node-label" x="110" y="76" text-anchor="middle">A</text>
@@ -104,21 +135,7 @@
         <div class="panel">
           <div class="panel-title">Lista de Adjacência</div>
           <div class="adj-list-body" id="adjList">
-            <div class="adj-row" id="adjA">
-              <span class="adj-node">A</span><span class="adj-arrow">→</span><span class="adj-nbrs">[B, E]</span>
-            </div>
-            <div class="adj-row" id="adjB">
-              <span class="adj-node">B</span><span class="adj-arrow">→</span><span class="adj-nbrs">[A, C, D]</span>
-            </div>
-            <div class="adj-row" id="adjC">
-              <span class="adj-node">C</span><span class="adj-arrow">→</span><span class="adj-nbrs">[B, D]</span>
-            </div>
-            <div class="adj-row" id="adjD">
-              <span class="adj-node">D</span><span class="adj-arrow">→</span><span class="adj-nbrs">[B, C, E]</span>
-            </div>
-            <div class="adj-row" id="adjE">
-              <span class="adj-node">E</span><span class="adj-arrow">→</span><span class="adj-nbrs">[A, D]</span>
-            </div>
+            <!-- filled by JS -->
           </div>
           <div class="hint" id="adjHint">Selecione um nó no grafo</div>
         </div>
@@ -143,7 +160,7 @@
         </div>
       </div>
 
-      <div class="formula-box">
+      <div class="formula-box" id="formulaBox">
         <span>G = (V, E)</span> &nbsp;|&nbsp; V = {A, B, C, D, E} &nbsp;|&nbsp; E = conjunto de arestas &nbsp;|&nbsp; |V|=5, |E|=6
       </div>
     </main>
@@ -157,52 +174,135 @@
 
   <script>
     const nodes = ['A','B','C','D','E'];
-    const adj = {
+
+    // Undirected adjacency
+    const adjUndirected = {
       A: ['B','E'],
       B: ['A','C','D'],
       C: ['B','D'],
       D: ['B','C','E'],
       E: ['A','D']
     };
+
+    // Directed adjacency (asymmetric)
+    const adjDirected = {
+      A: ['B','E'],
+      B: ['C','D'],
+      C: ['D'],
+      D: ['E'],
+      E: ['A']
+    };
+
     const edgeMap = {
       'AB':'eAB','BA':'eAB','BC':'eBC','CB':'eBC','CD':'eCD','DC':'eCD',
       'DE':'eDE','ED':'eDE','AE':'eAE','EA':'eAE','BD':'eBD','DB':'eBD'
     };
 
-    // Build matrix
-    const mat = {};
-    nodes.forEach(r => {
-      mat[r] = {};
-      nodes.forEach(c => { mat[r][c] = 0; });
-    });
-    Object.entries(adj).forEach(([n, nbrs]) => {
-      nbrs.forEach(nb => { mat[n][nb] = 1; mat[nb][n] = 1; });
-    });
+    // Edge weights
+    const weights = {
+      'AB':3,'BA':3,'BC':1,'CB':1,'CD':2,'DC':2,
+      'DE':4,'ED':4,'AE':1,'EA':1,'BD':5,'DB':5
+    };
+
+    let directed = false;
+    let weighted = false;
+    let selected = null;
+
+    function getAdj() { return directed ? adjDirected : adjUndirected; }
+
+    function toggleDir() {
+      directed = !directed;
+      const btn = document.getElementById('btnDir');
+      btn.classList.toggle('active', directed);
+      updateEdgeArrows();
+      buildAdjList();
+      buildMatrix(selected);
+      if (selected) selectNode(selected);
+      updateFormula();
+    }
+
+    function toggleWgt() {
+      weighted = !weighted;
+      const btn = document.getElementById('btnWgt');
+      btn.classList.toggle('active', weighted);
+      // Show/hide weight labels
+      ['AB','BC','CD','DE','AE','BD'].forEach(e => {
+        document.getElementById('w'+e).setAttribute('visibility', weighted ? 'visible' : 'hidden');
+      });
+      buildMatrix(selected);
+      updateFormula();
+    }
+
+    function updateEdgeArrows() {
+      const edges = ['eAB','eBC','eCD','eDE','eAE','eBD'];
+      edges.forEach(id => {
+        const el = document.getElementById(id);
+        if (directed) {
+          el.setAttribute('marker-end', 'url(#arrowDir)');
+        } else {
+          el.removeAttribute('marker-end');
+        }
+      });
+    }
+
+    function updateFormula() {
+      const extras = [];
+      if (directed) extras.push('direcionado');
+      if (weighted) extras.push('ponderado');
+      const suffix = extras.length ? ' — ' + extras.join(', ') : '';
+      document.getElementById('formulaBox').innerHTML =
+        '<span>G = (V, E)</span> &nbsp;|&nbsp; V = {A,B,C,D,E} &nbsp;|&nbsp; |V|=5, |E|=6' + suffix;
+    }
+
+    function buildAdjList() {
+      const adj = getAdj();
+      const arrow = directed ? '→' : '↔';
+      const container = document.getElementById('adjList');
+      container.innerHTML = '';
+      nodes.forEach(n => {
+        const div = document.createElement('div');
+        div.className = 'adj-row';
+        div.id = 'adj' + n;
+        const nbrs = adj[n].map(nb => weighted ? `${nb}(${weights[n+nb]})` : nb);
+        div.innerHTML = `<span class="adj-node">${n}</span><span class="adj-arrow">${arrow}</span><span class="adj-nbrs">[${nbrs.join(', ')}]</span>`;
+        container.appendChild(div);
+      });
+    }
 
     function buildMatrix(selNode) {
+      const adj = getAdj();
       const tbody = document.getElementById('matrixBody');
       tbody.innerHTML = '';
       nodes.forEach(row => {
         const tr = document.createElement('tr');
-        if (selNode && (row === selNode || adj[selNode].includes(row))) tr.classList.add('sel-row');
         const th = document.createElement('th');
         th.textContent = row;
         tr.appendChild(th);
         nodes.forEach(col => {
           const td = document.createElement('td');
-          td.textContent = mat[row][col];
-          if (mat[row][col] === 1) td.classList.add('one');
-          if (selNode && row === selNode && col === selNode) td.classList.add('sel-cell');
+          const hasEdge = directed
+            ? adj[row].includes(col)
+            : (adjUndirected[row].includes(col));
+          const val = hasEdge ? (weighted ? weights[row+col] : 1) : 0;
+          td.textContent = val;
+          if (val !== 0) td.classList.add('one');
+          // Highlight only neighbor cells of selected node (in its row and column)
+          if (selNode && row === selNode && adj[selNode].includes(col)) {
+            td.classList.remove('one');
+            td.classList.add('nbr-cell');
+          }
+          if (selNode && !directed && col === selNode && adj[col].includes(row)) {
+            td.classList.remove('one');
+            td.classList.add('nbr-cell');
+          }
           tr.appendChild(td);
         });
         tbody.appendChild(tr);
       });
     }
-    buildMatrix(null);
-
-    let selected = null;
 
     function selectNode(n) {
+      const adj = getAdj();
       // Reset all
       nodes.forEach(nd => {
         const c = document.getElementById('n'+nd);
@@ -217,29 +317,28 @@
       if (selected === n) { selected = null; buildMatrix(null); return; }
       selected = n;
 
-      // Highlight selected
       document.getElementById('n'+n).classList.add('selected');
-
-      // Highlight neighbors & edges
       adj[n].forEach(nb => {
         document.getElementById('n'+nb).classList.add('neighbor');
         const eid = edgeMap[n+nb];
         if (eid) document.getElementById(eid).classList.add('highlight');
       });
 
-      // Highlight adj list row
       document.getElementById('adj'+n).classList.add('sel');
-      document.getElementById('adjHint').textContent = `Nó ${n}: ${adj[n].length} vizinho(s)`;
-
+      document.getElementById('adjHint').textContent = `Nó ${n}: ${adj[n].length} vizinho(s) ` + (directed ? '(saída)' : '');
       buildMatrix(n);
-      document.getElementById('matHint').textContent = `Linha/coluna de ${n} destacada`;
+      document.getElementById('matHint').textContent = `Células da vizinhança de ${n} destacadas`;
     }
+
+    // Initialize
+    buildAdjList();
+    buildMatrix(null);
 
     // Nav dots
     (function(){
       const container = document.getElementById('navDots');
       const CURRENT = 3;
-      const TOTAL = 20;
+      const TOTAL = 22;
       for (let i = 1; i <= TOTAL; i++) {
         const dot = document.createElement('div');
         dot.className = 'dot' + (i === CURRENT ? ' active' : '');

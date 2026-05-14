@@ -3,27 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Slide 13 – Graph Attention Network (GAT)</title>
+  <title>Slide 13 – Limitação do Pooling Uniforme</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
   <style>
-    .gat-layout { display:grid; grid-template-columns:1fr 1fr; gap:1.2rem; flex:1; }
-    .step-formula { display:flex; align-items:flex-start; gap:0.5rem; padding:0.45rem 0.7rem;
-      background:var(--bg3); border-radius:var(--radius-sm); border-left:3px solid var(--teal);
-      font-family:'Fira Code',monospace; font-size:0.82rem; line-height:1.5; color:var(--text-muted); }
-    .step-num { font-size:0.7rem; background:var(--teal); color:#fff; border-radius:50%;
-      width:18px; height:18px; display:flex; align-items:center; justify-content:center;
-      font-weight:700; flex-shrink:0; margin-top:1px; }
-    .slider-group { display:flex; flex-direction:column; gap:0.5rem; }
-    .slider-row { display:flex; align-items:center; gap:0.6rem; font-size:0.85rem; }
-    .slider-row label { width:80px; color:var(--text-muted); }
-    .slider-row input[type=range] { flex:1; accent-color:var(--teal); }
-    .slider-row .sv { width:36px; text-align:right; font-family:'Fira Code',monospace; font-size:0.82rem; color:var(--teal); font-weight:700; }
-    .attn-bar { display:flex; align-items:center; gap:0.5rem; }
-    .attn-bar .lbl { width:24px; font-family:'Fira Code',monospace; font-size:0.8rem; color:var(--text-muted); }
-    .attn-bar .track { flex:1; height:14px; background:var(--bg3); border-radius:4px; overflow:hidden; border:1px solid var(--border2); }
-    .attn-bar .fill { height:100%; border-radius:4px; transition:width 0.4s; }
-    .attn-bar .pct { width:40px; font-family:'Fira Code',monospace; font-size:0.78rem; color:var(--text-dim); }
+    .main-layout { display:grid; grid-template-columns:1.1fr 0.9fr; gap:1.2rem; flex:1; }
+    .bar-group { display:flex; flex-direction:column; gap:0.4rem; }
+    .bar-row { display:flex; align-items:center; gap:0.6rem; font-size:0.88rem; }
+    .bar-label { width:28px; font-family:'Fira Code',monospace; font-weight:700; color:var(--text); text-align:right; }
+    .bar-track { flex:1; height:18px; background:var(--bg3); border-radius:4px; overflow:hidden; border:1px solid var(--border2); }
+    .bar-fill { height:100%; border-radius:4px; transition:width 0.7s ease, background 0.5s; display:flex; align-items:center; justify-content:flex-end; padding-right:4px; font-size:0.7rem; font-weight:700; color:#fff; }
+    .bar-val { width:36px; font-family:'Fira Code',monospace; font-size:0.82rem; color:var(--text-dim); }
+    .result-row { display:flex; align-items:center; gap:0.6rem; padding:0.55rem 0.8rem;
+      background:var(--bg3); border-radius:var(--radius-sm); border:1.5px solid var(--border2);
+      font-family:'Fira Code',monospace; font-size:0.9rem; transition:all 0.5s; }
+    .result-row.highlight { background:var(--teal-lt); border-color:#5eead4; }
+    .edge-label { font-size:0.7rem; fill:#6b7fa3; font-family:'Fira Code',monospace; }
+    .mode-btns { display:flex; gap:0.5rem; margin-bottom:0.5rem; }
   </style>
 </head>
 <body>
@@ -31,104 +27,96 @@
     <header class="slide-header">
       <span class="course-tag">GNNs</span>
       <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
-      <span class="slide-counter">Slide 13 / 20</span>
+      <span class="slide-counter">Slide 13 / 22</span>
     </header>
 
     <main class="slide-main">
       <div class="title-block">
-        <h1 class="slide-title">Graph Attention Network (GAT)</h1>
-        <p class="slide-subtitle">Bloco 3 — Atenção em Grafos</p>
+        <h1 class="slide-title">Limitação do Pooling Uniforme</h1>
+        <p class="slide-subtitle">Bloco 3 — Motivação para Atenção</p>
       </div>
 
-      <div class="gat-layout">
-        <!-- LEFT: arquitetura -->
+      <div class="main-layout">
+        <!-- Grafo SVG -->
         <div class="panel">
-          <div class="panel-title">🏗️ Arquitetura GAT</div>
+          <div class="panel-title">🕸️ Grafo com Pesos Iguais</div>
+          <div class="mode-btns">
+            <button class="btn-toggle active" id="btnUniform" onclick="setMode('uniform')">Pooling Uniforme</button>
+            <button class="btn-toggle" id="btnAttn" onclick="setMode('attention')">Com Atenção</button>
+          </div>
 
-          <svg viewBox="0 0 240 190" style="width:100%;max-height:190px;display:block;">
-            <!-- Arestas com espessura proporcional ao α -->
-            <line x1="120" y1="95" x2="45"  y2="45"  stroke="#5eead4" stroke-width="5"   id="ea1" opacity="0.85"/>
-            <line x1="120" y1="95" x2="195" y2="45"  stroke="#5eead4" stroke-width="2.5" id="ea2" opacity="0.5"/>
-            <line x1="120" y1="95" x2="120" y2="165" stroke="#5eead4" stroke-width="1.5" id="ea3" opacity="0.35"/>
-            <!-- Labels de atenção nas arestas -->
-            <text x="74"  y="63"  font-size="9" fill="#0d6e6e" font-family="Fira Code" font-weight="700" id="la1">α=0.62</text>
-            <text x="162" y="63"  font-size="9" fill="#0d6e6e" font-family="Fira Code" font-weight="700" id="la2">α=0.25</text>
-            <text x="124" y="138" font-size="9" fill="#0d6e6e" font-family="Fira Code" font-weight="700" id="la3">α=0.13</text>
+          <svg viewBox="0 0 260 180" style="width:100%;max-height:180px;display:block;margin:0 auto;">
+            <!-- Arestas -->
+            <line x1="130" y1="90" x2="50"  y2="40"  stroke="#c7d0e0" stroke-width="2.5" id="edgeA"/>
+            <line x1="130" y1="90" x2="210" y2="40"  stroke="#c7d0e0" stroke-width="2.5" id="edgeB"/>
+            <line x1="130" y1="90" x2="50"  y2="150" stroke="#c7d0e0" stroke-width="2.5" id="edgeC"/>
+            <line x1="130" y1="90" x2="210" y2="150" stroke="#c7d0e0" stroke-width="2.5" id="edgeD"/>
             <!-- Nós vizinhos -->
-            <circle cx="45"  cy="45"  r="20" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="2.5" id="nu1"/>
-            <circle cx="195" cy="45"  r="16" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"   id="nu2"/>
-            <circle cx="120" cy="165" r="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5" id="nu3"/>
-            <!-- Nó central pulsante -->
-            <circle cx="120" cy="95" r="24" fill="#f0fdf4" stroke="#166534" stroke-width="2.5">
-              <animate attributeName="r" values="22;25;22" dur="2.2s" repeatCount="indefinite"/>
-            </circle>
-            <text x="45"  y="49"  font-size="10" font-weight="700" fill="#0d6e6e" text-anchor="middle">u₁</text>
-            <text x="195" y="49"  font-size="10" font-weight="700" fill="#1d4ed8" text-anchor="middle">u₂</text>
-            <text x="120" y="169" font-size="10" font-weight="700" fill="#1d4ed8" text-anchor="middle">u₃</text>
-            <text x="120" y="99"  font-size="12" font-weight="700" fill="#166534" text-anchor="middle">v</text>
+            <circle cx="50"  cy="40"  r="22" fill="#fef3c7" stroke="#d97706" stroke-width="2.5" id="nodeA"/>
+            <circle cx="210" cy="40"  r="18" fill="#f0f2f6" stroke="#c7d0e0" stroke-width="2" id="nodeB"/>
+            <circle cx="50"  cy="150" r="18" fill="#f0f2f6" stroke="#c7d0e0" stroke-width="2" id="nodeC"/>
+            <circle cx="210" cy="150" r="18" fill="#f0f2f6" stroke="#c7d0e0" stroke-width="2" id="nodeD"/>
+            <!-- Nó central -->
+            <circle cx="130" cy="90" r="24" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="2.5"/>
+            <!-- Labels arestas -->
+            <text x="82"  y="58"  class="edge-label" id="wA" text-anchor="middle">1/4</text>
+            <text x="178" y="58"  class="edge-label" id="wB" text-anchor="middle">1/4</text>
+            <text x="82"  y="128" class="edge-label" id="wC" text-anchor="middle">1/4</text>
+            <text x="178" y="128" class="edge-label" id="wD" text-anchor="middle">1/4</text>
+            <!-- Labels nós -->
+            <text x="50"  y="44"  font-size="11" font-weight="700" fill="#92400e" text-anchor="middle">A</text>
+            <text x="210" y="44"  font-size="11" font-weight="700" fill="#3d4f6e" text-anchor="middle">B</text>
+            <text x="50"  y="154" font-size="11" font-weight="700" fill="#3d4f6e" text-anchor="middle">C</text>
+            <text x="210" y="154" font-size="11" font-weight="700" fill="#3d4f6e" text-anchor="middle">D</text>
+            <text x="130" y="94"  font-size="12" font-weight="700" fill="#0d6e6e" text-anchor="middle">v</text>
           </svg>
 
-          <div class="step-formula">
-            <span class="step-num">∑</span>
-            <span>h<sub>v</sub><sup>(l+1)</sup> = σ( Σ<sub>u∈N(v)∪{v}</sub> <strong>α<sub>vu</sub></strong> · W · h<sub>u</sub><sup>(l)</sup> )</span>
+          <div style="font-size:0.82rem;color:var(--text-muted);text-align:center;">
+            A=[5,5] · B=[0,1] · C=[1,0] · D=[0,0]
           </div>
-          <div style="font-size:0.82rem;color:var(--text-dim);">Arestas mais espessas = <strong>maior atenção</strong> aprendida</div>
+
+          <!-- Resultado -->
+          <div class="result-row" id="resultRow">
+            <span style="color:var(--text-dim);font-size:0.82rem;">Resultado h<sub>v</sub></span>
+            <span id="resultVal" style="font-weight:700;color:var(--teal);">[1.5, 1.5]</span>
+          </div>
         </div>
 
-        <!-- RIGHT: como α é aprendido + slider -->
+        <!-- Barras de contribuição -->
         <div class="panel">
-          <div class="panel-title">⚙️ Como α é Aprendido</div>
-
-          <div class="step-formula">
-            <span class="step-num">1</span>
-            <span>Projetar: <strong>Wh<sub>v</sub></strong>, <strong>Wh<sub>u</sub></strong></span>
-          </div>
-          <div class="step-formula">
-            <span class="step-num">2</span>
-            <span>Score: e<sub>vu</sub> = LeakyReLU([Wh<sub>v</sub> ‖ Wh<sub>u</sub>] · <strong>a</strong>)<br/><span style="font-size:0.75rem;color:var(--text-dim);"><strong>a</strong> ∈ ℝ<sup>2d</sup>: vetor de atenção treinável (aprendido junto com W)</span></span>
-          </div>
-          <div class="step-formula">
-            <span class="step-num">3</span>
-            <span>Normalizar: α<sub>vu</sub> = exp(e<sub>vu</sub>) / Σ<sub>u'∈N(v)</sub> exp(e<sub>vu'</sub>)</span>
-          </div>
-
-          <div class="divider"></div>
-
-          <!-- Slider interativo -->
-          <div style="font-size:0.82rem;font-weight:700;color:var(--text-muted);margin-bottom:0.3rem;">🎛️ Ajuste o score de u₁ e veja o softmax:</div>
-          <div class="slider-group">
-            <div class="slider-row">
-              <label>e(v,u₁)</label>
-              <input type="range" id="slE1" min="-2" max="4" step="0.1" value="2.1" oninput="updateAttn()"/>
-              <span class="sv" id="svE1">2.1</span>
+          <div class="panel-title">📊 Contribuições dos Vizinhos</div>
+          <div class="bar-group" id="barGroup">
+            <div class="bar-row">
+              <span class="bar-label">A</span>
+              <div class="bar-track"><div class="bar-fill" id="barA" style="width:25%;background:#d97706;"></div></div>
+              <span class="bar-val" id="valA">0.25</span>
             </div>
-            <div class="slider-row">
-              <label>e(v,u₂)</label>
-              <input type="range" id="slE2" min="-2" max="4" step="0.1" value="0.5" oninput="updateAttn()"/>
-              <span class="sv" id="svE2">0.5</span>
+            <div class="bar-row">
+              <span class="bar-label">B</span>
+              <div class="bar-track"><div class="bar-fill" id="barB" style="width:25%;background:#3b82f6;"></div></div>
+              <span class="bar-val" id="valB">0.25</span>
             </div>
-            <div class="slider-row">
-              <label>e(v,u₃)</label>
-              <input type="range" id="slE3" min="-2" max="4" step="0.1" value="1.3" oninput="updateAttn()"/>
-              <span class="sv" id="svE3">1.3</span>
+            <div class="bar-row">
+              <span class="bar-label">C</span>
+              <div class="bar-track"><div class="bar-fill" id="barC" style="width:25%;background:#3b82f6;"></div></div>
+              <span class="bar-val" id="valC">0.25</span>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">D</span>
+              <div class="bar-track"><div class="bar-fill" id="barD" style="width:25%;background:#3b82f6;"></div></div>
+              <span class="bar-val" id="valD">0.25</span>
             </div>
           </div>
 
-          <div style="margin-top:0.4rem;display:flex;flex-direction:column;gap:0.3rem;">
-            <div class="attn-bar">
-              <span class="lbl">α₁</span>
-              <div class="attn-bar track"><div class="attn-bar fill" id="ab1" style="background:#0d6e6e;"></div></div>
-              <span class="attn-bar pct" id="ap1"></span>
-            </div>
-            <div class="attn-bar">
-              <span class="lbl">α₂</span>
-              <div class="attn-bar track"><div class="attn-bar fill" id="ab2" style="background:#3b82f6;"></div></div>
-              <span class="attn-bar pct" id="ap2"></span>
-            </div>
-            <div class="attn-bar">
-              <span class="lbl">α₃</span>
-              <div class="attn-bar track"><div class="attn-bar fill" id="ab3" style="background:#8b5cf6;"></div></div>
-              <span class="attn-bar pct" id="ap3"></span>
+          <div class="highlight-box yellow" id="modeMsg" style="margin-top:0.5rem;">
+            <span class="icon">⚠️</span>
+            <span>A informação importante de A <strong>se dilui</strong> — todos recebem peso igual 1/4.</span>
+          </div>
+
+          <div style="margin-top:0.5rem;">
+            <div style="font-size:0.8rem;color:var(--text-dim);margin-bottom:0.3rem;font-weight:600;">MÉDIA PONDERADA:</div>
+            <div style="font-family:'Fira Code',monospace;font-size:0.88rem;padding:0.5rem 0.8rem;background:var(--bg3);border-radius:var(--radius-sm);border:1px solid var(--border2);">
+              h<sub>v</sub> = <span id="formula">0.25·[5,5] + 0.25·[0,1] + 0.25·[1,0] + 0.25·[0,0]</span>
             </div>
           </div>
         </div>
@@ -136,7 +124,7 @@
 
       <div class="insight-box">
         <span class="i-icon">🎯</span>
-        <span class="i-text"><strong>GAT aprende automaticamente</strong> quais vizinhos merecem mais atenção. O vetor <code>a</code> é treinado junto com W pelo gradiente descendente.</span>
+        <span class="i-text"><strong>Não todos os vizinhos são igualmente importantes!</strong> Precisamos de um mecanismo para aprender <em>quais vizinhos merecem mais atenção</em> — essa é a motivação para o GAT.</span>
       </div>
     </main>
 
@@ -148,46 +136,57 @@
   </div>
 
   <script>
-    function softmax(arr) {
-      const maxV = Math.max(...arr);
-      const exps = arr.map(x => Math.exp(x - maxV));
-      const s = exps.reduce((a,b)=>a+b,0);
-      return exps.map(x=>x/s);
+    function setMode(mode) {
+      const isAttn = mode === 'attention';
+      document.getElementById('btnUniform').classList.toggle('active', !isAttn);
+      document.getElementById('btnAttn').classList.toggle('active', isAttn);
+
+      if (isAttn) {
+        // Atenção: A=0.70, B=0.10, C=0.10, D=0.10
+        setBar('barA','valA', 70, '0.70', '#0d6e6e');
+        setBar('barB','valB', 10, '0.10', '#3b82f6');
+        setBar('barC','valC', 10, '0.10', '#3b82f6');
+        setBar('barD','valD', 10, '0.10', '#3b82f6');
+        document.getElementById('wA').textContent = '0.70';
+        document.getElementById('wB').textContent = '0.10';
+        document.getElementById('wC').textContent = '0.10';
+        document.getElementById('wD').textContent = '0.10';
+        document.getElementById('nodeA').setAttribute('r','26');
+        document.getElementById('resultVal').textContent = '[3.6, 3.6]';
+        document.getElementById('resultRow').classList.add('highlight');
+        document.getElementById('modeMsg').className = 'highlight-box green';
+        document.getElementById('modeMsg').innerHTML = '<span class="icon">✅</span><span>Com atenção, A recebe peso 0.70 — a <strong>informação importante é preservada</strong>.</span>';
+        document.getElementById('formula').textContent = '0.70·[5,5] + 0.10·[0,1] + 0.10·[1,0] + 0.10·[0,0]';
+        document.getElementById('edgeA').setAttribute('stroke-width','5');
+      } else {
+        setBar('barA','valA', 25, '0.25', '#d97706');
+        setBar('barB','valB', 25, '0.25', '#3b82f6');
+        setBar('barC','valC', 25, '0.25', '#3b82f6');
+        setBar('barD','valD', 25, '0.25', '#3b82f6');
+        document.getElementById('wA').textContent = '1/4';
+        document.getElementById('wB').textContent = '1/4';
+        document.getElementById('wC').textContent = '1/4';
+        document.getElementById('wD').textContent = '1/4';
+        document.getElementById('nodeA').setAttribute('r','22');
+        document.getElementById('resultVal').textContent = '[1.5, 1.5]';
+        document.getElementById('resultRow').classList.remove('highlight');
+        document.getElementById('modeMsg').className = 'highlight-box yellow';
+        document.getElementById('modeMsg').innerHTML = '<span class="icon">⚠️</span><span>A informação importante de A <strong>se dilui</strong> — todos recebem peso igual 1/4.</span>';
+        document.getElementById('formula').textContent = '0.25·[5,5] + 0.25·[0,1] + 0.25·[1,0] + 0.25·[0,0]';
+        document.getElementById('edgeA').setAttribute('stroke-width','2.5');
+      }
     }
 
-    function updateAttn() {
-      const e1 = parseFloat(document.getElementById('slE1').value);
-      const e2 = parseFloat(document.getElementById('slE2').value);
-      const e3 = parseFloat(document.getElementById('slE3').value);
-      document.getElementById('svE1').textContent = e1.toFixed(1);
-      document.getElementById('svE2').textContent = e2.toFixed(1);
-      document.getElementById('svE3').textContent = e3.toFixed(1);
-
-      const [a1,a2,a3] = softmax([e1,e2,e3]);
-
-      setAttnBar('ab1','ap1','la1','ea1','nu1', a1, 0);
-      setAttnBar('ab2','ap2','la2','ea2','nu2', a2, 1);
-      setAttnBar('ab3','ap3','la3','ea3','nu3', a3, 2);
+    function setBar(barId, valId, pct, txt, color) {
+      const bar = document.getElementById(barId);
+      bar.style.width = pct + '%';
+      bar.style.background = color;
+      document.getElementById(valId).textContent = txt;
     }
-
-    function setAttnBar(barId, pctId, laId, edgeId, nodeId, val, idx) {
-      const pct = (val * 100).toFixed(1);
-      document.getElementById(barId).style.width = pct + '%';
-      document.getElementById(pctId).textContent = pct + '%';
-      document.getElementById(laId).textContent = 'α=' + val.toFixed(2);
-      const strokeW = 1 + val * 7;
-      const op = 0.2 + val * 0.8;
-      document.getElementById(edgeId).setAttribute('stroke-width', strokeW.toFixed(1));
-      document.getElementById(edgeId).setAttribute('opacity', op.toFixed(2));
-      const r = [20, 16, 14][idx];
-      document.getElementById(nodeId).setAttribute('r', Math.round(r + val * 10).toString());
-    }
-
-    updateAttn();
 
     (function(){
       const container = document.getElementById('navDots');
-      const CURRENT = 13, TOTAL = 20;
+      const CURRENT = 13, TOTAL = 22;
       for (let i = 1; i <= TOTAL; i++) {
         const dot = document.createElement('div');
         dot.className = 'dot' + (i === CURRENT ? ' active' : '');
