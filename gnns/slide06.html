@@ -7,61 +7,49 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
   <style>
-    .compare-wrap {
+    .mlp-layout {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1.5fr 1fr;
       gap: 1.2rem;
       flex: 1;
     }
-    .mode-panel {
-      background: var(--bg2);
-      border: 2px solid var(--border2);
-      border-radius: var(--radius);
-      padding: 1rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.6rem;
-      box-shadow: var(--shadow);
-      transition: border-color 0.3s;
-    }
-    .mode-panel.active-mlp { border-color: #f97316; }
-    .mode-panel.active-gnn { border-color: var(--teal); }
-    .mode-title {
-      font-size: 1.1rem;
-      font-weight: 800;
-      letter-spacing: 0.05em;
-    }
-    .mode-title.mlp { color: #f97316; }
-    .mode-title.gnn { color: var(--teal); }
-    .mode-svg { width: 100%; }
-    .mode-desc {
-      font-size: 0.88rem;
-      color: var(--text-muted);
-      text-align: center;
-      line-height: 1.55;
-    }
-    /* MLP: independent arrows, pulsing nodes */
-    .mlp-node { fill: var(--bg3); stroke: #f97316; stroke-width: 2; }
-    .mlp-node.flash { animation: flashAnim 0.7s ease-in-out infinite; }
-    @keyframes flashAnim {
-      0%, 100% { fill: #fff7ed; }
-      50%       { fill: #fed7aa; }
-    }
-    .mlp-box { fill: #fff7ed; stroke: #f97316; stroke-width: 2; rx: 6; }
-    .mlp-arrow { stroke: #f97316; stroke-width: 1.8; marker-end: url(#arrOrange); }
+    .graph-wrap { position: relative; }
+    svg.mlp-graph { width: 100%; height: 100%; min-height: 260px; }
 
-    /* GNN: flowing edge arrows */
-    .gnn-node { fill: #ccfbf1; stroke: #0d6e6e; stroke-width: 2; }
-    .gnn-edge { stroke: #0d6e6e; stroke-width: 2; marker-end: url(#arrTeal); }
-    .gnn-edge-flow {
-      stroke: #0d6e6e; stroke-width: 2.5;
-      stroke-dasharray: 8 4;
-      animation: flowAnim 1.2s linear infinite;
-    }
-    @keyframes flowAnim { to { stroke-dashoffset: -24; } }
+    /* Node styles — NO blinking */
+    .sn-user   { fill: #ccfbf1; stroke: #0d6e6e; stroke-width: 2.5; }
+    .sn-bot    { fill: #fee2e2; stroke: #b91c1c; stroke-width: 2.5; }
+    .sn-unknown{ fill: #e5e7eb; stroke: #9ca3af; stroke-width: 2.5; }
+    .sn-label  { font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 700; pointer-events: none; }
+    /* Edges faded — MLP ignores graph structure */
+    .sn-edge-faded { stroke: #e2e8f0; stroke-width: 1.8; stroke-dasharray: 5 4; }
+    .attr-box-user    { fill: #f0fdf9; stroke: #0d6e6e; stroke-width: 1.2; }
+    .attr-box-bot     { fill: #fff5f5; stroke: #b91c1c; stroke-width: 1.2; }
+    .attr-box-unknown { fill: #f9fafb; stroke: #9ca3af; stroke-width: 1.2; }
+    .attr-box-text    { font-family: 'Fira Code', monospace; font-size: 8px; pointer-events: none; }
+    /* MLP arrows from each node to MLP box */
+    .mlp-arrow { stroke: #f97316; stroke-width: 1.8; marker-end: url(#arrOrange06); }
+    .mlp-box   { fill: #fff7ed; stroke: #f97316; stroke-width: 1.8; }
 
-    .toggle-wrap { display: flex; justify-content: center; gap: 0.6rem; }
+    /* Right panel: feature comparison table */
+    .feat-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; font-family: 'Fira Code', monospace; }
+    .feat-table th { text-align: center; padding: 0.3rem 0.5rem; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); border-bottom: 2px solid var(--border2); }
+    .feat-table td { text-align: center; padding: 0.25rem 0.5rem; border-bottom: 1px solid var(--border2); }
+    .feat-table tr:last-child td { border-bottom: none; }
+    .row-user td { color: #0d6e6e; }
+    .row-bot  td { color: #b91c1c; }
+    .row-unk  td { color: #6b7fa3; font-weight: 700; }
+    .confusion-badge {
+      display: inline-block;
+      background: #fef3c7;
+      border: 1.5px solid #f59e0b;
+      border-radius: 4px;
+      padding: 0.1rem 0.35rem;
+      font-size: 0.78rem;
+      color: #92400e;
+      font-weight: 700;
+    }
+    @media (max-width: 800px) { .mlp-layout { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -78,94 +66,127 @@
         <p class="slide-subtitle">Bloco 2 — Motivação para GNNs</p>
       </div>
 
-      <div class="toggle-wrap">
-        <button class="btn-toggle active" id="btnMLP" onclick="setMode('mlp')">Ver com MLP</button>
-        <button class="btn-toggle" id="btnGNN" onclick="setMode('gnn')">Ver com GNN</button>
-      </div>
-
-      <div class="compare-wrap">
-        <!-- MLP Panel -->
-        <div class="mode-panel active-mlp" id="mlpPanel">
-          <div class="mode-title mlp">MLP</div>
-          <svg class="mode-svg" viewBox="0 0 300 210" id="mlpSvg">
+      <div class="mlp-layout">
+        <!-- Graph panel: slide-5 example, MLP ignores edges (shown faded) -->
+        <div class="panel graph-wrap">
+          <div class="panel-title">MLP: processa cada nó <em>isoladamente</em> — conexões invisíveis</div>
+          <svg class="mlp-graph" viewBox="0 0 460 310" id="mlpSvg">
             <defs>
-              <marker id="arrOrange" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+              <marker id="arrOrange06" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
                 <path d="M0,0 L6,3 L0,6 Z" fill="#f97316"/>
               </marker>
             </defs>
-            <!-- 5 nodes in a rough graph layout but no connecting edges shown (MLP ignores them) -->
-            <circle class="mlp-node flash" cx="50" cy="60" r="18" style="animation-delay:0s"/>
-            <text x="50" y="65" text-anchor="middle" font-size="12" font-weight="700" fill="#c2410c">A</text>
-            <circle class="mlp-node flash" cx="120" cy="35" r="18" style="animation-delay:0.15s"/>
-            <text x="120" y="40" text-anchor="middle" font-size="12" font-weight="700" fill="#c2410c">B</text>
-            <circle class="mlp-node flash" cx="190" cy="60" r="18" style="animation-delay:0.30s"/>
-            <text x="190" y="65" text-anchor="middle" font-size="12" font-weight="700" fill="#c2410c">C</text>
-            <circle class="mlp-node flash" cx="80" cy="130" r="18" style="animation-delay:0.45s"/>
-            <text x="80" y="135" text-anchor="middle" font-size="12" font-weight="700" fill="#c2410c">D</text>
-            <circle class="mlp-node flash" cx="160" cy="140" r="18" style="animation-delay:0.60s"/>
-            <text x="160" y="145" text-anchor="middle" font-size="12" font-weight="700" fill="#c2410c">E</text>
-            <!-- Individual MLP arrows -->
-            <line class="mlp-arrow" x1="50" y1="78" x2="50" y2="175"/>
-            <line class="mlp-arrow" x1="120" y1="53" x2="120" y2="175"/>
-            <line class="mlp-arrow" x1="190" y1="78" x2="190" y2="175"/>
-            <line class="mlp-arrow" x1="80" y1="148" x2="80" y2="175"/>
-            <line class="mlp-arrow" x1="160" y1="158" x2="160" y2="175"/>
-            <!-- MLP boxes at bottom -->
-            <rect x="20" y="176" width="60" height="22" rx="5" class="mlp-box"/>
-            <text x="50" y="191" text-anchor="middle" font-size="10" fill="#c2410c" font-weight="700">MLP</text>
-            <rect x="90" y="176" width="60" height="22" rx="5" class="mlp-box"/>
-            <text x="120" y="191" text-anchor="middle" font-size="10" fill="#c2410c" font-weight="700">MLP</text>
-            <rect x="160" y="176" width="60" height="22" rx="5" class="mlp-box"/>
-            <text x="190" y="191" text-anchor="middle" font-size="10" fill="#c2410c" font-weight="700">MLP</text>
-            <!-- Cross out edges (show they're ignored) -->
-            <line x1="68" y1="60" x2="102" y2="37" stroke="#e5e7eb" stroke-width="1.5" stroke-dasharray="4 3"/>
-            <line x1="138" y1="40" x2="172" y2="56" stroke="#e5e7eb" stroke-width="1.5" stroke-dasharray="4 3"/>
-            <line x1="62" y1="75" x2="65" y2="112" stroke="#e5e7eb" stroke-width="1.5" stroke-dasharray="4 3"/>
-            <text x="150" y="115" font-size="9" fill="#9ca3af" font-style="italic" text-anchor="middle">sem conexões</text>
-            <text x="150" y="127" font-size="9" fill="#9ca3af" font-style="italic" text-anchor="middle">consideradas</text>
+
+            <!-- Edges faded (MLP ignores them) -->
+            <line class="sn-edge-faded" x1="90"  y1="120" x2="90"  y2="245"/>
+            <line class="sn-edge-faded" x1="90"  y1="120" x2="230" y2="185"/>
+            <line class="sn-edge-faded" x1="370" y1="120" x2="370" y2="245"/>
+            <line class="sn-edge-faded" x1="370" y1="120" x2="230" y2="185"/>
+            <line class="sn-edge-faded" x1="370" y1="245" x2="230" y2="185"/>
+
+            <!-- Attribute boxes above nodes (same as slide 5) -->
+            <rect x="58"  y="64"  width="64" height="28" rx="4" class="attr-box-user"/>
+            <text x="90"  y="75"  text-anchor="middle" class="attr-box-text" fill="#0d6e6e">840d</text>
+            <text x="90"  y="87"  text-anchor="middle" class="attr-box-text" fill="#0d6e6e">5 posts</text>
+
+            <rect x="58"  y="189" width="64" height="28" rx="4" class="attr-box-user"/>
+            <text x="90"  y="200" text-anchor="middle" class="attr-box-text" fill="#0d6e6e">620d</text>
+            <text x="90"  y="212" text-anchor="middle" class="attr-box-text" fill="#0d6e6e">7 posts</text>
+
+            <rect x="338" y="64"  width="64" height="28" rx="4" class="attr-box-bot"/>
+            <text x="370" y="75"  text-anchor="middle" class="attr-box-text" fill="#b91c1c">38d</text>
+            <text x="370" y="87"  text-anchor="middle" class="attr-box-text" fill="#b91c1c">14 posts</text>
+
+            <rect x="338" y="189" width="64" height="28" rx="4" class="attr-box-bot"/>
+            <text x="370" y="200" text-anchor="middle" class="attr-box-text" fill="#b91c1c">22d</text>
+            <text x="370" y="212" text-anchor="middle" class="attr-box-text" fill="#b91c1c">19 posts</text>
+
+            <rect x="198" y="129" width="64" height="28" rx="4" class="attr-box-unknown"/>
+            <text x="230" y="140" text-anchor="middle" class="attr-box-text" fill="#6b7fa3">30d</text>
+            <text x="230" y="152" text-anchor="middle" class="attr-box-text" fill="#6b7fa3">12 posts</text>
+
+            <!-- Node circles (static — no animation) -->
+            <circle class="sn-user"    cx="90"  cy="120" r="22"/>
+            <text class="sn-label" x="90"  y="116" text-anchor="middle" fill="#0d6e6e">U1</text>
+            <text class="sn-label" x="90"  y="129" text-anchor="middle" font-size="11" fill="#0d6e6e">✓</text>
+
+            <circle class="sn-user"    cx="90"  cy="245" r="22"/>
+            <text class="sn-label" x="90"  y="241" text-anchor="middle" fill="#0d6e6e">U2</text>
+            <text class="sn-label" x="90"  y="254" text-anchor="middle" font-size="11" fill="#0d6e6e">✓</text>
+
+            <circle class="sn-bot"     cx="370" cy="120" r="22"/>
+            <text class="sn-label" x="370" y="116" text-anchor="middle" fill="#b91c1c">B1</text>
+            <text class="sn-label" x="370" y="129" text-anchor="middle" font-size="11" fill="#b91c1c">✗</text>
+
+            <circle class="sn-bot"     cx="370" cy="245" r="22"/>
+            <text class="sn-label" x="370" y="241" text-anchor="middle" fill="#b91c1c">B2</text>
+            <text class="sn-label" x="370" y="254" text-anchor="middle" font-size="11" fill="#b91c1c">✗</text>
+
+            <circle class="sn-unknown" cx="230" cy="185" r="22"/>
+            <text class="sn-label" x="230" y="181" text-anchor="middle" fill="#6b7fa3">X</text>
+            <text class="sn-label" x="230" y="194" text-anchor="middle" font-size="11" fill="#6b7fa3">?</text>
+
+            <!-- MLP arrows: each node → MLP box at bottom -->
+            <line class="mlp-arrow" x1="90"  y1="268" x2="90"  y2="292"/>
+            <line class="mlp-arrow" x1="370" y1="268" x2="370" y2="292"/>
+            <line class="mlp-arrow" x1="230" y1="208" x2="230" y2="292"/>
+
+            <!-- MLP boxes -->
+            <rect x="58"  y="293" width="64" height="16" rx="4" class="mlp-box"/>
+            <text x="90"  y="305" text-anchor="middle" font-size="9" fill="#c2410c" font-weight="700">MLP</text>
+            <rect x="198" y="293" width="64" height="16" rx="4" class="mlp-box"/>
+            <text x="230" y="305" text-anchor="middle" font-size="9" fill="#c2410c" font-weight="700">MLP</text>
+            <rect x="338" y="293" width="64" height="16" rx="4" class="mlp-box"/>
+            <text x="370" y="305" text-anchor="middle" font-size="9" fill="#c2410c" font-weight="700">MLP</text>
+
+            <!-- "sem conexões" label -->
+            <text x="230" y="275" text-anchor="middle" font-size="9" fill="#9ca3af" font-style="italic">conexões ignoradas</text>
           </svg>
-          <div class="mode-desc">Cada nó processado <strong>isoladamente</strong> — sem troca de informação entre vizinhos.</div>
         </div>
 
-        <!-- GNN Panel -->
-        <div class="mode-panel" id="gnnPanel">
-          <div class="mode-title gnn">GNN</div>
-          <svg class="mode-svg" viewBox="0 0 300 210" id="gnnSvg">
-            <defs>
-              <marker id="arrTeal" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-                <path d="M0,0 L6,3 L0,6 Z" fill="#0d6e6e"/>
-              </marker>
-            </defs>
-            <!-- Edges with flow animation -->
-            <line class="gnn-edge-flow" x1="68" y1="60" x2="102" y2="37" stroke-dashoffset="0"/>
-            <line class="gnn-edge-flow" x1="102" y1="37" x2="68" y2="60" stroke-dashoffset="0" style="animation-delay:0.3s"/>
-            <line class="gnn-edge-flow" x1="138" y1="40" x2="172" y2="56" stroke-dashoffset="0" style="animation-delay:0.6s"/>
-            <line class="gnn-edge-flow" x1="172" y1="56" x2="138" y2="40" stroke-dashoffset="0" style="animation-delay:0.9s"/>
-            <line class="gnn-edge-flow" x1="62" y1="75" x2="65" y2="112" stroke-dashoffset="0" style="animation-delay:0.2s"/>
-            <line class="gnn-edge-flow" x1="65" y1="112" x2="62" y2="75" stroke-dashoffset="0" style="animation-delay:0.5s"/>
-            <line class="gnn-edge-flow" x1="98" y1="130" x2="142" y2="135" stroke-dashoffset="0" style="animation-delay:0.4s"/>
-            <line class="gnn-edge-flow" x1="142" y1="135" x2="98" y2="130" stroke-dashoffset="0" style="animation-delay:0.7s"/>
-            <!-- Nodes -->
-            <circle class="gnn-node" cx="50" cy="60" r="18"/>
-            <text x="50" y="65" text-anchor="middle" font-size="12" font-weight="700" fill="#0d6e6e">A</text>
-            <circle class="gnn-node" cx="120" cy="35" r="18"/>
-            <text x="120" y="40" text-anchor="middle" font-size="12" font-weight="700" fill="#0d6e6e">B</text>
-            <circle class="gnn-node" cx="190" cy="60" r="18"/>
-            <text x="190" y="65" text-anchor="middle" font-size="12" font-weight="700" fill="#0d6e6e">C</text>
-            <circle class="gnn-node" cx="80" cy="130" r="18"/>
-            <text x="80" y="135" text-anchor="middle" font-size="12" font-weight="700" fill="#0d6e6e">D</text>
-            <circle class="gnn-node" cx="160" cy="140" r="18"/>
-            <text x="160" y="145" text-anchor="middle" font-size="12" font-weight="700" fill="#0d6e6e">E</text>
-            <text x="150" y="190" font-size="10" fill="#0d6e6e" text-anchor="middle" font-weight="600">mensagens fluem pelas arestas</text>
-          </svg>
-          <div class="mode-desc">GNN <strong>propaga informação</strong> pela estrutura do grafo — vizinhos influenciam uns aos outros.</div>
+        <!-- Right: feature comparison showing MLP confusion -->
+        <div class="panel" style="display:flex;flex-direction:column;gap:0.8rem;">
+          <div class="panel-title">⚠️ O MLP vê apenas atributos</div>
+          <table class="feat-table">
+            <thead>
+              <tr>
+                <th>Nó</th>
+                <th>cadastro</th>
+                <th>posts</th>
+                <th>MLP diz</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="row-user">
+                <td>U1 ✓</td><td>840d</td><td>5</td><td>✓ user</td>
+              </tr>
+              <tr class="row-user">
+                <td>U2 ✓</td><td>620d</td><td>7</td><td>✓ user</td>
+              </tr>
+              <tr class="row-bot">
+                <td>B1 ✗</td><td>38d</td><td>14</td><td>🤔 ?</td>
+              </tr>
+              <tr class="row-bot">
+                <td>B2 ✗</td><td>22d</td><td>19</td><td>🤔 ?</td>
+              </tr>
+              <tr class="row-unk">
+                <td>X  ?</td><td>30d</td><td>12</td><td><span class="confusion-badge">???</span></td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="font-size:0.82rem;color:var(--text-muted);line-height:1.6;">
+            B1 [38d, 14] e X [30d, 12] são<br>
+            <strong>atributos muito similares</strong>.<br>
+            Só as conexões revelam que X<br>
+            está no <em>cluster de bots</em>.
+          </div>
         </div>
       </div>
 
       <div class="insight-box">
         <span class="i-icon">⚡</span>
         <span class="i-text">
-          O MLP <strong>ignora a estrutura do grafo</strong>. GNNs incorporam a topologia da rede no processo de aprendizado.
+          O MLP <strong>ignora a estrutura do grafo</strong> — processa cada nó individualmente. Para distinguir X, precisamos das conexões!
         </span>
       </div>
     </main>
@@ -178,24 +199,6 @@
   </div>
 
   <script>
-    function setMode(mode) {
-      const mlpPanel = document.getElementById('mlpPanel');
-      const gnnPanel = document.getElementById('gnnPanel');
-      const btnMLP = document.getElementById('btnMLP');
-      const btnGNN = document.getElementById('btnGNN');
-      if (mode === 'mlp') {
-        mlpPanel.classList.add('active-mlp');
-        gnnPanel.classList.remove('active-gnn');
-        btnMLP.classList.add('active');
-        btnGNN.classList.remove('active');
-      } else {
-        gnnPanel.classList.add('active-gnn');
-        mlpPanel.classList.remove('active-mlp');
-        btnGNN.classList.add('active');
-        btnMLP.classList.remove('active');
-      }
-    }
-
     (function(){
       const container = document.getElementById('navDots');
       const CURRENT = 6;

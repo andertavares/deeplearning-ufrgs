@@ -154,7 +154,7 @@
         <div class="task-panel">
           <div class="task-panel-title graph">Classificação de Grafo</div>
           <div class="graph-class-wrap" style="flex:1;">
-            <svg viewBox="0 0 110 160" width="110">
+            <svg viewBox="0 0 110 160" width="78">
               <rect x="5" y="5" width="100" height="150" rx="10" fill="#fee2e2" stroke="#b91c1c" stroke-width="2"/>
               <line x1="40" y1="50" x2="70" y2="35" stroke="#b91c1c" stroke-width="2"/>
               <line x1="70" y1="35" x2="90" y2="60" stroke="#b91c1c" stroke-width="2"/>
@@ -171,7 +171,7 @@
               <text x="55" y="85" text-anchor="middle" font-size="9" font-weight="700" fill="#b91c1c">H</text>
               <text class="mol-label mol-toxic" x="55" y="130" font-size="13" font-weight="800" text-anchor="middle">🧪 Tóxico</text>
             </svg>
-            <svg viewBox="0 0 110 160" width="110">
+            <svg viewBox="0 0 110 160" width="78">
               <rect x="5" y="5" width="100" height="150" rx="10" fill="#dcfce7" stroke="#166534" stroke-width="2"/>
               <line x1="35" y1="55" x2="55" y2="35" stroke="#166534" stroke-width="2"/>
               <line x1="55" y1="35" x2="80" y2="50" stroke="#166534" stroke-width="2"/>
@@ -187,8 +187,27 @@
               <text x="50" y="85" text-anchor="middle" font-size="9" font-weight="700" fill="#166534">H</text>
               <text class="mol-label mol-safe" x="55" y="130" font-size="13" font-weight="800" text-anchor="middle">✅ Não tóxico</text>
             </svg>
+            <!-- Unknown molecule to classify -->
+            <svg viewBox="0 0 110 160" width="78" id="unknownMolSvg">
+              <rect id="unknownMolRect" x="5" y="5" width="100" height="150" rx="10" fill="#f3f4f6" stroke="#6b7280" stroke-width="2"/>
+              <line x1="42" y1="50" x2="68" y2="35" stroke="#9ca3af" stroke-width="2"/>
+              <line x1="68" y1="35" x2="88" y2="62" stroke="#9ca3af" stroke-width="2"/>
+              <line x1="42" y1="50" x2="58" y2="80" stroke="#9ca3af" stroke-width="2"/>
+              <line x1="68" y1="35" x2="58" y2="80" stroke="#9ca3af" stroke-width="2"/>
+              <circle id="uMolN1" cx="42" cy="50" r="11" fill="#e5e7eb" stroke="#6b7280" stroke-width="2"/>
+              <text x="42" y="55" text-anchor="middle" font-size="9" font-weight="700" fill="#6b7280">?</text>
+              <circle id="uMolN2" cx="68" cy="35" r="11" fill="#e5e7eb" stroke="#6b7280" stroke-width="2"/>
+              <text x="68" y="40" text-anchor="middle" font-size="9" font-weight="700" fill="#6b7280">?</text>
+              <circle id="uMolN3" cx="88" cy="62" r="11" fill="#e5e7eb" stroke="#6b7280" stroke-width="2"/>
+              <text x="88" y="67" text-anchor="middle" font-size="9" font-weight="700" fill="#6b7280">?</text>
+              <circle id="uMolN4" cx="58" cy="80" r="11" fill="#e5e7eb" stroke="#6b7280" stroke-width="2"/>
+              <text x="58" y="85" text-anchor="middle" font-size="9" font-weight="700" fill="#6b7280">?</text>
+              <text class="mol-label" id="unknownMolLabel" x="55" y="130" font-size="12" font-weight="800" text-anchor="middle" fill="#6b7280">❓ Novo grafo</text>
+            </svg>
           </div>
+          <button class="btn-step task-btn" onclick="classifyGraph()">Classificar grafo</button>
           <div class="task-example">Ex: prever atividade de moléculas, classificar redes cerebrais</div>
+          <div class="task-example" style="color:var(--text-dim);font-size:0.77rem;margin-top:-0.3rem;">Outras tarefas: graph clustering, community detection, graph generation...</div>
         </div>
       </div>
 
@@ -206,6 +225,35 @@
   </div>
 
   <script>
+    let graphClassDone = false;
+    function classifyGraph() {
+      graphClassDone = !graphClassDone;
+      const rect  = document.getElementById('unknownMolRect');
+      const label = document.getElementById('unknownMolLabel');
+      const nodeIds = ['uMolN1','uMolN2','uMolN3','uMolN4'];
+      if (graphClassDone) {
+        rect.setAttribute('fill','#dcfce7');
+        rect.setAttribute('stroke','#166534');
+        nodeIds.forEach(id => {
+          const el = document.getElementById(id);
+          el.setAttribute('fill','#86efac');
+          el.setAttribute('stroke','#166534');
+        });
+        label.setAttribute('fill','#166534');
+        label.textContent = '✅ Não tóxico';
+      } else {
+        rect.setAttribute('fill','#f3f4f6');
+        rect.setAttribute('stroke','#6b7280');
+        nodeIds.forEach(id => {
+          const el = document.getElementById(id);
+          el.setAttribute('fill','#e5e7eb');
+          el.setAttribute('stroke','#6b7280');
+        });
+        label.setAttribute('fill','#6b7280');
+        label.textContent = '❓ Novo grafo';
+      }
+    }
+
     let classified = false;
     function classifyNode() {
       if (classified) return;
