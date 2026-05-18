@@ -30,11 +30,16 @@
     .g-node { cursor: pointer; transition: all 0.2s; }
     .g-node circle { fill: var(--bg3); stroke: var(--border2); stroke-width: 2.5; transition: fill 0.25s, stroke 0.25s; }
     .g-node:hover circle { stroke: var(--teal); }
-    .g-node.central circle { fill: #fed7aa; stroke: #c2410c; stroke-width: 3; }
-    .g-node.neighbor circle { fill: #ccfbf1; stroke: #0d6e6e; stroke-width: 3; }
-    .g-node text { font-family:'Inter',sans-serif; font-weight:700; font-size:14px; pointer-events:none; fill:var(--text); }
-    .g-node.central text { fill: #c2410c; }
-    .g-node.neighbor text { fill: #0d6e6e; }
+    /* selected states use !important to override ID-based defaults */
+    .g-node.central circle { fill: #fed7aa !important; stroke: #c2410c !important; stroke-width: 3 !important; }
+    .g-node.neighbor circle { fill: #fef9c3 !important; stroke: #ca8a04 !important; stroke-width: 3 !important; }
+    /* Bot/user colors when not selected */
+    #node-U1 circle, #node-U2 circle { fill: #ccfbf1; stroke: #0d6e6e; }
+    #node-B1 circle, #node-B2 circle { fill: #fee2e2; stroke: #b91c1c; }
+    #node-X  circle { fill: #e5e7eb; stroke: #9ca3af; }
+    #node-U1 text, #node-U2 text { fill: #0d6e6e; }
+    #node-B1 text, #node-B2 text { fill: #b91c1c; }
+    #node-X  text { fill: #6b7fa3; }
 
     /* Edges */
     .g-edge { stroke: var(--border); stroke-width: 2; }
@@ -124,7 +129,7 @@
       <div class="gather-layout">
         <!-- LEFT: graph -->
         <div class="graph-wrap">
-          <div class="panel-title">Grafo Interativo</div>
+          <div class="panel-title">Grafo — Exemplo de Trabalho</div>
           <p class="hint-text">Clique em um nó para ver as mensagens que ele coleta dos vizinhos</p>
           <svg class="graph-svg" viewBox="0 0 400 300" id="gatherSvg">
             <defs>
@@ -133,59 +138,65 @@
               </marker>
             </defs>
             <!-- Edges -->
-            <line id="e01" class="g-edge" x1="200" y1="150" x2="100" y2="80"/>
-            <line id="e02" class="g-edge" x1="200" y1="150" x2="300" y2="80"/>
-            <line id="e03" class="g-edge" x1="200" y1="150" x2="345" y2="200"/>
-            <line id="e04" class="g-edge" x1="200" y1="150" x2="200" y2="260"/>
-            <line id="e05" class="g-edge" x1="200" y1="150" x2="60" y2="200"/>
-            <line id="e12" class="g-edge" x1="100" y1="80" x2="300" y2="80"/>
-            <line id="e34" class="g-edge" x1="345" y1="200" x2="200" y2="260"/>
+            <line id="e-u1u2" class="g-edge" x1="120" y1="90"  x2="120" y2="220"/>
+            <line id="e-u1x"  class="g-edge" x1="120" y1="90"  x2="200" y2="150"/>
+            <line id="e-b1b2" class="g-edge" x1="280" y1="90"  x2="280" y2="220"/>
+            <line id="e-b1x"  class="g-edge" x1="280" y1="90"  x2="200" y2="150"/>
+            <line id="e-b2x"  class="g-edge" x1="280" y1="220" x2="200" y2="150"/>
 
             <!-- Animated message arrows (hidden by default) -->
-            <line id="m10" class="msg-anim" x1="100" y1="80" x2="200" y2="150" marker-end="url(#gArr)"/>
-            <line id="m20" class="msg-anim" x1="300" y1="80" x2="200" y2="150" marker-end="url(#gArr)" style="animation-delay:0.2s"/>
-            <line id="m30" class="msg-anim" x1="345" y1="200" x2="200" y2="150" marker-end="url(#gArr)" style="animation-delay:0.4s"/>
-            <line id="m40" class="msg-anim" x1="200" y1="260" x2="200" y2="150" marker-end="url(#gArr)" style="animation-delay:0.6s"/>
-            <line id="m50" class="msg-anim" x1="60" y1="200" x2="200" y2="150" marker-end="url(#gArr)" style="animation-delay:0.1s"/>
+            <line id="m-u2-u1" class="msg-anim" x1="120" y1="212" x2="120" y2="98"  marker-end="url(#gArr)"/>
+            <line id="m-x-u1"  class="msg-anim" x1="192" y1="144" x2="128" y2="96"  marker-end="url(#gArr)" style="animation-delay:0.25s"/>
 
-            <line id="m01" class="msg-anim" x1="200" y1="150" x2="100" y2="80" marker-end="url(#gArr)"/>
-            <line id="m21" class="msg-anim" x1="300" y1="80" x2="100" y2="80" marker-end="url(#gArr)" style="animation-delay:0.3s"/>
+            <line id="m-u1-u2" class="msg-anim" x1="120" y1="98"  x2="120" y2="212" marker-end="url(#gArr)"/>
 
-            <line id="m02" class="msg-anim" x1="200" y1="150" x2="300" y2="80" marker-end="url(#gArr)"/>
-            <line id="m12" class="msg-anim" x1="100" y1="80" x2="300" y2="80" marker-end="url(#gArr)" style="animation-delay:0.3s"/>
+            <line id="m-b2-b1" class="msg-anim" x1="280" y1="212" x2="280" y2="98"  marker-end="url(#gArr)"/>
+            <line id="m-x-b1"  class="msg-anim" x1="208" y1="144" x2="272" y2="96"  marker-end="url(#gArr)" style="animation-delay:0.25s"/>
 
-            <line id="m03" class="msg-anim" x1="200" y1="150" x2="345" y2="200" marker-end="url(#gArr)"/>
-            <line id="m43" class="msg-anim" x1="200" y1="260" x2="345" y2="200" marker-end="url(#gArr)" style="animation-delay:0.3s"/>
+            <line id="m-b1-b2" class="msg-anim" x1="280" y1="98"  x2="280" y2="212" marker-end="url(#gArr)"/>
+            <line id="m-x-b2"  class="msg-anim" x1="208" y1="158" x2="272" y2="214" marker-end="url(#gArr)" style="animation-delay:0.25s"/>
 
-            <line id="m04" class="msg-anim" x1="200" y1="150" x2="200" y2="260" marker-end="url(#gArr)"/>
-            <line id="m34" class="msg-anim" x1="345" y1="200" x2="200" y2="260" marker-end="url(#gArr)" style="animation-delay:0.3s"/>
+            <line id="m-u1-x"  class="msg-anim" x1="128" y1="96"  x2="192" y2="144" marker-end="url(#gArr)"/>
+            <line id="m-b1-x"  class="msg-anim" x1="272" y1="96"  x2="208" y2="144" marker-end="url(#gArr)" style="animation-delay:0.25s"/>
+            <line id="m-b2-x"  class="msg-anim" x1="272" y1="214" x2="208" y2="158" marker-end="url(#gArr)" style="animation-delay:0.5s"/>
 
-            <line id="m05" class="msg-anim" x1="200" y1="150" x2="60" y2="200" marker-end="url(#gArr)"/>
+            <!-- Attribute boxes -->
+            <rect x="50"  y="56"  width="70" height="22" rx="3" fill="#f0fdf9" stroke="#0d6e6e" stroke-width="1"/>
+            <text x="85"  y="65"  text-anchor="middle" font-family="Fira Code" font-size="8" fill="#0d6e6e">[720, 8]</text>
+            <rect x="50"  y="232" width="70" height="22" rx="3" fill="#f0fdf9" stroke="#0d6e6e" stroke-width="1"/>
+            <text x="85"  y="241" text-anchor="middle" font-family="Fira Code" font-size="8" fill="#0d6e6e">[640, 5]</text>
+            <rect x="280" y="56"  width="70" height="22" rx="3" fill="#fff5f5" stroke="#b91c1c" stroke-width="1"/>
+            <text x="315" y="65"  text-anchor="middle" font-family="Fira Code" font-size="8" fill="#b91c1c">[700, 11]</text>
+            <rect x="280" y="232" width="70" height="22" rx="3" fill="#fff5f5" stroke="#b91c1c" stroke-width="1"/>
+            <text x="315" y="241" text-anchor="middle" font-family="Fira Code" font-size="8" fill="#b91c1c">[680, 9]</text>
+            <rect x="200" y="118" width="60" height="22" rx="3" fill="#f9fafb" stroke="#9ca3af" stroke-width="1"/>
+            <text x="230" y="127" text-anchor="middle" font-family="Fira Code" font-size="8" fill="#6b7fa3">[690, 10]</text>
 
             <!-- Nodes -->
-            <g class="g-node" id="node0" onclick="selectGatherNode(0)">
+            <g class="g-node" id="node-U1" onclick="selectGatherNode('U1')">
+              <circle cx="120" cy="90" r="24"/>
+              <text x="120" y="86" text-anchor="middle" font-size="11">U1</text>
+              <text x="120" y="99" text-anchor="middle" font-size="10">✓</text>
+            </g>
+            <g class="g-node" id="node-U2" onclick="selectGatherNode('U2')">
+              <circle cx="120" cy="220" r="22"/>
+              <text x="120" y="216" text-anchor="middle" font-size="11">U2</text>
+              <text x="120" y="228" text-anchor="middle" font-size="10">✓</text>
+            </g>
+            <g class="g-node" id="node-B1" onclick="selectGatherNode('B1')">
+              <circle cx="280" cy="90" r="24"/>
+              <text x="280" y="86" text-anchor="middle" font-size="11">B1</text>
+              <text x="280" y="99" text-anchor="middle" font-size="10">✗</text>
+            </g>
+            <g class="g-node" id="node-B2" onclick="selectGatherNode('B2')">
+              <circle cx="280" cy="220" r="22"/>
+              <text x="280" y="216" text-anchor="middle" font-size="11">B2</text>
+              <text x="280" y="228" text-anchor="middle" font-size="10">✗</text>
+            </g>
+            <g class="g-node" id="node-X" onclick="selectGatherNode('X')">
               <circle cx="200" cy="150" r="26"/>
-              <text x="200" y="155" text-anchor="middle">0</text>
-            </g>
-            <g class="g-node" id="node1" onclick="selectGatherNode(1)">
-              <circle cx="100" cy="80" r="22"/>
-              <text x="100" y="85" text-anchor="middle">1</text>
-            </g>
-            <g class="g-node" id="node2" onclick="selectGatherNode(2)">
-              <circle cx="300" cy="80" r="22"/>
-              <text x="300" y="85" text-anchor="middle">2</text>
-            </g>
-            <g class="g-node" id="node3" onclick="selectGatherNode(3)">
-              <circle cx="345" cy="200" r="22"/>
-              <text x="345" y="205" text-anchor="middle">3</text>
-            </g>
-            <g class="g-node" id="node4" onclick="selectGatherNode(4)">
-              <circle cx="200" cy="260" r="22"/>
-              <text x="200" y="265" text-anchor="middle">4</text>
-            </g>
-            <g class="g-node" id="node5" onclick="selectGatherNode(5)">
-              <circle cx="60" cy="200" r="22"/>
-              <text x="60" y="205" text-anchor="middle">5</text>
+              <text x="200" y="146" text-anchor="middle" font-size="11">X</text>
+              <text x="200" y="159" text-anchor="middle" font-size="10">?</text>
             </g>
           </svg>
         </div>
@@ -194,7 +205,7 @@
         <div class="messages-panel">
           <div class="panel-title">Mensagens Coletadas</div>
           <div class="formula-block">
-            <span>M_v</span> = &#123; h<sub>u</sub> : u ∈ N(v) &#125;
+            <span>M<sub>v</sub></span> = &#123; h<sub>u</sub> : u ∈ N(v) &#125;
           </div>
           <div id="msgList" style="display:flex;flex-direction:column;gap:0.5rem;flex:1;">
             <div style="color:var(--text-dim);font-size:0.9rem;text-align:center;margin-top:1rem;">
@@ -221,54 +232,49 @@
 
   <script>
     const gAdj = {
-      0: [1,2,3,4,5],
-      1: [0,2],
-      2: [0,1],
-      3: [0,4],
-      4: [0,3],
-      5: [0]
+      'U1': ['U2','X'],
+      'U2': ['U1'],
+      'B1': ['B2','X'],
+      'B2': ['B1','X'],
+      'X':  ['U1','B1','B2']
     };
     const gFeatures = {
-      0: '[0.8, 0.3]',
-      1: '[1.2, 0.5]',
-      2: '[0.4, 0.9]',
-      3: '[1.1, 0.2]',
-      4: '[0.6, 0.7]',
-      5: '[0.9, 1.0]'
+      'U1': '[720, 8]',
+      'U2': '[640, 5]',
+      'B1': '[700, 11]',
+      'B2': '[680, 9]',
+      'X':  '[690, 10]'
     };
-    // Message arrow IDs (from->to format)
-    const msgArrows = {
-      '0->1': 'm01', '2->1': 'm21',
-      '0->2': 'm02', '1->2': 'm12',
-      '0->3': 'm03', '4->3': 'm43',
-      '0->4': 'm04', '3->4': 'm34',
-      '0->5': 'm05',
-      '1->0': 'm10', '2->0': 'm20', '3->0': 'm30', '4->0': 'm40', '5->0': 'm50'
+    const msgArrowIds = {
+      'U2->U1': 'm-u2-u1', 'X->U1': 'm-x-u1',
+      'U1->U2': 'm-u1-u2',
+      'B2->B1': 'm-b2-b1', 'X->B1': 'm-x-b1',
+      'B1->B2': 'm-b1-b2', 'X->B2': 'm-x-b2',
+      'U1->X': 'm-u1-x', 'B1->X': 'm-b1-x', 'B2->X': 'm-b2-x'
     };
-
+    const allNodes = ['U1','U2','B1','B2','X'];
     let selectedNode = null;
 
-    function selectGatherNode(n) {
+    function selectGatherNode(id) {
       // Reset all
-      for (let i = 0; i <= 5; i++) {
-        const nd = document.getElementById('node'+i);
+      allNodes.forEach(n => {
+        const nd = document.getElementById('node-'+n);
         nd.classList.remove('central','neighbor');
-      }
-      // Hide all msg arrows
-      Object.values(msgArrows).forEach(id => {
-        const el = document.getElementById(id);
+      });
+      Object.values(msgArrowIds).forEach(mid => {
+        const el = document.getElementById(mid);
         if (el) el.classList.remove('visible');
       });
 
-      if (selectedNode === n) { selectedNode = null; clearMsgList(); return; }
-      selectedNode = n;
+      if (selectedNode === id) { selectedNode = null; clearMsgList(); return; }
+      selectedNode = id;
 
-      document.getElementById('node'+n).classList.add('central');
-      const nbrs = gAdj[n];
+      document.getElementById('node-'+id).classList.add('central');
+      const nbrs = gAdj[id];
       nbrs.forEach(nb => {
-        document.getElementById('node'+nb).classList.add('neighbor');
-        const key = nb+'->'+n;
-        const el = document.getElementById(msgArrows[key]);
+        document.getElementById('node-'+nb).classList.add('neighbor');
+        const key = nb+'->'+id;
+        const el = document.getElementById(msgArrowIds[key]);
         if (el) el.classList.add('visible');
       });
 
@@ -278,7 +284,7 @@
       nbrs.forEach((nb, i) => {
         const div = document.createElement('div');
         div.className = 'msg-entry';
-        div.innerHTML = `<span class="msg-from">h_${nb}</span><span class="msg-arrow">→</span><span class="msg-val">${gFeatures[nb]}</span>`;
+        div.innerHTML = `<span class="msg-from">h<sub>${nb}</sub></span><span class="msg-arrow">→</span><span class="msg-val">${gFeatures[nb]}</span>`;
         div.style.transitionDelay = (i * 0.08) + 's';
         msgList.appendChild(div);
         requestAnimationFrame(() => requestAnimationFrame(() => div.classList.add('visible')));
@@ -286,7 +292,7 @@
 
       const summary = document.getElementById('msgSummary');
       summary.style.display = 'block';
-      summary.innerHTML = `<strong>Nó ${n}</strong> coletou <strong>${nbrs.length}</strong> mensagem(ns) de N(${n}) = {${nbrs.join(', ')}}`;
+      summary.innerHTML = `<strong>${id}</strong> coletou <strong>${nbrs.length}</strong> mensagem(ns) de N(${id}) = {${nbrs.join(', ')}}`;
     }
 
     function clearMsgList() {
