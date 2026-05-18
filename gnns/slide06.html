@@ -31,7 +31,7 @@
     .mlp-arrow { stroke: #f97316; stroke-width: 1.8; marker-end: url(#arrOrange06); }
     .mlp-box   { fill: #fff7ed; stroke: #f97316; stroke-width: 1.8; }
 
-    /* Right panel: feature comparison table */
+    /* Right panel: feature comparison table + scatter plot */
     .feat-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; font-family: 'Fira Code', monospace; }
     .feat-table th { text-align: center; padding: 0.3rem 0.5rem; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); border-bottom: 2px solid var(--border2); }
     .feat-table td { text-align: center; padding: 0.25rem 0.5rem; border-bottom: 1px solid var(--border2); }
@@ -39,16 +39,8 @@
     .row-user td { color: #0d6e6e; }
     .row-bot  td { color: #b91c1c; }
     .row-unk  td { color: #6b7fa3; font-weight: 700; }
-    .confusion-badge {
-      display: inline-block;
-      background: #fef3c7;
-      border: 1.5px solid #f59e0b;
-      border-radius: 4px;
-      padding: 0.1rem 0.35rem;
-      font-size: 0.78rem;
-      color: #92400e;
-      font-weight: 700;
-    }
+    /* Scatter plot */
+    .scatter-label { font-family:'Fira Code',monospace; font-size:9px; }
     @media (max-width: 800px) { .mlp-layout { grid-template-columns: 1fr; } }
   </style>
 </head>
@@ -86,24 +78,24 @@
 
             <!-- Attribute boxes above nodes (same as slide 5) -->
             <rect x="58"  y="64"  width="64" height="28" rx="4" class="attr-box-user"/>
-            <text x="90"  y="75"  text-anchor="middle" class="attr-box-text" fill="#0d6e6e">840d</text>
-            <text x="90"  y="87"  text-anchor="middle" class="attr-box-text" fill="#0d6e6e">5 posts</text>
+            <text x="90"  y="75"  text-anchor="middle" class="attr-box-text" fill="#0d6e6e">720d</text>
+            <text x="90"  y="87"  text-anchor="middle" class="attr-box-text" fill="#0d6e6e">8 posts</text>
 
             <rect x="58"  y="189" width="64" height="28" rx="4" class="attr-box-user"/>
-            <text x="90"  y="200" text-anchor="middle" class="attr-box-text" fill="#0d6e6e">620d</text>
-            <text x="90"  y="212" text-anchor="middle" class="attr-box-text" fill="#0d6e6e">7 posts</text>
+            <text x="90"  y="200" text-anchor="middle" class="attr-box-text" fill="#0d6e6e">640d</text>
+            <text x="90"  y="212" text-anchor="middle" class="attr-box-text" fill="#0d6e6e">5 posts</text>
 
             <rect x="338" y="64"  width="64" height="28" rx="4" class="attr-box-bot"/>
-            <text x="370" y="75"  text-anchor="middle" class="attr-box-text" fill="#b91c1c">38d</text>
-            <text x="370" y="87"  text-anchor="middle" class="attr-box-text" fill="#b91c1c">14 posts</text>
+            <text x="370" y="75"  text-anchor="middle" class="attr-box-text" fill="#b91c1c">700d</text>
+            <text x="370" y="87"  text-anchor="middle" class="attr-box-text" fill="#b91c1c">11 posts</text>
 
             <rect x="338" y="189" width="64" height="28" rx="4" class="attr-box-bot"/>
-            <text x="370" y="200" text-anchor="middle" class="attr-box-text" fill="#b91c1c">22d</text>
-            <text x="370" y="212" text-anchor="middle" class="attr-box-text" fill="#b91c1c">19 posts</text>
+            <text x="370" y="200" text-anchor="middle" class="attr-box-text" fill="#b91c1c">680d</text>
+            <text x="370" y="212" text-anchor="middle" class="attr-box-text" fill="#b91c1c">9 posts</text>
 
             <rect x="198" y="129" width="64" height="28" rx="4" class="attr-box-unknown"/>
-            <text x="230" y="140" text-anchor="middle" class="attr-box-text" fill="#6b7fa3">30d</text>
-            <text x="230" y="152" text-anchor="middle" class="attr-box-text" fill="#6b7fa3">12 posts</text>
+            <text x="230" y="140" text-anchor="middle" class="attr-box-text" fill="#6b7fa3">690d</text>
+            <text x="230" y="152" text-anchor="middle" class="attr-box-text" fill="#6b7fa3">10 posts</text>
 
             <!-- Node circles (static — no animation) -->
             <circle class="sn-user"    cx="90"  cy="120" r="22"/>
@@ -144,7 +136,7 @@
           </svg>
         </div>
 
-        <!-- Right: feature comparison showing MLP confusion -->
+        <!-- Right: feature comparison table + scatter plot -->
         <div class="panel" style="display:flex;flex-direction:column;gap:0.8rem;">
           <div class="panel-title">⚠️ O MLP vê apenas atributos</div>
           <table class="feat-table">
@@ -153,32 +145,83 @@
                 <th>Nó</th>
                 <th>cadastro</th>
                 <th>posts</th>
-                <th>MLP diz</th>
               </tr>
             </thead>
             <tbody>
               <tr class="row-user">
-                <td>U1 ✓</td><td>840d</td><td>5</td><td>✓ user</td>
+                <td>U1 ✓</td><td>720d</td><td>8</td>
               </tr>
               <tr class="row-user">
-                <td>U2 ✓</td><td>620d</td><td>7</td><td>✓ user</td>
+                <td>U2 ✓</td><td>640d</td><td>5</td>
               </tr>
               <tr class="row-bot">
-                <td>B1 ✗</td><td>38d</td><td>14</td><td>🤔 ?</td>
+                <td>B1 ✗</td><td>700d</td><td>11</td>
               </tr>
               <tr class="row-bot">
-                <td>B2 ✗</td><td>22d</td><td>19</td><td>🤔 ?</td>
+                <td>B2 ✗</td><td>680d</td><td>9</td>
               </tr>
               <tr class="row-unk">
-                <td>X  ?</td><td>30d</td><td>12</td><td><span class="confusion-badge">???</span></td>
+                <td>X  ?</td><td>690d</td><td>10</td>
               </tr>
             </tbody>
           </table>
+
+          <!-- 2D Scatter Plot -->
+          <div style="font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-dim);">Plot 2D: cadastro × posts</div>
+          <svg viewBox="0 0 210 160" style="width:100%;border:1px solid var(--border2);border-radius:var(--radius-sm);background:#fafbfd;">
+            <!-- axes -->
+            <line x1="30" y1="130" x2="195" y2="130" stroke="#c7d0e0" stroke-width="1.5"/>
+            <line x1="30" y1="130" x2="30"  y2="10"  stroke="#c7d0e0" stroke-width="1.5"/>
+            <!-- axis labels -->
+            <text x="113" y="148" text-anchor="middle" font-size="8" fill="#6b7fa3" font-family="Fira Code">cadastro (dias)</text>
+            <text x="10" y="75" text-anchor="middle" font-size="8" fill="#6b7fa3" font-family="Fira Code" transform="rotate(-90,10,75)">posts</text>
+            <!-- tick marks cadastro: 600→190, 640→50px step. x = 30 + (v-600)/200 * 160 -->
+            <!-- U1 720d,8p  → x=30+(120/200)*160=126, y=130-(8/16)*100=80 -->
+            <!-- U2 640d,5p  → x=30+(40/200)*160=62,  y=130-(5/16)*100=99 -->
+            <!-- B1 700d,11p → x=30+(100/200)*160=110, y=130-(11/16)*100=62 -->
+            <!-- B2 680d,9p  → x=30+(80/200)*160=94,  y=130-(9/16)*100=74 -->
+            <!-- X  690d,10p → x=30+(90/200)*160=102, y=130-(10/16)*100=68 -->
+            <!-- x-ticks -->
+            <line x1="62"  y1="130" x2="62"  y2="133" stroke="#c7d0e0" stroke-width="1"/>
+            <text x="62"  y="140" text-anchor="middle" font-size="7" fill="#9ca3af" font-family="Fira Code">640</text>
+            <line x1="94"  y1="130" x2="94"  y2="133" stroke="#c7d0e0" stroke-width="1"/>
+            <text x="94"  y="140" text-anchor="middle" font-size="7" fill="#9ca3af" font-family="Fira Code">680</text>
+            <line x1="110" y1="130" x2="110" y2="133" stroke="#c7d0e0" stroke-width="1"/>
+            <text x="110" y="140" text-anchor="middle" font-size="7" fill="#9ca3af" font-family="Fira Code">700</text>
+            <line x1="126" y1="130" x2="126" y2="133" stroke="#c7d0e0" stroke-width="1"/>
+            <text x="126" y="140" text-anchor="middle" font-size="7" fill="#9ca3af" font-family="Fira Code">720</text>
+            <!-- y-ticks -->
+            <line x1="27" y1="99" x2="30" y2="99" stroke="#c7d0e0" stroke-width="1"/>
+            <text x="24" y="102" text-anchor="end" font-size="7" fill="#9ca3af" font-family="Fira Code">5</text>
+            <line x1="27" y1="74" x2="30" y2="74" stroke="#c7d0e0" stroke-width="1"/>
+            <text x="24" y="77" text-anchor="end" font-size="7" fill="#9ca3af" font-family="Fira Code">9</text>
+            <line x1="27" y1="62" x2="30" y2="62" stroke="#c7d0e0" stroke-width="1"/>
+            <text x="24" y="65" text-anchor="end" font-size="7" fill="#9ca3af" font-family="Fira Code">11</text>
+            <!-- overlap ellipse hint -->
+            <ellipse cx="100" cy="74" rx="40" ry="30" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.7"/>
+            <text x="143" y="62" font-size="7" fill="#b45309" font-family="Fira Code" font-style="italic">sobreposição!</text>
+            <!-- Data points -->
+            <!-- U1 -->
+            <circle cx="126" cy="80" r="7" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="1.5"/>
+            <text x="135" y="78" font-size="8" fill="#0d6e6e" font-family="Fira Code" font-weight="700">U1</text>
+            <!-- U2 -->
+            <circle cx="62" cy="99" r="7" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="1.5"/>
+            <text x="44" y="97" font-size="8" fill="#0d6e6e" font-family="Fira Code" font-weight="700">U2</text>
+            <!-- B1 -->
+            <circle cx="110" cy="62" r="7" fill="#fee2e2" stroke="#b91c1c" stroke-width="1.5"/>
+            <text x="119" y="60" font-size="8" fill="#b91c1c" font-family="Fira Code" font-weight="700">B1</text>
+            <!-- B2 -->
+            <circle cx="94" cy="74" r="7" fill="#fee2e2" stroke="#b91c1c" stroke-width="1.5"/>
+            <text x="73" y="72" font-size="8" fill="#b91c1c" font-family="Fira Code" font-weight="700">B2</text>
+            <!-- X -->
+            <circle cx="102" cy="68" r="7" fill="#e5e7eb" stroke="#9ca3af" stroke-width="1.5"/>
+            <text x="111" y="80" font-size="8" fill="#6b7fa3" font-family="Fira Code" font-weight="700">X?</text>
+          </svg>
+
           <div style="font-size:0.82rem;color:var(--text-muted);line-height:1.6;">
-            B1 [38d, 14] e X [30d, 12] são<br>
-            <strong>atributos muito similares</strong>.<br>
-            Só as conexões revelam que X<br>
-            está no <em>cluster de bots</em>.
+            Bots têm atributos <strong>similares</strong> aos usuários.<br>
+            Impossível separar <em>só</em> pelos atributos!<br>
+            Só as conexões revelam que X está no <em>cluster de bots</em>.
           </div>
         </div>
       </div>
