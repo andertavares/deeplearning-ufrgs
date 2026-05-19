@@ -123,8 +123,8 @@
           <button class="btn-toggle" id="btnU1" onclick="chooseNode('U1')">U1</button>
           <button class="btn-toggle" id="btnU2" onclick="chooseNode('U2')">U2</button>
           <button class="btn-toggle" id="btnB1" onclick="chooseNode('B1')">B1</button>
-          <button class="btn-toggle active" id="btnB2" onclick="chooseNode('B2')">B2</button>
-          <button class="btn-toggle" id="btnX"  onclick="chooseNode('X')">X</button>
+          <button class="btn-toggle" id="btnB2" onclick="chooseNode('B2')">B2</button>
+          <button class="btn-toggle active" id="btnX"  onclick="chooseNode('X')">X</button>
         </div>
         <div class="big-formula" style="flex:1;font-size:0.8rem;">
           <span class="f-teal">h<sub>v</sub><sup>(l+1)</sup></span> = σ( <span class="f-blue">W</span> · [<span class="f-teal">h<sub>v</sub><sup>(l)</sup></span> ‖ <span class="f-orange">m<sub>v</sub><sup>(l)</sup></span>] )
@@ -147,19 +147,19 @@
             <line class="gn-edge" x1="195" y1="70" x2="160" y2="120"/>
             <line class="gn-edge" x1="195" y1="155" x2="160" y2="120"/>
             <!-- Nodes L0 -->
-            <circle id="l0-U1" class="gn-user" cx="65"  cy="70"  r="22"/>
+            <circle id="l0-U1" class="gn-user" cx="65"  cy="70"  r="22" onclick="chooseNode('U1')" style="cursor:pointer;"/>
             <text x="65"  y="66"  text-anchor="middle" font-family="Inter" font-weight="800" font-size="10" fill="#0d6e6e" pointer-events="none">U1</text>
             <text x="65"  y="78"  text-anchor="middle" font-family="Fira Code" font-size="7.5" fill="#0d6e6e" pointer-events="none">[730,12]</text>
-            <circle id="l0-U2" class="gn-user" cx="65"  cy="155" r="18"/>
+            <circle id="l0-U2" class="gn-user" cx="65"  cy="155" r="18" onclick="chooseNode('U2')" style="cursor:pointer;"/>
             <text x="65"  y="151" text-anchor="middle" font-family="Inter" font-weight="800" font-size="10" fill="#0d6e6e" pointer-events="none">U2</text>
             <text x="65"  y="163" text-anchor="middle" font-family="Fira Code" font-size="7.5" fill="#0d6e6e" pointer-events="none">[610,4]</text>
-            <circle id="l0-B1" class="gn-bot"  cx="195" cy="70"  r="22"/>
+            <circle id="l0-B1" class="gn-bot"  cx="195" cy="70"  r="22" onclick="chooseNode('B1')" style="cursor:pointer;"/>
             <text x="195" y="66"  text-anchor="middle" font-family="Inter" font-weight="800" font-size="10" fill="#b91c1c" pointer-events="none">B1</text>
             <text x="195" y="78"  text-anchor="middle" font-family="Fira Code" font-size="7.5" fill="#b91c1c" pointer-events="none">[620,11]</text>
-            <circle id="l0-B2" class="gn-bot"  cx="195" cy="155" r="18"/>
+            <circle id="l0-B2" class="gn-bot"  cx="195" cy="155" r="18" onclick="chooseNode('B2')" style="cursor:pointer;"/>
             <text x="195" y="151" text-anchor="middle" font-family="Inter" font-weight="800" font-size="10" fill="#b91c1c" pointer-events="none">B2</text>
             <text x="195" y="163" text-anchor="middle" font-family="Fira Code" font-size="7.5" fill="#b91c1c" pointer-events="none">[735,3]</text>
-            <circle id="l0-X"  class="gn-unk"  cx="160" cy="120" r="22"/>
+            <circle id="l0-X"  class="gn-unk"  cx="160" cy="120" r="22" onclick="chooseNode('X')" style="cursor:pointer;"/>
             <text x="160" y="116" text-anchor="middle" font-family="Inter" font-weight="800" font-size="10" fill="#6b7fa3" pointer-events="none">X</text>
             <text x="160" y="128" text-anchor="middle" font-family="Fira Code" font-size="7.5" fill="#6b7fa3" pointer-events="none">[675,7]</text>
           </svg>
@@ -177,38 +177,38 @@
               <!-- Nodes L1 -->
               <circle id="l1-U1" class="gn-user gn-new" cx="65"  cy="70"  r="22"/>
               <text x="65"  y="66"  text-anchor="middle" font-family="Inter" font-weight="800" font-size="10" fill="#0d6e6e" pointer-events="none">U1</text>
-              <text x="65"  y="78"  text-anchor="middle" font-family="Fira Code" font-size="7" fill="#0d6e6e" pointer-events="none">[2015,23]</text>
+              <text x="65"  y="78"  text-anchor="middle" font-family="Fira Code" font-size="7" fill="#0d6e6e" pointer-events="none">[1,555]</text>
               <circle id="l1-U2" class="gn-user gn-new" cx="65"  cy="155" r="18"/>
               <text x="65"  y="151" text-anchor="middle" font-family="Inter" font-weight="800" font-size="10" fill="#0d6e6e" pointer-events="none">U2</text>
-              <text x="65"  y="163" text-anchor="middle" font-family="Fira Code" font-size="7" fill="#0d6e6e" pointer-events="none">[1340,16]</text>
+              <text x="65"  y="163" text-anchor="middle" font-family="Fira Code" font-size="7" fill="#0d6e6e" pointer-events="none">[0,120]</text>
               <circle id="l1-B1" class="gn-bot gn-new-bot" cx="195" cy="70"  r="22"/>
               <text x="195" y="66"  text-anchor="middle" font-family="Inter" font-weight="800" font-size="10" fill="#b91c1c" pointer-events="none">B1</text>
-              <text x="195" y="78"  text-anchor="middle" font-family="Fira Code" font-size="7" fill="#b91c1c" pointer-events="none">[2030,21]</text>
+              <text x="195" y="78"  text-anchor="middle" font-family="Fira Code" font-size="7" fill="#b91c1c" pointer-events="none">[1,790]</text>
               <circle id="l1-B2" class="gn-bot gn-new-bot" cx="195" cy="155" r="18"/>
               <text x="195" y="151" text-anchor="middle" font-family="Inter" font-weight="800" font-size="10" fill="#b91c1c" pointer-events="none">B2</text>
-              <text x="195" y="163" text-anchor="middle" font-family="Fira Code" font-size="7" fill="#b91c1c" pointer-events="none">[2030,21]</text>
+              <text x="195" y="163" text-anchor="middle" font-family="Fira Code" font-size="7" fill="#b91c1c" pointer-events="none">[0,560]</text>
               <circle id="l1-X"  class="gn-unk gn-new-unk" cx="160" cy="120" r="22"/>
               <text x="160" y="116" text-anchor="middle" font-family="Inter" font-weight="800" font-size="10" fill="#6b7fa3" pointer-events="none">X</text>
-              <text x="160" y="128" text-anchor="middle" font-family="Fira Code" font-size="7" fill="#6b7fa3" pointer-events="none">[2760,33]</text>
+              <text x="160" y="128" text-anchor="middle" font-family="Fira Code" font-size="7" fill="#6b7fa3" pointer-events="none">[0,1410]</text>
             </svg>
             <div style="font-size:0.75rem;color:#166534;background:#dcfce7;border-radius:4px;padding:0.3rem 0.5rem;">
-              ✓ B1 e B2 obtêm o <em>mesmo</em> embedding [2030, 21] — cluster de bots!
+              ✓ ReLU zerou a 1ª dimensão em U2, B2 e X (valores negativos pré-ativação).
             </div>
           </div>
         </div>
 
         <!-- RIGHT: step-by-step -->
         <div class="step-panel">
-          <div class="panel-title">Passo a Passo — nó <span id="nodeTitle" style="color:#b91c1c;">B2</span></div>
+          <div class="panel-title">Passo a Passo — nó <span id="nodeTitle" style="color:#6b7fa3;">X</span></div>
 
           <!-- W matrix display -->
-          <div style="font-size:0.78rem;font-weight:600;color:var(--text-muted);">Matriz W (hipotética, pesos inteiros):</div>
+          <div style="font-size:0.78rem;font-weight:600;color:var(--text-muted);">Matriz W (pesos com valores negativos):</div>
           <div class="w-matrix" style="display:inline-flex;align-items:center;gap:0.2rem;">
             <span style="color:#854d0e;font-weight:700;margin-right:0.3rem;">W</span><span style="color:#854d0e;font-weight:700;">=</span>
             <span style="font-size:1.9em;line-height:0.9;color:#92400e;margin:0 0.1rem;">⎡<br>⎣</span>
             <span style="display:inline-block;text-align:right;line-height:1.8;">
-              <span style="display:block;">1 &nbsp;0 &nbsp;1 &nbsp;0</span>
-              <span style="display:block;">0 &nbsp;1 &nbsp;0 &nbsp;1</span>
+              <span style="display:block;">0 &nbsp;&nbsp;1 &nbsp;&nbsp;0 &nbsp;-1</span>
+              <span style="display:block;">-1 &nbsp;0 &nbsp;&nbsp;1 &nbsp;&nbsp;0</span>
             </span>
             <span style="font-size:1.9em;line-height:0.9;color:#92400e;margin:0 0.1rem;">⎤<br>⎦</span>
           </div>
@@ -217,7 +217,7 @@
             <div class="step-num">✓</div>
             <div>
               <div class="step-title">Entrada: h<sub>v</sub> e m<sub>v</sub></div>
-              <div class="step-formula" id="sf0">h<sub>B2</sub> = [735, 3] &nbsp;|&nbsp; m<sub>B2</sub> = [1295, 18]</div>
+              <div class="step-formula" id="sf0">h<sub>X</sub> = [675, 7] &nbsp;|&nbsp; m<sub>X</sub> = [2085, 26]</div>
               <div class="step-desc">Embedding atual do nó e soma das features dos vizinhos.</div>
             </div>
           </div>
@@ -225,40 +225,24 @@
             <div class="step-num">2</div>
             <div>
               <div class="step-title">Concatenação [h<sub>v</sub> ‖ m<sub>v</sub>]</div>
-              <div class="step-formula" id="sf1">[735, 3, 1295, 18]</div>
+              <div class="step-formula" id="sf1">[675, 7, 2085, 26]</div>
               <div class="step-desc">Juntamos h<sub>v</sub> e m<sub>v</sub> em um único vetor 4D.</div>
             </div>
           </div>
           <div class="step-item" id="step2" onclick="goToStep(2)" style="cursor:pointer;">
             <div class="step-num">3</div>
             <div style="min-width:0;flex:1;">
-              <div class="step-title">Transformação Linear W · x</div>
+              <div class="step-title">W · x → ReLU → h<sub>v</sub><sup>(1)</sup></div>
               <div class="step-formula" id="sf2" style="overflow-x:auto;"></div>
-              <div class="step-desc">Clique em um elemento de <strong>z</strong> para ver quais linhas de W e elementos de x estão envolvidos.</div>
+              <div class="step-desc" id="sd2">Clique em z para ver quais linhas de W e x estão envolvidos. Valores negativos são zerados pela ReLU.</div>
             </div>
           </div>
           <div class="step-item" id="step3" onclick="goToStep(3)" style="cursor:pointer;">
             <div class="step-num">4</div>
             <div>
-              <div class="step-title">Resultado Numérico</div>
-              <div class="step-formula" id="sf3">z = [2030, 21]</div>
-              <div class="step-desc">Combinação direta: h<sub>v</sub> + m<sub>v</sub> (por construção de W).</div>
-            </div>
-          </div>
-          <div class="step-item" id="step4" onclick="goToStep(4)" style="cursor:pointer;">
-            <div class="step-num">5</div>
-            <div>
-              <div class="step-title">Ativação ReLU σ(z)</div>
-              <div class="step-formula" id="sf4">ReLU([2030, 21]) = [2030, 21]</div>
-              <div class="step-desc">Todos os valores ≥ 0, então ReLU não altera o resultado.</div>
-            </div>
-          </div>
-          <div class="step-item" id="step5" onclick="goToStep(5)" style="cursor:pointer;">
-            <div class="step-num">6</div>
-            <div>
-              <div class="step-title">Novo Embedding h<sub>B2</sub><sup>(1)</sup></div>
-              <div class="step-formula" id="sf5">h<sub>B2</sub><sup>(1)</sup> = [2030, 21] ✓</div>
-              <div class="step-desc" id="sd5">Embedding atualizado — incorpora informação de B1 e X!</div>
+              <div class="step-title">Novo Embedding h<sub>v</sub><sup>(1)</sup></div>
+              <div class="step-formula" id="sf3">h<sub>X</sub><sup>(1)</sup> = [0, 1410] ✓</div>
+              <div class="step-desc" id="sd3">⚡ Todos os nós (U1, U2, B1, B2, X) aplicam W · x → ReLU em paralelo!</div>
             </div>
           </div>
 
@@ -285,42 +269,56 @@
   </div>
 
   <script>
-    // Node data: features, adjacency, sum-agg, concatenation, W·x, result
+    // Node data: features, adjacency, sum-agg, concatenation, W·x (pre-ReLU), ReLU result
+    // W = [[0,1,0,-1],[-1,0,1,0]]
     const nodeData = {
-      'U1': { h:[730,12],  nbrs:['U2','X'],      m:[1285,11], concat:[730,12,1285,11], wResult:[2015,23], color:'#0d6e6e' },
-      'U2': { h:[610,4],   nbrs:['U1'],           m:[730,12],  concat:[610,4,730,12],   wResult:[1340,16], color:'#0d6e6e' },
-      'B1': { h:[620,11],  nbrs:['B2','X'],       m:[1410,10], concat:[620,11,1410,10], wResult:[2030,21], color:'#b91c1c' },
-      'B2': { h:[735,3],   nbrs:['B1','X'],       m:[1295,18], concat:[735,3,1295,18],  wResult:[2030,21], color:'#b91c1c' },
-      'X':  { h:[675,7],   nbrs:['U1','B1','B2'], m:[2085,26], concat:[675,7,2085,26],  wResult:[2760,33], color:'#6b7fa3' }
+      'U1': { h:[730,12], nbrs:['U2','X'],       m:[1285,11], concat:[730,12,1285,11], zPre:[1,555],   reluResult:[1,555],   color:'#0d6e6e' },
+      'U2': { h:[610,4],  nbrs:['U1'],            m:[730,12],  concat:[610,4,730,12],   zPre:[-8,120],  reluResult:[0,120],   color:'#0d6e6e' },
+      'B1': { h:[620,11], nbrs:['B2','X'],        m:[1410,10], concat:[620,11,1410,10], zPre:[1,790],   reluResult:[1,790],   color:'#b91c1c' },
+      'B2': { h:[735,3],  nbrs:['B1','X'],        m:[1295,18], concat:[735,3,1295,18],  zPre:[-15,560], reluResult:[0,560],   color:'#b91c1c' },
+      'X':  { h:[675,7],  nbrs:['U1','B1','B2'],  m:[2085,26], concat:[675,7,2085,26],  zPre:[-19,1410],reluResult:[0,1410],  color:'#6b7fa3' }
     };
-    // W = [[1,0,1,0],[0,1,0,1]]
-    let currentNode = 'B2';
+    // W = [[0,1,0,-1],[-1,0,1,0]]
+    const W_MATRIX = [[0,1,0,-1],[-1,0,1,0]];
+    let currentNode = 'X';
     let currentStep = 0;
 
     function renderWxViz(id) {
       const d = nodeData[id];
       const x = d.concat;
-      const z = d.wResult;
-      const W = [[1,0,1,0],[0,1,0,1]];
-      const cellBase = 'padding:3px 6px;border-radius:3px;text-align:center;font-size:0.78rem;transition:background 0.2s;';
+      const zPre = d.zPre;
+      const zRelu = d.reluResult;
+      const cellBase = 'padding:3px 6px;border-radius:3px;text-align:center;font-size:0.78rem;transition:background 0.2s;min-width:32px;display:inline-block;';
       let wHtml = '<div style="display:inline-grid;grid-template-columns:repeat(4,1fr);gap:2px;">';
-      for (let r=0; r<2; r++) for (let c=0; c<4; c++)
-        wHtml += `<div id="wc${r}${c}" style="${cellBase}background:#fef9c3;color:#92400e;">${W[r][c]}</div>`;
+      for (let r=0; r<2; r++) for (let c=0; c<4; c++) {
+        const v = W_MATRIX[r][c];
+        wHtml += `<div id="wc${r}${c}" style="${cellBase}background:#fef9c3;color:${v<0?'#b91c1c':'#92400e'};">${v}</div>`;
+      }
       wHtml += '</div>';
       let xHtml = '<div style="display:flex;flex-direction:column;gap:2px;">';
       for (let i=0; i<4; i++)
         xHtml += `<div id="xr${i}" style="${cellBase}background:#dbeafe;color:#1d4ed8;">${x[i]}</div>`;
       xHtml += '</div>';
-      let zHtml = '<div style="display:flex;flex-direction:column;gap:8px;">';
-      for (let i=0; i<2; i++)
-        zHtml += `<div id="zr${i}" onclick="highlightWxRow(${i})" style="${cellBase}background:#dcfce7;color:#166534;font-weight:700;cursor:pointer;border:2px solid transparent;">${z[i]}</div>`;
-      zHtml += '</div>';
-      return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-        <div><div style="font-size:0.62rem;color:#92400e;text-align:center;font-weight:700;margin-bottom:2px;">W (2×4)</div>${wHtml}</div>
+      let zPreHtml = '<div style="display:flex;flex-direction:column;gap:4px;">';
+      for (let i=0; i<2; i++) {
+        const isNeg = zPre[i] < 0;
+        zPreHtml += `<div id="zr${i}" onclick="highlightWxRow(${i})" style="${cellBase}background:${isNeg?'#fee2e2':'#dcfce7'};color:${isNeg?'#b91c1c':'#166534'};font-weight:700;cursor:pointer;border:2px solid transparent;">${zPre[i]}</div>`;
+      }
+      zPreHtml += '</div>';
+      let zReluHtml = '<div style="display:flex;flex-direction:column;gap:4px;">';
+      for (let i=0; i<2; i++) {
+        const wasNeg = zPre[i] < 0;
+        zReluHtml += `<div id="hr${i}" style="${cellBase}background:#dcfce7;color:#166534;font-weight:700;border:${wasNeg?'2px solid #22c55e':'2px solid transparent'};">${zRelu[i]}${wasNeg?'&#x2193;':'&nbsp;'}</div>`;
+      }
+      zReluHtml += '</div>';
+      return `<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px;">
+        <div><div style="font-size:0.6rem;color:#92400e;text-align:center;font-weight:700;margin-bottom:2px;">W (2×4)</div>${wHtml}</div>
         <div style="font-weight:700;color:var(--text-dim);">·</div>
-        <div><div style="font-size:0.62rem;color:#1d4ed8;text-align:center;font-weight:700;margin-bottom:2px;">x (4×1)</div>${xHtml}</div>
+        <div><div style="font-size:0.6rem;color:#1d4ed8;text-align:center;font-weight:700;margin-bottom:2px;">x (4×1)</div>${xHtml}</div>
         <div style="font-weight:700;color:var(--text-dim);">=</div>
-        <div><div style="font-size:0.62rem;color:#166534;text-align:center;font-weight:700;margin-bottom:2px;">z — clique!</div>${zHtml}</div>
+        <div><div style="font-size:0.6rem;color:#6b7fa3;text-align:center;font-weight:700;margin-bottom:2px;">z (clique!)</div>${zPreHtml}</div>
+        <div style="font-weight:700;color:var(--text-dim);font-size:0.8rem;">→<br>ReLU</div>
+        <div><div style="font-size:0.6rem;color:#166534;text-align:center;font-weight:700;margin-bottom:2px;">h<sub>v</sub><sup>(1)</sup></div>${zReluHtml}</div>
       </div>`;
     }
 
@@ -344,11 +342,9 @@
     function chooseNode(id) {
       currentNode = id;
       resetSteps();
-      // Update buttons
       ['U1','U2','B1','B2','X'].forEach(n => {
         document.getElementById('btn'+n).classList.toggle('active', n===id);
       });
-      // Update graph highlight
       ['U1','U2','B1','B2','X'].forEach(n => {
         const el = document.getElementById('l0-'+n);
         if (el) el.classList.toggle('gn-sel', n===id);
@@ -360,42 +356,30 @@
     function getSteps(id) {
       const d = nodeData[id];
       const nbrStr = d.nbrs.map(n=>n+'['+nodeData[n].h.join(',')+']').join(', ');
+      const hasNeg = d.zPre.some(v => v < 0);
+      const negParts = d.zPre.map((v,i) => v < 0 ? `z[${i}]=${v}→0` : null).filter(Boolean);
       return [
         {
-          id:'step0', num:'✓',
           title:`Entrada: h<sub>${id}</sub> e m<sub>${id}</sub>`,
-          formula:`h<sub>${id}</sub> = [${d.h.join(', ')}] &nbsp;|&nbsp; m<sub>${id}</sub> = Sum(${nbrStr}) = [${d.m.join(', ')}]`,
-          desc:`Embedding atual de ${id} e soma das features dos ${d.nbrs.length} vizinho(s).`
+          formula:`h<sub>${id}</sub> = [${d.h.join(', ')}] &nbsp;|&nbsp; m<sub>${id}</sub> = [${d.m.join(', ')}]`,
+          desc:`Embedding atual de ${id} e soma das features dos ${d.nbrs.length} vizinho(s): ${nbrStr}.`
         },
         {
-          id:'step1', num:'2',
           title:`Concatenação [h<sub>${id}</sub> ‖ m<sub>${id}</sub>]`,
           formula:`[${d.concat.join(', ')}]`,
-          desc:`Juntamos h<sub>${id}</sub> e m<sub>${id}</sub> em um único vetor 4D.`
+          desc:`Juntamos h<sub>${id}</sub> e m<sub>${id}</sub> em um único vetor 4D x.`
         },
         {
-          id:'step2', num:'3',
-          title:`Transformação Linear W · x`,
+          title:`W · x → ReLU → h<sub>${id}</sub><sup>(1)</sup>`,
           formula: renderWxViz(id),
-          desc:`Clique em um elemento de <strong>z</strong> para ver quais linhas de W e elementos de x estão envolvidos.`
+          desc: hasNeg
+            ? `Clique em z para destacar W e x. <span style="color:#b91c1c;font-weight:700">${negParts.join(', ')} (ReLU zera valores negativos!)</span>`
+            : `Clique em um elemento de <strong>z</strong> para ver quais linhas de W e elementos de x estão envolvidos.`
         },
         {
-          id:'step3', num:'4',
-          title:`Resultado Numérico`,
-          formula:`z = [${d.wResult.join(', ')}]`,
-          desc:`Cada dimensão de z combina h<sub>${id}</sub>[i] + m<sub>${id}</sub>[i] (por construção de W).`
-        },
-        {
-          id:'step4', num:'5',
-          title:`Ativação ReLU σ(z)`,
-          formula:`ReLU([${d.wResult.join(', ')}]) = [${d.wResult.join(', ')}]`,
-          desc:`Todos os valores ≥ 0, então ReLU não altera o resultado neste exemplo.`
-        },
-        {
-          id:'step5', num:'6',
-          title:`Novo Embedding h<sub>${id}</sub><sup>(1)</sup>`,
-          formula:`h<sub>${id}</sub><sup>(1)</sup> = [${d.wResult.join(', ')}] ✓`,
-          desc:`Embedding atualizado — incorpora informação de {${d.nbrs.join(', ')}}!`
+          title:`Novo Embedding h<sub>${id}</sub><sup>(1)</sup> = [${d.reluResult.join(', ')}]`,
+          formula:`<span style="color:var(--teal);font-weight:700;font-size:1rem;">h<sub>${id}</sub><sup>(1)</sup> = [${d.reluResult.join(', ')}]</span>`,
+          desc:`<span style="color:#1d4ed8;font-weight:700;">⚡ Todos os nós (U1, U2, B1, B2, X) aplicam W · x → ReLU <em>em paralelo</em> — mesmos pesos W para todos!</span>`
         }
       ];
     }
@@ -404,6 +388,7 @@
       const steps = getSteps(currentNode);
       steps.forEach((s, i) => {
         const el = document.getElementById('step'+i);
+        if (!el) return;
         el.querySelector('.step-title').innerHTML = s.title;
         el.querySelector('.step-formula').innerHTML = s.formula;
         el.querySelector('.step-desc').innerHTML = s.desc;
@@ -444,8 +429,9 @@
       currentStep = 0;
       document.getElementById('graphL1Wrap').style.display = 'none';
       updateStepContent();
-      for (let i = 0; i < 6; i++) {
+      for (let i = 0; i < 4; i++) {
         const el = document.getElementById('step'+i);
+        if (!el) continue;
         el.classList.remove('active','done');
         el.querySelector('.step-num').textContent = (i===0) ? '✓' : (i+1);
       }
@@ -456,7 +442,7 @@
     }
 
     // Init
-    chooseNode('B2');
+    chooseNode('X');
 
     (function(){
       const container = document.getElementById('navDots');

@@ -77,6 +77,14 @@
         <p class="slide-subtitle">Bloco 2 — Message Passing</p>
       </div>
 
+      <!-- Full-width intro panel -->
+      <div style="background:#f0fdf9;border:1.5px solid #0d6e6e;border-radius:var(--radius);padding:0.7rem 1.1rem;display:flex;align-items:center;gap:0.8rem;box-shadow:var(--shadow);">
+        <span style="font-size:1.3rem;">🌐</span>
+        <span style="font-size:0.88rem;color:var(--text);line-height:1.5;">
+          Em GNNs completas, <strong>todos os componentes do grafo</strong> podem ter seus próprios embeddings e <em>trocar mensagens entre si</em>: nós ↔ nós, nós ↔ arestas, e tudo ↔ estado global.
+        </span>
+      </div>
+
       <div class="emb-layout">
         <!-- LEFT: interactive diagram -->
         <div class="emb-panel">
@@ -109,36 +117,36 @@
             <rect x="100" y="5" width="80" height="28" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="2" id="svgGraph"/>
             <text x="140" y="23" text-anchor="middle" font-family="Inter" font-weight="800" font-size="11" fill="#5b21b6">u (Global)</text>
 
-            <!-- Edges (middle) - shown as diamonds -->
-            <rect x="30" y="88" width="58" height="26" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="2" id="svgEdge1" transform=""/>
-            <text x="59" y="105" text-anchor="middle" font-family="Fira Code" font-weight="700" font-size="10" fill="#92400e">e(U1,B1)</text>
+            <!-- Edges (middle) -->
+            <rect x="20" y="88" width="64" height="26" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="2" id="svgEdge1"/>
+            <text x="52" y="105" text-anchor="middle" font-family="Fira Code" font-weight="700" font-size="10" fill="#92400e">e(U1,X)</text>
 
-            <rect x="192" y="88" width="58" height="26" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="2" id="svgEdge2"/>
-            <text x="221" y="105" text-anchor="middle" font-family="Fira Code" font-weight="700" font-size="10" fill="#92400e">e(B1,X)</text>
+            <rect x="196" y="88" width="64" height="26" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="2" id="svgEdge2"/>
+            <text x="228" y="105" text-anchor="middle" font-family="Fira Code" font-weight="700" font-size="10" fill="#92400e">e(B1,X)</text>
 
-            <!-- Nodes (bottom) -->
-            <circle cx="60" cy="170" r="22" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="2" id="svgU1"/>
-            <text x="60" y="166" text-anchor="middle" font-family="Inter" font-weight="800" font-size="11" fill="#0d6e6e">U1</text>
-            <text x="60" y="179" text-anchor="middle" font-family="Fira Code" font-size="7.5" fill="#0d6e6e">h_U1</text>
+            <!-- Nodes (bottom): U1 left, X center, B1 right -->
+            <circle cx="55"  cy="170" r="22" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="2" id="svgU1"/>
+            <text x="55"  y="166" text-anchor="middle" font-family="Inter" font-weight="800" font-size="11" fill="#0d6e6e">U1</text>
+            <text x="55"  y="179" text-anchor="middle" font-family="Fira Code" font-size="7.5" fill="#0d6e6e">h<tspan dy="3" font-size="6">U1</tspan></text>
 
-            <circle cx="140" cy="170" r="22" fill="#fee2e2" stroke="#b91c1c" stroke-width="2" id="svgB1"/>
-            <text x="140" y="166" text-anchor="middle" font-family="Inter" font-weight="800" font-size="11" fill="#b91c1c">B1</text>
-            <text x="140" y="179" text-anchor="middle" font-family="Fira Code" font-size="7.5" fill="#b91c1c">h_B1</text>
+            <circle cx="140" cy="170" r="22" fill="#e5e7eb" stroke="#9ca3af" stroke-width="2" id="svgX"/>
+            <text x="140" y="166" text-anchor="middle" font-family="Inter" font-weight="800" font-size="11" fill="#6b7fa3">X</text>
+            <text x="140" y="179" text-anchor="middle" font-family="Fira Code" font-size="7.5" fill="#6b7fa3">h<tspan dy="3" font-size="6">X</tspan></text>
 
-            <circle cx="220" cy="170" r="22" fill="#e5e7eb" stroke="#9ca3af" stroke-width="2" id="svgX"/>
-            <text x="220" y="166" text-anchor="middle" font-family="Inter" font-weight="800" font-size="11" fill="#6b7fa3">X</text>
-            <text x="220" y="179" text-anchor="middle" font-family="Fira Code" font-size="7.5" fill="#6b7fa3">h_X</text>
+            <circle cx="225" cy="170" r="22" fill="#fee2e2" stroke="#b91c1c" stroke-width="2" id="svgB1"/>
+            <text x="225" y="166" text-anchor="middle" font-family="Inter" font-weight="800" font-size="11" fill="#b91c1c">B1</text>
+            <text x="225" y="179" text-anchor="middle" font-family="Fira Code" font-size="7.5" fill="#b91c1c">h<tspan dy="3" font-size="6">B1</tspan></text>
 
             <!-- Static connecting lines (structure) -->
-            <line x1="59" y1="114" x2="65" y2="148" stroke="#d97706" stroke-width="1.5" opacity="0.4"/>
-            <line x1="59" y1="114" x2="130" y2="148" stroke="#d97706" stroke-width="1.5" opacity="0.4"/>
-            <line x1="221" y1="114" x2="150" y2="148" stroke="#d97706" stroke-width="1.5" opacity="0.4"/>
-            <line x1="221" y1="114" x2="210" y2="148" stroke="#d97706" stroke-width="1.5" opacity="0.4"/>
-            <line x1="140" y1="33" x2="59" y2="88" stroke="#7c3aed" stroke-width="1.5" opacity="0.3"/>
-            <line x1="140" y1="33" x2="221" y2="88" stroke="#7c3aed" stroke-width="1.5" opacity="0.3"/>
-            <line x1="140" y1="33" x2="60" y2="148" stroke="#7c3aed" stroke-width="1.5" opacity="0.3"/>
+            <line x1="52"  y1="114" x2="62"  y2="148" stroke="#d97706" stroke-width="1.5" opacity="0.4"/>
+            <line x1="52"  y1="114" x2="120" y2="148" stroke="#d97706" stroke-width="1.5" opacity="0.4"/>
+            <line x1="228" y1="114" x2="155" y2="148" stroke="#d97706" stroke-width="1.5" opacity="0.4"/>
+            <line x1="228" y1="114" x2="215" y2="148" stroke="#d97706" stroke-width="1.5" opacity="0.4"/>
+            <line x1="140" y1="33" x2="52"  y2="88" stroke="#7c3aed" stroke-width="1.5" opacity="0.3"/>
+            <line x1="140" y1="33" x2="228" y2="88" stroke="#7c3aed" stroke-width="1.5" opacity="0.3"/>
+            <line x1="140" y1="33" x2="55"  y2="148" stroke="#7c3aed" stroke-width="1.5" opacity="0.3"/>
             <line x1="140" y1="33" x2="140" y2="148" stroke="#7c3aed" stroke-width="1.5" opacity="0.3"/>
-            <line x1="140" y1="33" x2="220" y2="148" stroke="#7c3aed" stroke-width="1.5" opacity="0.3"/>
+            <line x1="140" y1="33" x2="225" y2="148" stroke="#7c3aed" stroke-width="1.5" opacity="0.3"/>
 
             <!-- Animated arrows (shown based on selected entity) -->
             <g id="flowArrows" opacity="0"></g>
@@ -149,14 +157,14 @@
             <div class="entity-row selected-node" id="row-node" onclick="selectEntity('node')" style="flex:1;">
               <span class="entity-badge eb-node">Nó</span>
               <div>
-                <div style="font-weight:700;font-size:0.82rem;">Embedding de Nó <span style="font-family:'Fira Code',monospace;color:#0d6e6e;">h_v</span></div>
+                <div style="font-weight:700;font-size:0.82rem;">Embedding de Nó <span style="font-family:'Fira Code',monospace;color:#0d6e6e;">h<sub>v</sub></span></div>
                 <div style="font-size:0.75rem;color:var(--text-muted);">Agrega vizinhos, arestas incidentes e estado global</div>
               </div>
             </div>
             <div class="entity-row" id="row-edge" onclick="selectEntity('edge')" style="flex:1;">
               <span class="entity-badge eb-edge">Aresta</span>
               <div>
-                <div style="font-weight:700;font-size:0.82rem;">Embedding de Aresta <span style="font-family:'Fira Code',monospace;color:#92400e;">e_ij</span></div>
+                <div style="font-weight:700;font-size:0.82rem;">Embedding de Aresta <span style="font-family:'Fira Code',monospace;color:#92400e;">e<sub>ij</sub></span></div>
                 <div style="font-size:0.75rem;color:var(--text-muted);">Agrega nós endpoints e estado global</div>
               </div>
             </div>
@@ -200,25 +208,25 @@
     const entityData = {
       node: {
         title: 'Mensagem para Nós',
-        desc: `Num modelo com todas as entidades, o embedding de um nó <strong>v</strong> é atualizado usando:
+        desc: `Num modelo com todas as entidades, o embedding de um nó <strong>X</strong> é atualizado usando:
           <ul style="margin:0.4rem 0 0 1rem;list-style:disc;line-height:2;">
-            <li>Seus <strong>vizinhos</strong> (nós)</li>
-            <li>As <strong>arestas incidentes</strong> a v</li>
+            <li>Seus <strong>vizinhos</strong> (nós U1, B1…)</li>
+            <li>As <strong>arestas incidentes</strong> a X</li>
             <li>O embedding <strong>global</strong> do grafo <span style="font-family:'Fira Code',monospace;color:#7c3aed;">u</span></li>
           </ul>`,
-        eq: `h_v' = f_nó( h_v, AGG({h_u}), AGG({e_vu}), u )`,
+        eq: `h<sub>v</sub>' = f<sub>nó</sub>( h<sub>v</sub>, AGG({h<sub>u</sub>}), AGG({e<sub>vu</sub>}), u )`,
         example: `<strong>Exemplo — bot detection:</strong><br>Aresta U1→X poderia conter a frequência de interações entre U1 e X. O nó X usaria esse atributo para ponderar a mensagem de U1.`,
         insight: '🔵', insightText: 'Se as arestas não têm atributos, o modelo se reduz ao message passing padrão com apenas vizinhos e, opcionalmente, o estado global.',
         selectedClass: 'selected-node'
       },
       edge: {
         title: 'Mensagem para Arestas',
-        desc: `O embedding de uma aresta <strong>(i,j)</strong> é atualizado usando:
+        desc: `O embedding de uma aresta <strong>e(U1,X)</strong> é atualizado usando:
           <ul style="margin:0.4rem 0 0 1rem;list-style:disc;line-height:2;">
-            <li>Os <strong>nós nos extremos</strong> (i e j)</li>
+            <li>Os <strong>nós nos extremos</strong> (U1 e X)</li>
             <li>O embedding <strong>global</strong> do grafo <span style="font-family:'Fira Code',monospace;color:#7c3aed;">u</span></li>
           </ul>`,
-        eq: `e_ij' = f_aresta( e_ij, h_i, h_j, u )`,
+        eq: `e<sub>ij</sub>' = f<sub>aresta</sub>( e<sub>ij</sub>, h<sub>i</sub>, h<sub>j</sub>, u )`,
         example: `<strong>Exemplo — bot detection:</strong><br>A aresta U1→X pode aprender o tipo de interação: é uma resposta, curtida ou repost? Isso enriquece a mensagem que X recebe de U1.`,
         insight: '🔗', insightText: 'Atributos de arestas são comuns em grafos de conhecimento (tipo de relação), moléculas (tipo de ligação) e redes sociais (intensidade de interação).',
         selectedClass: 'selected-edge'
@@ -230,7 +238,7 @@
             <li><strong>Todos os nós</strong> do grafo</li>
             <li><strong>Todas as arestas</strong> do grafo</li>
           </ul>`,
-        eq: `u' = f_global( u, AGG({h_v}), AGG({e_ij}) )`,
+        eq: `u' = f<sub>global</sub>( u, AGG({h<sub>v</sub>}), AGG({e<sub>ij</sub>}) )`,
         example: `<strong>Exemplo — bot detection:</strong><br>O embedding global poderia capturar características da rede inteira: densidade de arestas, proporção de contas verificadas, padrão geral de atividade.`,
         insight: '🌍', insightText: 'O embedding global é essencial para tarefas de classificação de grafos — representa o grafo inteiro com um único vetor.',
         selectedClass: 'selected-graph'
@@ -268,26 +276,27 @@
       const fa = document.getElementById('flowArrows');
       fa.innerHTML = '';
       if (type === 'node') {
-        // Show arrows from neighbors → B1 and from edges → B1 and from global → B1
+        // Show arrows from neighbors (U1, B1) → X and from edges → X and from global → X
         fa.setAttribute('opacity','1');
-        addArrow(fa, 60, 148, 130, 157, '#0d6e6e', 'arNode');   // U1 → B1
-        addArrow(fa, 220, 148, 150, 157, '#0d6e6e', 'arNode');  // X → B1
-        addArrow(fa, 59, 107, 130, 155, '#d97706', 'arEdge');   // edge → B1
-        addArrow(fa, 140, 33, 135, 148, '#7c3aed', 'arGraph');  // global → B1
+        addArrow(fa, 55,  148, 122, 157, '#0d6e6e', 'arNode');   // U1 → X
+        addArrow(fa, 225, 148, 158, 157, '#0d6e6e', 'arNode');   // B1 → X
+        addArrow(fa, 52,  107, 122, 158, '#d97706', 'arEdge');   // e(U1,X) → X
+        addArrow(fa, 228, 107, 158, 158, '#d97706', 'arEdge');   // e(B1,X) → X
+        addArrow(fa, 140, 33,  140, 148, '#7c3aed', 'arGraph');  // global → X
       } else if (type === 'edge') {
-        // Show arrows from nodes → edge e(B1,X)
+        // Show arrows from nodes → edge e(U1,X)
         fa.setAttribute('opacity','1');
-        addArrow(fa, 150, 157, 205, 112, '#0d6e6e', 'arNode');  // B1 → edge
-        addArrow(fa, 210, 148, 228, 114, '#0d6e6e', 'arNode');  // X → edge
-        addArrow(fa, 140, 33, 210, 88, '#7c3aed', 'arGraph');   // global → edge
+        addArrow(fa, 68,  148, 60,  114, '#0d6e6e', 'arNode');   // U1 → e(U1,X)
+        addArrow(fa, 125, 148, 70,  112, '#0d6e6e', 'arNode');   // X → e(U1,X)
+        addArrow(fa, 140, 33,  60,  88,  '#7c3aed', 'arGraph');  // global → e(U1,X)
       } else {
-        // global: show arrows from nodes → global and from edges → global
+        // global: arrows from all nodes and edges → u
         fa.setAttribute('opacity','1');
-        addArrow(fa, 60, 148, 120, 33, '#0d6e6e', 'arNode');
+        addArrow(fa, 55,  148, 120, 33, '#0d6e6e', 'arNode');
         addArrow(fa, 140, 148, 140, 33, '#0d6e6e', 'arNode');
-        addArrow(fa, 220, 148, 155, 33, '#0d6e6e', 'arNode');
-        addArrow(fa, 59, 100, 115, 33, '#d97706', 'arEdge');
-        addArrow(fa, 221, 100, 160, 33, '#d97706', 'arEdge');
+        addArrow(fa, 225, 148, 155, 33, '#0d6e6e', 'arNode');
+        addArrow(fa, 52,  100, 115, 33, '#d97706', 'arEdge');
+        addArrow(fa, 228, 100, 162, 33, '#d97706', 'arEdge');
       }
     }
 
