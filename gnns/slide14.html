@@ -166,10 +166,10 @@
               <line x1="130" y1="30" x2="130" y2="80" stroke="#c7d0e0" stroke-width="1.5"/>
               <line x1="130" y1="80" x2="130" y2="130" stroke="#c7d0e0" stroke-width="1.5"/>
               <!-- Diagonal edges (8-connectivity) into center -->
-              <line x1="30"  y1="30"  x2="80" y2="80" stroke="#bfdbfe" stroke-width="1" stroke-dasharray="3 2"/>
-              <line x1="130" y1="30"  x2="80" y2="80" stroke="#bfdbfe" stroke-width="1" stroke-dasharray="3 2"/>
-              <line x1="30"  y1="130" x2="80" y2="80" stroke="#bfdbfe" stroke-width="1" stroke-dasharray="3 2"/>
-              <line x1="130" y1="130" x2="80" y2="80" stroke="#bfdbfe" stroke-width="1" stroke-dasharray="3 2"/>
+              <line x1="30"  y1="30"  x2="80" y2="80" stroke="#bfdbfe" stroke-width="1"/>
+              <line x1="130" y1="30"  x2="80" y2="80" stroke="#bfdbfe" stroke-width="1"/>
+              <line x1="30"  y1="130" x2="80" y2="80" stroke="#bfdbfe" stroke-width="1"/>
+              <line x1="130" y1="130" x2="80" y2="80" stroke="#bfdbfe" stroke-width="1"/>
 
               <!-- Neighbor nodes (8 surrounding pixels, using image values from kernel region) -->
               <circle cx="30"  cy="30"  r="16" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
@@ -218,6 +218,43 @@
             <li>Grau variável — borda tem menos vizinhos que o centro</li>
             <li>GCN <em>(Kipf &amp; Welling)</em> usa <strong>mean-pooling</strong> normalizado pelo grau</li>
           </ul>
+
+          <!-- Numerical example -->
+          <div style="background:var(--bg3);border:1.5px solid var(--border2);border-radius:var(--radius-sm);padding:0.5rem 0.7rem;font-size:0.77rem;">
+            <div style="font-size:0.7rem;font-weight:700;color:#0d6e6e;margin-bottom:0.3rem;font-family:'Inter',sans-serif;text-transform:uppercase;letter-spacing:0.05em;">Exemplo: atualização de p₁₁</div>
+            <table style="border-collapse:collapse;width:100%;font-family:'Fira Code',monospace;font-size:0.73rem;">
+              <tr>
+                <td style="padding:1px 4px;color:var(--text-muted);">h<sub>p₁₁</sub></td>
+                <td style="padding:1px 4px;color:#b91c1c;font-weight:700;">= −2</td>
+                <td style="padding:1px 4px;color:var(--text-dim);font-size:0.68rem;">(feature atual)</td>
+              </tr>
+              <tr>
+                <td style="padding:1px 4px;color:var(--text-muted);">N(p₁₁)</td>
+                <td style="padding:1px 4px;color:#1d4ed8;">{2,−1,0,1,1,0,2,−1}</td>
+                <td style="padding:1px 4px;color:var(--text-dim);font-size:0.68rem;">(8 vizinhos)</td>
+              </tr>
+              <tr>
+                <td style="padding:1px 4px;color:var(--text-muted);">Σh<sub>u</sub></td>
+                <td style="padding:1px 4px;color:#1d4ed8;font-weight:700;">= 4</td>
+                <td style="padding:1px 4px;color:var(--text-dim);font-size:0.68rem;">2−1+0+1+1+0+2−1</td>
+              </tr>
+              <tr>
+                <td style="padding:1px 4px;color:var(--text-muted);">mean</td>
+                <td style="padding:1px 4px;color:#1d4ed8;font-weight:700;">= 0.5</td>
+                <td style="padding:1px 4px;color:var(--text-dim);font-size:0.68rem;">Σ / 8</td>
+              </tr>
+              <tr>
+                <td style="padding:1px 4px;color:var(--text-muted);">z</td>
+                <td style="padding:1px 4px;color:#92400e;">= W · 0.5</td>
+                <td style="padding:1px 4px;color:var(--text-dim);font-size:0.68rem;">(W escalar)</td>
+              </tr>
+              <tr>
+                <td style="padding:1px 4px;color:#166534;font-weight:700;">h'<sub>p₁₁</sub></td>
+                <td style="padding:1px 4px;color:#166534;font-weight:700;">= ReLU(z)</td>
+                <td style="padding:1px 4px;color:var(--text-dim);font-size:0.68rem;">≥ 0 após ativação</td>
+              </tr>
+            </table>
+          </div>
         </div>
       </div>
 

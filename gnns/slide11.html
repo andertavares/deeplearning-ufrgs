@@ -7,96 +7,41 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
   <style>
-    .par-layout {
-      display: grid;
-      grid-template-columns: 1.1fr 0.9fr;
-      gap: 1.2rem;
-      flex: 1;
-    }
-    .par-panel {
-      background: var(--bg2);
-      border: 1.5px solid var(--border2);
-      border-radius: var(--radius);
-      padding: 1rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.7rem;
-      box-shadow: var(--shadow);
-    }
-    .node-op {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.45rem 0.7rem;
-      border-radius: var(--radius-sm);
+    .mat-cell {
+      padding: 3px 7px;
+      text-align: center;
+      font-size: 0.73rem;
       font-family: 'Fira Code', monospace;
-      font-size: 0.78rem;
-      border: 1.5px solid var(--border2);
       background: var(--bg3);
-      transition: background 0.3s, border-color 0.3s, transform 0.3s;
+      color: var(--text);
+      border: 1.5px solid transparent;
+      border-radius: 3px;
+      transition: background 0.2s, border-color 0.2s;
+      min-width: 36px;
     }
-    .node-op.user { border-color: #0d6e6e; }
-    .node-op.bot  { border-color: #b91c1c; }
-    .node-op.unk  { border-color: #9ca3af; }
-    .node-op.active { transform: scale(1.02); }
-    .node-op.user.active { background: #ccfbf1; }
-    .node-op.bot.active  { background: #fee2e2; }
-    .node-op.unk.active  { background: #f3f4f6; }
-    .op-badge {
-      display: inline-block;
-      padding: 0.1rem 0.4rem;
-      border-radius: 4px;
-      font-size: 0.7rem;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-    }
-    .op-g { background: #dbeafe; color: #1d4ed8; }
-    .op-a { background: #fff7ed; color: #c2410c; }
-    .op-u { background: #dcfce7; color: #166534; }
-    .matrix-eq {
-      font-family: 'Fira Code', monospace;
-      font-size: 0.9rem;
-      background: var(--bg3);
-      border: 1.5px solid var(--border2);
+    .mat-cell.neg       { background: #fee2e2; color: #b91c1c; }
+    .mat-cell.hl        { background: #fde68a !important; border-color: #ca8a04 !important; font-weight: 700 !important; }
+    .mat-cell.sel       { background: #bbf7d0 !important; border-color: #15803d !important; font-weight: 700 !important; color: #14532d !important; }
+    .mat-cell.relu-clip { background: #fef3c7; color: #854d0e; border-color: #f59e0b; font-style: italic; }
+    .mat-cell.relu-keep { background: #dcfce7; color: #166534; font-weight: 700; }
+    .mat-node-lbl { font-size: 0.65rem; font-weight: 700; font-family: 'Inter', sans-serif; padding-right: 5px; vertical-align: middle; }
+    .mat-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; text-align: center; margin-bottom: 0.3rem; }
+    table.mat { border-collapse: separate; border-spacing: 2px; }
+    .step-btn {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem; font-weight: 600;
+      padding: 0.4rem 0.9rem;
+      border: 1.5px solid var(--teal);
       border-radius: var(--radius-sm);
-      padding: 0.7rem 1rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
+      background: var(--bg3); color: var(--teal);
+      cursor: pointer; transition: all 0.2s;
     }
-    .mat-row {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      flex-wrap: wrap;
+    .step-btn:hover, .step-btn.active { background: var(--teal); color: #fff; }
+    .op-sym {
+      align-self: center;
+      font-size: 1.3rem; font-weight: 700;
+      color: var(--text-dim); padding: 0 0.25rem;
     }
-    .mat-sym {
-      font-size: 1.1rem;
-      color: var(--text-dim);
-      font-weight: 700;
-    }
-    .mat-label {
-      font-size: 0.72rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.07em;
-      color: var(--text-dim);
-    }
-    .btn-step { font-family:'Inter',sans-serif; font-size:0.82rem; font-weight:600; padding:0.4rem 1rem; border:1.5px solid var(--teal); border-radius:var(--radius-sm); background:var(--teal); color:#fff; cursor:pointer; transition:all 0.2s; }
-    .btn-step:hover { background:#0a5454; }
-    /* animated graph */
-    .anim-edge { transition: stroke 0.4s, stroke-width 0.4s, opacity 0.4s; }
-    .anim-node-circle { transition: fill 0.4s, stroke 0.4s; }
-    /* numerical table */
-    .num-table { border-collapse: collapse; width: 100%; font-family: 'Fira Code', monospace; font-size: 0.78rem; }
-    .num-table th { background: var(--bg3); padding: 0.3rem 0.5rem; text-align: center; border: 1px solid var(--border2); font-size: 0.7rem; font-weight: 700; color: var(--text-dim); }
-    .num-table td { padding: 0.3rem 0.5rem; text-align: center; border: 1px solid var(--border2); color: var(--text-muted); }
-    .num-table td.node-user { color: #0d6e6e; font-weight: 700; }
-    .num-table td.node-bot  { color: #b91c1c; font-weight: 700; }
-    .num-table td.node-unk  { color: #6b7fa3; font-weight: 700; }
-    .num-table td.val-neg  { color: #b91c1c; }
-    .num-table td.val-relu { color: #166534; font-weight: 700; }
-    .col-hidden { opacity: 0.2; }
   </style>
 </head>
 <body>
@@ -113,156 +58,41 @@
         <p class="slide-subtitle">Bloco 2 — Message Passing</p>
       </div>
 
-      <div class="par-layout">
-        <!-- LEFT: animated parallel execution + graph -->
-        <div class="par-panel">
-          <div class="panel-title">Todos os nós executam <em>simultaneamente</em></div>
+      <!-- Single full-width panel -->
+      <div style="flex:1;background:var(--bg2);border:1.5px solid var(--border2);border-radius:var(--radius);padding:1rem;display:flex;flex-direction:column;gap:0.7rem;box-shadow:var(--shadow);overflow:auto;">
 
-          <div style="font-size:0.8rem;color:var(--text-muted);line-height:1.5;">
-            A cada camada, <strong>cada nó</strong> aplica os mesmos três passos:
-          </div>
-
-          <!-- Node rows -->
-          <div id="nodeOps" style="display:flex;flex-direction:column;gap:0.3rem;">
-            <div class="node-op user" id="op-U1">
-              <span style="font-weight:700;color:#0d6e6e;min-width:22px;">U1</span>
-              <span class="op-badge op-g" id="g-U1">Gather</span>
-              <span class="op-badge op-a" id="a-U1">Aggregate</span>
-              <span class="op-badge op-u" id="u-U1">Update</span>
-              <span style="color:var(--text-dim);margin-left:auto;font-size:0.72rem;" id="res-U1"></span>
-            </div>
-            <div class="node-op user" id="op-U2">
-              <span style="font-weight:700;color:#0d6e6e;min-width:22px;">U2</span>
-              <span class="op-badge op-g" id="g-U2">Gather</span>
-              <span class="op-badge op-a" id="a-U2">Aggregate</span>
-              <span class="op-badge op-u" id="u-U2">Update</span>
-              <span style="color:var(--text-dim);margin-left:auto;font-size:0.72rem;" id="res-U2"></span>
-            </div>
-            <div class="node-op bot" id="op-B1">
-              <span style="font-weight:700;color:#b91c1c;min-width:22px;">B1</span>
-              <span class="op-badge op-g" id="g-B1">Gather</span>
-              <span class="op-badge op-a" id="a-B1">Aggregate</span>
-              <span class="op-badge op-u" id="u-B1">Update</span>
-              <span style="color:var(--text-dim);margin-left:auto;font-size:0.72rem;" id="res-B1"></span>
-            </div>
-            <div class="node-op bot" id="op-B2">
-              <span style="font-weight:700;color:#b91c1c;min-width:22px;">B2</span>
-              <span class="op-badge op-g" id="g-B2">Gather</span>
-              <span class="op-badge op-a" id="a-B2">Aggregate</span>
-              <span class="op-badge op-u" id="u-B2">Update</span>
-              <span style="color:var(--text-dim);margin-left:auto;font-size:0.72rem;" id="res-B2"></span>
-            </div>
-            <div class="node-op unk" id="op-X">
-              <span style="font-weight:700;color:#6b7fa3;min-width:22px;">X</span>
-              <span class="op-badge op-g" id="g-X">Gather</span>
-              <span class="op-badge op-a" id="a-X">Aggregate</span>
-              <span class="op-badge op-u" id="u-X">Update</span>
-              <span style="color:var(--text-dim);margin-left:auto;font-size:0.72rem;" id="res-X"></span>
-            </div>
-          </div>
-
-          <div style="display:flex;gap:0.6rem;align-items:center;flex-wrap:wrap;">
-            <button class="btn-step" id="animBtn" onclick="stepAnim()">▶ Animar</button>
-            <button class="btn-toggle" onclick="resetAnim()">↩ Reiniciar</button>
-            <span id="animLabel" style="font-size:0.78rem;color:var(--text-muted);font-style:italic;"></span>
-          </div>
-
-          <!-- Animated graph below the table -->
-          <div style="border-top:1px solid var(--border2);padding-top:0.5rem;margin-top:0.2rem;">
-            <div style="font-size:0.72rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.3rem;">Grafo — etapas da animação</div>
-            <svg viewBox="0 0 240 160" style="width:100%;max-height:150px;" id="animGraph">
-              <!-- Edges -->
-              <line id="ge-U1U2" class="anim-edge" x1="52" y1="55" x2="52" y2="110" stroke="#c7d0e0" stroke-width="1.5"/>
-              <line id="ge-U1X"  class="anim-edge" x1="68" y1="62" x2="112" y2="82" stroke="#c7d0e0" stroke-width="1.5"/>
-              <line id="ge-B1B2" class="anim-edge" x1="185" y1="55" x2="185" y2="110" stroke="#c7d0e0" stroke-width="1.5"/>
-              <line id="ge-B1X"  class="anim-edge" x1="170" y1="62" x2="126" y2="82" stroke="#c7d0e0" stroke-width="1.5"/>
-              <line id="ge-B2X"  class="anim-edge" x1="170" y1="116" x2="126" y2="93" stroke="#c7d0e0" stroke-width="1.5"/>
-              <!-- Nodes -->
-              <circle id="gn-U1" class="anim-node-circle" cx="52"  cy="45"  r="18" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="1.5"/>
-              <text x="52"  y="42"  text-anchor="middle" font-family="Inter" font-weight="800" font-size="9" fill="#0d6e6e">U1</text>
-              <text x="52"  y="53"  text-anchor="middle" font-family="Fira Code" font-size="6.5" fill="#0d6e6e" id="gt-U1">[730,12]</text>
-              <circle id="gn-U2" class="anim-node-circle" cx="52"  cy="120" r="16" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="1.5"/>
-              <text x="52"  y="117" text-anchor="middle" font-family="Inter" font-weight="800" font-size="9" fill="#0d6e6e">U2</text>
-              <text x="52"  y="128" text-anchor="middle" font-family="Fira Code" font-size="6.5" fill="#0d6e6e" id="gt-U2">[610,4]</text>
-              <circle id="gn-B1" class="anim-node-circle" cx="185" cy="45"  r="18" fill="#fee2e2" stroke="#b91c1c" stroke-width="1.5"/>
-              <text x="185" y="42"  text-anchor="middle" font-family="Inter" font-weight="800" font-size="9" fill="#b91c1c">B1</text>
-              <text x="185" y="53"  text-anchor="middle" font-family="Fira Code" font-size="6.5" fill="#b91c1c" id="gt-B1">[620,11]</text>
-              <circle id="gn-B2" class="anim-node-circle" cx="185" cy="120" r="16" fill="#fee2e2" stroke="#b91c1c" stroke-width="1.5"/>
-              <text x="185" y="117" text-anchor="middle" font-family="Inter" font-weight="800" font-size="9" fill="#b91c1c">B2</text>
-              <text x="185" y="128" text-anchor="middle" font-family="Fira Code" font-size="6.5" fill="#b91c1c" id="gt-B2">[735,3]</text>
-              <circle id="gn-X"  class="anim-node-circle" cx="120" cy="83"  r="20" fill="#e5e7eb" stroke="#9ca3af" stroke-width="1.5"/>
-              <text x="120" y="80"  text-anchor="middle" font-family="Inter" font-weight="800" font-size="9" fill="#6b7fa3">X</text>
-              <text x="120" y="91"  text-anchor="middle" font-family="Fira Code" font-size="6.5" fill="#6b7fa3" id="gt-X">[675,7]</text>
-              <!-- Phase label -->
-              <text id="graphPhaseLabel" x="120" y="150" text-anchor="middle" font-family="Inter" font-size="8" fill="#9ca3af" font-style="italic"></text>
-            </svg>
-          </div>
-
-          <div class="highlight-box teal" style="font-size:0.82rem;padding:0.5rem 0.8rem;">
-            <span class="icon">🔁</span>
-            <span>Os pesos <strong>W</strong> são <em>compartilhados</em> entre todos os nós — a mesma função é aplicada em paralelo.</span>
-          </div>
+        <!-- Formula header -->
+        <div style="display:flex;align-items:center;justify-content:center;gap:0.4rem;flex-wrap:wrap;font-family:'Fira Code',monospace;font-size:1rem;">
+          <span style="color:var(--teal);font-weight:700;">H<sup>(l+1)</sup></span>
+          <span style="color:var(--text-dim);font-weight:700;font-size:1.15rem;">=</span>
+          <span style="color:var(--text-dim);font-weight:700;">σ(</span>
+          <span style="color:#ca8a04;font-weight:700;">Ã</span>
+          <span style="color:var(--teal);font-weight:700;">H<sup>(l)</sup></span>
+          <span style="color:#1d4ed8;font-weight:700;">W</span>
+          <span style="color:var(--text-dim);font-weight:700;">)</span>
+          <span style="font-size:0.75rem;color:var(--text-muted);margin-left:0.8rem;font-family:'Inter',sans-serif;">Ã = A+I &nbsp;·&nbsp; W compartilhado entre todos os nós &nbsp;·&nbsp; Gather+Aggregate+Update em paralelo</span>
         </div>
 
-        <!-- RIGHT: matrix formulation + numerical example -->
-        <div class="par-panel">
-          <div class="panel-title">Formulação Matricial</div>
+        <!-- Step navigation -->
+        <div style="display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap;">
+          <button class="step-btn active" id="stepBtn1" onclick="showStep(1)">① Ã &middot; H<sup>(0)</sup></button>
+          <button class="step-btn" id="stepBtn2" onclick="showStep(2)">② &times; W = Z</button>
+          <button class="step-btn" id="stepBtn3" onclick="showStep(3)">③ ReLU(Z) = H<sup>(l+1)</sup></button>
+        </div>
 
-          <div class="matrix-eq">
-            <div class="mat-label">Notação compacta (GCN simplificado)</div>
-            <div class="mat-row">
-              <span style="color:var(--teal);font-weight:700;font-size:1rem;">H<sup>(l+1)</sup></span>
-              <span class="mat-sym">=</span>
-              <span>σ(</span>
-              <span style="color:#ca8a04;font-weight:700;">Ã</span>
-              <span style="color:var(--teal);font-weight:700;">H<sup>(l)</sup></span>
-              <span style="color:#1d4ed8;font-weight:700;">W</span>
-              <span>)</span>
-            </div>
-          </div>
+        <!-- Step description -->
+        <div id="stepDesc" style="font-size:0.8rem;color:var(--text-muted);text-align:center;min-height:1.2em;"></div>
 
-          <div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.8rem;">
-            <div style="display:flex;align-items:flex-start;gap:0.5rem;">
-              <span style="color:var(--teal);font-weight:700;font-family:'Fira Code',monospace;min-width:58px;">H<sup>(l)</sup></span>
-              <span style="color:var(--text-muted);">Embeddings de todos os nós na camada l &nbsp;<span style="color:var(--text-dim);">[n×d]</span></span>
-            </div>
-            <div style="display:flex;align-items:flex-start;gap:0.5rem;">
-              <span style="color:#ca8a04;font-weight:700;font-family:'Fira Code',monospace;min-width:58px;">Ã</span>
-              <span style="color:var(--text-muted);">Adjacência normalizada — agrega de quem &nbsp;<span style="color:var(--text-dim);">[n×n]</span></span>
-            </div>
-            <div style="display:flex;align-items:flex-start;gap:0.5rem;">
-              <span style="color:#1d4ed8;font-weight:700;font-family:'Fira Code',monospace;min-width:58px;">W</span>
-              <span style="color:var(--text-muted);">Pesos treináveis — <em>mesmos</em> para todos os nós &nbsp;<span style="color:var(--text-dim);">[d×d']</span></span>
-            </div>
-          </div>
+        <!-- Matrix visualization area -->
+        <div id="matrixViz" style="display:flex;align-items:flex-start;justify-content:center;gap:0.4rem;overflow-x:auto;padding:0.3rem 0.5rem;flex-wrap:wrap;">
+        </div>
 
-          <!-- Numerical example -->
-          <div style="border-top:1px solid var(--border2);padding-top:0.5rem;">
-            <div style="font-size:0.72rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.4rem;">Exemplo numérico (W = [[0,1,0,−1],[−1,0,1,0]])</div>
-            <table class="num-table">
-              <thead>
-                <tr>
-                  <th>Nó</th>
-                  <th>h<sup>(0)</sup></th>
-                  <th id="col-m-hdr" class="col-hidden">m<sub>v</sub></th>
-                  <th id="col-z-hdr" class="col-hidden">z (pré-ReLU)</th>
-                  <th id="col-h1-hdr" class="col-hidden">h<sup>(1)</sup></th>
-                </tr>
-              </thead>
-              <tbody id="numTableBody">
-                <tr><td class="node-user">U1</td><td>[730,12]</td><td id="m-U1" class="col-hidden">[1285,11]</td><td id="z-U1" class="col-hidden">[1,555]</td><td id="h1-U1" class="col-hidden">[1,555]</td></tr>
-                <tr><td class="node-user">U2</td><td>[610,4]</td><td id="m-U2" class="col-hidden">[730,12]</td><td id="z-U2" class="col-hidden val-neg">[-8,120]</td><td id="h1-U2" class="col-hidden val-relu">[0,120]</td></tr>
-                <tr><td class="node-bot">B1</td><td>[620,11]</td><td id="m-B1" class="col-hidden">[1410,10]</td><td id="z-B1" class="col-hidden">[1,790]</td><td id="h1-B1" class="col-hidden">[1,790]</td></tr>
-                <tr><td class="node-bot">B2</td><td>[735,3]</td><td id="m-B2" class="col-hidden">[1295,18]</td><td id="z-B2" class="col-hidden val-neg">[-15,560]</td><td id="h1-B2" class="col-hidden val-relu">[0,560]</td></tr>
-                <tr><td class="node-unk">X</td><td>[675,7]</td><td id="m-X" class="col-hidden">[2085,26]</td><td id="z-X" class="col-hidden val-neg">[-19,1410]</td><td id="h1-X" class="col-hidden val-relu">[0,1410]</td></tr>
-              </tbody>
-            </table>
-            <div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.3rem;" id="numTableNote">Clique em <strong>Animar</strong> para ver os valores preencherem.</div>
-          </div>
+        <!-- Hint -->
+        <div id="matrixHint" style="font-size:0.72rem;color:var(--text-dim);text-align:center;font-style:italic;min-height:1em;"></div>
 
-          <div style="font-size:0.78rem;background:#fef9c3;border:1.5px solid #ca8a04;border-radius:var(--radius-sm);padding:0.5rem 0.7rem;color:#78350f;line-height:1.5;">
-            ⚡ <strong>Ã · H</strong> é um produto matricial — multiplica cada nó pela soma normalizada dos embeddings de seus vizinhos, para <em>todos os nós de uma vez</em>.
-          </div>
+        <!-- Bottom note -->
+        <div style="font-size:0.82rem;background:#fef9c3;border:1.5px solid #ca8a04;border-radius:var(--radius-sm);padding:0.5rem 0.7rem;color:#78350f;line-height:1.5;text-align:center;">
+          ⚡ O produto <strong>ÃHW</strong> realiza Gather+Aggregate+Update para <em>todos os nós em paralelo</em> — os pesos <strong>W</strong> são os mesmos para todos!
         </div>
       </div>
     </main>
@@ -275,147 +105,195 @@
   </div>
 
   <script>
-    const nodes = ['U1','U2','B1','B2','X'];
-    const nodeColors = { U1:'#0d6e6e', U2:'#0d6e6e', B1:'#b91c1c', B2:'#b91c1c', X:'#6b7fa3' };
-    const results = {
-      'U1': '[1, 555]', 'U2': '[0, 120]',
-      'B1': '[1, 790]', 'B2': '[0, 560]',
-      'X':  '[0, 1410]'
-    };
-    const phases = ['Gather','Aggregate','Update'];
-    // edges involved in each node's gather
-    const nodeEdges = {
-      U1: ['ge-U1U2','ge-U1X'], U2: ['ge-U1U2'],
-      B1: ['ge-B1B2','ge-B1X'], B2: ['ge-B1B2','ge-B2X'],
-      X:  ['ge-U1X','ge-B1X','ge-B2X']
-    };
-    const edgeColors = { gather:'#1d4ed8', aggregate:'#c2410c', update:'#166534' };
-    let animPhase = -1;
-    let animTimer = null;
+    const NODES = ['U1','U2','B1','B2','X'];
+    const NCOL  = ['#0d6e6e','#0d6e6e','#b91c1c','#b91c1c','#6b7fa3'];
 
-    function resetAnim() {
-      if (animTimer) clearTimeout(animTimer);
-      animTimer = null;
-      animPhase = -1;
-      nodes.forEach(n => {
-        const row = document.getElementById('op-'+n);
-        row.classList.remove('active');
-        ['g','a','u'].forEach(p => {
-          const el = document.getElementById(p+'-'+n);
-          el.style.opacity = '0.35';
-          el.style.transform = 'scale(1)';
-        });
-        document.getElementById('res-'+n).textContent = '';
-        // reset graph
-        document.getElementById('gn-'+n).setAttribute('fill', n==='U1'||n==='U2'?'#ccfbf1':n==='X'?'#e5e7eb':'#fee2e2');
-        document.getElementById('gt-'+n).textContent = n==='U1'?'[730,12]':n==='U2'?'[610,4]':n==='B1'?'[620,11]':n==='B2'?'[735,3]':'[675,7]';
-      });
-      ['ge-U1U2','ge-U1X','ge-B1B2','ge-B1X','ge-B2X'].forEach(id => {
-        const el = document.getElementById(id);
-        el.setAttribute('stroke','#c7d0e0');
-        el.setAttribute('stroke-width','1.5');
-        el.setAttribute('opacity','1');
-      });
-      document.getElementById('graphPhaseLabel').textContent = '';
-      const btn = document.getElementById('animBtn');
-      btn.disabled = false;
-      btn.textContent = '▶ Animar';
-      document.getElementById('animLabel').textContent = '';
-      // reset table
-      ['m-U1','m-U2','m-B1','m-B2','m-X','z-U1','z-U2','z-B1','z-B2','z-X','h1-U1','h1-U2','h1-B1','h1-B2','h1-X'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.classList.add('col-hidden');
-      });
-      ['col-m-hdr','col-z-hdr','col-h1-hdr'].forEach(id => {
-        document.getElementById(id).classList.add('col-hidden');
-      });
-      document.getElementById('numTableNote').textContent = 'Clique em Animar para ver os valores preencherem.';
-    }
+    // Ã = A + I  (sum-aggregation with self-loops)
+    //        U1 U2 B1 B2 X
+    const ATILDE = [
+      [1, 1, 0, 0, 1],  // U1
+      [1, 1, 0, 0, 0],  // U2
+      [0, 0, 1, 1, 1],  // B1
+      [0, 0, 1, 1, 1],  // B2
+      [1, 0, 1, 1, 1]   // X
+    ];
 
-    function stepAnim() {
-      animPhase++;
-      if (animPhase === 0) {
-        // Clear
-        nodes.forEach(n => {
-          ['g','a','u'].forEach(p => {
-            document.getElementById(p+'-'+n).style.opacity = '0.35';
-            document.getElementById(p+'-'+n).style.transform = 'scale(1)';
-          });
-          document.getElementById('res-'+n).textContent = '';
-        });
+    // H^(0) — initial features (cadastro, posts)
+    const H0 = [
+      [730, 12],  // U1
+      [610,  4],  // U2
+      [620, 11],  // B1
+      [735,  3],  // B2
+      [675,  7]   // X
+    ];
+
+    // W (2×2) with negative entries so some z < 0
+    const WMAT = [[0, 1], [-1, 0]];
+
+    // AH = ATILDE · H0   (5×2)
+    const AH = ATILDE.map(row => [
+      row.reduce((s,v,j) => s + v * H0[j][0], 0),
+      row.reduce((s,v,j) => s + v * H0[j][1], 0)
+    ]);
+    // [[2015,23],[1340,16],[2030,21],[2030,21],[2760,33]]
+
+    // Z = AH · W   (5×2)
+    const ZMAT = AH.map(row => [
+      row[0]*WMAT[0][0] + row[1]*WMAT[1][0],
+      row[0]*WMAT[0][1] + row[1]*WMAT[1][1]
+    ]);
+    // [[-23,2015],[-16,1340],[-21,2030],[-21,2030],[-33,2760]]
+
+    // H1 = ReLU(Z)
+    const H1 = ZMAT.map(row => row.map(v => Math.max(0, v)));
+    // [[0,2015],[0,1340],[0,2030],[0,2030],[0,2760]]
+
+    let curStep = 1;
+    let hlState = null; // {type:'ah'|'z', i, j}
+
+    // Build an HTML matrix table.
+    // opts: { clickFn, rowLabels, rowLabelColors, negRed, reluRef,
+    //         hlRow, hlCol, selI, selJ, titleText, titleColor, id }
+    function matTable(data, pfx, opts) {
+      const o = opts || {};
+      let html = '<div style="display:flex;flex-direction:column;align-items:center;">';
+      if (o.titleText) {
+        html += `<div class="mat-title" style="color:${o.titleColor||'var(--text-dim)'};">${o.titleText}</div>`;
       }
-      if (animPhase < 3) {
-        const labels = {
-          0:'Gather — cada nó coleta os embeddings dos seus vizinhos…',
-          1:'Aggregate — combina (soma) as mensagens recebidas…',
-          2:'Update — aplica W · x → ReLU para obter novo embedding…'
-        };
-        const pfx = ['g','a','u'][animPhase];
-        document.getElementById('animLabel').textContent = labels[animPhase];
-        nodes.forEach(n => {
-          const el = document.getElementById(pfx+'-'+n);
-          el.style.opacity = '1';
-          el.style.transform = 'scale(1.1)';
-          document.getElementById('op-'+n).classList.add('active');
-        });
-        const btn = document.getElementById('animBtn');
-        btn.textContent = animPhase < 2 ? '▶ Próximo passo' : '✓ Resultado';
-        // Update graph visual
-        if (animPhase === 0) {
-          // Gather: highlight all edges
-          ['ge-U1U2','ge-U1X','ge-B1B2','ge-B1X','ge-B2X'].forEach(id => {
-            const el = document.getElementById(id);
-            el.setAttribute('stroke','#1d4ed8');
-            el.setAttribute('stroke-width','2.5');
-          });
-          document.getElementById('graphPhaseLabel').textContent = 'Gather: arestas ativas';
-          // show m column
-          document.getElementById('col-m-hdr').classList.remove('col-hidden');
-          nodes.forEach(n => document.getElementById('m-'+n).classList.remove('col-hidden'));
-          document.getElementById('numTableNote').textContent = 'm\u1D65 = soma das features dos vizinhos (Sum aggregation)';
-        } else if (animPhase === 1) {
-          // Aggregate: nodes pulse
-          nodes.forEach(n => {
-            document.getElementById('gn-'+n).setAttribute('stroke-width','3');
-          });
-          document.getElementById('graphPhaseLabel').textContent = 'Aggregate: somando mensagens';
-          // show z column
-          document.getElementById('col-z-hdr').classList.remove('col-hidden');
-          nodes.forEach(n => document.getElementById('z-'+n).classList.remove('col-hidden'));
-          document.getElementById('numTableNote').textContent = 'z = W · [h ‖ m] (antes da ReLU; negativo = vermelho)';
-        } else if (animPhase === 2) {
-          // Update: new fills
-          nodes.forEach(n => {
-            const circle = document.getElementById('gn-'+n);
-            circle.setAttribute('fill', n==='U1'||n==='U2'?'#5eead4':n==='X'?'#d1d5db':'#fca5a5');
-          });
-          document.getElementById('graphPhaseLabel').textContent = 'Update: novos embeddings';
+      html += '<table class="mat">';
+      data.forEach((row, i) => {
+        html += '<tr>';
+        if (o.rowLabels) {
+          const lc = o.rowLabelColors ? o.rowLabelColors[i] : 'var(--text-dim)';
+          html += `<td class="mat-node-lbl" style="color:${lc};">${NODES[i]}</td>`;
         }
-      } else {
-        // Done
-        document.getElementById('animLabel').textContent = 'Novos embeddings prontos!';
-        nodes.forEach(n => {
-          document.getElementById('res-'+n).textContent = '→ ' + results[n];
-          document.getElementById('gt-'+n).textContent = results[n];
+        row.forEach((v, j) => {
+          let cls = 'mat-cell';
+          if (o.negRed && v < 0)                              cls += ' neg';
+          if (o.reluRef && o.reluRef[i][j] < 0 && v === 0)   cls += ' relu-clip';
+          else if (o.reluRef && o.reluRef[i][j] >= 0 && v > 0) cls += ' relu-keep';
+
+          const hlR = (o.hlRow !== undefined && o.hlRow >= 0 && o.hlRow === i);
+          const hlC = (o.hlCol !== undefined && o.hlCol >= 0 && o.hlCol === j);
+          const sel = (o.selI !== undefined && o.selI >= 0 && o.selI === i &&
+                       o.selJ !== undefined && o.selJ >= 0 && o.selJ === j);
+          if (sel)        cls += ' sel';
+          else if (hlR || hlC) cls += ' hl';
+
+          const onClick = o.clickFn ? ` onclick="${o.clickFn}(${i},${j})" style="cursor:pointer;"` : '';
+          html += `<td class="${cls}"${onClick} id="${pfx}-${i}-${j}">${v}</td>`;
         });
-        const btn = document.getElementById('animBtn');
-        btn.disabled = true;
-        btn.textContent = '✓ Completo';
-        document.getElementById('graphPhaseLabel').textContent = 'ReLU aplicada → h⁽¹⁾';
-        // show h1 column
-        document.getElementById('col-h1-hdr').classList.remove('col-hidden');
-        nodes.forEach(n => document.getElementById('h1-'+n).classList.remove('col-hidden'));
-        document.getElementById('numTableNote').innerHTML = '<span style="color:#b91c1c;font-weight:700">ReLU zerou z[0] para U2, B2 e X</span> (valores negativos → 0).';
+        html += '</tr>';
+      });
+      html += '</table></div>';
+      return html;
+    }
+
+    function opSym(s) {
+      return `<div class="op-sym">${s}</div>`;
+    }
+
+    function showStep(n) {
+      curStep = n;
+      hlState = null;
+      ['stepBtn1','stepBtn2','stepBtn3'].forEach((id, idx) => {
+        const btn = document.getElementById(id);
+        if (btn) btn.classList.toggle('active', idx + 1 === n);
+      });
+      renderStep();
+    }
+
+    function renderStep() {
+      const viz  = document.getElementById('matrixViz');
+      const desc = document.getElementById('stepDesc');
+      const hint = document.getElementById('matrixHint');
+      const hs = hlState;
+
+      if (curStep === 1) {
+        const ahI = (hs && hs.type === 'ah') ? hs.i : -1;
+        const ahJ = (hs && hs.type === 'ah') ? hs.j : -1;
+
+        desc.innerHTML = 'Passo 1: <strong style="color:#ca8a04">Ã</strong> &middot; <strong style="color:#0d9488">H<sup>(0)</sup></strong> — cada linha de Ã seleciona quais vizinhos (e o próprio nó) contribuem; o resultado é a soma de seus embeddings.';
+        hint.textContent = 'Clique em uma célula de Ã·H para ver qual linha de Ã e coluna de H estão envolvidas.';
+
+        viz.innerHTML =
+          matTable(ATILDE, 'atilde', {
+            rowLabels: true, rowLabelColors: NCOL,
+            titleText: 'Ã &nbsp;(A+I, 5×5)', titleColor: '#ca8a04',
+            hlRow: ahI
+          }) +
+          opSym('&middot;') +
+          matTable(H0, 'h0', {
+            rowLabels: true, rowLabelColors: NCOL,
+            titleText: 'H<sup>(0)</sup> &nbsp;(5×2)', titleColor: '#0d9488',
+            hlCol: ahJ
+          }) +
+          opSym('=') +
+          matTable(AH, 'ah', {
+            clickFn: 'clickAH',
+            rowLabels: true, rowLabelColors: NCOL,
+            titleText: 'Ã·H<sup>(0)</sup> &nbsp;(5×2)', titleColor: '#166534',
+            selI: ahI, selJ: ahJ
+          });
+
+      } else if (curStep === 2) {
+        const zI = (hs && hs.type === 'z') ? hs.i : -1;
+        const zJ = (hs && hs.type === 'z') ? hs.j : -1;
+
+        desc.innerHTML = 'Passo 2: <strong style="color:#0d9488">Ã·H</strong> &middot; <strong style="color:#1d4ed8">W</strong> = Z — transforma os embeddings agregados. <span style="color:#b91c1c;font-weight:700">Valores negativos</span> serão zerados pela ReLU.';
+        hint.textContent = 'Clique em uma célula de Z para ver qual linha de Ã·H e coluna de W estão envolvidas.';
+
+        viz.innerHTML =
+          matTable(AH, 'ah', {
+            rowLabels: true, rowLabelColors: NCOL,
+            titleText: 'Ã·H<sup>(0)</sup> &nbsp;(5×2)', titleColor: '#0d9488',
+            hlRow: zI
+          }) +
+          opSym('&middot;') +
+          matTable(WMAT, 'wmat', {
+            titleText: 'W &nbsp;(2×2)', titleColor: '#1d4ed8',
+            hlCol: zJ
+          }) +
+          opSym('=') +
+          matTable(ZMAT, 'z', {
+            clickFn: 'clickZ',
+            rowLabels: true, rowLabelColors: NCOL,
+            negRed: true,
+            titleText: 'Z = Ã·H·W &nbsp;(5×2)', titleColor: '#92400e',
+            selI: zI, selJ: zJ
+          });
+
+      } else if (curStep === 3) {
+        desc.innerHTML = 'Passo 3: <strong>ReLU(Z)</strong> = H<sup>(l+1)</sup> — valores negativos são zerados (<span style="color:#854d0e;font-style:italic">amarelo</span>); positivos ficam intactos (<span style="color:#166534;font-weight:700">verde</span>). Não-linearidade essencial para aprender funções complexas.';
+        hint.textContent = '';
+
+        viz.innerHTML =
+          matTable(ZMAT, 'zpre', {
+            rowLabels: true, rowLabelColors: NCOL,
+            negRed: true,
+            titleText: 'Z &nbsp;(pré-ReLU)', titleColor: '#92400e'
+          }) +
+          `<div style="align-self:center;display:flex;flex-direction:column;align-items:center;gap:0.4rem;padding:0 0.4rem;">
+            <div class="op-sym">→</div>
+            <div style="font-size:0.72rem;font-weight:700;color:#c2410c;background:#fff7ed;border:1.5px solid #fed7aa;border-radius:4px;padding:0.2rem 0.6rem;">ReLU</div>
+          </div>` +
+          matTable(H1, 'h1', {
+            rowLabels: true, rowLabelColors: NCOL,
+            reluRef: ZMAT,
+            titleText: 'H<sup>(l+1)</sup> &nbsp;(5×2)', titleColor: '#166534'
+          });
       }
     }
 
-    // Init: all badges faded
-    resetAnim();
+    function clickAH(i, j) { hlState = { type: 'ah', i, j }; renderStep(); }
+    function clickZ(i, j)   { hlState = { type: 'z',  i, j }; renderStep(); }
+
+    // Init
+    showStep(1);
 
     (function(){
       const container = document.getElementById('navDots');
-      const CURRENT = 11;
-      const TOTAL = 24;
+      const CURRENT = 11, TOTAL = 24;
       for (let i = 1; i <= TOTAL; i++) {
         const dot = document.createElement('div');
         dot.className = 'dot' + (i === CURRENT ? ' active' : '');
