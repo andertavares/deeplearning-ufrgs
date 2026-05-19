@@ -107,7 +107,7 @@
     <header class="slide-header">
       <span class="course-tag">GNNs</span>
       <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
-      <span class="slide-counter">Slide 10 / 22</span>
+      <span class="slide-counter">Slide 10 / 24</span>
     </header>
 
     <main class="slide-main">
@@ -231,25 +231,17 @@
           </div>
           <div class="step-item" id="step2" onclick="goToStep(2)" style="cursor:pointer;">
             <div class="step-num">3</div>
-            <div>
+            <div style="min-width:0;flex:1;">
               <div class="step-title">Transformação Linear W · x</div>
-              <div class="step-formula" id="sf2">
-                <span style="font-size:1.4em;line-height:0.9;vertical-align:middle;">⎡<br>⎣</span>
-                <span style="display:inline-block;text-align:right;vertical-align:middle;line-height:1.6;margin:0 2px;">1 0 1 0<br>0 1 0 1</span>
-                <span style="font-size:1.4em;line-height:0.9;vertical-align:middle;">⎤<br>⎦</span>
-                <span style="vertical-align:middle;margin:0 4px;">·</span>
-                <span style="font-size:1.4em;line-height:0.9;vertical-align:middle;">⎡<br>⎢<br>⎢<br>⎣</span>
-                <span style="display:inline-block;text-align:right;vertical-align:middle;line-height:1.6;margin:0 2px;">735<br>3<br>1295<br>18</span>
-                <span style="font-size:1.4em;line-height:0.9;vertical-align:middle;">⎤<br>⎥<br>⎥<br>⎦</span>
-              </div>
-              <div class="step-desc">Matriz W (2×4) projeta o vetor concatenado para 2D.</div>
+              <div class="step-formula" id="sf2" style="overflow-x:auto;"></div>
+              <div class="step-desc">Clique em um elemento de <strong>z</strong> para ver quais linhas de W e elementos de x estão envolvidos.</div>
             </div>
           </div>
           <div class="step-item" id="step3" onclick="goToStep(3)" style="cursor:pointer;">
             <div class="step-num">4</div>
             <div>
               <div class="step-title">Resultado Numérico</div>
-              <div class="step-formula" id="sf3">z = [735+1295, 3+18] = [2030, 21]</div>
+              <div class="step-formula" id="sf3">z = [2030, 21]</div>
               <div class="step-desc">Combinação direta: h<sub>v</sub> + m<sub>v</sub> (por construção de W).</div>
             </div>
           </div>
@@ -305,6 +297,50 @@
     let currentNode = 'B2';
     let currentStep = 0;
 
+    function renderWxViz(id) {
+      const d = nodeData[id];
+      const x = d.concat;
+      const z = d.wResult;
+      const W = [[1,0,1,0],[0,1,0,1]];
+      const cellBase = 'padding:3px 6px;border-radius:3px;text-align:center;font-size:0.78rem;transition:background 0.2s;';
+      let wHtml = '<div style="display:inline-grid;grid-template-columns:repeat(4,1fr);gap:2px;">';
+      for (let r=0; r<2; r++) for (let c=0; c<4; c++)
+        wHtml += `<div id="wc${r}${c}" style="${cellBase}background:#fef9c3;color:#92400e;">${W[r][c]}</div>`;
+      wHtml += '</div>';
+      let xHtml = '<div style="display:flex;flex-direction:column;gap:2px;">';
+      for (let i=0; i<4; i++)
+        xHtml += `<div id="xr${i}" style="${cellBase}background:#dbeafe;color:#1d4ed8;">${x[i]}</div>`;
+      xHtml += '</div>';
+      let zHtml = '<div style="display:flex;flex-direction:column;gap:8px;">';
+      for (let i=0; i<2; i++)
+        zHtml += `<div id="zr${i}" onclick="highlightWxRow(${i})" style="${cellBase}background:#dcfce7;color:#166534;font-weight:700;cursor:pointer;border:2px solid transparent;">${z[i]}</div>`;
+      zHtml += '</div>';
+      return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <div><div style="font-size:0.62rem;color:#92400e;text-align:center;font-weight:700;margin-bottom:2px;">W (2×4)</div>${wHtml}</div>
+        <div style="font-weight:700;color:var(--text-dim);">·</div>
+        <div><div style="font-size:0.62rem;color:#1d4ed8;text-align:center;font-weight:700;margin-bottom:2px;">x (4×1)</div>${xHtml}</div>
+        <div style="font-weight:700;color:var(--text-dim);">=</div>
+        <div><div style="font-size:0.62rem;color:#166534;text-align:center;font-weight:700;margin-bottom:2px;">z — clique!</div>${zHtml}</div>
+      </div>`;
+    }
+
+    function highlightWxRow(row) {
+      for (let r=0; r<2; r++) for (let c=0; c<4; c++) {
+        const el = document.getElementById(`wc${r}${c}`);
+        if (!el) continue;
+        el.style.background = r===row ? '#fde68a' : '#fef9c3';
+        el.style.fontWeight  = r===row ? '700' : 'normal';
+      }
+      for (let i=0; i<4; i++) {
+        const el = document.getElementById(`xr${i}`);
+        if (el) { el.style.background='#93c5fd'; el.style.fontWeight='700'; }
+      }
+      for (let i=0; i<2; i++) {
+        const el = document.getElementById(`zr${i}`);
+        if (el) { el.style.border = i===row ? '2px solid #15803d' : '2px solid transparent'; el.style.transform = i===row ? 'scale(1.08)' : 'scale(1)'; }
+      }
+    }
+
     function chooseNode(id) {
       currentNode = id;
       resetSteps();
@@ -340,14 +376,14 @@
         {
           id:'step2', num:'3',
           title:`Transformação Linear W · x`,
-          formula:`<span style="font-size:1.4em;line-height:0.9;vertical-align:middle;">⎡<br>⎣</span><span style="display:inline-block;text-align:right;vertical-align:middle;line-height:1.6;margin:0 2px;">1 0 1 0<br>0 1 0 1</span><span style="font-size:1.4em;line-height:0.9;vertical-align:middle;">⎤<br>⎦</span><span style="vertical-align:middle;margin:0 4px;">·</span><span style="font-size:1.4em;line-height:0.9;vertical-align:middle;">⎡<br>⎢<br>⎢<br>⎣</span><span style="display:inline-block;text-align:right;vertical-align:middle;line-height:1.6;margin:0 2px;">${d.concat[0]}<br>${d.concat[1]}<br>${d.concat[2]}<br>${d.concat[3]}</span><span style="font-size:1.4em;line-height:0.9;vertical-align:middle;">⎤<br>⎥<br>⎥<br>⎦</span>`,
-          desc:`Matriz W (2×4) projeta o vetor concatenado para 2D.`
+          formula: renderWxViz(id),
+          desc:`Clique em um elemento de <strong>z</strong> para ver quais linhas de W e elementos de x estão envolvidos.`
         },
         {
           id:'step3', num:'4',
           title:`Resultado Numérico`,
-          formula:`z = [${d.h[0]}+${d.m[0]}, ${d.h[1]}+${d.m[1]}] = [${d.wResult.join(', ')}]`,
-          desc:`Combinação direta: por construção de W, cada dimensão soma h<sub>${id}</sub>[i] + m<sub>${id}</sub>[i].`
+          formula:`z = [${d.wResult.join(', ')}]`,
+          desc:`Cada dimensão de z combina h<sub>${id}</sub>[i] + m<sub>${id}</sub>[i] (por construção de W).`
         },
         {
           id:'step4', num:'5',
@@ -425,7 +461,7 @@
     (function(){
       const container = document.getElementById('navDots');
       const CURRENT = 10;
-      const TOTAL = 22;
+      const TOTAL = 24;
       for (let i = 1; i <= TOTAL; i++) {
         const dot = document.createElement('div');
         dot.className = 'dot' + (i === CURRENT ? ' active' : '');

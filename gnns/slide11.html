@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Slide 11 – Empilhando Camadas</title>
+  <title>Slide 11 – Operações em Paralelo e Formulação Matricial</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
   <style>
-    .layers-layout {
+    .par-layout {
       display: grid;
-      grid-template-columns: 1.6fr 1fr;
+      grid-template-columns: 1.1fr 0.9fr;
       gap: 1.2rem;
       flex: 1;
     }
-    .graph-panel {
+    .par-panel {
       background: var(--bg2);
       border: 1.5px solid var(--border2);
       border-radius: var(--radius);
@@ -23,130 +23,67 @@
       gap: 0.7rem;
       box-shadow: var(--shadow);
     }
-    .info-panel {
-      background: var(--bg2);
-      border: 1.5px solid var(--border2);
-      border-radius: var(--radius);
-      padding: 1rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.8rem;
-      box-shadow: var(--shadow);
-    }
-
-    /* Slider */
-    .slider-wrap {
+    .node-op {
       display: flex;
       align-items: center;
-      gap: 1rem;
+      gap: 0.5rem;
+      padding: 0.45rem 0.7rem;
+      border-radius: var(--radius-sm);
+      font-family: 'Fira Code', monospace;
+      font-size: 0.78rem;
+      border: 1.5px solid var(--border2);
+      background: var(--bg3);
+      transition: background 0.3s, border-color 0.3s, transform 0.3s;
     }
-    .layer-slider {
-      -webkit-appearance: none;
-      appearance: none;
-      height: 8px;
+    .node-op.user { border-color: #0d6e6e; }
+    .node-op.bot  { border-color: #b91c1c; }
+    .node-op.unk  { border-color: #9ca3af; }
+    .node-op.active { transform: scale(1.02); }
+    .node-op.user.active { background: #ccfbf1; }
+    .node-op.bot.active  { background: #fee2e2; }
+    .node-op.unk.active  { background: #f3f4f6; }
+    .op-badge {
+      display: inline-block;
+      padding: 0.1rem 0.4rem;
       border-radius: 4px;
-      background: var(--border2);
-      flex: 1;
-      cursor: pointer;
-      outline: none;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
     }
-    .layer-slider::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 22px; height: 22px;
-      border-radius: 50%;
-      background: var(--teal);
-      cursor: pointer;
-      border: 2px solid #fff;
-      box-shadow: 0 0 0 3px rgba(13,110,110,0.25);
-    }
-    .layer-slider::-moz-range-thumb {
-      width: 22px; height: 22px;
-      border-radius: 50%;
-      background: var(--teal);
-      cursor: pointer;
-      border: 2px solid #fff;
-    }
-    .slider-val {
-      font-family:'Fira Code',monospace;
-      font-weight:700;
-      font-size:1rem;
-      color:var(--teal);
-      min-width:70px;
-    }
-
-    /* Graph SVG nodes */
-    .rf-node { transition: fill 0.4s, stroke 0.4s, stroke-width 0.4s; cursor: default; }
-    .rf-edge { stroke: var(--border); stroke-width: 2; transition: stroke 0.3s, stroke-width 0.3s; }
-    .rf-edge.hop1 { stroke: #0d6e6e; stroke-width: 3; }
-    .rf-edge.hop2 { stroke: #1d4ed8; stroke-width: 2.5; stroke-dasharray: 5 3; }
-    .rf-edge.hop3 { stroke: #7c3aed; stroke-width: 2; stroke-dasharray: 4 4; }
-
-    /* Receptive field legend */
-    .rf-legend {
+    .op-g { background: #dbeafe; color: #1d4ed8; }
+    .op-a { background: #fff7ed; color: #c2410c; }
+    .op-u { background: #dcfce7; color: #166534; }
+    .matrix-eq {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.9rem;
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0.7rem 1rem;
       display: flex;
       flex-direction: column;
       gap: 0.5rem;
     }
-    .rf-entry {
+    .mat-row {
       display: flex;
       align-items: center;
-      gap: 0.7rem;
-      padding: 0.5rem 0.7rem;
-      border-radius: var(--radius-sm);
-      font-size: 0.88rem;
-      font-weight: 600;
-      border: 1.5px solid transparent;
-      opacity: 0.35;
-      transition: opacity 0.4s, border-color 0.3s, background 0.3s;
+      gap: 0.5rem;
+      flex-wrap: wrap;
     }
-    .rf-entry.visible { opacity: 1; }
-    .rf-entry.center { background:#fff7ed; border-color:#f97316; }
-    .rf-entry.hop1   { background:#ccfbf1; border-color:#0d6e6e; }
-    .rf-entry.hop2   { background:#dbeafe; border-color:#1d4ed8; }
-    .rf-entry.hop3   { background:#ede9fe; border-color:#7c3aed; }
-    .rf-dot {
-      width: 14px; height: 14px;
-      border-radius: 50%;
-      flex-shrink: 0;
+    .mat-sym {
+      font-size: 1.1rem;
+      color: var(--text-dim);
+      font-weight: 700;
     }
-    .rf-dot.center { background:#f97316; }
-    .rf-dot.hop1   { background:#0d6e6e; }
-    .rf-dot.hop2   { background:#1d4ed8; }
-    .rf-dot.hop3   { background:#7c3aed; }
-
-    /* Depth info box */
-    .depth-info {
-      background: var(--bg3);
-      border: 1.5px solid var(--border2);
-      border-radius: var(--radius-sm);
-      padding: 0.7rem 0.9rem;
-      font-size: 0.9rem;
-      color: var(--text);
-      line-height: 1.6;
-      transition: background 0.3s, border-color 0.3s;
-      min-height: 90px;
+    .mat-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-dim);
     }
-    .depth-info strong { color: var(--teal); }
-    .depth-info.d1 { background:#f0fdf4; border-color:#0d6e6e; }
-    .depth-info.d2 { background:#eff6ff; border-color:#3b82f6; }
-    .depth-info.d3 { background:#f5f3ff; border-color:#7c3aed; }
-
-    /* RF size visual */
-    .rf-size-wrap { display: flex; gap: 0.5rem; align-items: center; }
-    .rf-size-bar {
-      height: 22px;
-      border-radius: 999px;
-      transition: width 0.5s cubic-bezier(0.34,1.2,0.64,1), background 0.4s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family:'Fira Code',monospace;
-      font-size:0.78rem;
-      font-weight:700;
-      color:#fff;
-      min-width:32px;
-    }
+    .btn-step { font-family:'Inter',sans-serif; font-size:0.82rem; font-weight:600; padding:0.4rem 1rem; border:1.5px solid var(--teal); border-radius:var(--radius-sm); background:var(--teal); color:#fff; cursor:pointer; transition:all 0.2s; }
+    .btn-step:hover { background:#0a5454; }
   </style>
 </head>
 <body>
@@ -154,109 +91,117 @@
     <header class="slide-header">
       <span class="course-tag">GNNs</span>
       <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
-      <span class="slide-counter">Slide 11 / 22</span>
+      <span class="slide-counter">Slide 11 / 24</span>
     </header>
 
     <main class="slide-main">
       <div class="title-block">
-        <h1 class="slide-title">Empilhando Camadas</h1>
-        <p class="slide-subtitle">Bloco 2 — Receptive Field</p>
+        <h1 class="slide-title">Operações em Paralelo e Formulação Matricial</h1>
+        <p class="slide-subtitle">Bloco 2 — Message Passing</p>
       </div>
 
-      <!-- Slider -->
-      <div style="background:var(--bg2);border:1.5px solid var(--border2);border-radius:var(--radius);padding:0.8rem 1.2rem;box-shadow:var(--shadow);">
-        <div style="font-size:0.9rem;font-weight:600;color:var(--text-muted);margin-bottom:0.5rem;">Número de camadas GNN:</div>
-        <div class="slider-wrap">
-          <span style="font-size:0.85rem;color:var(--text-dim);font-weight:600;min-width:50px;">k = 1</span>
-          <input type="range" min="1" max="3" value="1" class="layer-slider" id="layerSlider" oninput="setLayers(this.value)"/>
-          <span style="font-size:0.85rem;color:var(--text-dim);font-weight:600;min-width:50px;">k = 3</span>
-          <span class="slider-val" id="sliderVal">k = 1</span>
-        </div>
-        <div style="display:flex;justify-content:center;gap:0.7rem;margin-top:0.5rem;">
-          <button class="btn-toggle active" id="btnL1" onclick="setLayersBtn(1)">1 Camada</button>
-          <button class="btn-toggle" id="btnL2" onclick="setLayersBtn(2)">2 Camadas</button>
-          <button class="btn-toggle" id="btnL3" onclick="setLayersBtn(3)">3 Camadas</button>
-        </div>
-      </div>
+      <div class="par-layout">
+        <!-- LEFT: animated parallel execution -->
+        <div class="par-panel">
+          <div class="panel-title">Todos os nós executam <em>simultaneamente</em></div>
 
-      <div class="layers-layout">
-        <!-- LEFT: graph SVG — B2's expanding receptive field (same layout as working example) -->
-        <div class="graph-panel">
-          <div class="panel-title">Receptive Field de B2 (bot)</div>
-          <svg viewBox="0 0 460 290" style="width:100%;" id="rfSvg">
-            <!-- Same layout as working example: U1 top-left, U2 bottom-left, B1 top-right, B2 bottom-right, X center -->
-            <!-- Edges -->
-            <line id="rfE-u1u2" class="rf-edge" x1="90"  y1="115" x2="90"  y2="235"/>
-            <line id="rfE-b1b2" class="rf-edge" x1="370" y1="115" x2="370" y2="235"/>
-            <line id="rfE-b2x"  class="rf-edge" x1="370" y1="235" x2="230" y2="175"/>
-            <line id="rfE-b1x"  class="rf-edge" x1="370" y1="115" x2="230" y2="175"/>
-            <line id="rfE-xu1"  class="rf-edge" x1="230" y1="175" x2="90"  y2="115"/>
+          <div style="font-size:0.8rem;color:var(--text-muted);line-height:1.5;">
+            A cada camada, <strong>cada nó</strong> aplica os mesmos três passos:
+          </div>
 
-            <!-- Hop-3: U2 (bottom-left) -->
-            <circle id="rfN-U2" class="rf-node" cx="90"  cy="235" r="18" fill="#e5e7eb" stroke="#9ca3af" stroke-width="1.5"/>
-            <text x="90"  y="231" text-anchor="middle" font-size="10" fill="#9ca3af" font-weight="700">U2</text>
-            <text x="90"  y="244" text-anchor="middle" font-size="7.5" fill="#9ca3af">[610,4]</text>
-
-            <!-- Hop-2: U1 (top-left) -->
-            <circle id="rfN-U1" class="rf-node" cx="90"  cy="115" r="22" fill="#e5e7eb" stroke="#9ca3af" stroke-width="2"/>
-            <text x="90"  y="111" text-anchor="middle" font-size="11" fill="#9ca3af" font-weight="700">U1</text>
-            <text x="90"  y="124" text-anchor="middle" font-size="8" fill="#9ca3af">[730,12]</text>
-
-            <!-- Hop-1: B1 (top-right) -->
-            <circle id="rfN-B1" class="rf-node" cx="370" cy="115" r="22" fill="#e5e7eb" stroke="#9ca3af" stroke-width="2"/>
-            <text x="370" y="111" text-anchor="middle" font-size="11" fill="#9ca3af" font-weight="700">B1</text>
-            <text x="370" y="124" text-anchor="middle" font-size="8" fill="#9ca3af">[620,11]</text>
-
-            <!-- Hop-1: X (center) -->
-            <circle id="rfN-X"  class="rf-node" cx="230" cy="175" r="22" fill="#e5e7eb" stroke="#9ca3af" stroke-width="2"/>
-            <text x="230" y="171" text-anchor="middle" font-size="11" fill="#9ca3af" font-weight="700">X</text>
-            <text x="230" y="184" text-anchor="middle" font-size="8" fill="#9ca3af">[675,7]</text>
-
-            <!-- Center: B2 (bottom-right) -->
-            <circle id="rfN-B2" class="rf-node" cx="370" cy="235" r="30" fill="#fed7aa" stroke="#f97316" stroke-width="3"/>
-            <text x="370" y="230" text-anchor="middle" font-size="13" fill="#c2410c" font-weight="800">B2</text>
-            <text x="370" y="246" text-anchor="middle" font-size="9" fill="#c2410c">[735, 3]</text>
-          </svg>
-        </div>
-
-        <!-- RIGHT: info panel -->
-        <div class="info-panel">
-          <div class="panel-title">Receptive Field de B2</div>
-
-          <div class="rf-legend">
-            <div class="rf-entry center visible" id="rfCenter">
-              <div class="rf-dot center"></div>
-              <span>B2 — nó bot estudado</span>
+          <!-- Node rows -->
+          <div id="nodeOps" style="display:flex;flex-direction:column;gap:0.4rem;">
+            <div class="node-op user" id="op-U1">
+              <span style="font-weight:700;color:#0d6e6e;min-width:22px;">U1</span>
+              <span class="op-badge op-g" id="g-U1">Gather</span>
+              <span class="op-badge op-a" id="a-U1">Aggregate</span>
+              <span class="op-badge op-u" id="u-U1">Update</span>
+              <span style="color:var(--text-dim);margin-left:auto;" id="res-U1"></span>
             </div>
-            <div class="rf-entry hop1" id="rfHop1">
-              <div class="rf-dot hop1"></div>
-              <span>1 salto: B1, X</span>
+            <div class="node-op user" id="op-U2">
+              <span style="font-weight:700;color:#0d6e6e;min-width:22px;">U2</span>
+              <span class="op-badge op-g" id="g-U2">Gather</span>
+              <span class="op-badge op-a" id="a-U2">Aggregate</span>
+              <span class="op-badge op-u" id="u-U2">Update</span>
+              <span style="color:var(--text-dim);margin-left:auto;" id="res-U2"></span>
             </div>
-            <div class="rf-entry hop2" id="rfHop2">
-              <div class="rf-dot hop2"></div>
-              <span>2 saltos: U1 (via X)</span>
+            <div class="node-op bot" id="op-B1">
+              <span style="font-weight:700;color:#b91c1c;min-width:22px;">B1</span>
+              <span class="op-badge op-g" id="g-B1">Gather</span>
+              <span class="op-badge op-a" id="a-B1">Aggregate</span>
+              <span class="op-badge op-u" id="u-B1">Update</span>
+              <span style="color:var(--text-dim);margin-left:auto;" id="res-B1"></span>
             </div>
-            <div class="rf-entry hop3" id="rfHop3">
-              <div class="rf-dot hop3"></div>
-              <span>3 saltos: U2 (via X→U1)</span>
+            <div class="node-op bot" id="op-B2">
+              <span style="font-weight:700;color:#b91c1c;min-width:22px;">B2</span>
+              <span class="op-badge op-g" id="g-B2">Gather</span>
+              <span class="op-badge op-a" id="a-B2">Aggregate</span>
+              <span class="op-badge op-u" id="u-B2">Update</span>
+              <span style="color:var(--text-dim);margin-left:auto;" id="res-B2"></span>
+            </div>
+            <div class="node-op unk" id="op-X">
+              <span style="font-weight:700;color:#6b7fa3;min-width:22px;">X</span>
+              <span class="op-badge op-g" id="g-X">Gather</span>
+              <span class="op-badge op-a" id="a-X">Aggregate</span>
+              <span class="op-badge op-u" id="u-X">Update</span>
+              <span style="color:var(--text-dim);margin-left:auto;" id="res-X"></span>
             </div>
           </div>
 
-          <div class="divider"></div>
-
-          <div class="depth-info d1" id="depthInfo">
-            <strong>1 camada:</strong> B2 agrega informação apenas de B1 e X — seus vizinhos diretos.<br>
-            Receptive field = 2 nós.
+          <div style="display:flex;gap:0.6rem;align-items:center;flex-wrap:wrap;">
+            <button class="btn-step" id="animBtn" onclick="stepAnim()">▶ Animar</button>
+            <button class="btn-toggle" onclick="resetAnim()">↩ Reiniciar</button>
+            <span id="animLabel" style="font-size:0.8rem;color:var(--text-muted);font-style:italic;"></span>
           </div>
 
-          <div style="font-size:0.85rem;font-weight:600;color:var(--text-muted);">Tamanho do campo receptivo:</div>
-          <div class="rf-size-wrap">
-            <div class="rf-size-bar" id="rfBar" style="width:60px;background:#0d6e6e;">2 nós</div>
+          <div class="highlight-box teal" style="font-size:0.82rem;padding:0.5rem 0.8rem;">
+            <span class="icon">🔁</span>
+            <span>Os pesos <strong>W</strong> são <em>compartilhados</em> entre todos os nós — a mesma função é aplicada em paralelo.</span>
+          </div>
+        </div>
+
+        <!-- RIGHT: matrix formulation -->
+        <div class="par-panel">
+          <div class="panel-title">Formulação Matricial</div>
+
+          <div style="font-size:0.82rem;color:var(--text-muted);line-height:1.6;">
+            Podemos expressar uma camada GNN de forma compacta, operando sobre <em>todos os nós em paralelo</em>:
           </div>
 
-          <div class="highlight-box teal" style="font-size:0.83rem;padding:0.6rem 0.8rem;">
-            <span class="icon">📏</span>
-            <span>Com <strong>k camadas</strong>, cada nó agrega informação de <strong>k saltos</strong> de distância.</span>
+          <div class="matrix-eq">
+            <div class="mat-label">Notação compacta (GCN simplificado)</div>
+            <div class="mat-row">
+              <span style="color:var(--teal);font-weight:700;font-size:1rem;">H<sup>(l+1)</sup></span>
+              <span class="mat-sym">=</span>
+              <span>σ(</span>
+              <span style="color:#ca8a04;font-weight:700;">Ã</span>
+              <span style="color:var(--teal);font-weight:700;">H<sup>(l)</sup></span>
+              <span style="color:#1d4ed8;font-weight:700;">W</span>
+              <span>)</span>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:0.45rem;font-size:0.83rem;">
+            <div style="display:flex;align-items:flex-start;gap:0.5rem;">
+              <span style="color:var(--teal);font-weight:700;font-family:'Fira Code',monospace;min-width:60px;">H<sup>(l)</sup></span>
+              <span style="color:var(--text-muted);">Matriz de embeddings de todos os nós na camada l <span style="color:var(--text-dim);">[n × d]</span></span>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:0.5rem;">
+              <span style="color:#ca8a04;font-weight:700;font-family:'Fira Code',monospace;min-width:60px;">Ã</span>
+              <span style="color:var(--text-muted);">Matriz de adjacência normalizada — encoda quem agrega de quem <span style="color:var(--text-dim);">[n × n]</span></span>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:0.5rem;">
+              <span style="color:#1d4ed8;font-weight:700;font-family:'Fira Code',monospace;min-width:60px;">W</span>
+              <span style="color:var(--text-muted);">Pesos treináveis — os mesmos para todos os nós <span style="color:var(--text-dim);">[d × d']</span></span>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:0.5rem;">
+              <span style="color:var(--teal);font-weight:700;font-family:'Fira Code',monospace;min-width:60px;">H<sup>(l+1)</sup></span>
+              <span style="color:var(--text-muted);">Novos embeddings de todos os nós após a camada <span style="color:var(--text-dim);">[n × d']</span></span>
+            </div>
+          </div>
+
+          <div style="font-size:0.78rem;background:#fef9c3;border:1.5px solid #ca8a04;border-radius:var(--radius-sm);padding:0.5rem 0.7rem;color:#78350f;line-height:1.5;">
+            ⚡ <strong>Ã · H</strong> é um produto matricial esparsamente implementado — multiplica cada nó pela soma normalizada dos embeddings de seus vizinhos.
           </div>
         </div>
       </div>
@@ -270,117 +215,79 @@
   </div>
 
   <script>
-    const layerConfigs = {
-      1: {
-        nodes: {
-          'rfN-B2': { fill:'#fed7aa', stroke:'#f97316', sw:3 },
-          'rfN-B1': { fill:'#ccfbf1', stroke:'#0d6e6e', sw:2.5 },
-          'rfN-X':  { fill:'#ccfbf1', stroke:'#0d6e6e', sw:2.5 },
-        },
-        edges: { 'rfE-b1b2':'hop1', 'rfE-b2x':'hop1' },
-        depthClass:'d1',
-        depthText:'<strong>1 camada:</strong> B2 agrega informação apenas de <strong>B1 e X</strong> — seus vizinhos diretos.<br>Receptive field = 2 nós.',
-        barW:'60px', barColor:'#0d6e6e', barText:'2 nós',
-        hops:[1,0,0]
-      },
-      2: {
-        nodes: {
-          'rfN-B2': { fill:'#fed7aa', stroke:'#f97316', sw:3 },
-          'rfN-B1': { fill:'#ccfbf1', stroke:'#0d6e6e', sw:2.5 },
-          'rfN-X':  { fill:'#ccfbf1', stroke:'#0d6e6e', sw:2.5 },
-          'rfN-U1': { fill:'#dbeafe', stroke:'#3b82f6', sw:2.5 },
-        },
-        edges: { 'rfE-b1b2':'hop1','rfE-b2x':'hop1','rfE-b1x':'hop1','rfE-xu1':'hop2' },
-        depthClass:'d2',
-        depthText:'<strong>2 camadas:</strong> B2 agrega informação de B1, X e <strong>U1</strong> (2 saltos, via X).<br>Receptive field = 3 nós.',
-        barW:'130px', barColor:'#3b82f6', barText:'3 nós',
-        hops:[1,1,0]
-      },
-      3: {
-        nodes: {
-          'rfN-B2': { fill:'#fed7aa', stroke:'#f97316', sw:3 },
-          'rfN-B1': { fill:'#ccfbf1', stroke:'#0d6e6e', sw:2.5 },
-          'rfN-X':  { fill:'#ccfbf1', stroke:'#0d6e6e', sw:2.5 },
-          'rfN-U1': { fill:'#dbeafe', stroke:'#3b82f6', sw:2.5 },
-          'rfN-U2': { fill:'#ede9fe', stroke:'#7c3aed', sw:2 },
-        },
-        edges: { 'rfE-b1b2':'hop1','rfE-b2x':'hop1','rfE-b1x':'hop1','rfE-xu1':'hop2','rfE-u1u2':'hop3' },
-        depthClass:'d3',
-        depthText:'<strong>3 camadas:</strong> B2 alcança <strong>U2</strong> (3 saltos, via X→U1).<br>O campo receptivo de B2 agora inclui usuários legítimos!<br>Receptive field = 4 nós.',
-        barW:'200px', barColor:'#7c3aed', barText:'4 nós',
-        hops:[1,1,1]
-      }
+    const nodes = ['U1','U2','B1','B2','X'];
+    const results = {
+      'U1': '[2015, 23]', 'U2': '[1340, 16]',
+      'B1': '[2030, 21]', 'B2': '[2030, 21]',
+      'X':  '[2760, 33]'
     };
+    const phases = ['Gather','Aggregate','Update'];
+    let animPhase = -1; // -1 = idle, 0 = gather, 1 = agg, 2 = update, 3 = done
+    let animTimer = null;
 
-    const allNodeIds = ['rfN-B2','rfN-B1','rfN-X','rfN-U1','rfN-U2'];
-    const allEdgeIds = ['rfE-b1b2','rfE-b2x','rfE-b1x','rfE-xu1','rfE-u1u2'];
-    const defaultNodeStyle = { fill:'#e5e7eb', stroke:'#9ca3af', sw:1.5 };
-
-    function setLayers(k) {
-      k = parseInt(k);
-      document.getElementById('layerSlider').value = k;
-      document.getElementById('sliderVal').textContent = 'k = ' + k;
-      [1,2,3].forEach(n => {
-        document.getElementById('btnL'+n).classList.toggle('active', n===k);
-      });
-
-      const cfg = layerConfigs[k];
-
-      // Reset all nodes
-      allNodeIds.forEach(id => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        const style = cfg.nodes[id] || defaultNodeStyle;
-        el.setAttribute('fill', style.fill);
-        el.setAttribute('stroke', style.stroke);
-        el.setAttribute('stroke-width', style.sw);
-        // Update text colors
-        const parent = el.parentElement || document.getElementById('rfSvg');
-        // Update adjacent text fill
-        const texts = document.querySelectorAll('#rfSvg text');
-        const cx = parseFloat(el.getAttribute('cx'));
-        const cy = parseFloat(el.getAttribute('cy'));
-        texts.forEach(t => {
-          const tx = parseFloat(t.getAttribute('x'));
-          const ty = parseFloat(t.getAttribute('y'));
-          if (Math.abs(tx - cx) < 5 && Math.abs(ty - cy) < 30) {
-            t.setAttribute('fill', cfg.nodes[id] ? style.stroke : '#9ca3af');
-          }
+    function resetAnim() {
+      if (animTimer) clearTimeout(animTimer);
+      animTimer = null;
+      animPhase = -1;
+      nodes.forEach(n => {
+        const row = document.getElementById('op-'+n);
+        row.classList.remove('active');
+        ['g','a','u'].forEach(p => {
+          const el = document.getElementById(p+'-'+n);
+          el.style.opacity = '0.35';
+          el.style.transform = 'scale(1)';
         });
+        document.getElementById('res-'+n).textContent = '';
       });
-
-      // Reset all edges
-      allEdgeIds.forEach(id => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        el.className.baseVal = 'rf-edge ' + (cfg.edges[id] || '');
-      });
-
-      // Update depth info
-      const di = document.getElementById('depthInfo');
-      di.className = 'depth-info ' + cfg.depthClass;
-      di.innerHTML = cfg.depthText;
-
-      // Update bar
-      const bar = document.getElementById('rfBar');
-      bar.style.width = cfg.barW;
-      bar.style.background = cfg.barColor;
-      bar.textContent = cfg.barText;
-
-      // Update legend visibility
-      ['rfHop1','rfHop2','rfHop3'].forEach((id, i) => {
-        document.getElementById(id).classList.toggle('visible', cfg.hops[i] === 1);
-      });
+      const btn = document.getElementById('animBtn');
+      btn.disabled = false;
+      btn.textContent = '▶ Animar';
+      document.getElementById('animLabel').textContent = '';
     }
 
-    function setLayersBtn(k) { setLayers(k); }
+    function stepAnim() {
+      animPhase++;
+      if (animPhase === 0) {
+        // Reset visual, start gather
+        nodes.forEach(n => {
+          ['g','a','u'].forEach(p => {
+            document.getElementById(p+'-'+n).style.opacity = '0.35';
+            document.getElementById(p+'-'+n).style.transform = 'scale(1)';
+          });
+          document.getElementById('res-'+n).textContent = '';
+        });
+      }
+      if (animPhase < 3) {
+        const labels = { 0:'Gather — coletando mensagens dos vizinhos…', 1:'Aggregate — combinando mensagens (Sum)…', 2:'Update — calculando novo embedding (W·x)…' };
+        const pfx = ['g','a','u'][animPhase];
+        document.getElementById('animLabel').textContent = labels[animPhase];
+        nodes.forEach(n => {
+          const el = document.getElementById(pfx+'-'+n);
+          el.style.opacity = '1';
+          el.style.transform = 'scale(1.1)';
+          document.getElementById('op-'+n).classList.add('active');
+        });
+        const btn = document.getElementById('animBtn');
+        btn.textContent = animPhase < 2 ? '▶ Próximo passo' : '✓ Resultado';
+      } else {
+        // Show results
+        document.getElementById('animLabel').textContent = 'Novos embeddings prontos!';
+        nodes.forEach(n => {
+          document.getElementById('res-'+n).textContent = '→ ' + results[n];
+        });
+        const btn = document.getElementById('animBtn');
+        btn.disabled = true;
+        btn.textContent = '✓ Completo';
+      }
+    }
 
-    setLayers(1);
+    // Init: all badges faded
+    resetAnim();
 
     (function(){
       const container = document.getElementById('navDots');
       const CURRENT = 11;
-      const TOTAL = 22;
+      const TOTAL = 24;
       for (let i = 1; i <= TOTAL; i++) {
         const dot = document.createElement('div');
         dot.className = 'dot' + (i === CURRENT ? ' active' : '');

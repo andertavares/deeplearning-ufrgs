@@ -3,21 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Slide 16 – Transformers e GNNs são Primos</title>
+  <title>Slide 16 – Graph Attention Network (GAT)</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
   <style>
-    .cmp-layout { display:grid; grid-template-columns:1fr 1fr; gap:1.2rem; flex:1; }
-    .formula-eq { font-family:'Fira Code',monospace; font-size:0.88rem; color:var(--text);
-      background:var(--bg3); border:1px solid var(--border2); border-radius:var(--radius-sm);
-      padding:0.55rem 0.75rem; line-height:1.6; }
-    .token-seq { display:flex; gap:0.4rem; flex-wrap:wrap; justify-content:center; margin:0.4rem 0; }
-    .tok { padding:0.3rem 0.6rem; background:var(--blue-lt); border:1.5px solid #93c5fd;
-      border-radius:6px; font-family:'Fira Code',monospace; font-size:0.88rem; font-weight:700; color:var(--blue); }
-    .tok.teal { background:var(--teal-lt); border-color:#5eead4; color:var(--teal); }
-    .toggle-row { display:flex; gap:0.5rem; justify-content:center; }
-    .big-insight { background:linear-gradient(135deg,#ede9fe,#dbeafe); border:1.5px solid #c4b5fd;
-      border-radius:var(--radius); padding:0.9rem 1.2rem; display:flex; gap:0.7rem; align-items:flex-start; }
+    .gat-layout { display:grid; grid-template-columns:1fr 1fr; gap:1.2rem; flex:1; }
+    .step-formula { display:flex; align-items:flex-start; gap:0.5rem; padding:0.45rem 0.7rem;
+      background:var(--bg3); border-radius:var(--radius-sm); border-left:3px solid var(--teal);
+      font-family:'Fira Code',monospace; font-size:0.82rem; line-height:1.5; color:var(--text-muted); }
+    .step-num { font-size:0.7rem; background:var(--teal); color:#fff; border-radius:50%;
+      width:18px; height:18px; display:flex; align-items:center; justify-content:center;
+      font-weight:700; flex-shrink:0; margin-top:1px; }
+    .slider-group { display:flex; flex-direction:column; gap:0.5rem; }
+    .slider-row { display:flex; align-items:center; gap:0.6rem; font-size:0.85rem; }
+    .slider-row label { width:80px; color:var(--text-muted); }
+    .slider-row input[type=range] { flex:1; accent-color:var(--teal); }
+    .slider-row .sv { width:36px; text-align:right; font-family:'Fira Code',monospace; font-size:0.82rem; color:var(--teal); font-weight:700; }
+    .attn-bar { display:flex; align-items:center; gap:0.5rem; }
+    .attn-bar .lbl { width:24px; font-family:'Fira Code',monospace; font-size:0.8rem; color:var(--text-muted); }
+    .attn-bar .track { flex:1; height:14px; background:var(--bg3); border-radius:4px; overflow:hidden; border:1px solid var(--border2); }
+    .attn-bar .fill { height:100%; border-radius:4px; transition:width 0.4s; }
+    .attn-bar .pct { width:40px; font-family:'Fira Code',monospace; font-size:0.78rem; color:var(--text-dim); }
   </style>
 </head>
 <body>
@@ -25,104 +31,112 @@
     <header class="slide-header">
       <span class="course-tag">GNNs</span>
       <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
-      <span class="slide-counter">Slide 16 / 22</span>
+      <span class="slide-counter">Slide 16 / 24</span>
     </header>
 
     <main class="slide-main">
       <div class="title-block">
-        <h1 class="slide-title">Transformers e GNNs são Primos</h1>
-        <p class="slide-subtitle">Bloco 4 — Conexões</p>
+        <h1 class="slide-title">Graph Attention Network (GAT)</h1>
+        <p class="slide-subtitle">Bloco 3 — Atenção em Grafos</p>
       </div>
 
-      <div class="toggle-row">
-        <button class="btn-toggle active" id="btnTf" onclick="setView('transformer')">Ver como Transformer</button>
-        <button class="btn-toggle" id="btnGNN" onclick="setView('gnn')">Ver como GNN (esparso)</button>
-      </div>
-
-      <div class="cmp-layout">
-        <!-- LEFT: Transformer -->
+      <div class="gat-layout">
+        <!-- LEFT: arquitetura -->
         <div class="panel">
-          <div class="panel-title">⚡ Transformer Self-Attention</div>
-          <div class="token-seq">
-            <span class="tok">T₁</span>
-            <span class="tok">T₂</span>
-            <span class="tok">T₃</span>
-            <span class="tok">T₄</span>
-          </div>
+          <div class="panel-title">🏗️ Arquitetura GAT</div>
 
-          <!-- SVG grafo completo do Transformer -->
-          <svg viewBox="0 0 200 160" style="width:100%;max-height:160px;display:block;margin:0 auto;" id="svgTf">
-            <!-- Todas as arestas (grafo completo) -->
-            <!-- T1-T2, T1-T3, T1-T4, T2-T3, T2-T4, T3-T4 -->
-            <line x1="40" y1="40"  x2="160" y2="40"  stroke="#93c5fd" stroke-width="1.5" class="tf-edge"/>
-            <line x1="40" y1="40"  x2="40"  y2="130" stroke="#93c5fd" stroke-width="1.5" class="tf-edge"/>
-            <line x1="40" y1="40"  x2="160" y2="130" stroke="#93c5fd" stroke-width="1.5" class="tf-edge"/>
-            <line x1="160" y1="40" x2="40"  y2="130" stroke="#93c5fd" stroke-width="1.5" class="tf-edge"/>
-            <line x1="160" y1="40" x2="160" y2="130" stroke="#93c5fd" stroke-width="1.5" class="tf-edge"/>
-            <line x1="40" y1="130" x2="160" y2="130" stroke="#93c5fd" stroke-width="1.5" class="tf-edge"/>
-            <!-- Auto-loops (self) -->
-            <circle cx="40"  cy="40"  r="18" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
-            <circle cx="160" cy="40"  r="18" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
-            <circle cx="40"  cy="130" r="18" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
-            <circle cx="160" cy="130" r="18" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
-            <text x="40"  y="44"  font-size="11" font-weight="700" fill="#1d4ed8" text-anchor="middle">T₁</text>
-            <text x="160" y="44"  font-size="11" font-weight="700" fill="#1d4ed8" text-anchor="middle">T₂</text>
-            <text x="40"  y="134" font-size="11" font-weight="700" fill="#1d4ed8" text-anchor="middle">T₃</text>
-            <text x="160" y="134" font-size="11" font-weight="700" fill="#1d4ed8" text-anchor="middle">T₄</text>
-            <text x="100" y="90"  font-size="8" fill="#6b7fa3" font-family="Fira Code" text-anchor="middle">grafo completo</text>
+          <svg viewBox="0 0 240 190" style="width:100%;max-height:190px;display:block;">
+            <!-- Arestas com espessura proporcional ao α -->
+            <line x1="120" y1="95" x2="45"  y2="45"  stroke="#5eead4" stroke-width="5"   id="ea1" opacity="0.85"/>
+            <line x1="120" y1="95" x2="195" y2="45"  stroke="#5eead4" stroke-width="2.5" id="ea2" opacity="0.5"/>
+            <line x1="120" y1="95" x2="120" y2="165" stroke="#5eead4" stroke-width="1.5" id="ea3" opacity="0.35"/>
+            <!-- Labels de atenção nas arestas -->
+            <text x="74"  y="63"  font-size="9" fill="#0d6e6e" font-family="Fira Code" font-weight="700" id="la1">α=0.62</text>
+            <text x="162" y="63"  font-size="9" fill="#0d6e6e" font-family="Fira Code" font-weight="700" id="la2">α=0.25</text>
+            <text x="124" y="138" font-size="9" fill="#0d6e6e" font-family="Fira Code" font-weight="700" id="la3">α=0.13</text>
+            <!-- Nós vizinhos -->
+            <circle cx="45"  cy="45"  r="20" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="2.5" id="nu1"/>
+            <circle cx="195" cy="45"  r="16" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"   id="nu2"/>
+            <circle cx="120" cy="165" r="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5" id="nu3"/>
+            <!-- Nó central pulsante -->
+            <circle cx="120" cy="95" r="24" fill="#f0fdf4" stroke="#166534" stroke-width="2.5">
+              <animate attributeName="r" values="22;25;22" dur="2.2s" repeatCount="indefinite"/>
+            </circle>
+            <text x="45"  y="49"  font-size="10" font-weight="700" fill="#0d6e6e" text-anchor="middle">u₁</text>
+            <text x="195" y="49"  font-size="10" font-weight="700" fill="#1d4ed8" text-anchor="middle">u₂</text>
+            <text x="120" y="169" font-size="10" font-weight="700" fill="#1d4ed8" text-anchor="middle">u₃</text>
+            <text x="120" y="99"  font-size="12" font-weight="700" fill="#166534" text-anchor="middle">v</text>
           </svg>
 
-          <div class="formula-eq">Attention(Q,K,V) = softmax(QKᵀ/√d)·V</div>
-          <div style="font-size:0.85rem;color:var(--text-muted);">
-            ↳ Cada token atende a <strong>TODOS</strong> os outros tokens (O(n²))
+          <div class="step-formula">
+            <span class="step-num">∑</span>
+            <span>h<sub>v</sub><sup>(l+1)</sup> = σ( Σ<sub>u∈N(v)∪{v}</sub> <strong>α<sub>vu</sub></strong> · W · h<sub>u</sub><sup>(l)</sup> )</span>
           </div>
+          <div style="font-size:0.82rem;color:var(--text-dim);">Arestas mais espessas = <strong>maior atenção</strong> aprendida</div>
         </div>
 
-        <!-- RIGHT: GNN com atenção -->
+        <!-- RIGHT: como α é aprendido + slider -->
         <div class="panel">
-          <div class="panel-title">🕸️ GNN com Atenção (GAT)</div>
-          <div class="token-seq">
-            <span class="tok teal">T₁</span>
-            <span class="tok teal">T₂</span>
-            <span class="tok teal">T₃</span>
-            <span class="tok teal">T₄</span>
+          <div class="panel-title">⚙️ Como α é Aprendido</div>
+
+          <div class="step-formula">
+            <span class="step-num">1</span>
+            <span>Projetar: <strong>Wh<sub>v</sub></strong>, <strong>Wh<sub>u</sub></strong></span>
+          </div>
+          <div class="step-formula">
+            <span class="step-num">2</span>
+            <span>Score: e<sub>vu</sub> = LeakyReLU([Wh<sub>v</sub> ‖ Wh<sub>u</sub>] · <strong>a</strong>)<br/><span style="font-size:0.75rem;color:var(--text-dim);"><strong>a</strong> ∈ ℝ<sup>2d</sup>: vetor de atenção treinável (aprendido junto com W)</span></span>
+          </div>
+          <div class="step-formula">
+            <span class="step-num">3</span>
+            <span>Normalizar: α<sub>vu</sub> = exp(e<sub>vu</sub>) / Σ<sub>u'∈N(v)</sub> exp(e<sub>vu'</sub>)</span>
           </div>
 
-          <!-- SVG grafo esparso do GNN -->
-          <svg viewBox="0 0 200 160" style="width:100%;max-height:160px;display:block;margin:0 auto;" id="svgGNN">
-            <!-- Apenas algumas arestas (grafo esparso) -->
-            <line x1="40" y1="40"  x2="160" y2="40"  stroke="#5eead4" stroke-width="2" class="gnn-edge"/>
-            <line x1="40" y1="40"  x2="40"  y2="130" stroke="#5eead4" stroke-width="2" class="gnn-edge"/>
-            <!-- Arestas ocultas do transformer (tracejadas) -->
-            <line x1="40"  y1="40"  x2="160" y2="130" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3,3" class="hidden-edge" id="he1"/>
-            <line x1="160" y1="40"  x2="40"  y2="130" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3,3" class="hidden-edge" id="he2"/>
-            <line x1="160" y1="40"  x2="160" y2="130" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3,3" class="hidden-edge" id="he3"/>
-            <line x1="40"  y1="130" x2="160" y2="130" stroke="#5eead4" stroke-width="2" class="gnn-edge"/>
-            <!-- Nós -->
-            <circle cx="40"  cy="40"  r="18" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="2"/>
-            <circle cx="160" cy="40"  r="18" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="2"/>
-            <circle cx="40"  cy="130" r="18" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="2"/>
-            <circle cx="160" cy="130" r="18" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="2"/>
-            <text x="40"  y="44"  font-size="11" font-weight="700" fill="#0d6e6e" text-anchor="middle">T₁</text>
-            <text x="160" y="44"  font-size="11" font-weight="700" fill="#0d6e6e" text-anchor="middle">T₂</text>
-            <text x="40"  y="134" font-size="11" font-weight="700" fill="#0d6e6e" text-anchor="middle">T₃</text>
-            <text x="160" y="134" font-size="11" font-weight="700" fill="#0d6e6e" text-anchor="middle">T₄</text>
-            <text x="100" y="90"  font-size="8" fill="#6b7fa3" font-family="Fira Code" text-anchor="middle">grafo esparso</text>
-          </svg>
+          <div class="divider"></div>
 
-          <div class="formula-eq">h<sub>v</sub> = Σ<sub>u∈N(v)</sub> α<sub>vu</sub> W h<sub>u</sub></div>
-          <div style="font-size:0.85rem;color:var(--text-muted);">
-            ↳ Cada nó atende apenas aos seus <strong>VIZINHOS</strong> (inductive bias)
+          <!-- Slider interativo -->
+          <div style="font-size:0.82rem;font-weight:700;color:var(--text-muted);margin-bottom:0.3rem;">🎛️ Ajuste o score de u₁ e veja o softmax:</div>
+          <div class="slider-group">
+            <div class="slider-row">
+              <label>e(v,u₁)</label>
+              <input type="range" id="slE1" min="-2" max="4" step="0.1" value="2.1" oninput="updateAttn()"/>
+              <span class="sv" id="svE1">2.1</span>
+            </div>
+            <div class="slider-row">
+              <label>e(v,u₂)</label>
+              <input type="range" id="slE2" min="-2" max="4" step="0.1" value="0.5" oninput="updateAttn()"/>
+              <span class="sv" id="svE2">0.5</span>
+            </div>
+            <div class="slider-row">
+              <label>e(v,u₃)</label>
+              <input type="range" id="slE3" min="-2" max="4" step="0.1" value="1.3" oninput="updateAttn()"/>
+              <span class="sv" id="svE3">1.3</span>
+            </div>
+          </div>
+
+          <div style="margin-top:0.4rem;display:flex;flex-direction:column;gap:0.3rem;">
+            <div class="attn-bar">
+              <span class="lbl">α₁</span>
+              <div class="attn-bar track"><div class="attn-bar fill" id="ab1" style="background:#0d6e6e;"></div></div>
+              <span class="attn-bar pct" id="ap1"></span>
+            </div>
+            <div class="attn-bar">
+              <span class="lbl">α₂</span>
+              <div class="attn-bar track"><div class="attn-bar fill" id="ab2" style="background:#3b82f6;"></div></div>
+              <span class="attn-bar pct" id="ap2"></span>
+            </div>
+            <div class="attn-bar">
+              <span class="lbl">α₃</span>
+              <div class="attn-bar track"><div class="attn-bar fill" id="ab3" style="background:#8b5cf6;"></div></div>
+              <span class="attn-bar pct" id="ap3"></span>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="big-insight">
-        <span style="font-size:1.4rem;">🔗</span>
-        <span style="font-size:0.97rem;line-height:1.6;color:var(--text);">
-          <strong>Transformer = GAT em grafo completo.</strong><br/>
-          GNN = Transformer com estrutura esparsa (<em>inductive bias</em> relacional). A esparsidade reduz O(n²) para O(E), onde E é o número de arestas.
-        </span>
+      <div class="insight-box">
+        <span class="i-icon">🎯</span>
+        <span class="i-text"><strong>GAT aprende automaticamente</strong> quais vizinhos merecem mais atenção. O vetor <code>a</code> é treinado junto com W pelo gradiente descendente.</span>
       </div>
     </main>
 
@@ -134,27 +148,46 @@
   </div>
 
   <script>
-    function setView(mode) {
-      const isTf = mode === 'transformer';
-      document.getElementById('btnTf').classList.toggle('active', isTf);
-      document.getElementById('btnGNN').classList.toggle('active', !isTf);
-
-      // When "ver como GNN", hide some transformer edges
-      document.querySelectorAll('.hidden-edge').forEach(el => {
-        el.style.opacity = isTf ? '1' : '0';
-        el.setAttribute('stroke', isTf ? '#93c5fd' : '#e2e8f0');
-        el.setAttribute('stroke-width', isTf ? '1.5' : '1');
-      });
-      document.querySelectorAll('.tf-edge').forEach(el => {
-        el.setAttribute('stroke', isTf ? '#93c5fd' : '#c7d0e0');
-        el.setAttribute('stroke-width', isTf ? '1.5' : '1');
-        el.setAttribute('stroke-dasharray', isTf ? '' : '3,3');
-      });
+    function softmax(arr) {
+      const maxV = Math.max(...arr);
+      const exps = arr.map(x => Math.exp(x - maxV));
+      const s = exps.reduce((a,b)=>a+b,0);
+      return exps.map(x=>x/s);
     }
+
+    function updateAttn() {
+      const e1 = parseFloat(document.getElementById('slE1').value);
+      const e2 = parseFloat(document.getElementById('slE2').value);
+      const e3 = parseFloat(document.getElementById('slE3').value);
+      document.getElementById('svE1').textContent = e1.toFixed(1);
+      document.getElementById('svE2').textContent = e2.toFixed(1);
+      document.getElementById('svE3').textContent = e3.toFixed(1);
+
+      const [a1,a2,a3] = softmax([e1,e2,e3]);
+
+      setAttnBar('ab1','ap1','la1','ea1','nu1', a1, 0);
+      setAttnBar('ab2','ap2','la2','ea2','nu2', a2, 1);
+      setAttnBar('ab3','ap3','la3','ea3','nu3', a3, 2);
+    }
+
+    function setAttnBar(barId, pctId, laId, edgeId, nodeId, val, idx) {
+      const pct = (val * 100).toFixed(1);
+      document.getElementById(barId).style.width = pct + '%';
+      document.getElementById(pctId).textContent = pct + '%';
+      document.getElementById(laId).textContent = 'α=' + val.toFixed(2);
+      const strokeW = 1 + val * 7;
+      const op = 0.2 + val * 0.8;
+      document.getElementById(edgeId).setAttribute('stroke-width', strokeW.toFixed(1));
+      document.getElementById(edgeId).setAttribute('opacity', op.toFixed(2));
+      const r = [20, 16, 14][idx];
+      document.getElementById(nodeId).setAttribute('r', Math.round(r + val * 10).toString());
+    }
+
+    updateAttn();
 
     (function(){
       const container = document.getElementById('navDots');
-      const CURRENT = 16, TOTAL = 22;
+      const CURRENT = 14, TOTAL = 22;
       for (let i = 1; i <= TOTAL; i++) {
         const dot = document.createElement('div');
         dot.className = 'dot' + (i === CURRENT ? ' active' : '');

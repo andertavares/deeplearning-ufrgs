@@ -49,7 +49,7 @@
     <header class="slide-header">
       <span class="course-tag">GNNs</span>
       <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
-      <span class="slide-counter">Slide 06 / 22</span>
+      <span class="slide-counter">Slide 06 / 24</span>
     </header>
 
     <main class="slide-main">
@@ -230,6 +230,15 @@
           O MLP <strong>ignora a estrutura do grafo</strong> — processa cada nó individualmente. Para distinguir X, precisamos das conexões!
         </span>
       </div>
+      <div class="insight-box" style="margin-top:0.5rem;">
+        <span class="i-icon">🤔</span>
+        <span class="i-text">
+          Poderíamos incluir atributos dos vizinhos como entrada do MLP — mas quantos?
+          Nós com <strong>muitos vizinhos</strong> perdem informação (precisamos truncar);
+          nós com <strong>poucos vizinhos</strong> recebem entradas "vazias" (padding artificial).
+          O grafo tem tamanho e estrutura variáveis — o MLP não lida bem com isso!
+        </span>
+      </div>
     </main>
 
     <nav class="slide-nav">
@@ -243,7 +252,7 @@
     (function(){
       const container = document.getElementById('navDots');
       const CURRENT = 6;
-      const TOTAL = 22;
+      const TOTAL = 24;
       for (let i = 1; i <= TOTAL; i++) {
         const dot = document.createElement('div');
         dot.className = 'dot' + (i === CURRENT ? ' active' : '');
