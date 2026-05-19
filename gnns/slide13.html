@@ -3,23 +3,150 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Slide 13 – Limitação do Pooling Uniforme</title>
+  <title>Slide 13 – Empilhando Camadas</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
   <style>
-    .main-layout { display:grid; grid-template-columns:1.1fr 0.9fr; gap:1.2rem; flex:1; }
-    .bar-group { display:flex; flex-direction:column; gap:0.4rem; }
-    .bar-row { display:flex; align-items:center; gap:0.6rem; font-size:0.88rem; }
-    .bar-label { width:28px; font-family:'Fira Code',monospace; font-weight:700; color:var(--text); text-align:right; }
-    .bar-track { flex:1; height:18px; background:var(--bg3); border-radius:4px; overflow:hidden; border:1px solid var(--border2); }
-    .bar-fill { height:100%; border-radius:4px; transition:width 0.7s ease, background 0.5s; display:flex; align-items:center; justify-content:flex-end; padding-right:4px; font-size:0.7rem; font-weight:700; color:#fff; }
-    .bar-val { width:36px; font-family:'Fira Code',monospace; font-size:0.82rem; color:var(--text-dim); }
-    .result-row { display:flex; align-items:center; gap:0.6rem; padding:0.55rem 0.8rem;
-      background:var(--bg3); border-radius:var(--radius-sm); border:1.5px solid var(--border2);
-      font-family:'Fira Code',monospace; font-size:0.9rem; transition:all 0.5s; }
-    .result-row.highlight { background:var(--teal-lt); border-color:#5eead4; }
-    .edge-label { font-size:0.7rem; fill:#6b7fa3; font-family:'Fira Code',monospace; }
-    .mode-btns { display:flex; gap:0.5rem; margin-bottom:0.5rem; }
+    .layers-layout {
+      display: grid;
+      grid-template-columns: 1.6fr 1fr;
+      gap: 1.2rem;
+      flex: 1;
+    }
+    .graph-panel {
+      background: var(--bg2);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+      box-shadow: var(--shadow);
+    }
+    .info-panel {
+      background: var(--bg2);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      box-shadow: var(--shadow);
+    }
+
+    /* Slider */
+    .slider-wrap {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .layer-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 8px;
+      border-radius: 4px;
+      background: var(--border2);
+      flex: 1;
+      cursor: pointer;
+      outline: none;
+    }
+    .layer-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: var(--teal);
+      cursor: pointer;
+      border: 2px solid #fff;
+      box-shadow: 0 0 0 3px rgba(13,110,110,0.25);
+    }
+    .layer-slider::-moz-range-thumb {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: var(--teal);
+      cursor: pointer;
+      border: 2px solid #fff;
+    }
+    .slider-val {
+      font-family:'Fira Code',monospace;
+      font-weight:700;
+      font-size:1rem;
+      color:var(--teal);
+      min-width:70px;
+    }
+
+    /* Graph SVG nodes */
+    .rf-node { transition: fill 0.4s, stroke 0.4s, stroke-width 0.4s; cursor: default; }
+    .rf-edge { stroke: var(--border); stroke-width: 2; transition: stroke 0.3s, stroke-width 0.3s; }
+    .rf-edge.hop1 { stroke: #0d6e6e; stroke-width: 3; }
+    .rf-edge.hop2 { stroke: #1d4ed8; stroke-width: 2.5; stroke-dasharray: 5 3; }
+    .rf-edge.hop3 { stroke: #7c3aed; stroke-width: 2; stroke-dasharray: 4 4; }
+
+    /* Receptive field legend */
+    .rf-legend {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .rf-entry {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      padding: 0.5rem 0.7rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.88rem;
+      font-weight: 600;
+      border: 1.5px solid transparent;
+      opacity: 0.35;
+      transition: opacity 0.4s, border-color 0.3s, background 0.3s;
+    }
+    .rf-entry.visible { opacity: 1; }
+    .rf-entry.center { background:#fff7ed; border-color:#f97316; }
+    .rf-entry.hop1   { background:#ccfbf1; border-color:#0d6e6e; }
+    .rf-entry.hop2   { background:#dbeafe; border-color:#1d4ed8; }
+    .rf-entry.hop3   { background:#ede9fe; border-color:#7c3aed; }
+    .rf-dot {
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .rf-dot.center { background:#f97316; }
+    .rf-dot.hop1   { background:#0d6e6e; }
+    .rf-dot.hop2   { background:#1d4ed8; }
+    .rf-dot.hop3   { background:#7c3aed; }
+
+    /* Depth info box */
+    .depth-info {
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0.7rem 0.9rem;
+      font-size: 0.9rem;
+      color: var(--text);
+      line-height: 1.6;
+      transition: background 0.3s, border-color 0.3s;
+      min-height: 90px;
+    }
+    .depth-info strong { color: var(--teal); }
+    .depth-info.d1 { background:#f0fdf4; border-color:#0d6e6e; }
+    .depth-info.d2 { background:#eff6ff; border-color:#3b82f6; }
+    .depth-info.d3 { background:#f5f3ff; border-color:#7c3aed; }
+
+    /* RF size visual */
+    .rf-size-wrap { display: flex; gap: 0.5rem; align-items: center; }
+    .rf-size-bar {
+      height: 22px;
+      border-radius: 999px;
+      transition: width 0.5s cubic-bezier(0.34,1.2,0.64,1), background 0.4s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family:'Fira Code',monospace;
+      font-size:0.78rem;
+      font-weight:700;
+      color:#fff;
+      min-width:32px;
+    }
   </style>
 </head>
 <body>
@@ -27,104 +154,111 @@
     <header class="slide-header">
       <span class="course-tag">GNNs</span>
       <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
-      <span class="slide-counter">Slide 13 / 22</span>
+      <span class="slide-counter">Slide 13 / 24</span>
     </header>
 
     <main class="slide-main">
       <div class="title-block">
-        <h1 class="slide-title">Limitação do Pooling Uniforme</h1>
-        <p class="slide-subtitle">Bloco 3 — Motivação para Atenção</p>
+        <h1 class="slide-title">Empilhando Camadas</h1>
+        <p class="slide-subtitle">Bloco 2 — Receptive Field</p>
       </div>
 
-      <div class="main-layout">
-        <!-- Grafo SVG -->
-        <div class="panel">
-          <div class="panel-title">🕸️ Grafo com Pesos Iguais</div>
-          <div class="mode-btns">
-            <button class="btn-toggle active" id="btnUniform" onclick="setMode('uniform')">Pooling Uniforme</button>
-            <button class="btn-toggle" id="btnAttn" onclick="setMode('attention')">Com Atenção</button>
-          </div>
+      <!-- Slider -->
+      <div style="background:var(--bg2);border:1.5px solid var(--border2);border-radius:var(--radius);padding:0.8rem 1.2rem;box-shadow:var(--shadow);">
+        <div style="font-size:0.9rem;font-weight:600;color:var(--text-muted);margin-bottom:0.5rem;">Número de camadas GNN:</div>
+        <div class="slider-wrap">
+          <span style="font-size:0.85rem;color:var(--text-dim);font-weight:600;min-width:50px;">k = 1</span>
+          <input type="range" min="1" max="3" value="1" class="layer-slider" id="layerSlider" oninput="setLayers(this.value)"/>
+          <span style="font-size:0.85rem;color:var(--text-dim);font-weight:600;min-width:50px;">k = 3</span>
+          <span class="slider-val" id="sliderVal">k = 1</span>
+        </div>
+        <div style="display:flex;justify-content:center;gap:0.7rem;margin-top:0.5rem;">
+          <button class="btn-toggle active" id="btnL1" onclick="setLayersBtn(1)">1 Camada</button>
+          <button class="btn-toggle" id="btnL2" onclick="setLayersBtn(2)">2 Camadas</button>
+          <button class="btn-toggle" id="btnL3" onclick="setLayersBtn(3)">3 Camadas</button>
+        </div>
+      </div>
 
-          <svg viewBox="0 0 260 180" style="width:100%;max-height:180px;display:block;margin:0 auto;">
-            <!-- Arestas -->
-            <line x1="130" y1="90" x2="50"  y2="40"  stroke="#c7d0e0" stroke-width="2.5" id="edgeA"/>
-            <line x1="130" y1="90" x2="210" y2="40"  stroke="#c7d0e0" stroke-width="2.5" id="edgeB"/>
-            <line x1="130" y1="90" x2="50"  y2="150" stroke="#c7d0e0" stroke-width="2.5" id="edgeC"/>
-            <line x1="130" y1="90" x2="210" y2="150" stroke="#c7d0e0" stroke-width="2.5" id="edgeD"/>
-            <!-- Nós vizinhos -->
-            <circle cx="50"  cy="40"  r="22" fill="#fef3c7" stroke="#d97706" stroke-width="2.5" id="nodeA"/>
-            <circle cx="210" cy="40"  r="18" fill="#f0f2f6" stroke="#c7d0e0" stroke-width="2" id="nodeB"/>
-            <circle cx="50"  cy="150" r="18" fill="#f0f2f6" stroke="#c7d0e0" stroke-width="2" id="nodeC"/>
-            <circle cx="210" cy="150" r="18" fill="#f0f2f6" stroke="#c7d0e0" stroke-width="2" id="nodeD"/>
-            <!-- Nó central -->
-            <circle cx="130" cy="90" r="24" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="2.5"/>
-            <!-- Labels arestas -->
-            <text x="82"  y="58"  class="edge-label" id="wA" text-anchor="middle">1/4</text>
-            <text x="178" y="58"  class="edge-label" id="wB" text-anchor="middle">1/4</text>
-            <text x="82"  y="128" class="edge-label" id="wC" text-anchor="middle">1/4</text>
-            <text x="178" y="128" class="edge-label" id="wD" text-anchor="middle">1/4</text>
-            <!-- Labels nós -->
-            <text x="50"  y="44"  font-size="11" font-weight="700" fill="#92400e" text-anchor="middle">A</text>
-            <text x="210" y="44"  font-size="11" font-weight="700" fill="#3d4f6e" text-anchor="middle">B</text>
-            <text x="50"  y="154" font-size="11" font-weight="700" fill="#3d4f6e" text-anchor="middle">C</text>
-            <text x="210" y="154" font-size="11" font-weight="700" fill="#3d4f6e" text-anchor="middle">D</text>
-            <text x="130" y="94"  font-size="12" font-weight="700" fill="#0d6e6e" text-anchor="middle">v</text>
+      <div class="layers-layout">
+        <!-- LEFT: graph SVG — B2's expanding receptive field (same layout as working example) -->
+        <div class="graph-panel">
+          <div class="panel-title">Receptive Field de B2 (bot)</div>
+          <svg viewBox="0 0 460 290" style="width:100%;" id="rfSvg">
+            <!-- Same layout as working example: U1 top-left, U2 bottom-left, B1 top-right, B2 bottom-right, X center -->
+            <!-- Edges -->
+            <line id="rfE-u1u2" class="rf-edge" x1="90"  y1="115" x2="90"  y2="235"/>
+            <line id="rfE-b1b2" class="rf-edge" x1="370" y1="115" x2="370" y2="235"/>
+            <line id="rfE-b2x"  class="rf-edge" x1="370" y1="235" x2="230" y2="175"/>
+            <line id="rfE-b1x"  class="rf-edge" x1="370" y1="115" x2="230" y2="175"/>
+            <line id="rfE-xu1"  class="rf-edge" x1="230" y1="175" x2="90"  y2="115"/>
+
+            <!-- Hop-3: U2 (bottom-left) -->
+            <circle id="rfN-U2" class="rf-node" cx="90"  cy="235" r="18" fill="#e5e7eb" stroke="#9ca3af" stroke-width="1.5"/>
+            <text x="90"  y="231" text-anchor="middle" font-size="10" fill="#9ca3af" font-weight="700">U2</text>
+            <text x="90"  y="244" text-anchor="middle" font-size="7.5" fill="#9ca3af">[610,4]</text>
+
+            <!-- Hop-2: U1 (top-left) -->
+            <circle id="rfN-U1" class="rf-node" cx="90"  cy="115" r="22" fill="#e5e7eb" stroke="#9ca3af" stroke-width="2"/>
+            <text x="90"  y="111" text-anchor="middle" font-size="11" fill="#9ca3af" font-weight="700">U1</text>
+            <text x="90"  y="124" text-anchor="middle" font-size="8" fill="#9ca3af">[730,12]</text>
+
+            <!-- Hop-1: B1 (top-right) -->
+            <circle id="rfN-B1" class="rf-node" cx="370" cy="115" r="22" fill="#e5e7eb" stroke="#9ca3af" stroke-width="2"/>
+            <text x="370" y="111" text-anchor="middle" font-size="11" fill="#9ca3af" font-weight="700">B1</text>
+            <text x="370" y="124" text-anchor="middle" font-size="8" fill="#9ca3af">[620,11]</text>
+
+            <!-- Hop-1: X (center) -->
+            <circle id="rfN-X"  class="rf-node" cx="230" cy="175" r="22" fill="#e5e7eb" stroke="#9ca3af" stroke-width="2"/>
+            <text x="230" y="171" text-anchor="middle" font-size="11" fill="#9ca3af" font-weight="700">X</text>
+            <text x="230" y="184" text-anchor="middle" font-size="8" fill="#9ca3af">[675,7]</text>
+
+            <!-- Center: B2 (bottom-right) -->
+            <circle id="rfN-B2" class="rf-node" cx="370" cy="235" r="30" fill="#fed7aa" stroke="#f97316" stroke-width="3"/>
+            <text x="370" y="230" text-anchor="middle" font-size="13" fill="#c2410c" font-weight="800">B2</text>
+            <text x="370" y="246" text-anchor="middle" font-size="9" fill="#c2410c">[735, 3]</text>
           </svg>
-
-          <div style="font-size:0.82rem;color:var(--text-muted);text-align:center;">
-            A=[5,5] · B=[0,1] · C=[1,0] · D=[0,0]
-          </div>
-
-          <!-- Resultado -->
-          <div class="result-row" id="resultRow">
-            <span style="color:var(--text-dim);font-size:0.82rem;">Resultado h<sub>v</sub></span>
-            <span id="resultVal" style="font-weight:700;color:var(--teal);">[1.5, 1.5]</span>
-          </div>
         </div>
 
-        <!-- Barras de contribuição -->
-        <div class="panel">
-          <div class="panel-title">📊 Contribuições dos Vizinhos</div>
-          <div class="bar-group" id="barGroup">
-            <div class="bar-row">
-              <span class="bar-label">A</span>
-              <div class="bar-track"><div class="bar-fill" id="barA" style="width:25%;background:#d97706;"></div></div>
-              <span class="bar-val" id="valA">0.25</span>
+        <!-- RIGHT: info panel -->
+        <div class="info-panel">
+          <div class="panel-title">Receptive Field de B2</div>
+
+          <div class="rf-legend">
+            <div class="rf-entry center visible" id="rfCenter">
+              <div class="rf-dot center"></div>
+              <span>B2 — nó bot estudado</span>
             </div>
-            <div class="bar-row">
-              <span class="bar-label">B</span>
-              <div class="bar-track"><div class="bar-fill" id="barB" style="width:25%;background:#3b82f6;"></div></div>
-              <span class="bar-val" id="valB">0.25</span>
+            <div class="rf-entry hop1" id="rfHop1">
+              <div class="rf-dot hop1"></div>
+              <span>1 salto: B1, X</span>
             </div>
-            <div class="bar-row">
-              <span class="bar-label">C</span>
-              <div class="bar-track"><div class="bar-fill" id="barC" style="width:25%;background:#3b82f6;"></div></div>
-              <span class="bar-val" id="valC">0.25</span>
+            <div class="rf-entry hop2" id="rfHop2">
+              <div class="rf-dot hop2"></div>
+              <span>2 saltos: U1 (via X)</span>
             </div>
-            <div class="bar-row">
-              <span class="bar-label">D</span>
-              <div class="bar-track"><div class="bar-fill" id="barD" style="width:25%;background:#3b82f6;"></div></div>
-              <span class="bar-val" id="valD">0.25</span>
+            <div class="rf-entry hop3" id="rfHop3">
+              <div class="rf-dot hop3"></div>
+              <span>3 saltos: U2 (via X→U1)</span>
             </div>
           </div>
 
-          <div class="highlight-box yellow" id="modeMsg" style="margin-top:0.5rem;">
-            <span class="icon">⚠️</span>
-            <span>A informação importante de A <strong>se dilui</strong> — todos recebem peso igual 1/4.</span>
+          <div class="divider"></div>
+
+          <div class="depth-info d1" id="depthInfo">
+            <strong>1 camada:</strong> B2 agrega informação apenas de B1 e X — seus vizinhos diretos.<br>
+            Receptive field = 2 nós.
           </div>
 
-          <div style="margin-top:0.5rem;">
-            <div style="font-size:0.8rem;color:var(--text-dim);margin-bottom:0.3rem;font-weight:600;">MÉDIA PONDERADA:</div>
-            <div style="font-family:'Fira Code',monospace;font-size:0.88rem;padding:0.5rem 0.8rem;background:var(--bg3);border-radius:var(--radius-sm);border:1px solid var(--border2);">
-              h<sub>v</sub> = <span id="formula">0.25·[5,5] + 0.25·[0,1] + 0.25·[1,0] + 0.25·[0,0]</span>
-            </div>
+          <div style="font-size:0.85rem;font-weight:600;color:var(--text-muted);">Tamanho do campo receptivo:</div>
+          <div class="rf-size-wrap">
+            <div class="rf-size-bar" id="rfBar" style="width:60px;background:#0d6e6e;">2 nós</div>
+          </div>
+
+          <div class="highlight-box teal" style="font-size:0.83rem;padding:0.6rem 0.8rem;">
+            <span class="icon">📏</span>
+            <span>Com <strong>k camadas</strong>, cada nó agrega informação de <strong>k saltos</strong> de distância.</span>
           </div>
         </div>
-      </div>
-
-      <div class="insight-box">
-        <span class="i-icon">🎯</span>
-        <span class="i-text"><strong>Não todos os vizinhos são igualmente importantes!</strong> Precisamos de um mecanismo para aprender <em>quais vizinhos merecem mais atenção</em> — essa é a motivação para o GAT.</span>
       </div>
     </main>
 
@@ -136,57 +270,117 @@
   </div>
 
   <script>
-    function setMode(mode) {
-      const isAttn = mode === 'attention';
-      document.getElementById('btnUniform').classList.toggle('active', !isAttn);
-      document.getElementById('btnAttn').classList.toggle('active', isAttn);
-
-      if (isAttn) {
-        // Atenção: A=0.70, B=0.10, C=0.10, D=0.10
-        setBar('barA','valA', 70, '0.70', '#0d6e6e');
-        setBar('barB','valB', 10, '0.10', '#3b82f6');
-        setBar('barC','valC', 10, '0.10', '#3b82f6');
-        setBar('barD','valD', 10, '0.10', '#3b82f6');
-        document.getElementById('wA').textContent = '0.70';
-        document.getElementById('wB').textContent = '0.10';
-        document.getElementById('wC').textContent = '0.10';
-        document.getElementById('wD').textContent = '0.10';
-        document.getElementById('nodeA').setAttribute('r','26');
-        document.getElementById('resultVal').textContent = '[3.6, 3.6]';
-        document.getElementById('resultRow').classList.add('highlight');
-        document.getElementById('modeMsg').className = 'highlight-box green';
-        document.getElementById('modeMsg').innerHTML = '<span class="icon">✅</span><span>Com atenção, A recebe peso 0.70 — a <strong>informação importante é preservada</strong>.</span>';
-        document.getElementById('formula').textContent = '0.70·[5,5] + 0.10·[0,1] + 0.10·[1,0] + 0.10·[0,0]';
-        document.getElementById('edgeA').setAttribute('stroke-width','5');
-      } else {
-        setBar('barA','valA', 25, '0.25', '#d97706');
-        setBar('barB','valB', 25, '0.25', '#3b82f6');
-        setBar('barC','valC', 25, '0.25', '#3b82f6');
-        setBar('barD','valD', 25, '0.25', '#3b82f6');
-        document.getElementById('wA').textContent = '1/4';
-        document.getElementById('wB').textContent = '1/4';
-        document.getElementById('wC').textContent = '1/4';
-        document.getElementById('wD').textContent = '1/4';
-        document.getElementById('nodeA').setAttribute('r','22');
-        document.getElementById('resultVal').textContent = '[1.5, 1.5]';
-        document.getElementById('resultRow').classList.remove('highlight');
-        document.getElementById('modeMsg').className = 'highlight-box yellow';
-        document.getElementById('modeMsg').innerHTML = '<span class="icon">⚠️</span><span>A informação importante de A <strong>se dilui</strong> — todos recebem peso igual 1/4.</span>';
-        document.getElementById('formula').textContent = '0.25·[5,5] + 0.25·[0,1] + 0.25·[1,0] + 0.25·[0,0]';
-        document.getElementById('edgeA').setAttribute('stroke-width','2.5');
+    const layerConfigs = {
+      1: {
+        nodes: {
+          'rfN-B2': { fill:'#fed7aa', stroke:'#f97316', sw:3 },
+          'rfN-B1': { fill:'#ccfbf1', stroke:'#0d6e6e', sw:2.5 },
+          'rfN-X':  { fill:'#ccfbf1', stroke:'#0d6e6e', sw:2.5 },
+        },
+        edges: { 'rfE-b1b2':'hop1', 'rfE-b2x':'hop1' },
+        depthClass:'d1',
+        depthText:'<strong>1 camada:</strong> B2 agrega informação apenas de <strong>B1 e X</strong> — seus vizinhos diretos.<br>Receptive field = 2 nós.',
+        barW:'60px', barColor:'#0d6e6e', barText:'2 nós',
+        hops:[1,0,0]
+      },
+      2: {
+        nodes: {
+          'rfN-B2': { fill:'#fed7aa', stroke:'#f97316', sw:3 },
+          'rfN-B1': { fill:'#ccfbf1', stroke:'#0d6e6e', sw:2.5 },
+          'rfN-X':  { fill:'#ccfbf1', stroke:'#0d6e6e', sw:2.5 },
+          'rfN-U1': { fill:'#dbeafe', stroke:'#3b82f6', sw:2.5 },
+        },
+        edges: { 'rfE-b1b2':'hop1','rfE-b2x':'hop1','rfE-b1x':'hop1','rfE-xu1':'hop2' },
+        depthClass:'d2',
+        depthText:'<strong>2 camadas:</strong> B2 agrega informação de B1, X e <strong>U1</strong> (2 saltos, via X).<br>Receptive field = 3 nós.',
+        barW:'130px', barColor:'#3b82f6', barText:'3 nós',
+        hops:[1,1,0]
+      },
+      3: {
+        nodes: {
+          'rfN-B2': { fill:'#fed7aa', stroke:'#f97316', sw:3 },
+          'rfN-B1': { fill:'#ccfbf1', stroke:'#0d6e6e', sw:2.5 },
+          'rfN-X':  { fill:'#ccfbf1', stroke:'#0d6e6e', sw:2.5 },
+          'rfN-U1': { fill:'#dbeafe', stroke:'#3b82f6', sw:2.5 },
+          'rfN-U2': { fill:'#ede9fe', stroke:'#7c3aed', sw:2 },
+        },
+        edges: { 'rfE-b1b2':'hop1','rfE-b2x':'hop1','rfE-b1x':'hop1','rfE-xu1':'hop2','rfE-u1u2':'hop3' },
+        depthClass:'d3',
+        depthText:'<strong>3 camadas:</strong> B2 alcança <strong>U2</strong> (3 saltos, via X→U1).<br>O campo receptivo de B2 agora inclui usuários legítimos!<br>Receptive field = 4 nós.',
+        barW:'200px', barColor:'#7c3aed', barText:'4 nós',
+        hops:[1,1,1]
       }
+    };
+
+    const allNodeIds = ['rfN-B2','rfN-B1','rfN-X','rfN-U1','rfN-U2'];
+    const allEdgeIds = ['rfE-b1b2','rfE-b2x','rfE-b1x','rfE-xu1','rfE-u1u2'];
+    const defaultNodeStyle = { fill:'#e5e7eb', stroke:'#9ca3af', sw:1.5 };
+
+    function setLayers(k) {
+      k = parseInt(k);
+      document.getElementById('layerSlider').value = k;
+      document.getElementById('sliderVal').textContent = 'k = ' + k;
+      [1,2,3].forEach(n => {
+        document.getElementById('btnL'+n).classList.toggle('active', n===k);
+      });
+
+      const cfg = layerConfigs[k];
+
+      // Reset all nodes
+      allNodeIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const style = cfg.nodes[id] || defaultNodeStyle;
+        el.setAttribute('fill', style.fill);
+        el.setAttribute('stroke', style.stroke);
+        el.setAttribute('stroke-width', style.sw);
+        // Update text colors
+        const parent = el.parentElement || document.getElementById('rfSvg');
+        // Update adjacent text fill
+        const texts = document.querySelectorAll('#rfSvg text');
+        const cx = parseFloat(el.getAttribute('cx'));
+        const cy = parseFloat(el.getAttribute('cy'));
+        texts.forEach(t => {
+          const tx = parseFloat(t.getAttribute('x'));
+          const ty = parseFloat(t.getAttribute('y'));
+          if (Math.abs(tx - cx) < 5 && Math.abs(ty - cy) < 30) {
+            t.setAttribute('fill', cfg.nodes[id] ? style.stroke : '#9ca3af');
+          }
+        });
+      });
+
+      // Reset all edges
+      allEdgeIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.className.baseVal = 'rf-edge ' + (cfg.edges[id] || '');
+      });
+
+      // Update depth info
+      const di = document.getElementById('depthInfo');
+      di.className = 'depth-info ' + cfg.depthClass;
+      di.innerHTML = cfg.depthText;
+
+      // Update bar
+      const bar = document.getElementById('rfBar');
+      bar.style.width = cfg.barW;
+      bar.style.background = cfg.barColor;
+      bar.textContent = cfg.barText;
+
+      // Update legend visibility
+      ['rfHop1','rfHop2','rfHop3'].forEach((id, i) => {
+        document.getElementById(id).classList.toggle('visible', cfg.hops[i] === 1);
+      });
     }
 
-    function setBar(barId, valId, pct, txt, color) {
-      const bar = document.getElementById(barId);
-      bar.style.width = pct + '%';
-      bar.style.background = color;
-      document.getElementById(valId).textContent = txt;
-    }
+    function setLayersBtn(k) { setLayers(k); }
+
+    setLayers(1);
 
     (function(){
       const container = document.getElementById('navDots');
-      const CURRENT = 13, TOTAL = 22;
+      const CURRENT = 13;
+      const TOTAL = 24;
       for (let i = 1; i <= TOTAL; i++) {
         const dot = document.createElement('div');
         dot.className = 'dot' + (i === CURRENT ? ' active' : '');

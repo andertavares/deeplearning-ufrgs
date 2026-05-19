@@ -83,7 +83,7 @@
     <header class="slide-header">
       <span class="course-tag">GNNs</span>
       <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
-      <span class="slide-counter">Slide 09 / 22</span>
+      <span class="slide-counter">Slide 09 / 24</span>
     </header>
 
     <main class="slide-main">
@@ -120,19 +120,19 @@
             <!-- Nodes -->
             <circle id="an-U1" class="an-node an-user" cx="80"  cy="75"  r="26" onclick="selectAggNode('U1')"/>
             <text x="80"  y="71"  text-anchor="middle" font-family="Inter" font-weight="800" font-size="12" fill="#0d6e6e" pointer-events="none">U1</text>
-            <text x="80"  y="85"  text-anchor="middle" font-family="Fira Code" font-size="8" fill="#0d6e6e" pointer-events="none">[720,8]</text>
+            <text x="80"  y="85"  text-anchor="middle" font-family="Fira Code" font-size="8" fill="#0d6e6e" pointer-events="none">[730,12]</text>
             <circle id="an-U2" class="an-node an-user" cx="80"  cy="180" r="22" onclick="selectAggNode('U2')"/>
             <text x="80"  y="176" text-anchor="middle" font-family="Inter" font-weight="800" font-size="11" fill="#0d6e6e" pointer-events="none">U2</text>
-            <text x="80"  y="189" text-anchor="middle" font-family="Fira Code" font-size="8" fill="#0d6e6e" pointer-events="none">[640,5]</text>
+            <text x="80"  y="189" text-anchor="middle" font-family="Fira Code" font-size="8" fill="#0d6e6e" pointer-events="none">[610,4]</text>
             <circle id="an-B1" class="an-node an-bot"  cx="240" cy="75"  r="26" onclick="selectAggNode('B1')"/>
             <text x="240" y="71"  text-anchor="middle" font-family="Inter" font-weight="800" font-size="12" fill="#b91c1c" pointer-events="none">B1</text>
-            <text x="240" y="85"  text-anchor="middle" font-family="Fira Code" font-size="8" fill="#b91c1c" pointer-events="none">[700,11]</text>
+            <text x="240" y="85"  text-anchor="middle" font-family="Fira Code" font-size="8" fill="#b91c1c" pointer-events="none">[620,11]</text>
             <circle id="an-B2" class="an-node an-bot"  cx="240" cy="180" r="22" onclick="selectAggNode('B2')"/>
             <text x="240" y="176" text-anchor="middle" font-family="Inter" font-weight="800" font-size="11" fill="#b91c1c" pointer-events="none">B2</text>
-            <text x="240" y="189" text-anchor="middle" font-family="Fira Code" font-size="8" fill="#b91c1c" pointer-events="none">[680,9]</text>
+            <text x="240" y="189" text-anchor="middle" font-family="Fira Code" font-size="8" fill="#b91c1c" pointer-events="none">[735,3]</text>
             <circle id="an-X"  class="an-node an-unk"  cx="190" cy="130" r="26" onclick="selectAggNode('X')"/>
             <text x="190" y="126" text-anchor="middle" font-family="Inter" font-weight="800" font-size="12" fill="#6b7fa3" pointer-events="none">X</text>
-            <text x="190" y="139" text-anchor="middle" font-family="Fira Code" font-size="8" fill="#6b7fa3" pointer-events="none">[690,10]</text>
+            <text x="190" y="139" text-anchor="middle" font-family="Fira Code" font-size="8" fill="#6b7fa3" pointer-events="none">[675,7]</text>
           </svg>
           <div id="nodeHint" style="font-size:0.82rem;color:var(--text-dim);text-align:center;">← Clique em um nó para ver as mensagens recebidas</div>
         </div>
@@ -152,10 +152,6 @@
 
           <div class="result-box" id="resultBox" style="background:var(--bg3);border:2px solid var(--border2);color:var(--text-muted);">
             m<sub>v</sub> = ?
-          </div>
-
-          <div id="stepCalc" style="font-family:'Fira Code',monospace;font-size:0.82rem;color:var(--text-muted);background:var(--bg3);border-radius:var(--radius-sm);padding:0.4rem 0.8rem;line-height:1.8;">
-            Selecione um nó para ver o cálculo
           </div>
         </div>
       </div>
@@ -179,9 +175,9 @@
 
   <script>
     const nodeFeats = {
-      'U1': [720, 8], 'U2': [640, 5],
-      'B1': [700, 11], 'B2': [680, 9],
-      'X':  [690, 10]
+      'U1': [730, 12], 'U2': [610, 4],
+      'B1': [620, 11], 'B2': [735, 3],
+      'X':  [675, 7]
     };
     const nodeAdj = {
       'U1': ['U2','X'], 'U2': ['U1'],
@@ -257,7 +253,6 @@
       rb.style.border = '2px solid var(--border2)';
       rb.style.color = 'var(--text-muted)';
       rb.innerHTML = 'm<sub>v</sub> = ?';
-      document.getElementById('stepCalc').innerHTML = 'Selecione um nó para ver o cálculo';
       document.getElementById('rightTitle').textContent = 'Mensagens e Resultado Agregado';
     }
 
@@ -281,7 +276,7 @@
       // Compute aggregation
       const dim1 = feats.map(f => f[0]);
       const dim2 = feats.map(f => f[1]);
-      let r1, r2, label, formulaHTML, calcHTML;
+      let r1, r2, label, formulaHTML;
       const clsColor = { sum:'#c2410c', mean:'#1d4ed8', max:'#166534' };
       const c = clsColor[method];
 
@@ -289,20 +284,17 @@
         r1 = dim1.reduce((a,b)=>a+b,0);
         r2 = dim2.reduce((a,b)=>a+b,0);
         label = `m<sub>${id}</sub> = [${r1}, ${r2}]`;
-        formulaHTML = `Sum: [${dim1.join('+')}] = <span style="color:${c};font-weight:700;">${r1}</span> &nbsp;|&nbsp; [${dim2.join('+')}] = <span style="color:${c};font-weight:700;">${r2}</span>`;
-        calcHTML = `<span style="color:${c};font-weight:700;">dim cadastro:</span> ${dim1.join(' + ')} = <b style="color:${c}">${r1}</b><br><span style="color:${c};font-weight:700;">dim posts:</span> ${dim2.join(' + ')} = <b style="color:${c}">${r2}</b>`;
+        formulaHTML = `sum = <span style="color:${c};font-weight:700;">[${r1}, ${r2}]</span>`;
       } else if (method === 'mean') {
         r1 = Math.round(dim1.reduce((a,b)=>a+b,0) / dim1.length * 10) / 10;
         r2 = Math.round(dim2.reduce((a,b)=>a+b,0) / dim2.length * 10) / 10;
         label = `m<sub>${id}</sub> = [${r1}, ${r2}]`;
-        formulaHTML = `Mean: (${dim1.join('+')})/|N| = <span style="color:${c};font-weight:700;">${r1}</span> &nbsp;|&nbsp; (${dim2.join('+')})/|N| = <span style="color:${c};font-weight:700;">${r2}</span>`;
-        calcHTML = `<span style="color:${c};font-weight:700;">dim cadastro:</span> (${dim1.join('+')})/  ${dim1.length} = <b style="color:${c}">${r1}</b><br><span style="color:${c};font-weight:700;">dim posts:</span> (${dim2.join('+')})/${dim2.length} = <b style="color:${c}">${r2}</b>`;
+        formulaHTML = `mean = <span style="color:${c};font-weight:700;">[${r1}, ${r2}]</span>`;
       } else {
         r1 = Math.max(...dim1);
         r2 = Math.max(...dim2);
         label = `m<sub>${id}</sub> = [${r1}, ${r2}]`;
-        formulaHTML = `Max: max(${dim1.join(',')}) = <span style="color:${c};font-weight:700;">${r1}</span> &nbsp;|&nbsp; max(${dim2.join(',')}) = <span style="color:${c};font-weight:700;">${r2}</span>`;
-        calcHTML = `<span style="color:${c};font-weight:700;">dim cadastro:</span> max(${dim1.join(', ')}) = <b style="color:${c}">${r1}</b><br><span style="color:${c};font-weight:700;">dim posts:</span> max(${dim2.join(', ')}) = <b style="color:${c}">${r2}</b>`;
+        formulaHTML = `max = <span style="color:${c};font-weight:700;">[${r1}, ${r2}]</span>`;
       }
 
       // Update formula box
@@ -318,16 +310,13 @@
       rb.style.color = '';
       rb.innerHTML = label;
 
-      // Update step calc
-      document.getElementById('stepCalc').innerHTML = calcHTML;
-
       document.getElementById('rightTitle').textContent = `Agregação de ${id} (|N|=${nbrs.length})`;
     }
 
     (function(){
       const container = document.getElementById('navDots');
       const CURRENT = 9;
-      const TOTAL = 22;
+      const TOTAL = 24;
       for (let i = 1; i <= TOTAL; i++) {
         const dot = document.createElement('div');
         dot.className = 'dot' + (i === CURRENT ? ' active' : '');
