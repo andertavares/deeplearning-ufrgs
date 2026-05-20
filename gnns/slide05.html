@@ -53,7 +53,7 @@
     <header class="slide-header">
       <span class="course-tag">GNNs</span>
       <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
-      <span class="slide-counter">Slide 05 / 22</span>
+      <span class="slide-counter">Slide 05 / 24</span>
     </header>
 
     <main class="slide-main">
@@ -76,28 +76,28 @@
 
             <!-- U1 attribute box: x=58, y=64, w=64, h=28 -->
             <rect x="58" y="64" width="64" height="28" rx="4" class="attr-box-user"/>
-            <text x="90" y="75" text-anchor="middle" class="attr-box-text" fill="#0d6e6e">720d</text>
-            <text x="90" y="87" text-anchor="middle" class="attr-box-text" fill="#0d6e6e">8 posts</text>
+            <text x="90" y="75" text-anchor="middle" class="attr-box-text" fill="#0d6e6e">730d</text>
+            <text x="90" y="87" text-anchor="middle" class="attr-box-text" fill="#0d6e6e">12 posts</text>
 
             <!-- U2 attribute box: x=58, y=189, w=64, h=28 -->
             <rect x="58" y="189" width="64" height="28" rx="4" class="attr-box-user"/>
-            <text x="90" y="200" text-anchor="middle" class="attr-box-text" fill="#0d6e6e">640d</text>
-            <text x="90" y="212" text-anchor="middle" class="attr-box-text" fill="#0d6e6e">5 posts</text>
+            <text x="90" y="200" text-anchor="middle" class="attr-box-text" fill="#0d6e6e">610d</text>
+            <text x="90" y="212" text-anchor="middle" class="attr-box-text" fill="#0d6e6e">4 posts</text>
 
             <!-- B1 attribute box: x=338, y=64, w=64, h=28 -->
             <rect x="338" y="64" width="64" height="28" rx="4" class="attr-box-bot"/>
-            <text x="370" y="75" text-anchor="middle" class="attr-box-text" fill="#b91c1c">700d</text>
+            <text x="370" y="75" text-anchor="middle" class="attr-box-text" fill="#b91c1c">620d</text>
             <text x="370" y="87" text-anchor="middle" class="attr-box-text" fill="#b91c1c">11 posts</text>
 
             <!-- B2 attribute box: x=338, y=189, w=64, h=28 -->
             <rect x="338" y="189" width="64" height="28" rx="4" class="attr-box-bot"/>
-            <text x="370" y="200" text-anchor="middle" class="attr-box-text" fill="#b91c1c">680d</text>
-            <text x="370" y="212" text-anchor="middle" class="attr-box-text" fill="#b91c1c">9 posts</text>
+            <text x="370" y="200" text-anchor="middle" class="attr-box-text" fill="#b91c1c">735d</text>
+            <text x="370" y="212" text-anchor="middle" class="attr-box-text" fill="#b91c1c">3 posts</text>
 
             <!-- X attribute box: x=198, y=129, w=64, h=28 -->
             <rect x="198" y="129" width="64" height="28" rx="4" class="attr-box-unknown"/>
-            <text x="230" y="140" text-anchor="middle" class="attr-box-text" fill="#6b7fa3">690d</text>
-            <text x="230" y="152" text-anchor="middle" class="attr-box-text" fill="#6b7fa3">10 posts</text>
+            <text x="230" y="140" text-anchor="middle" class="attr-box-text" fill="#6b7fa3">675d</text>
+            <text x="230" y="152" text-anchor="middle" class="attr-box-text" fill="#6b7fa3">7 posts</text>
 
             <!-- U1: usuário legítimo, cadastro=720d, posts_7d=8 -->
             <circle id="node-U1" class="sn-user" cx="90" cy="120" r="22" onclick="showNode('U1')"/>
@@ -164,9 +164,9 @@
           <div class="insight-box">
             <span class="i-icon">💡</span>
             <span class="i-text">
-              X tem cadastro=690d e posts=10 — <strong>ambíguo!</strong><br>
-              Os atributos são similares a U1 e U2, mas<br>
-              as conexões (B1, B2) revelam que X provavelmente é um bot.
+              X tem cadastro=675d e posts=7 — <strong>ambíguo!</strong><br>
+              Os atributos ficam quase no centro, entre os dois grupos.<br>
+              Só as conexões (B1, B2) revelam que X provavelmente é um bot.
             </span>
           </div>
         </div>
@@ -182,11 +182,11 @@
 
   <script>
     const nodeData = {
-      'U1': { type: 'user',    title: 'Usuário Legítimo',  cadastro: 720, posts_7d: 8  },
-      'U2': { type: 'user',    title: 'Usuário Legítimo',  cadastro: 640, posts_7d: 5  },
-      'B1': { type: 'bot',     title: 'Bot',               cadastro: 700, posts_7d: 11 },
-      'B2': { type: 'bot',     title: 'Bot',               cadastro: 680, posts_7d: 9  },
-      'X':  { type: 'unknown', title: 'Nó desconhecido',   cadastro: 690, posts_7d: 10 }
+      'U1': { type: 'user',    title: 'Usuário Legítimo',  cadastro: 730, posts_7d: 12 },
+      'U2': { type: 'user',    title: 'Usuário Legítimo',  cadastro: 610, posts_7d: 4  },
+      'B1': { type: 'bot',     title: 'Bot',               cadastro: 620, posts_7d: 11 },
+      'B2': { type: 'bot',     title: 'Bot',               cadastro: 735, posts_7d: 3  },
+      'X':  { type: 'unknown', title: 'Nó desconhecido',   cadastro: 675, posts_7d: 7  }
     };
 
     function showNode(id) {
@@ -217,7 +217,7 @@
     (function(){
       const container = document.getElementById('navDots');
       const CURRENT = 5;
-      const TOTAL = 22;
+      const TOTAL = 24;
       for (let i = 1; i <= TOTAL; i++) {
         const dot = document.createElement('div');
         dot.className = 'dot' + (i === CURRENT ? ' active' : '');
