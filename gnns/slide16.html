@@ -24,6 +24,25 @@
     .attn-bar .track { flex:1; height:14px; background:var(--bg3); border-radius:4px; overflow:hidden; border:1px solid var(--border2); }
     .attn-bar .fill { height:100%; border-radius:4px; transition:width 0.4s; }
     .attn-bar .pct { width:40px; font-family:'Fira Code',monospace; font-size:0.78rem; color:var(--text-dim); }
+    /* Matrix block styles (like slide10/11) */
+    .mcell { padding:3px 6px; text-align:center; font-size:0.68rem; font-family:'Fira Code',monospace;
+      background:var(--bg3); color:var(--text); border:1.5px solid transparent; border-radius:3px;
+      min-width:30px; }
+    .mw  { background:#dbeafe !important; color:#1d4ed8 !important; }
+    .mh  { background:var(--bg3); }
+    .mwh { background:#ede9fe !important; color:#5b21b6 !important; font-weight:700 !important; }
+    .me  { background:#fef3c7 !important; color:#b45309 !important; border:1.5px solid #f59e0b !important; font-weight:700 !important; }
+    .mcell-a { background:#ccfbf1 !important; color:#0d6e6e !important; }
+    .mcell-b { background:#e0f2fe !important; color:#0369a1 !important; }
+    .mcell-c { background:#fce7f3 !important; color:#9d174d !important; }
+    .mlbl { font-size:0.58rem; font-weight:700; font-family:'Inter',sans-serif; padding-right:4px;
+      vertical-align:middle; }
+    .mtitle { font-size:0.6rem; font-weight:700; text-transform:uppercase; letter-spacing:0.07em;
+      text-align:center; margin-bottom:0.2rem; }
+    table.mmat { border-collapse:separate; border-spacing:2px; }
+    .op { align-self:center; font-size:1.1rem; font-weight:700; color:var(--text-dim); padding:0 0.15rem; }
+    .step-badge { display:inline-block; font-size:0.6rem; font-weight:700; padding:0.1rem 0.35rem;
+      border-radius:3px; margin-right:0.3rem; }
   </style>
 </head>
 <body>
@@ -31,7 +50,7 @@
     <header class="slide-header">
       <span class="course-tag">GNNs</span>
       <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
-      <span class="slide-counter">Slide 16 / 23</span>
+      <span class="slide-counter">Slide 16 / 24</span>
     </header>
 
     <main class="slide-main">
@@ -79,49 +98,110 @@
           <div style="font-size:0.82rem;color:var(--text-dim);">Arestas mais espessas = <strong>maior atenção</strong> aprendida</div>
         </div>
 
-        <!-- RIGHT: exemplo numérico -->
-        <div class="panel">
-          <div class="panel-title">🔢 Exemplo Numérico (sem slider)</div>
+        <!-- RIGHT: exemplo numérico com blocos matriciais -->
+        <div class="panel" style="overflow-y:auto;">
+          <div class="panel-title">🔢 Cálculo de Atenção — Passo a Passo</div>
 
-          <div class="step-formula">
-            <span class="step-num">1</span>
-            <span>Projetar: <strong>Wh</strong> com valores fixos de <strong>W</strong> e dos embeddings</span>
+          <!-- Step 1: Projection -->
+          <div style="margin-bottom:0.3rem;">
+            <span class="step-badge" style="background:#dbeafe;border:1px solid #93c5fd;color:#1d4ed8;">① Projeção</span>
+            <span style="font-size:0.72rem;color:var(--text-muted);">Wh = W · h</span>
           </div>
-          <div class="step-formula">
-            <span class="step-num">2</span>
-            <span>Score: e<sub>vu</sub> = LeakyReLU([Wh<sub>v</sub> ‖ Wh<sub>u</sub>] · <strong>a</strong>)<br/><span style="font-size:0.75rem;color:var(--text-dim);">e(v,A)=2.1, e(v,B)=0.5, e(v,C)=1.3</span></span>
-          </div>
-          <div class="step-formula">
-            <span class="step-num">3</span>
-            <span>Normalizar: α<sub>vu</sub> = <strong>softmax</strong>(e<sub>vu</sub>)</span>
+          <div style="display:flex;align-items:flex-start;gap:0.3rem;overflow-x:auto;padding:0.1rem 0 0.4rem;">
+            <!-- W (2×2) -->
+            <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;">
+              <div class="mtitle" style="color:#1d4ed8;">W (2×2)</div>
+              <table class="mmat">
+                <tr><td class="mcell mw">0.5</td><td class="mcell mw">0.3</td></tr>
+                <tr><td class="mcell mw">0.2</td><td class="mcell mw">0.8</td></tr>
+              </table>
+            </div>
+            <div class="op">·</div>
+            <!-- h (4×2) -->
+            <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;">
+              <div class="mtitle" style="color:#0d6e6e;">h (4×2)</div>
+              <table class="mmat">
+                <tr><td class="mlbl" style="color:#166534;">v</td><td class="mcell">0.8</td><td class="mcell">0.3</td></tr>
+                <tr><td class="mlbl" style="color:#1d4ed8;">A</td><td class="mcell">1.0</td><td class="mcell">0.0</td></tr>
+                <tr><td class="mlbl" style="color:#6b7fa3;">B</td><td class="mcell">0.0</td><td class="mcell">1.0</td></tr>
+                <tr><td class="mlbl" style="color:#8b5cf6;">C</td><td class="mcell">1.0</td><td class="mcell">1.0</td></tr>
+              </table>
+            </div>
+            <div class="op">=</div>
+            <!-- Wh (4×2) -->
+            <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;">
+              <div class="mtitle" style="color:#7c3aed;">Wh (4×2)</div>
+              <table class="mmat">
+                <tr><td class="mlbl" style="color:#166534;">v</td><td class="mcell mwh">0.49</td><td class="mcell mwh">0.40</td></tr>
+                <tr><td class="mlbl" style="color:#1d4ed8;">A</td><td class="mcell mwh">0.50</td><td class="mcell mwh">0.20</td></tr>
+                <tr><td class="mlbl" style="color:#6b7fa3;">B</td><td class="mcell mwh">0.30</td><td class="mcell mwh">0.80</td></tr>
+                <tr><td class="mlbl" style="color:#8b5cf6;">C</td><td class="mcell mwh">0.80</td><td class="mcell mwh">1.00</td></tr>
+              </table>
+            </div>
           </div>
 
-          <div class="divider"></div>
-
-          <div style="background:var(--bg3);border-radius:4px;border-left:3px solid #7c3aed;padding:0.5rem 0.7rem;font-family:'Fira Code',monospace;font-size:0.78rem;line-height:1.7;color:var(--text-muted);">
-            W = [[0.5, 0.3], [0.2, 0.8]]<br/>
-            a = [0.9, 0.4, 0.7, 0.2]<br/>
-            Wh<sub>v</sub> = [0.49, 0.40]<br/>
-            Wh<sub>A</sub> = [0.50, 0.20]&nbsp;&nbsp;
-            Wh<sub>B</sub> = [0.30, 0.80]&nbsp;&nbsp;
-            Wh<sub>C</sub> = [0.80, 1.00]
+          <!-- Step 2: Score -->
+          <div style="margin-bottom:0.2rem;">
+            <span class="step-badge" style="background:#fef9c3;border:1px solid #ca8a04;color:#78350f;">② Score</span>
+            <span style="font-size:0.72rem;color:var(--text-muted);">e(v,u) = a<sup>T</sup>·[Wh<sub>v</sub>‖Wh<sub>u</sub>] &nbsp; <span style="font-family:'Fira Code',monospace;">a=[0.9,0.4,0.7,0.2]</span></span>
           </div>
+          <table class="mmat" style="width:100%;">
+            <thead>
+              <tr>
+                <td style="font-size:0.55rem;color:var(--text-dim);padding-bottom:2px;"></td>
+                <td colspan="2" style="font-size:0.55rem;font-weight:700;color:#5b21b6;text-align:center;padding-bottom:2px;">Wh<sub>v</sub></td>
+                <td colspan="2" style="font-size:0.55rem;font-weight:700;color:#d97706;text-align:center;padding-bottom:2px;">Wh<sub>u</sub></td>
+                <td style="font-size:0.55rem;font-weight:700;color:#b45309;text-align:center;padding-bottom:2px;">e</td>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mlbl" style="color:#1d4ed8;">v,A</td>
+                <td class="mcell mwh" style="font-size:0.65rem;">0.49</td><td class="mcell mwh" style="font-size:0.65rem;">0.40</td>
+                <td class="mcell mcell-a" style="font-size:0.65rem;">0.50</td><td class="mcell mcell-a" style="font-size:0.65rem;">0.20</td>
+                <td class="mcell me">2.1</td>
+              </tr>
+              <tr>
+                <td class="mlbl" style="color:#6b7fa3;">v,B</td>
+                <td class="mcell mwh" style="font-size:0.65rem;">0.49</td><td class="mcell mwh" style="font-size:0.65rem;">0.40</td>
+                <td class="mcell mcell-b" style="font-size:0.65rem;">0.30</td><td class="mcell mcell-b" style="font-size:0.65rem;">0.80</td>
+                <td class="mcell me">0.5</td>
+              </tr>
+              <tr>
+                <td class="mlbl" style="color:#8b5cf6;">v,C</td>
+                <td class="mcell mwh" style="font-size:0.65rem;">0.49</td><td class="mcell mwh" style="font-size:0.65rem;">0.40</td>
+                <td class="mcell mcell-c" style="font-size:0.65rem;">0.80</td><td class="mcell mcell-c" style="font-size:0.65rem;">1.00</td>
+                <td class="mcell me">1.3</td>
+              </tr>
+            </tbody>
+          </table>
 
-          <div style="margin-top:0.4rem;display:flex;flex-direction:column;gap:0.3rem;">
+          <!-- Step 3: Softmax → α -->
+          <div style="margin:0.35rem 0 0.2rem;">
+            <span class="step-badge" style="background:#dcfce7;border:1px solid #15803d;color:#14532d;">③ Softmax</span>
+            <span style="font-size:0.72rem;color:var(--text-muted);">α = softmax(e) &nbsp;→&nbsp; pesos de atenção</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:0.3rem;">
             <div class="attn-bar">
-              <span class="lbl">αA</span>
-              <div class="attn-bar track"><div class="attn-bar fill" id="ab1" style="background:#0d6e6e;width:62%;"></div></div>
-              <span class="attn-bar pct">0.62</span>
+              <span class="lbl" style="font-size:0.8rem;color:#1d4ed8;font-weight:700;">A</span>
+              <span class="mcell me" style="min-width:26px;font-size:0.7rem;">2.1</span>
+              <span style="color:var(--text-dim);font-size:0.7rem;padding:0 3px;">→</span>
+              <div class="attn-bar track"><div class="attn-bar fill" style="background:#0d6e6e;width:62%;"></div></div>
+              <span class="attn-bar pct" style="color:#0d6e6e;font-weight:700;">0.62</span>
             </div>
             <div class="attn-bar">
-              <span class="lbl">αB</span>
-              <div class="attn-bar track"><div class="attn-bar fill" id="ab2" style="background:#3b82f6;width:12%;"></div></div>
-              <span class="attn-bar pct">0.12</span>
+              <span class="lbl" style="font-size:0.8rem;color:#6b7fa3;font-weight:700;">B</span>
+              <span class="mcell me" style="min-width:26px;font-size:0.7rem;">0.5</span>
+              <span style="color:var(--text-dim);font-size:0.7rem;padding:0 3px;">→</span>
+              <div class="attn-bar track"><div class="attn-bar fill" style="background:#3b82f6;width:12%;"></div></div>
+              <span class="attn-bar pct" style="color:#3b82f6;font-weight:700;">0.12</span>
             </div>
             <div class="attn-bar">
-              <span class="lbl">αC</span>
-              <div class="attn-bar track"><div class="attn-bar fill" id="ab3" style="background:#8b5cf6;width:26%;"></div></div>
-              <span class="attn-bar pct">0.26</span>
+              <span class="lbl" style="font-size:0.8rem;color:#8b5cf6;font-weight:700;">C</span>
+              <span class="mcell me" style="min-width:26px;font-size:0.7rem;">1.3</span>
+              <span style="color:var(--text-dim);font-size:0.7rem;padding:0 3px;">→</span>
+              <div class="attn-bar track"><div class="attn-bar fill" style="background:#8b5cf6;width:26%;"></div></div>
+              <span class="attn-bar pct" style="color:#8b5cf6;font-weight:700;">0.26</span>
             </div>
           </div>
         </div>
@@ -143,7 +223,7 @@
   <script>
     (function(){
       const container = document.getElementById('navDots');
-      const CURRENT = 16, TOTAL = 23;
+      const CURRENT = 16, TOTAL = 24;
       for (let i = 1; i <= TOTAL; i++) {
         const dot = document.createElement('div');
         dot.className = 'dot' + (i === CURRENT ? ' active' : '');

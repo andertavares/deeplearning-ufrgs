@@ -11,7 +11,7 @@
     .step-indicator { display:flex; gap:0.5rem; align-items:center; justify-content:center; margin-bottom:0.6rem; }
     .step-pip { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center;
       font-size:0.78rem; font-weight:700; border:2px solid var(--border2);
-      background:var(--bg3); color:var(--text-dim); transition:all 0.3s; }
+      background:var(--bg3); color:var(--text-dim); transition:all 0.3s; cursor:pointer; }
     .step-pip.active { background:var(--teal); border-color:var(--teal); color:#fff; transform:scale(1.15); }
     .step-pip.done { background:var(--teal-lt); border-color:var(--teal); color:var(--teal); }
     .step-connector { flex:1; height:2px; background:var(--border2); max-width:32px; }
@@ -35,7 +35,7 @@
     <header class="slide-header">
       <span class="course-tag">GNNs</span>
       <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
-      <span class="slide-counter">Slide 17 / 23</span>
+      <span class="slide-counter">Slide 17 / 24</span>
     </header>
 
     <main class="slide-main">
@@ -46,15 +46,15 @@
 
       <!-- Indicador de passos -->
       <div class="step-indicator">
-        <div class="step-pip active" id="pip1">1</div>
+        <div class="step-pip done" id="pip1" onclick="goToStep(1)" title="Ver Slide 16">1</div>
         <div class="step-connector"></div>
-        <div class="step-pip" id="pip2">2</div>
+        <div class="step-pip done" id="pip2" onclick="goToStep(2)" title="Ver Slide 16">2</div>
         <div class="step-connector"></div>
-        <div class="step-pip" id="pip3">3</div>
+        <div class="step-pip done" id="pip3" onclick="goToStep(3)" title="Ver Slide 16">3</div>
         <div class="step-connector"></div>
-        <div class="step-pip" id="pip4">4</div>
+        <div class="step-pip active" id="pip4" onclick="goToStep(4)">4</div>
         <div class="step-connector"></div>
-        <div class="step-pip" id="pip5">5</div>
+        <div class="step-pip" id="pip5" onclick="goToStep(5)">5</div>
       </div>
 
       <div class="step-layout">
@@ -77,10 +77,10 @@
             <text x="130" y="189" font-size="13" font-weight="700" fill="#1d4ed8" text-anchor="middle">C</text>
             <text x="130" y="110" font-size="14" font-weight="700" fill="#0d6e6e" text-anchor="middle">v</text>
             <!-- Embeddings (mostrar em passo 1) -->
-            <text x="45"  y="72"  font-size="9" fill="#6b7fa3" font-family="Fira Code" text-anchor="middle" id="emb1" opacity="0">hA=[1,0]</text>
-            <text x="215" y="72"  font-size="9" fill="#6b7fa3" font-family="Fira Code" text-anchor="middle" id="emb2" opacity="0">hB=[0,1]</text>
-            <text x="130" y="162" font-size="9" fill="#6b7fa3" font-family="Fira Code" text-anchor="middle" id="emb3" opacity="0">hC=[1,1]</text>
-            <text x="130" y="132" font-size="9" fill="#0d6e6e" font-family="Fira Code" text-anchor="middle" id="embv" opacity="0">hv=[0.8,0.3]</text>
+            <text x="45"  y="74"  font-size="12" fill="#6b7fa3" font-family="Fira Code" text-anchor="middle" id="emb1" opacity="0">hA=[1,0]</text>
+            <text x="215" y="74"  font-size="12" fill="#6b7fa3" font-family="Fira Code" text-anchor="middle" id="emb2" opacity="0">hB=[0,1]</text>
+            <text x="130" y="166" font-size="12" fill="#6b7fa3" font-family="Fira Code" text-anchor="middle" id="emb3" opacity="0">hC=[1,1]</text>
+            <text x="130" y="134" font-size="12" fill="#0d6e6e" font-family="Fira Code" text-anchor="middle" id="embv" opacity="0">hv=[0.8,0.3]</text>
             <!-- Scores (passo 2) -->
             <text x="58"  y="88"  font-size="11" fill="#d97706" font-family="Fira Code" font-weight="700" text-anchor="middle" id="sc1" opacity="0">e=2.1</text>
             <text x="200" y="88"  font-size="11" fill="#d97706" font-family="Fira Code" font-weight="700" text-anchor="middle" id="sc2" opacity="0">e=0.5</text>
@@ -99,67 +99,43 @@
             <button class="btn-step" id="btnNext" onclick="nextStep()">Próximo passo →</button>
             <button class="btn-toggle" onclick="resetSteps()">Reiniciar</button>
           </div>
-          <div style="font-size:0.8rem;color:var(--text-dim);font-family:'Fira Code',monospace;" id="stepLabel">Passo 1 de 4</div>
+          <div style="font-size:0.8rem;color:var(--text-dim);font-family:'Fira Code',monospace;" id="stepLabel">Passo 4 de 5</div>
         </div>
 
         <!-- Painel lateral com fórmulas -->
         <div class="panel">
-          <!-- Passo 1 -->
-          <div class="step-content active" id="sc1c">
-            <div class="step-title">1. Inicialização</div>
-            <div class="formula-block">
-              h<sub>v</sub> = embedding do nó v<br/>
-              h<sub>u</sub> = embedding de cada vizinho u
-            </div>
-            <div class="node-info">
-              <strong>Embeddings:</strong><br/>
-              h<sub>v</sub> = [0.8, 0.3]<br/>
-              h<sub>A</sub> = [1.0, 0.0]<br/>
-              h<sub>B</sub> = [0.0, 1.0]<br/>
-              h<sub>C</sub> = [1.0, 1.0]
-            </div>
+          <!-- Passo 1 (ref slide16) -->
+          <div class="step-content" id="sc1c">
+            <div class="step-title" style="color:#94a3b8;">1. Inicialização <span style="font-size:0.7rem;font-weight:400;">← Slide 16</span></div>
+            <div class="formula-block" style="font-size:0.78rem;opacity:0.75;">h<sub>v</sub>=[0.8,0.3] &nbsp; h<sub>A</sub>=[1,0] &nbsp; h<sub>B</sub>=[0,1] &nbsp; h<sub>C</sub>=[1,1]</div>
+            <a href="slide16.html" style="font-size:0.78rem;color:var(--teal);">← Ver exemplo numérico completo no Slide 16</a>
           </div>
 
-          <!-- Passo 2 -->
+          <!-- Passo 2 (ref slide16) -->
           <div class="step-content" id="sc2c">
-            <div class="step-title">2. Projeção Linear (W)</div>
-            <div class="formula-block">
-              Wh<sub>u</sub> = <strong>W</strong> · h<sub>u</sub><br/>
-              <span style="font-size:0.78rem;color:var(--text-dim);"><strong>W</strong> ∈ ℝ<sup>d'×d</sup> — matriz de pesos treinável</span>
+            <div class="step-title" style="color:#94a3b8;">2. Projeção Linear (W) <span style="font-size:0.7rem;font-weight:400;">← Slide 16</span></div>
+            <div class="formula-block" style="font-size:0.78rem;opacity:0.75;">
+              W=[[0.5,0.3],[0.2,0.8]]: &nbsp; Wh<sub>v</sub>=[0.49,0.40]<br/>
+              Wh<sub>A</sub>=[0.50,0.20] &nbsp; Wh<sub>B</sub>=[0.30,0.80] &nbsp; Wh<sub>C</sub>=[0.80,1.00]
             </div>
-            <div class="node-info">
-              <strong>Projeções calculadas:</strong><br/>
-              Wh<sub>v</sub> &nbsp;= [0.49, 0.40]<br/>
-               Wh<sub>A</sub> = [0.50, 0.20]<br/>
-               Wh<sub>B</sub> = [0.30, 0.80]<br/>
-               Wh<sub>C</sub> = [0.80, 1.00]
-            </div>
-            <div class="highlight-box" style="background:var(--bg3);border-left:3px solid #7c3aed;">
-              <span class="icon">🔵</span>
-              <span>W projeta os embeddings no espaço onde a atenção será medida</span>
-            </div>
+            <a href="slide16.html" style="font-size:0.78rem;color:var(--teal);">← Ver cálculo matricial no Slide 16</a>
           </div>
 
-          <!-- Passo 3 -->
+          <!-- Passo 3 (ref slide16) -->
           <div class="step-content" id="sc3c">
-            <div class="step-title">3. Score com vetor a</div>
-            <div class="formula-block">
-              <strong>a</strong> ∈ ℝ<sup>2d'</sup> — vetor de atenção treinável<br/>
-              e<sub>vu</sub> = LeakyReLU(<strong>a</strong><sup>T</sup>·[Wh<sub>v</sub> ‖ Wh<sub>u</sub>])
+            <div class="step-title" style="color:#94a3b8;">3. Score com vetor a <span style="font-size:0.7rem;font-weight:400;">← Slide 16</span></div>
+            <div class="formula-block" style="font-size:0.78rem;opacity:0.75;">
+              a=[0.9,0.4,0.7,0.2]<br/>
+              e(v,A)=<strong>2.1</strong> &nbsp; e(v,B)=<strong>0.5</strong> &nbsp; e(v,C)=<strong>1.3</strong>
             </div>
-            <div class="node-info">
-              e(v, A) = <strong>2.1</strong><br/>
-              e(v, B) = <strong>0.5</strong><br/>
-              e(v, C) = <strong>1.3</strong>
-            </div>
-            <div class="highlight-box yellow">
-              <span class="icon">💬</span>
-              <span>Assumimos que <strong>A</strong> é o vizinho mais importante para v</span>
-            </div>
+            <a href="slide16.html" style="font-size:0.78rem;color:var(--teal);">← Ver tabela de scores no Slide 16</a>
           </div>
 
           <!-- Passo 4 -->
           <div class="step-content" id="sc4c">
+            <div style="font-size:0.72rem;color:var(--text-dim);margin-bottom:0.3rem;padding:0.2rem 0.5rem;background:var(--bg3);border-radius:3px;border-left:2px solid var(--teal);">
+              Passos 1–3 calculados no <a href="slide16.html" style="color:var(--teal);">Slide 16</a>. Aqui usamos os α resultantes.
+            </div>
             <div class="step-title">4. Softmax → α</div>
             <div class="formula-block">
               α<sub>vu</sub> = exp(e<sub>vu</sub>) / Σ<sub>k</sub> exp(e<sub>vk</sub>)
@@ -186,16 +162,20 @@
           <!-- Passo 5 -->
           <div class="step-content" id="sc5c">
             <div class="step-title">5. Agregação Ponderada</div>
-            <div class="formula-block">
-              h<sub>v</sub>' = σ(<br/>
-               &nbsp;α<sub>A</sub>·Wh<sub>A</sub> +<br/>
-               &nbsp;α<sub>B</sub>·Wh<sub>B</sub> +<br/>
-               &nbsp;α<sub>C</sub>·Wh<sub>C</sub><br/>
-              )
+            <div class="formula-block" style="font-size:0.78rem;line-height:1.7;">
+              h<sub>v</sub>' = σ(α<sub>A</sub>·Wh<sub>A</sub> + α<sub>B</sub>·Wh<sub>B</sub> + α<sub>C</sub>·Wh<sub>C</sub>)<br/>
+              = σ(0.62·[0.50,0.20] + 0.12·[0.30,0.80] + 0.26·[0.80,1.00])<br/>
+              = σ([0.31,0.12] + [0.04,0.10] + [0.21,0.26])<br/>
+              = σ([<strong>0.55</strong>, <strong>0.48</strong>])<br/>
+              ≈ [<strong style="color:var(--teal);">0.64</strong>, <strong style="color:var(--teal);">0.62</strong>]
+            </div>
+            <div style="font-size:0.73rem;background:#fef9c3;border:1px solid #ca8a04;border-radius:3px;padding:0.35rem 0.5rem;color:#78350f;margin-top:0.3rem;">
+              🔑 <strong>W aqui é a mesma</strong> usada no Slide 16 para calcular Wh<br/>
+              W = [[0.5, 0.3], [0.2, 0.8]]
             </div>
             <div class="highlight-box teal">
               <span class="icon">✅</span>
-              <span>Intensidade de cada vizinho proporcional ao α aprendido!</span>
+              <span>A intensidade de cada vizinho é proporcional ao α aprendido!</span>
             </div>
           </div>
         </div>
@@ -307,14 +287,42 @@
       document.getElementById('ab1s3').style.width='0%';
       document.getElementById('ab2s3').style.width='0%';
       document.getElementById('ab3s3').style.width='0%';
-      applyStep(1);
+      function goToStep(n) {
+      if (n >= 1 && n <= TOTAL_STEPS) {
+        currentStep = n;
+        // Reset bars when going back before step 4
+        if (n < 4) {
+          document.getElementById('ab1s3').style.width='0%';
+          document.getElementById('ab2s3').style.width='0%';
+          document.getElementById('ab3s3').style.width='0%';
+        }
+        applyStep(n);
+      }
     }
 
-    applyStep(1);
+    applyStep(4);
+    currentStep = 4;
+    }
+
+    function goToStep(n) {
+      if (n >= 1 && n <= TOTAL_STEPS) {
+        currentStep = n;
+        // Reset bars when going back before step 4
+        if (n < 4) {
+          document.getElementById('ab1s3').style.width='0%';
+          document.getElementById('ab2s3').style.width='0%';
+          document.getElementById('ab3s3').style.width='0%';
+        }
+        applyStep(n);
+      }
+    }
+
+    applyStep(4);
+    currentStep = 4;
 
     (function(){
       const container = document.getElementById('navDots');
-      const CURRENT = 17, TOTAL = 23;
+      const CURRENT = 17, TOTAL = 24;
       for (let i = 1; i <= TOTAL; i++) {
         const dot = document.createElement('div');
         dot.className = 'dot' + (i === CURRENT ? ' active' : '');

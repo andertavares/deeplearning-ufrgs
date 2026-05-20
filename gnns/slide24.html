@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 24 – Cabeça de Predição: do Embedding à Tarefa</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .pred-layout {
+      display: grid;
+      grid-template-columns: 1fr 1.5fr;
+      gap: 1.2rem;
+      flex: 1;
+    }
+
+    /* Task selector column */
+    .task-col {
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+    }
+    .task-card {
+      background: var(--bg2);
+      border: 2px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 0.85rem 1rem;
+      cursor: pointer;
+      transition: border-color 0.25s, background 0.25s, transform 0.2s, box-shadow 0.2s;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      box-shadow: var(--shadow);
+    }
+    .task-card:hover { transform: translateX(4px); box-shadow: 0 4px 18px rgba(13,110,110,0.12); }
+    .task-card.active-node { border-color: #0d6e6e; background: #f0fdfa; }
+    .task-card.active-edge { border-color: #d97706; background: #fffbeb; }
+    .task-card.active-graph { border-color: #7c3aed; background: #f5f3ff; }
+
+    .task-icon {
+      font-size: 1.6rem;
+      flex-shrink: 0;
+      margin-top: 0.1rem;
+    }
+    .task-label {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--text);
+    }
+    .task-formula {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      margin-top: 0.2rem;
+    }
+    .task-card.active-node .task-formula { color: var(--teal); }
+    .task-card.active-edge .task-formula { color: #b45309; }
+    .task-card.active-graph .task-formula { color: #7c3aed; }
+
+    /* Right pipeline panel */
+    .pipeline-panel {
+      background: var(--bg2);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 1.1rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    /* Animated pipeline flow */
+    .pipe-flow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+      padding: 0.6rem;
+      background: var(--bg3);
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border2);
+      min-height: 56px;
+    }
+    .pipe-step {
+      background: var(--bg2);
+      border: 2px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0.35rem 0.7rem;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      transition: all 0.4s;
+      text-align: center;
+    }
+    .pipe-step.lit-node  { border-color: var(--teal);   background: var(--teal-lt);   color: var(--teal); }
+    .pipe-step.lit-edge  { border-color: #d97706;        background: #fef3c7;           color: #92400e; }
+    .pipe-step.lit-graph { border-color: #7c3aed;        background: var(--purple-lt);  color: #5b21b6; }
+    .pipe-arrow-txt { color: var(--text-dim); font-size: 1rem; font-weight: 700; }
+
+    /* SVG diagram */
+    .diagram-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .task-svg { width: 100%; max-width: 420px; }
+
+    /* Description box */
+    .desc-box {
+      background: var(--bg3);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0.65rem 0.9rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      min-height: 52px;
+      transition: background 0.3s, border-color 0.3s;
+    }
+    .desc-box.dn { background: #f0fdfa; border-color: var(--teal); }
+    .desc-box.de { background: #fffbeb; border-color: #d97706; }
+    .desc-box.dg { background: #f5f3ff; border-color: #7c3aed; }
+
+    /* Readout selector */
+    .readout-row {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .readout-lbl { font-size: 0.8rem; color: var(--text-dim); font-weight: 600; }
+    .btn-readout {
+      font-size: 0.78rem;
+      font-family: 'Fira Code', monospace;
+      padding: 0.3rem 0.7rem;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid #7c3aed;
+      background: #f5f3ff;
+      color: #5b21b6;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .btn-readout:hover  { background: #ede9fe; transform: scale(1.05); }
+    .btn-readout.active { background: #7c3aed; color: #fff; }
+    #readoutRow { display: none; }
+
+    /* Node glow for SVG */
+    .sv-node { transition: fill 0.4s, stroke 0.4s, r 0.4s; }
+    .sv-edge-line { stroke: #c7d0e0; stroke-width: 2; }
+    .sv-mlp-rect { transition: fill 0.4s, stroke 0.4s; }
+    .sv-out-rect  { transition: fill 0.4s, stroke 0.4s; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">GNNs</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Slide 24 / 24</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Cabeça de Predição: do Embedding à Tarefa</h1>
+        <p class="slide-subtitle">Bloco 5 — Conclusão do Pipeline</p>
+      </div>
+
+      <div class="pred-layout">
+        <!-- LEFT: task cards -->
+        <div class="task-col">
+          <div style="font-size:0.82rem;color:var(--text-dim);font-weight:600;padding:0 0.2rem;">
+            Selecione o nível da tarefa:
+          </div>
+
+          <div class="task-card" id="card-node" onclick="selectTask('node')">
+            <div class="task-icon">🔵</div>
+            <div>
+              <div class="task-label">Nível de Nó</div>
+              <div class="task-formula">ŷ_v = MLP( h_v^(L) )</div>
+              <div style="font-size:0.78rem;color:var(--text-dim);margin-top:0.25rem;">
+                Classifica cada nó individualmente usando seu embedding final.
+              </div>
+            </div>
+          </div>
+
+          <div class="task-card" id="card-edge" onclick="selectTask('edge')">
+            <div class="task-icon">🔗</div>
+            <div>
+              <div class="task-label">Nível de Aresta</div>
+              <div class="task-formula">ŷ_uv = MLP( h_u^(L) ‖ h_v^(L) )</div>
+              <div style="font-size:0.78rem;color:var(--text-dim);margin-top:0.25rem;">
+                Concatena embeddings dos dois nós e classifica o par (u, v).
+              </div>
+            </div>
+          </div>
+
+          <div class="task-card" id="card-graph" onclick="selectTask('graph')">
+            <div class="task-icon">🗺️</div>
+            <div>
+              <div class="task-label">Nível de Grafo</div>
+              <div class="task-formula">h_G = READOUT({h_v}) &nbsp;→&nbsp; ŷ = MLP(h_G)</div>
+              <div style="font-size:0.78rem;color:var(--text-dim);margin-top:0.25rem;">
+                Agrega todos os embeddings em um vetor do grafo; MLP classifica o grafo inteiro.
+              </div>
+            </div>
+          </div>
+
+          <!-- Readout selector, shown only for graph task -->
+          <div id="readoutRow" class="readout-row">
+            <span class="readout-lbl">READOUT:</span>
+            <button class="btn-readout active" id="ro-sum"   onclick="setReadout('sum')">Σ  sum</button>
+            <button class="btn-readout"         id="ro-mean"  onclick="setReadout('mean')">μ  mean</button>
+            <button class="btn-readout"         id="ro-max"   onclick="setReadout('max')">↑  max</button>
+          </div>
+        </div>
+
+        <!-- RIGHT: pipeline panel -->
+        <div class="pipeline-panel">
+          <div class="panel-title" id="pipeTitle">Pipeline da Tarefa</div>
+
+          <!-- Animated pipeline steps -->
+          <div class="pipe-flow" id="pipeFlow">
+            <div class="pipe-step" id="ps0">h_v^(L)</div>
+            <div class="pipe-arrow-txt">→</div>
+            <div class="pipe-step" id="ps1">?</div>
+            <div class="pipe-arrow-txt">→</div>
+            <div class="pipe-step" id="ps2">MLP</div>
+            <div class="pipe-arrow-txt">→</div>
+            <div class="pipe-step" id="ps3">ŷ</div>
+          </div>
+
+          <!-- SVG diagram -->
+          <div class="diagram-wrap">
+            <svg class="task-svg" viewBox="0 0 420 200" id="taskSvg">
+              <defs>
+                <marker id="arrT" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                  <path d="M0,0 L6,3 L0,6 Z" fill="#6b7fa3"/>
+                </marker>
+                <marker id="arrN" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                  <path d="M0,0 L6,3 L0,6 Z" fill="#0d6e6e"/>
+                </marker>
+                <marker id="arrE" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                  <path d="M0,0 L6,3 L0,6 Z" fill="#d97706"/>
+                </marker>
+                <marker id="arrG" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                  <path d="M0,0 L6,3 L0,6 Z" fill="#7c3aed"/>
+                </marker>
+              </defs>
+
+              <!-- ===== NODE TASK group ===== -->
+              <g id="g-node" opacity="0" style="transition:opacity 0.4s">
+                <!-- Graph nodes -->
+                <line x1="45" y1="100" x2="95" y2="60"  class="sv-edge-line"/>
+                <line x1="45" y1="100" x2="95" y2="140" class="sv-edge-line"/>
+                <line x1="95" y1="60"  x2="145" y2="100" class="sv-edge-line"/>
+                <line x1="95" y1="140" x2="145" y2="100" class="sv-edge-line"/>
+                <!-- Focus node (v) -->
+                <circle cx="45" cy="100" r="18" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="2.5"/>
+                <text x="45" y="96"  text-anchor="middle" font-size="8" fill="#0d6e6e" font-weight="700">h_v</text>
+                <text x="45" y="108" text-anchor="middle" font-family="Fira Code" font-size="7" fill="#0d6e6e">[...]</text>
+                <!-- Other nodes -->
+                <circle cx="95"  cy="60"  r="13" fill="#e5e7eb" stroke="#9ca3af" stroke-width="2"/>
+                <circle cx="145" cy="100" r="13" fill="#e5e7eb" stroke="#9ca3af" stroke-width="2"/>
+                <circle cx="95"  cy="140" r="13" fill="#e5e7eb" stroke="#9ca3af" stroke-width="2"/>
+                <!-- Arrow to MLP -->
+                <line x1="64" y1="100" x2="180" y2="100" stroke="#0d6e6e" stroke-width="2" marker-end="url(#arrN)"/>
+                <!-- MLP box -->
+                <rect x="182" y="80" width="72" height="40" rx="8" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="2"/>
+                <text x="218" y="98"  text-anchor="middle" font-size="10" fill="#0d6e6e" font-weight="700">MLP</text>
+                <text x="218" y="112" text-anchor="middle" font-family="Fira Code" font-size="8" fill="#0d6e6e">W, b</text>
+                <!-- Arrow to output -->
+                <line x1="254" y1="100" x2="295" y2="100" stroke="#0d6e6e" stroke-width="2" marker-end="url(#arrN)"/>
+                <!-- Output box -->
+                <rect x="297" y="78" width="110" height="44" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+                <text x="352" y="97"  text-anchor="middle" font-size="9"  fill="#166534" font-weight="700">ŷ_v = Classe A</text>
+                <text x="352" y="111" text-anchor="middle" font-family="Fira Code" font-size="8" fill="#166534">softmax([...]) </text>
+              </g>
+
+              <!-- ===== EDGE TASK group ===== -->
+              <g id="g-edge" opacity="0" style="transition:opacity 0.4s">
+                <!-- Two nodes u and v -->
+                <line x1="60" y1="70" x2="60" y2="135" stroke="#d97706" stroke-width="3" stroke-dasharray="5,3"/>
+                <!-- Node u -->
+                <circle cx="60" cy="55"  r="18" fill="#fff7ed" stroke="#d97706" stroke-width="2.5"/>
+                <text x="60" y="51"  text-anchor="middle" font-size="8" fill="#92400e" font-weight="700">h_u</text>
+                <text x="60" y="63"  text-anchor="middle" font-family="Fira Code" font-size="7" fill="#92400e">[...]</text>
+                <!-- Node v -->
+                <circle cx="60" cy="150" r="18" fill="#fff7ed" stroke="#d97706" stroke-width="2.5"/>
+                <text x="60" y="146" text-anchor="middle" font-size="8" fill="#92400e" font-weight="700">h_v</text>
+                <text x="60" y="158" text-anchor="middle" font-family="Fira Code" font-size="7" fill="#92400e">[...]</text>
+                <!-- Arrows to CONCAT -->
+                <line x1="79" y1="63"  x2="138" y2="95"  stroke="#d97706" stroke-width="2" marker-end="url(#arrE)"/>
+                <line x1="79" y1="142" x2="138" y2="110" stroke="#d97706" stroke-width="2" marker-end="url(#arrE)"/>
+                <!-- CONCAT box -->
+                <rect x="140" y="84" width="56" height="36" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+                <text x="168" y="100" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">CONCAT</text>
+                <text x="168" y="113" text-anchor="middle" font-family="Fira Code" font-size="7" fill="#92400e">[h_u‖h_v]</text>
+                <!-- Arrow to MLP -->
+                <line x1="196" y1="102" x2="222" y2="102" stroke="#d97706" stroke-width="2" marker-end="url(#arrE)"/>
+                <!-- MLP box -->
+                <rect x="224" y="82" width="60" height="40" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+                <text x="254" y="100" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">MLP</text>
+                <text x="254" y="114" text-anchor="middle" font-family="Fira Code" font-size="8" fill="#92400e">W, b</text>
+                <!-- Arrow to output -->
+                <line x1="284" y1="102" x2="308" y2="102" stroke="#d97706" stroke-width="2" marker-end="url(#arrE)"/>
+                <!-- Output box -->
+                <rect x="310" y="80" width="104" height="44" rx="8" fill="#fffbeb" stroke="#f59e0b" stroke-width="2"/>
+                <text x="362" y="99"  text-anchor="middle" font-size="9"  fill="#92400e" font-weight="700">ŷ_uv = 0.87</text>
+                <text x="362" y="113" text-anchor="middle" font-family="Fira Code" font-size="8" fill="#92400e">P(aresta existe)</text>
+              </g>
+
+              <!-- ===== GRAPH TASK group ===== -->
+              <g id="g-graph" opacity="0" style="transition:opacity 0.4s">
+                <!-- Multiple nodes -->
+                <line x1="30"  y1="80"  x2="70"  y2="50"  class="sv-edge-line"/>
+                <line x1="30"  y1="80"  x2="70"  y2="110" class="sv-edge-line"/>
+                <line x1="70"  y1="50"  x2="110" y2="80"  class="sv-edge-line"/>
+                <line x1="70"  y1="110" x2="110" y2="80"  class="sv-edge-line"/>
+                <line x1="70"  y1="50"  x2="70"  y2="110" class="sv-edge-line"/>
+                <circle cx="30"  cy="80"  r="13" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+                <text x="30"  y="84" text-anchor="middle" font-family="Fira Code" font-size="7" fill="#5b21b6">h₁</text>
+                <circle cx="70"  cy="50"  r="13" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+                <text x="70"  y="54" text-anchor="middle" font-family="Fira Code" font-size="7" fill="#5b21b6">h₂</text>
+                <circle cx="110" cy="80"  r="13" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+                <text x="110" y="84" text-anchor="middle" font-family="Fira Code" font-size="7" fill="#5b21b6">h₃</text>
+                <circle cx="70"  cy="110" r="13" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+                <text x="70"  y="114" text-anchor="middle" font-family="Fira Code" font-size="7" fill="#5b21b6">h₄</text>
+                <!-- Arrows to READOUT -->
+                <line x1="43"  y1="80"  x2="136" y2="90"  stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrG)"/>
+                <line x1="70"  y1="63"  x2="136" y2="84"  stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrG)"/>
+                <line x1="123" y1="80"  x2="136" y2="87"  stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrG)"/>
+                <line x1="70"  y1="97"  x2="136" y2="93"  stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrG)"/>
+                <!-- READOUT box -->
+                <rect x="138" y="72" width="72" height="36" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+                <text x="174" y="88"  text-anchor="middle" font-size="9" fill="#5b21b6" font-weight="700">READOUT</text>
+                <text x="174" y="101" text-anchor="middle" font-family="Fira Code" font-size="8" fill="#5b21b6" id="ro-label">Σ sum</text>
+                <!-- Arrow to h_G -->
+                <line x1="210" y1="90" x2="234" y2="90" stroke="#7c3aed" stroke-width="2" marker-end="url(#arrG)"/>
+                <!-- h_G node -->
+                <circle cx="248" cy="90" r="14" fill="#ede9fe" stroke="#7c3aed" stroke-width="2.5"/>
+                <text x="248" y="87" text-anchor="middle" font-size="8"  fill="#5b21b6" font-weight="700">h_G</text>
+                <text x="248" y="99" text-anchor="middle" font-family="Fira Code" font-size="7" fill="#5b21b6">[...]</text>
+                <!-- Arrow to MLP -->
+                <line x1="262" y1="90" x2="284" y2="90" stroke="#7c3aed" stroke-width="2" marker-end="url(#arrG)"/>
+                <!-- MLP box -->
+                <rect x="286" y="71" width="54" height="38" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+                <text x="313" y="88"  text-anchor="middle" font-size="10" fill="#5b21b6" font-weight="700">MLP</text>
+                <text x="313" y="101" text-anchor="middle" font-family="Fira Code" font-size="8" fill="#5b21b6">W, b</text>
+                <!-- Arrow to output -->
+                <line x1="340" y1="90" x2="358" y2="90" stroke="#7c3aed" stroke-width="2" marker-end="url(#arrG)"/>
+                <!-- Output box -->
+                <rect x="360" y="69" width="58" height="42" rx="8" fill="#faf5ff" stroke="#8b5cf6" stroke-width="2"/>
+                <text x="389" y="86"  text-anchor="middle" font-size="9"  fill="#5b21b6" font-weight="700">ŷ_G</text>
+                <text x="389" y="99" text-anchor="middle" font-family="Fira Code" font-size="8" fill="#5b21b6">Tóxico?</text>
+              </g>
+
+              <!-- Default: placeholder text -->
+              <g id="g-default">
+                <text x="210" y="90"  text-anchor="middle" font-size="14" fill="#c7d0e0" font-weight="700">← selecione uma tarefa</text>
+                <text x="210" y="110" text-anchor="middle" font-size="11" fill="#d1d9e8">para ver o diagrama</text>
+              </g>
+            </svg>
+          </div>
+
+          <!-- Description -->
+          <div class="desc-box" id="descBox">
+            Clique em uma das tarefas à esquerda para ver como o MLP usa os embeddings finais da GNN.
+          </div>
+        </div>
+      </div>
+
+      <div class="insight-box">
+        <span class="i-icon">💡</span>
+        <span class="i-text">
+          Os <strong>pesos da GNN</strong> (Message Passing) e os <strong>pesos do MLP</strong> (cabeça de predição) são treinados
+          <em>conjuntamente</em> com backpropagation — a GNN aprende embeddings úteis para a tarefa específica.
+        </span>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide23.html'">← Anterior</button>
+      <div class="nav-dots" id="navDots"></div>
+      <button class="btn-nav btn-next" disabled>Fim →</button>
+    </nav>
+  </div>
+
+  <script>
+    let currentTask = null;
+    let currentReadout = 'sum';
+
+    const taskColors = {
+      node:  { lit: 'lit-node',  card: 'active-node',  desc: 'dn' },
+      edge:  { lit: 'lit-edge',  card: 'active-edge',  desc: 'de' },
+      graph: { lit: 'lit-graph', card: 'active-graph', desc: 'dg' }
+    };
+
+    const pipelineConfigs = {
+      node: {
+        steps: ['h_v^(L)', '—', 'MLP', 'ŷ_v'],
+        title: 'Pipeline — Nível de Nó',
+        desc: '<strong>Nível de Nó:</strong> após L camadas de message passing, o embedding h_v^(L) de cada nó é passado diretamente por um MLP. O output é uma predição por nó (e.g., classe, rótulo).'
+      },
+      edge: {
+        steps: ['h_u^(L), h_v^(L)', 'CONCAT', 'MLP', 'ŷ_uv'],
+        title: 'Pipeline — Nível de Aresta',
+        desc: '<strong>Nível de Aresta:</strong> os embeddings dos dois nós extremos (u, v) são concatenados [h_u ‖ h_v] e passados pelo MLP. Pode-se também usar produto escalar ou diferença absoluta.'
+      },
+      graph: {
+        steps: ['{h_v}', 'READOUT', 'MLP', 'ŷ_G'],
+        title: 'Pipeline — Nível de Grafo',
+        desc: '<strong>Nível de Grafo:</strong> um operador de readout (sum / mean / max) agrega <em>todos</em> os embeddings de nós em um único vetor h_G, que então é classificado pelo MLP.'
+      }
+    };
+
+    function selectTask(task) {
+      currentTask = task;
+      const cfg = pipelineConfigs[task];
+      const col = taskColors[task];
+
+      // Update cards
+      ['node','edge','graph'].forEach(t => {
+        const c = document.getElementById('card-' + t);
+        c.classList.remove('active-node','active-edge','active-graph');
+      });
+      document.getElementById('card-' + task).classList.add(col.card);
+
+      // Update pipeline steps
+      const stepIds = ['ps0','ps1','ps2','ps3'];
+      stepIds.forEach((id, i) => {
+        const el = document.getElementById(id);
+        el.className = 'pipe-step';
+        el.textContent = cfg.steps[i];
+      });
+      // Animate lit class sequentially
+      stepIds.forEach((id, i) => {
+        setTimeout(() => {
+          document.getElementById(id).classList.add(col.lit);
+        }, i * 180);
+      });
+
+      // Update title
+      document.getElementById('pipeTitle').textContent = cfg.title;
+
+      // Update description
+      const db = document.getElementById('descBox');
+      db.className = 'desc-box ' + col.desc;
+      db.innerHTML = cfg.desc;
+
+      // Show/hide SVG groups
+      document.getElementById('g-default').setAttribute('opacity','0');
+      ['node','edge','graph'].forEach(t => {
+        document.getElementById('g-' + t).style.opacity = (t === task) ? '1' : '0';
+      });
+
+      // Show readout row only for graph
+      document.getElementById('readoutRow').style.display = (task === 'graph') ? 'flex' : 'none';
+    }
+
+    function setReadout(type) {
+      currentReadout = type;
+      ['sum','mean','max'].forEach(r => {
+        document.getElementById('ro-' + r).classList.toggle('active', r === type);
+      });
+      const labels = { sum: 'Σ  sum', mean: 'μ  mean', max: '↑  max' };
+      document.getElementById('ro-label').textContent = labels[type];
+    }
+
+    (function(){
+      const container = document.getElementById('navDots');
+      const CURRENT = 24;
+      const TOTAL   = 24;
+      for (let i = 1; i <= TOTAL; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'dot' + (i === CURRENT ? ' active' : '');
+        dot.title = 'Slide ' + i;
+        dot.style.cursor = 'pointer';
+        dot.addEventListener('click', () => {
+          location.href = 'slide' + String(i).padStart(2,'0') + '.html';
+        });
+        container.appendChild(dot);
+      }
+    })();
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowLeft' || e.key === 'PageUp') location.href = 'slide23.html';
+    });
+  </script>
+</body>
+</html>
