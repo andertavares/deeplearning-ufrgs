@@ -10,34 +10,34 @@
     .mat-cell {
       padding: 3px 6px;
       text-align: center;
-      font-size: 0.7rem;
+      font-size: 0.68rem;
       font-family: 'Fira Code', monospace;
       background: var(--bg3);
       color: var(--text);
       border: 1.5px solid transparent;
       border-radius: 3px;
       transition: background 0.15s, border-color 0.15s;
-      min-width: 32px;
+      min-width: 30px;
     }
     .mat-cell.neg       { background: #fee2e2; color: #b91c1c; }
     .mat-cell.hl        { background: #fde68a !important; border-color: #ca8a04 !important; font-weight: 700 !important; }
     .mat-cell.sel       { background: #bbf7d0 !important; border-color: #15803d !important; font-weight: 700 !important; color: #14532d !important; }
+    .mat-cell.hl-row    { background: #e0f2fe !important; border-color: #0369a1 !important; }
     .mat-cell.relu-clip { background: #fef3c7; color: #854d0e; border-color: #f59e0b; font-style: italic; }
     .mat-cell.relu-keep { background: #dcfce7; color: #166534; font-weight: 700; }
     .mat-cell[data-click]:hover { opacity: 0.8; cursor: pointer; }
-    .mat-node-lbl { font-size: 0.62rem; font-weight: 700; font-family: 'Inter', sans-serif; padding-right: 4px; vertical-align: middle; }
-    .mat-title { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; text-align: center; margin-bottom: 0.2rem; }
+    .mat-node-lbl { font-size: 0.6rem; font-weight: 700; font-family: 'Inter', sans-serif; padding-right: 4px; vertical-align: middle; }
+    .mat-title { font-size: 0.63rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; text-align: center; margin-bottom: 0.2rem; }
     table.mat { border-collapse: separate; border-spacing: 2px; }
     .op-sym {
       align-self: center;
-      font-size: 1.2rem; font-weight: 700;
-      color: var(--text-dim); padding: 0 0.2rem;
+      font-size: 1.15rem; font-weight: 700;
+      color: var(--text-dim); padding: 0 0.15rem;
     }
-    .mat-row { display:flex; align-items:flex-start; justify-content:center; gap:0.3rem; flex-wrap:wrap; margin-bottom:0.5rem; }
-    .section-label {
-      font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.07em;
-      color:var(--text-dim); padding:0.15rem 0.5rem; border-bottom:1.5px solid var(--border2);
-      margin-bottom:0.3rem; margin-top:0.2rem;
+    .step-badge {
+      display:inline-block;
+      font-size:0.6rem; font-weight:700; padding:0.1rem 0.35rem;
+      border-radius:999px; margin-right:0.25rem; vertical-align:middle;
     }
   </style>
 </head>
@@ -56,7 +56,7 @@
       </div>
 
       <!-- Single full-width panel -->
-      <div style="flex:1;background:var(--bg2);border:1.5px solid var(--border2);border-radius:var(--radius);padding:0.8rem 1rem;display:flex;flex-direction:column;gap:0.5rem;box-shadow:var(--shadow);overflow:auto;">
+      <div style="flex:1;background:var(--bg2);border:1.5px solid var(--border2);border-radius:var(--radius);padding:0.7rem 1rem;display:flex;flex-direction:column;gap:0.5rem;box-shadow:var(--shadow);overflow:auto;">
 
         <!-- Formula header -->
         <div style="display:flex;align-items:center;justify-content:center;gap:0.4rem;flex-wrap:wrap;font-family:'Fira Code',monospace;font-size:1rem;">
@@ -67,67 +67,72 @@
           <span style="color:var(--teal);font-weight:700;">H<sup>(l)</sup></span>
           <span style="color:#1d4ed8;font-weight:700;">W</span>
           <span style="color:var(--text-dim);font-weight:700;">)</span>
-          <span style="font-size:0.72rem;color:var(--text-muted);margin-left:0.7rem;font-family:'Inter',sans-serif;">Ã = A+I &nbsp;·&nbsp; W compartilhado entre todos os nós &nbsp;·&nbsp; Gather+Aggregate+Update em paralelo</span>
+          <span style="font-size:0.7rem;color:var(--text-muted);margin-left:0.7rem;font-family:'Inter',sans-serif;">Ã = A+I &nbsp;·&nbsp; W compartilhado &nbsp;·&nbsp; Gather+Aggregate+Update em paralelo</span>
         </div>
 
-        <!-- Hint -->
-        <div style="font-size:0.68rem;color:var(--text-dim);text-align:center;font-style:italic;">Clique em uma célula do resultado para destacar as entradas correspondentes.</div>
+        <!-- Legend -->
+        <div style="font-size:0.65rem;color:var(--text-dim);text-align:center;font-style:italic;">
+          <span style="background:#fde68a;border:1px solid #ca8a04;border-radius:3px;padding:0 4px;">amarelo</span> = linha/col usada &nbsp;
+          <span style="background:#bbf7d0;border:1px solid #15803d;border-radius:3px;padding:0 4px;color:#14532d;">verde</span> = célula selecionada &nbsp;
+          <span style="background:#e0f2fe;border:1px solid #0369a1;border-radius:3px;padding:0 4px;">azul</span> = linha de Ã·H para ×W &nbsp;
+          Clique em Ã·H ou Z para destacar.
+        </div>
 
-        <!-- Step 1: Ã · H -->
-        <div class="section-label" style="color:#ca8a04;">① Ã · H<sup>(0)</sup> = Ã·H &nbsp;— agregação dos embeddings iniciais</div>
-        <div class="mat-row" id="rowAH"></div>
+        <!-- ONE row: Ã · H = [AH] · W = Z → ReLU → H^(l+1) -->
+        <div id="rowAll" style="display:flex;align-items:flex-start;justify-content:center;gap:0.25rem;overflow-x:auto;padding:0.3rem 0.2rem;"></div>
 
-        <!-- Step 2: ÃH · W = Z -->
-        <div class="section-label" style="color:#92400e;">② Ã·H · W = Z &nbsp;— transformação linear (negativos → vermelho)</div>
-        <div class="mat-row" id="rowZ"></div>
+        <!-- Step labels row -->
+        <div style="display:flex;justify-content:center;gap:1rem;font-size:0.65rem;flex-wrap:wrap;">
+          <span><span class="step-badge" style="background:#fef9c3;border:1px solid #ca8a04;color:#78350f;">①</span>Ã·H — agrega vizinhos</span>
+          <span><span class="step-badge" style="background:#fef3c7;border:1px solid #b45309;color:#7c2d12;">②</span>×W — transforma</span>
+          <span><span class="step-badge" style="background:#dcfce7;border:1px solid #15803d;color:#14532d;">③</span>ReLU — não-linearidade</span>
+        </div>
 
-        <!-- Step 3: ReLU(Z) = H^(l+1) -->
-        <div class="section-label" style="color:#166534;">③ ReLU(Z) = H<sup>(l+1)</sup> &nbsp;— não-linearidade: zera valores negativos</div>
-        <div class="mat-row" id="rowReLU"></div>
+        <!-- Graph of working example (embeddings outside nodes) -->
+        <div style="display:flex;justify-content:center;align-items:center;margin-top:0.2rem;">
+          <svg viewBox="0 0 500 235" style="width:100%;max-width:480px;max-height:175px;">
+            <!-- Edges: B1-X, B1-B2(diagonal), U1-U2(diagonal), U1-X, B2-X -->
+            <line x1="80"  y1="62"  x2="420" y2="173" stroke="#c7d0e0" stroke-width="1.5"/><!-- B1-B2 -->
+            <line x1="80"  y1="62"  x2="250" y2="118" stroke="#c7d0e0" stroke-width="1.5"/><!-- B1-X -->
+            <line x1="420" y1="62"  x2="80"  y2="173" stroke="#c7d0e0" stroke-width="1.5"/><!-- U1-U2 -->
+            <line x1="420" y1="62"  x2="250" y2="118" stroke="#c7d0e0" stroke-width="1.5"/><!-- U1-X -->
+            <line x1="420" y1="173" x2="250" y2="118" stroke="#c7d0e0" stroke-width="1.5"/><!-- B2-X -->
 
-        <!-- Graph of working example -->
-        <div class="section-label" style="color:var(--text-dim);">Grafo do exemplo de trabalho</div>
-        <div style="display:flex;justify-content:center;align-items:center;">
-          <svg id="graphSvg" viewBox="0 0 320 140" style="width:100%;max-width:360px;max-height:140px;">
-            <!-- Edges -->
-            <line x1="80"  y1="30"  x2="240" y2="30"  stroke="#c7d0e0" stroke-width="1.5"/><!-- U1-B1 ? No, let me redo edges -->
-            <!-- Adjacency: U1-U2, U1-X, B1-B2, B1-X, B2-X -->
-            <!-- Positions: B1 top-left(60,30), U1 top-right(260,30), U2 bottom-left(60,110), B2 bottom-right(260,110), X center(160,70) -->
-            <line x1="60"  y1="30"  x2="260" y2="110" stroke="#c7d0e0" stroke-width="1.5"/><!-- B1-B2 -->
-            <line x1="60"  y1="30"  x2="160" y2="70"  stroke="#c7d0e0" stroke-width="1.5"/><!-- B1-X -->
-            <line x1="260" y1="30"  x2="60"  y2="110" stroke="#c7d0e0" stroke-width="1.5"/><!-- U1-U2 -->
-            <line x1="260" y1="30"  x2="160" y2="70"  stroke="#c7d0e0" stroke-width="1.5"/><!-- U1-X -->
-            <line x1="260" y1="110" x2="160" y2="70"  stroke="#c7d0e0" stroke-width="1.5"/><!-- B2-X -->
+            <!-- B1: top-left (80,62) — embedding label above -->
+            <circle cx="80"  cy="62"  r="22" fill="#fee2e2" stroke="#b91c1c" stroke-width="2"/>
+            <text x="80"  y="66"  font-size="12" font-weight="700" fill="#b91c1c" text-anchor="middle" font-family="Fira Code">B1</text>
+            <!-- label outside: above-left -->
+            <text x="80"  y="22"  font-size="9.5" fill="#b91c1c" text-anchor="middle" font-family="Fira Code" font-weight="600">[620, 11]</text>
+            <line x1="80" y1="40" x2="80" y2="41" stroke="#b91c1c" stroke-width="1" stroke-dasharray="2,2"/>
 
-            <!-- B1: top-left (60,30) -->
-            <circle cx="60"  cy="30"  r="22" fill="#fee2e2" stroke="#b91c1c" stroke-width="2"/>
-            <text x="60"  y="27"  font-size="10" font-weight="700" fill="#b91c1c" text-anchor="middle" font-family="Fira Code">B1</text>
-            <text x="60"  y="41"  font-size="8"  fill="#b91c1c" text-anchor="middle" font-family="Fira Code">[620,11]</text>
+            <!-- U1: top-right (420,62) — embedding label above -->
+            <circle cx="420" cy="62"  r="22" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="2"/>
+            <text x="420" y="66"  font-size="12" font-weight="700" fill="#0d6e6e" text-anchor="middle" font-family="Fira Code">U1</text>
+            <text x="420" y="22"  font-size="9.5" fill="#0d6e6e" text-anchor="middle" font-family="Fira Code" font-weight="600">[730, 12]</text>
+            <line x1="420" y1="40" x2="420" y2="41" stroke="#0d6e6e" stroke-width="1" stroke-dasharray="2,2"/>
 
-            <!-- U1: top-right (260,30) -->
-            <circle cx="260" cy="30"  r="22" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="2"/>
-            <text x="260" y="27"  font-size="10" font-weight="700" fill="#0d6e6e" text-anchor="middle" font-family="Fira Code">U1</text>
-            <text x="260" y="41"  font-size="8"  fill="#0d6e6e" text-anchor="middle" font-family="Fira Code">[730,12]</text>
+            <!-- U2: bottom-left (80,173) — embedding label below -->
+            <circle cx="80"  cy="173" r="22" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="2"/>
+            <text x="80"  y="177" font-size="12" font-weight="700" fill="#0d6e6e" text-anchor="middle" font-family="Fira Code">U2</text>
+            <text x="80"  y="213" font-size="9.5" fill="#0d6e6e" text-anchor="middle" font-family="Fira Code" font-weight="600">[610, 4]</text>
+            <line x1="80" y1="195" x2="80" y2="196" stroke="#0d6e6e" stroke-width="1" stroke-dasharray="2,2"/>
 
-            <!-- U2: bottom-left (60,110) -->
-            <circle cx="60"  cy="110" r="22" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="2"/>
-            <text x="60"  y="107" font-size="10" font-weight="700" fill="#0d6e6e" text-anchor="middle" font-family="Fira Code">U2</text>
-            <text x="60"  y="121" font-size="8"  fill="#0d6e6e" text-anchor="middle" font-family="Fira Code">[610,4]</text>
+            <!-- B2: bottom-right (420,173) — embedding label below -->
+            <circle cx="420" cy="173" r="22" fill="#fee2e2" stroke="#b91c1c" stroke-width="2"/>
+            <text x="420" y="177" font-size="12" font-weight="700" fill="#b91c1c" text-anchor="middle" font-family="Fira Code">B2</text>
+            <text x="420" y="213" font-size="9.5" fill="#b91c1c" text-anchor="middle" font-family="Fira Code" font-weight="600">[735, 3]</text>
+            <line x1="420" y1="195" x2="420" y2="196" stroke="#b91c1c" stroke-width="1" stroke-dasharray="2,2"/>
 
-            <!-- B2: bottom-right (260,110) -->
-            <circle cx="260" cy="110" r="22" fill="#fee2e2" stroke="#b91c1c" stroke-width="2"/>
-            <text x="260" y="107" font-size="10" font-weight="700" fill="#b91c1c" text-anchor="middle" font-family="Fira Code">B2</text>
-            <text x="260" y="121" font-size="8"  fill="#b91c1c" text-anchor="middle" font-family="Fira Code">[735,3]</text>
-
-            <!-- X: center (160,70) -->
-            <circle cx="160" cy="70"  r="22" fill="#e5e7eb" stroke="#6b7fa3" stroke-width="2"/>
-            <text x="160" y="67"  font-size="10" font-weight="700" fill="#6b7fa3" text-anchor="middle" font-family="Fira Code">X</text>
-            <text x="160" y="81"  font-size="8"  fill="#6b7fa3" text-anchor="middle" font-family="Fira Code">[675,7]</text>
+            <!-- X: center (250,118) — embedding label to the right -->
+            <circle cx="250" cy="118" r="22" fill="#e5e7eb" stroke="#6b7fa3" stroke-width="2"/>
+            <text x="250" cy="118" y="122" font-size="12" font-weight="700" fill="#6b7fa3" text-anchor="middle" font-family="Fira Code">X</text>
+            <text x="320" y="122" font-size="9.5" fill="#6b7fa3" text-anchor="start" font-family="Fira Code" font-weight="600">[675, 7]</text>
+            <line x1="272" y1="118" x2="305" y2="118" stroke="#6b7fa3" stroke-width="1" stroke-dasharray="2,2"/>
           </svg>
         </div>
 
         <!-- Bottom note -->
-        <div style="font-size:0.8rem;background:#fef9c3;border:1.5px solid #ca8a04;border-radius:var(--radius-sm);padding:0.5rem 0.7rem;color:#78350f;line-height:1.5;text-align:center;">
+        <div style="font-size:0.78rem;background:#fef9c3;border:1.5px solid #ca8a04;border-radius:var(--radius-sm);padding:0.45rem 0.7rem;color:#78350f;line-height:1.5;text-align:center;">
           ⚡ O produto <strong>ÃHW</strong> realiza Gather+Aggregate+Update para <em>todos os nós em paralelo</em> — os pesos <strong>W</strong> são os mesmos para todos!
         </div>
       </div>
@@ -175,13 +180,15 @@
 
     const H1 = ZMAT.map(row => row.map(v => Math.max(0, v)));
 
-    // Current highlight state
-    let hlAH = {i:-1, j:-1}; // highlight in Ã·H
-    let hlZ  = {i:-1, j:-1}; // highlight in Z
+    // Highlight state
+    // hlAH: clicking AH cell (i,j) → highlight Ã row i + H0 col j
+    // hlZ:  clicking Z cell (i,j) → highlight AH row i + W col j
+    let hlAH = {i:-1, j:-1};
+    let hlZ  = {i:-1, j:-1};
 
     function matTable(data, pfx, opts) {
       const o = opts || {};
-      let html = '<div style="display:flex;flex-direction:column;align-items:center;">';
+      let html = '<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;">';
       if (o.titleText) {
         html += `<div class="mat-title" style="color:${o.titleColor||'var(--text-dim)'};">${o.titleText}</div>`;
       }
@@ -195,15 +202,20 @@
         row.forEach((v, j) => {
           let cls = 'mat-cell';
           if (o.negRed && v < 0) cls += ' neg';
-          if (o.reluRef && o.reluRef[i][j] < 0 && v === 0)        cls += ' relu-clip';
-          else if (o.reluRef && o.reluRef[i][j] >= 0 && v > 0)    cls += ' relu-keep';
+          if (o.reluRef && o.reluRef[i][j] < 0 && v === 0)      cls += ' relu-clip';
+          else if (o.reluRef && o.reluRef[i][j] >= 0 && v > 0)  cls += ' relu-keep';
 
+          // Normal highlight logic
           const hlR = (o.hlRow !== undefined && o.hlRow >= 0 && o.hlRow === i);
           const hlC = (o.hlCol !== undefined && o.hlCol >= 0 && o.hlCol === j);
           const sel = (o.selI !== undefined && o.selI >= 0 && o.selI === i &&
                        o.selJ !== undefined && o.selJ >= 0 && o.selJ === j);
+          // Blue row highlight (for AH when a Z cell is selected)
+          const hlRowBlue = (o.hlRowBlue !== undefined && o.hlRowBlue >= 0 && o.hlRowBlue === i);
+
           if (sel) cls += ' sel';
           else if (hlR || hlC) cls += ' hl';
+          else if (hlRowBlue) cls += ' hl-row';
 
           const click = o.clickFn ? ` data-click="1" onclick="${o.clickFn}(${i},${j})"` : '';
           html += `<td class="${cls}"${click} id="${pfx}-${i}-${j}">${v}</td>`;
@@ -214,68 +226,72 @@
       return html;
     }
 
-    function opSym(s) {
-      return `<div class="op-sym">${s}</div>`;
+    function opSym(s, sub) {
+      let html = `<div class="op-sym" style="align-self:center;">${s}</div>`;
+      if (sub) html = `<div style="display:flex;flex-direction:column;align-items:center;align-self:center;gap:2px;flex-shrink:0;">${html}<div style="font-size:0.55rem;color:var(--text-muted);font-family:'Inter',sans-serif;">${sub}</div></div>`;
+      return html;
     }
 
     function renderAll() {
-      // Row 1: Ã · H0 = AH
-      document.getElementById('rowAH').innerHTML =
+      // One long horizontal row:
+      // Ã · H0 = [AH shared] · W = Z → ReLU → H1
+      // AH is both: result of Ã×H (step1 sel/hl) AND operand for ×W (step2 hl-row)
+
+      document.getElementById('rowAll').innerHTML =
+        // Ã matrix
         matTable(ATILDE, 'atilde', {
           rowLabels: true, rowLabelColors: NCOL,
-          titleText: 'Ã &nbsp;(A+I, 5×5)', titleColor: '#ca8a04',
+          titleText: '<span style="color:#ca8a04">Ã</span> (A+I, 5×5)',
+          titleColor: '#ca8a04',
           hlRow: hlAH.i
         }) +
-        opSym('&middot;') +
+        opSym('&middot;', '①') +
+        // H0
         matTable(H0, 'h0', {
           rowLabels: true, rowLabelColors: NCOL,
-          titleText: 'H<sup>(0)</sup> &nbsp;(5×2)', titleColor: '#0d9488',
+          titleText: '<span style="color:#0d9488">H<sup>(0)</sup></span> (5×2)',
+          titleColor: '#0d9488',
           hlCol: hlAH.j
         }) +
         opSym('=') +
+        // AH shared — step1 sel + step2 hlRowBlue
         matTable(AH, 'ah', {
           clickFn: 'clickAH',
           rowLabels: true, rowLabelColors: NCOL,
-          titleText: 'Ã·H &nbsp;(5×2)', titleColor: '#166534',
-          selI: hlAH.i, selJ: hlAH.j
-        });
-
-      // Row 2: AH · W = Z
-      document.getElementById('rowZ').innerHTML =
-        matTable(AH, 'ah2', {
-          rowLabels: true, rowLabelColors: NCOL,
-          titleText: 'Ã·H &nbsp;(5×2)', titleColor: '#0d9488',
-          hlRow: hlZ.i
+          titleText: '<span style="color:#166534">Ã·H</span> (5×2)',
+          titleColor: '#166534',
+          selI: hlAH.i, selJ: hlAH.j,
+          hlRowBlue: hlZ.i    // blue row highlight from step2 selection
         }) +
-        opSym('&middot;') +
+        opSym('&middot;', '②') +
+        // W
         matTable(WMAT, 'wmat', {
-          titleText: 'W &nbsp;(2×2)', titleColor: '#1d4ed8',
+          titleText: '<span style="color:#1d4ed8">W</span> (2×2)',
+          titleColor: '#1d4ed8',
           hlCol: hlZ.j
         }) +
         opSym('=') +
+        // Z
         matTable(ZMAT, 'z', {
           clickFn: 'clickZ',
           rowLabels: true, rowLabelColors: NCOL,
           negRed: true,
-          titleText: 'Z &nbsp;(5×2)', titleColor: '#92400e',
+          titleText: 'Z (5×2)',
+          titleColor: '#92400e',
           selI: hlZ.i, selJ: hlZ.j
-        });
-
-      // Row 3: Z → ReLU → H1
-      document.getElementById('rowReLU').innerHTML =
-        matTable(ZMAT, 'zpre', {
-          rowLabels: true, rowLabelColors: NCOL,
-          negRed: true,
-          titleText: 'Z &nbsp;(pré-ReLU)', titleColor: '#92400e'
         }) +
-        `<div style="align-self:center;display:flex;flex-direction:column;align-items:center;gap:0.3rem;padding:0 0.3rem;">
+        // ReLU arrow
+        `<div style="align-self:center;display:flex;flex-direction:column;align-items:center;gap:2px;padding:0 0.2rem;flex-shrink:0;">
           <div class="op-sym">→</div>
-          <div style="font-size:0.68rem;font-weight:700;color:#c2410c;background:#fff7ed;border:1.5px solid #fed7aa;border-radius:4px;padding:0.2rem 0.5rem;">ReLU</div>
+          <div style="font-size:0.58rem;font-weight:700;color:#c2410c;background:#fff7ed;border:1.5px solid #fed7aa;border-radius:4px;padding:0.15rem 0.4rem;">ReLU</div>
+          <div style="font-size:0.5rem;color:var(--text-muted);">③</div>
         </div>` +
+        // H1
         matTable(H1, 'h1', {
           rowLabels: true, rowLabelColors: NCOL,
           reluRef: ZMAT,
-          titleText: 'H<sup>(l+1)</sup> &nbsp;(5×2)', titleColor: '#166534'
+          titleText: '<span style="color:#166534">H<sup>(l+1)</sup></span> (5×2)',
+          titleColor: '#166534'
         });
     }
 
