@@ -31,7 +31,7 @@
     <header class="slide-header">
       <span class="course-tag">GNNs</span>
       <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
-      <span class="slide-counter">Slide 14 / 22</span>
+      <span class="slide-counter">Slide 14 / 21</span>
     </header>
 
     <main class="slide-main">
@@ -45,27 +45,31 @@
         <div class="panel">
           <div class="panel-title">🏗️ Arquitetura GAT</div>
 
-          <svg viewBox="0 0 240 190" style="width:100%;max-height:190px;display:block;">
+          <svg viewBox="0 0 280 220" style="width:100%;max-height:220px;display:block;">
             <!-- Arestas com espessura proporcional ao α -->
-            <line x1="120" y1="95" x2="45"  y2="45"  stroke="#5eead4" stroke-width="5"   id="ea1" opacity="0.85"/>
-            <line x1="120" y1="95" x2="195" y2="45"  stroke="#5eead4" stroke-width="2.5" id="ea2" opacity="0.5"/>
-            <line x1="120" y1="95" x2="120" y2="165" stroke="#5eead4" stroke-width="1.5" id="ea3" opacity="0.35"/>
+            <line x1="140" y1="110" x2="50"  y2="50"  stroke="#5eead4" stroke-width="5"   id="ea1" opacity="0.85"/>
+            <line x1="140" y1="110" x2="230" y2="50"  stroke="#5eead4" stroke-width="2" id="ea2" opacity="0.5"/>
+            <line x1="140" y1="110" x2="140" y2="195" stroke="#5eead4" stroke-width="3" id="ea3" opacity="0.35"/>
             <!-- Labels de atenção nas arestas -->
-            <text x="74"  y="63"  font-size="9" fill="#0d6e6e" font-family="Fira Code" font-weight="700" id="la1">α=0.62</text>
-            <text x="162" y="63"  font-size="9" fill="#0d6e6e" font-family="Fira Code" font-weight="700" id="la2">α=0.25</text>
-            <text x="124" y="138" font-size="9" fill="#0d6e6e" font-family="Fira Code" font-weight="700" id="la3">α=0.13</text>
+            <text x="84"  y="72"  font-size="10" fill="#0d6e6e" font-family="Fira Code" font-weight="700" id="la1">α=0.62</text>
+            <text x="185" y="72"  font-size="10" fill="#0d6e6e" font-family="Fira Code" font-weight="700" id="la2">α=0.12</text>
+            <text x="147" y="155" font-size="10" fill="#0d6e6e" font-family="Fira Code" font-weight="700" id="la3">α=0.26</text>
             <!-- Nós vizinhos -->
-            <circle cx="45"  cy="45"  r="20" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="2.5" id="nu1"/>
-            <circle cx="195" cy="45"  r="16" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"   id="nu2"/>
-            <circle cx="120" cy="165" r="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5" id="nu3"/>
+            <circle cx="50"  cy="50"  r="22" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="2.5" id="nu1"/>
+            <circle cx="230" cy="50"  r="16" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"   id="nu2"/>
+            <circle cx="140" cy="195" r="18" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5" id="nu3"/>
             <!-- Nó central pulsante -->
-            <circle cx="120" cy="95" r="24" fill="#f0fdf4" stroke="#166534" stroke-width="2.5">
+            <circle cx="140" cy="110" r="26" fill="#f0fdf4" stroke="#166534" stroke-width="2.5">
               <animate attributeName="r" values="22;25;22" dur="2.2s" repeatCount="indefinite"/>
             </circle>
-            <text x="45"  y="49"  font-size="10" font-weight="700" fill="#0d6e6e" text-anchor="middle">u₁</text>
-            <text x="195" y="49"  font-size="10" font-weight="700" fill="#1d4ed8" text-anchor="middle">u₂</text>
-            <text x="120" y="169" font-size="10" font-weight="700" fill="#1d4ed8" text-anchor="middle">u₃</text>
-            <text x="120" y="99"  font-size="12" font-weight="700" fill="#166534" text-anchor="middle">v</text>
+            <text x="50"  y="54"  font-size="11" font-weight="700" fill="#0d6e6e" text-anchor="middle">A</text>
+            <text x="230" y="54"  font-size="11" font-weight="700" fill="#1d4ed8" text-anchor="middle">B</text>
+            <text x="140" y="199" font-size="11" font-weight="700" fill="#1d4ed8" text-anchor="middle">C</text>
+            <text x="140" y="114"  font-size="12" font-weight="700" fill="#166534" text-anchor="middle">v</text>
+            <text x="50"  y="80"  font-size="9" fill="#6b7fa3" font-family="Fira Code" text-anchor="middle">hA=[1,0]</text>
+            <text x="230" y="80"  font-size="9" fill="#6b7fa3" font-family="Fira Code" text-anchor="middle">hB=[0,1]</text>
+            <text x="140" y="172" font-size="9" fill="#6b7fa3" font-family="Fira Code" text-anchor="middle">hC=[1,1]</text>
+            <text x="140" y="136" font-size="9" fill="#166534" font-family="Fira Code" text-anchor="middle">hv=[0.8,0.3]</text>
           </svg>
 
           <div class="step-formula">
@@ -75,60 +79,46 @@
           <div style="font-size:0.82rem;color:var(--text-dim);">Arestas mais espessas = <strong>maior atenção</strong> aprendida</div>
         </div>
 
-        <!-- RIGHT: como α é aprendido + slider -->
+        <!-- RIGHT: exemplo numérico -->
         <div class="panel">
-          <div class="panel-title">⚙️ Como α é Aprendido</div>
+          <div class="panel-title">🔢 Exemplo Numérico (sem slider)</div>
 
           <div class="step-formula">
             <span class="step-num">1</span>
-            <span>Projetar: <strong>Wh<sub>v</sub></strong>, <strong>Wh<sub>u</sub></strong></span>
+            <span>Projetar: <strong>Wh</strong> com valores fixos de <strong>W</strong> e dos embeddings</span>
           </div>
           <div class="step-formula">
             <span class="step-num">2</span>
-            <span>Score: e<sub>vu</sub> = LeakyReLU([Wh<sub>v</sub> ‖ Wh<sub>u</sub>] · <strong>a</strong>)<br/><span style="font-size:0.75rem;color:var(--text-dim);"><strong>a</strong> ∈ ℝ<sup>2d</sup>: vetor de atenção treinável (aprendido junto com W)</span></span>
+            <span>Score: e<sub>vu</sub> = LeakyReLU([Wh<sub>v</sub> ‖ Wh<sub>u</sub>] · <strong>a</strong>)<br/><span style="font-size:0.75rem;color:var(--text-dim);">e(v,A)=2.1, e(v,B)=0.5, e(v,C)=1.3</span></span>
           </div>
           <div class="step-formula">
             <span class="step-num">3</span>
-            <span>Normalizar: α<sub>vu</sub> = exp(e<sub>vu</sub>) / Σ<sub>u'∈N(v)</sub> exp(e<sub>vu'</sub>)</span>
+            <span>Normalizar: α<sub>vu</sub> = <strong>softmax</strong>(e<sub>vu</sub>)</span>
           </div>
 
           <div class="divider"></div>
 
-          <!-- Slider interativo -->
-          <div style="font-size:0.82rem;font-weight:700;color:var(--text-muted);margin-bottom:0.3rem;">🎛️ Ajuste o score de u₁ e veja o softmax:</div>
-          <div class="slider-group">
-            <div class="slider-row">
-              <label>e(v,u₁)</label>
-              <input type="range" id="slE1" min="-2" max="4" step="0.1" value="2.1" oninput="updateAttn()"/>
-              <span class="sv" id="svE1">2.1</span>
-            </div>
-            <div class="slider-row">
-              <label>e(v,u₂)</label>
-              <input type="range" id="slE2" min="-2" max="4" step="0.1" value="0.5" oninput="updateAttn()"/>
-              <span class="sv" id="svE2">0.5</span>
-            </div>
-            <div class="slider-row">
-              <label>e(v,u₃)</label>
-              <input type="range" id="slE3" min="-2" max="4" step="0.1" value="1.3" oninput="updateAttn()"/>
-              <span class="sv" id="svE3">1.3</span>
-            </div>
+          <div class="step-formula" style="font-size:0.8rem;border-left-color:#7c3aed;">
+            W = [[0.5, 0.3], [0.2, 0.8]]<br/>
+            a = [0.9, 0.4, 0.7, 0.2]<br/>
+            Wh<sub>v</sub>=[0.49,0.40], Wh<sub>A</sub>=[0.50,0.20], Wh<sub>B</sub>=[0.30,0.80], Wh<sub>C</sub>=[0.80,1.00]
           </div>
 
           <div style="margin-top:0.4rem;display:flex;flex-direction:column;gap:0.3rem;">
             <div class="attn-bar">
-              <span class="lbl">α₁</span>
-              <div class="attn-bar track"><div class="attn-bar fill" id="ab1" style="background:#0d6e6e;"></div></div>
-              <span class="attn-bar pct" id="ap1"></span>
+              <span class="lbl">αA</span>
+              <div class="attn-bar track"><div class="attn-bar fill" id="ab1" style="background:#0d6e6e;width:62%;"></div></div>
+              <span class="attn-bar pct">0.62</span>
             </div>
             <div class="attn-bar">
-              <span class="lbl">α₂</span>
-              <div class="attn-bar track"><div class="attn-bar fill" id="ab2" style="background:#3b82f6;"></div></div>
-              <span class="attn-bar pct" id="ap2"></span>
+              <span class="lbl">αB</span>
+              <div class="attn-bar track"><div class="attn-bar fill" id="ab2" style="background:#3b82f6;width:12%;"></div></div>
+              <span class="attn-bar pct">0.12</span>
             </div>
             <div class="attn-bar">
-              <span class="lbl">α₃</span>
-              <div class="attn-bar track"><div class="attn-bar fill" id="ab3" style="background:#8b5cf6;"></div></div>
-              <span class="attn-bar pct" id="ap3"></span>
+              <span class="lbl">αC</span>
+              <div class="attn-bar track"><div class="attn-bar fill" id="ab3" style="background:#8b5cf6;width:26%;"></div></div>
+              <span class="attn-bar pct">0.26</span>
             </div>
           </div>
         </div>
@@ -148,46 +138,9 @@
   </div>
 
   <script>
-    function softmax(arr) {
-      const maxV = Math.max(...arr);
-      const exps = arr.map(x => Math.exp(x - maxV));
-      const s = exps.reduce((a,b)=>a+b,0);
-      return exps.map(x=>x/s);
-    }
-
-    function updateAttn() {
-      const e1 = parseFloat(document.getElementById('slE1').value);
-      const e2 = parseFloat(document.getElementById('slE2').value);
-      const e3 = parseFloat(document.getElementById('slE3').value);
-      document.getElementById('svE1').textContent = e1.toFixed(1);
-      document.getElementById('svE2').textContent = e2.toFixed(1);
-      document.getElementById('svE3').textContent = e3.toFixed(1);
-
-      const [a1,a2,a3] = softmax([e1,e2,e3]);
-
-      setAttnBar('ab1','ap1','la1','ea1','nu1', a1, 0);
-      setAttnBar('ab2','ap2','la2','ea2','nu2', a2, 1);
-      setAttnBar('ab3','ap3','la3','ea3','nu3', a3, 2);
-    }
-
-    function setAttnBar(barId, pctId, laId, edgeId, nodeId, val, idx) {
-      const pct = (val * 100).toFixed(1);
-      document.getElementById(barId).style.width = pct + '%';
-      document.getElementById(pctId).textContent = pct + '%';
-      document.getElementById(laId).textContent = 'α=' + val.toFixed(2);
-      const strokeW = 1 + val * 7;
-      const op = 0.2 + val * 0.8;
-      document.getElementById(edgeId).setAttribute('stroke-width', strokeW.toFixed(1));
-      document.getElementById(edgeId).setAttribute('opacity', op.toFixed(2));
-      const r = [20, 16, 14][idx];
-      document.getElementById(nodeId).setAttribute('r', Math.round(r + val * 10).toString());
-    }
-
-    updateAttn();
-
     (function(){
       const container = document.getElementById('navDots');
-      const CURRENT = 14, TOTAL = 22;
+      const CURRENT = 14, TOTAL = 21;
       for (let i = 1; i <= TOTAL; i++) {
         const dot = document.createElement('div');
         dot.className = 'dot' + (i === CURRENT ? ' active' : '');

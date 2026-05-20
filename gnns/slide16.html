@@ -25,7 +25,7 @@
     <header class="slide-header">
       <span class="course-tag">GNNs</span>
       <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
-      <span class="slide-counter">Slide 16 / 22</span>
+      <span class="slide-counter">Slide 16 / 21</span>
     </header>
 
     <main class="slide-main">
@@ -82,10 +82,10 @@
         <div class="panel">
           <div class="panel-title">🕸️ GNN com Atenção (GAT)</div>
           <div class="token-seq">
-            <span class="tok teal">T₁</span>
-            <span class="tok teal">T₂</span>
-            <span class="tok teal">T₃</span>
-            <span class="tok teal">T₄</span>
+            <span class="tok teal">v₁</span>
+            <span class="tok teal">v₂</span>
+            <span class="tok teal">v₃</span>
+            <span class="tok teal">v₄</span>
           </div>
 
           <!-- SVG grafo esparso do GNN -->
@@ -103,10 +103,10 @@
             <circle cx="160" cy="40"  r="18" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="2"/>
             <circle cx="40"  cy="130" r="18" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="2"/>
             <circle cx="160" cy="130" r="18" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="2"/>
-            <text x="40"  y="44"  font-size="11" font-weight="700" fill="#0d6e6e" text-anchor="middle">T₁</text>
-            <text x="160" y="44"  font-size="11" font-weight="700" fill="#0d6e6e" text-anchor="middle">T₂</text>
-            <text x="40"  y="134" font-size="11" font-weight="700" fill="#0d6e6e" text-anchor="middle">T₃</text>
-            <text x="160" y="134" font-size="11" font-weight="700" fill="#0d6e6e" text-anchor="middle">T₄</text>
+            <text x="40"  y="44"  font-size="11" font-weight="700" fill="#0d6e6e" text-anchor="middle">v₁</text>
+            <text x="160" y="44"  font-size="11" font-weight="700" fill="#0d6e6e" text-anchor="middle">v₂</text>
+            <text x="40"  y="134" font-size="11" font-weight="700" fill="#0d6e6e" text-anchor="middle">v₃</text>
+            <text x="160" y="134" font-size="11" font-weight="700" fill="#0d6e6e" text-anchor="middle">v₄</text>
             <text x="100" y="90"  font-size="8" fill="#6b7fa3" font-family="Fira Code" text-anchor="middle">grafo esparso</text>
           </svg>
 
@@ -154,7 +154,7 @@
 
     (function(){
       const container = document.getElementById('navDots');
-      const CURRENT = 16, TOTAL = 22;
+      const CURRENT = 16, TOTAL = 21;
       for (let i = 1; i <= TOTAL; i++) {
         const dot = document.createElement('div');
         dot.className = 'dot' + (i === CURRENT ? ' active' : '');

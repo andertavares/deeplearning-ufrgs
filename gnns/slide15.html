@@ -35,7 +35,7 @@
     <header class="slide-header">
       <span class="course-tag">GNNs</span>
       <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
-      <span class="slide-counter">Slide 15 / 22</span>
+      <span class="slide-counter">Slide 15 / 21</span>
     </header>
 
     <main class="slide-main">
@@ -72,14 +72,15 @@
             <!-- Nó central -->
             <circle cx="130" cy="105" r="26" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="2.5"/>
             <!-- Labels nós -->
-            <text x="45"  y="49"  font-size="13" font-weight="700" fill="#1d4ed8" text-anchor="middle">u₁</text>
-            <text x="215" y="49"  font-size="13" font-weight="700" fill="#1d4ed8" text-anchor="middle">u₂</text>
-            <text x="130" y="189" font-size="13" font-weight="700" fill="#1d4ed8" text-anchor="middle">u₃</text>
+            <text x="45"  y="49"  font-size="13" font-weight="700" fill="#1d4ed8" text-anchor="middle">A</text>
+            <text x="215" y="49"  font-size="13" font-weight="700" fill="#1d4ed8" text-anchor="middle">B</text>
+            <text x="130" y="189" font-size="13" font-weight="700" fill="#1d4ed8" text-anchor="middle">C</text>
             <text x="130" y="110" font-size="14" font-weight="700" fill="#0d6e6e" text-anchor="middle">v</text>
             <!-- Embeddings (mostrar em passo 1) -->
-            <text x="45"  y="22"  font-size="10" fill="#6b7fa3" font-family="Fira Code" text-anchor="middle" id="emb1" opacity="0">[1,0]</text>
-            <text x="215" y="22"  font-size="10" fill="#6b7fa3" font-family="Fira Code" text-anchor="middle" id="emb2" opacity="0">[0,1]</text>
-            <text x="130" y="168" font-size="10" fill="#6b7fa3" font-family="Fira Code" text-anchor="middle" id="emb3" opacity="0">[1,1]</text>
+            <text x="45"  y="72"  font-size="9" fill="#6b7fa3" font-family="Fira Code" text-anchor="middle" id="emb1" opacity="0">hA=[1,0]</text>
+            <text x="215" y="72"  font-size="9" fill="#6b7fa3" font-family="Fira Code" text-anchor="middle" id="emb2" opacity="0">hB=[0,1]</text>
+            <text x="130" y="162" font-size="9" fill="#6b7fa3" font-family="Fira Code" text-anchor="middle" id="emb3" opacity="0">hC=[1,1]</text>
+            <text x="130" y="132" font-size="9" fill="#0d6e6e" font-family="Fira Code" text-anchor="middle" id="embv" opacity="0">hv=[0.8,0.3]</text>
             <!-- Scores (passo 2) -->
             <text x="58"  y="88"  font-size="11" fill="#d97706" font-family="Fira Code" font-weight="700" text-anchor="middle" id="sc1" opacity="0">e=2.1</text>
             <text x="200" y="88"  font-size="11" fill="#d97706" font-family="Fira Code" font-weight="700" text-anchor="middle" id="sc2" opacity="0">e=0.5</text>
@@ -113,9 +114,9 @@
             <div class="node-info">
               <strong>Embeddings:</strong><br/>
               h<sub>v</sub> = [0.8, 0.3]<br/>
-              h<sub>u₁</sub> = [1.0, 0.0]<br/>
-              h<sub>u₂</sub> = [0.0, 1.0]<br/>
-              h<sub>u₃</sub> = [1.0, 1.0]
+              h<sub>A</sub> = [1.0, 0.0]<br/>
+              h<sub>B</sub> = [0.0, 1.0]<br/>
+              h<sub>C</sub> = [1.0, 1.0]
             </div>
           </div>
 
@@ -129,9 +130,9 @@
             <div class="node-info">
               <strong>Projeções calculadas:</strong><br/>
               Wh<sub>v</sub> &nbsp;= [0.49, 0.40]<br/>
-              Wh<sub>u₁</sub> = [0.50, 0.20]<br/>
-              Wh<sub>u₂</sub> = [0.30, 0.80]<br/>
-              Wh<sub>u₃</sub> = [0.80, 1.00]
+               Wh<sub>A</sub> = [0.50, 0.20]<br/>
+               Wh<sub>B</sub> = [0.30, 0.80]<br/>
+               Wh<sub>C</sub> = [0.80, 1.00]
             </div>
             <div class="highlight-box" style="background:var(--bg3);border-left:3px solid #7c3aed;">
               <span class="icon">🔵</span>
@@ -147,13 +148,13 @@
               e<sub>vu</sub> = LeakyReLU(<strong>a</strong><sup>T</sup>·[Wh<sub>v</sub> ‖ Wh<sub>u</sub>])
             </div>
             <div class="node-info">
-              e(v, u₁) = <strong>2.1</strong><br/>
-              e(v, u₂) = <strong>0.5</strong><br/>
-              e(v, u₃) = <strong>1.3</strong>
+              e(v, A) = <strong>2.1</strong><br/>
+              e(v, B) = <strong>0.5</strong><br/>
+              e(v, C) = <strong>1.3</strong>
             </div>
             <div class="highlight-box yellow">
               <span class="icon">💬</span>
-              <span>Score mais alto = vizinho mais relevante para v</span>
+              <span>Assumimos que <strong>A</strong> é o vizinho mais importante para v</span>
             </div>
           </div>
 
@@ -165,17 +166,17 @@
             </div>
             <div style="display:flex;flex-direction:column;gap:0.3rem;margin-top:0.2rem;">
               <div class="alpha-bar">
-                <span class="lbl">α₁</span>
+                <span class="lbl">αA</span>
                 <div class="alpha-bar track"><div class="alpha-bar fill" id="ab1s3" style="background:#0d6e6e;width:0%;">62%</div></div>
                 <span class="alpha-bar pct">0.62</span>
               </div>
               <div class="alpha-bar">
-                <span class="lbl">α₂</span>
+                <span class="lbl">αB</span>
                 <div class="alpha-bar track"><div class="alpha-bar fill" id="ab2s3" style="background:#3b82f6;width:0%;">12%</div></div>
                 <span class="alpha-bar pct">0.12</span>
               </div>
               <div class="alpha-bar">
-                <span class="lbl">α₃</span>
+                <span class="lbl">αC</span>
                 <div class="alpha-bar track"><div class="alpha-bar fill" id="ab3s3" style="background:#8b5cf6;width:0%;">26%</div></div>
                 <span class="alpha-bar pct">0.26</span>
               </div>
@@ -187,9 +188,9 @@
             <div class="step-title">5. Agregação Ponderada</div>
             <div class="formula-block">
               h<sub>v</sub>' = σ(<br/>
-              &nbsp;α₁·Wh<sub>u₁</sub> +<br/>
-              &nbsp;α₂·Wh<sub>u₂</sub> +<br/>
-              &nbsp;α₃·Wh<sub>u₃</sub><br/>
+               &nbsp;α<sub>A</sub>·Wh<sub>A</sub> +<br/>
+               &nbsp;α<sub>B</sub>·Wh<sub>B</sub> +<br/>
+               &nbsp;α<sub>C</sub>·Wh<sub>C</sub><br/>
               )
             </div>
             <div class="highlight-box teal">
@@ -234,10 +235,10 @@
         document.getElementById(id).setAttribute('r','20');
       });
       // Hide all SVG annotations
-      ['emb1','emb2','emb3','wh1','wh2','wh3','whv','sc1','sc2','sc3','al1','al2','al3'].forEach(id => setOpacity(id,0));
+       ['emb1','emb2','emb3','embv','wh1','wh2','wh3','whv','sc1','sc2','sc3','al1','al2','al3'].forEach(id => setOpacity(id,0));
 
       if (step >= 1) {
-        setOpacity('emb1',1); setOpacity('emb2',1); setOpacity('emb3',1);
+        setOpacity('emb1',1); setOpacity('emb2',1); setOpacity('emb3',1); setOpacity('embv',1);
       }
       if (step >= 2) {
         // Show Wh projections, highlight edges in purple
@@ -313,7 +314,7 @@
 
     (function(){
       const container = document.getElementById('navDots');
-      const CURRENT = 15, TOTAL = 22;
+      const CURRENT = 15, TOTAL = 21;
       for (let i = 1; i <= TOTAL; i++) {
         const dot = document.createElement('div');
         dot.className = 'dot' + (i === CURRENT ? ' active' : '');
