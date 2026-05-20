@@ -140,7 +140,7 @@
           <div class="graph-panel">
             <!-- 3x3 grid of image pixels as a graph -->
             <div style="font-size:0.75rem;color:var(--text-dim);font-family:'Fira Code',monospace;text-align:center;margin-bottom:0.2rem;">Região 3×3 como grafo — GCN sobre pixels</div>
-            <svg viewBox="0 0 220 170" style="width:100%;max-height:170px;">
+            <svg viewBox="0 0 155 155" style="width:100%;max-height:155px;">
               <!-- 3x3 grid layout: pixel nodes at grid positions -->
               <!-- Row 0: (30,30) (80,30) (130,30) -->
               <!-- Row 1: (30,80) (80,80) (130,80)  ← center -->
@@ -204,14 +204,13 @@
               <text x="80" y="77"  font-size="12" font-weight="700" fill="#0d6e6e" text-anchor="middle">-2</text>
               <text x="80" y="89"  font-size="9" fill="#0d6e6e" text-anchor="middle" font-family="Fira Code">p₁₁</text>
 
-              <!-- GCN update formula -->
-              <text x="175" y="55"  font-size="9.5" font-weight="700" fill="#0d6e6e" text-anchor="middle">GCN Update:</text>
-              <text x="175" y="70"  font-size="9" fill="#374151" text-anchor="middle" font-family="Fira Code">h'₁₁ = σ(W·</text>
-              <text x="175" y="83"  font-size="9" fill="#374151" text-anchor="middle" font-family="Fira Code">mean(N(p₁₁)))</text>
-              <text x="175" y="100" font-size="8.5" fill="#6b7fa3" text-anchor="middle">mean ≈ 0.5</text>
-              <text x="175" y="116" font-size="8" fill="#9ca3af" text-anchor="middle" font-family="Fira Code">(Kipf &amp; Welling,</text>
-              <text x="175" y="128" font-size="8" fill="#9ca3af" text-anchor="middle" font-family="Fira Code">  ICLR 2017)</text>
+              <!-- GCN update formula moved to HTML below -->
             </svg>
+            <!-- GCN Update formula — larger, readable HTML below the graph -->
+            <div style="margin-top:0.4rem;padding:0.45rem 0.7rem;background:#f0fdf4;border:1.5px solid #86efac;border-radius:var(--radius-sm);text-align:center;">
+              <div style="font-weight:700;color:#0d6e6e;font-size:0.9rem;margin-bottom:0.2rem;font-family:'Inter',sans-serif;">GCN Update &nbsp;<span style="font-size:0.75rem;font-weight:400;color:#6b7280;">(Kipf &amp; Welling, ICLR 2017)</span></div>
+              <div style="font-family:'Fira Code',monospace;font-size:0.85rem;color:#374151;">h'<sub>p₁₁</sub> = σ( W · mean(N(p₁₁)) ) &nbsp;·&nbsp; mean ≈ 0.5</div>
+            </div>
           </div>
           <ul class="bullet-list">
             <li>Vizinhança = pixels adjacentes na <strong>grade 2D</strong> (nós conectados por arestas)</li>
