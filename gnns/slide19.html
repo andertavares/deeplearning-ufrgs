@@ -37,7 +37,7 @@
       <div class="cmp-layout">
         <!-- LEFT: Indutivo (now first) -->
         <div class="panel">
-          <div class="panel-title">🚀 Indutivo</div>
+          <div class="panel-title"> Indutivo</div>
 
           <div class="legend-row">
             <span class="legend-item"><span class="legend-dot" style="background:#1d4ed8;border:1px solid #93c5fd;"></span>Grafo de treino</span>
@@ -85,16 +85,16 @@
           </svg>
 
           <ul style="list-style:none;display:flex;flex-direction:column;gap:.35rem;font-size:.84rem;">
-            <li>📌 Modelo aprende em grafos de <strong>treinamento</strong></li>
+            <li>📌 Dataset: conjunto de grafos</li>
             <li>📌 Infere em grafos <em>nunca vistos</em></li>
             <li>📌 Generaliza a estrutura aprendida</li>
-            <li>�� Exemplos: <strong>GraphSAGE</strong>, moléculas, proteínas</li>
+            <li>📦 Exemplos: moléculas, proteínas, ...</li>
           </ul>
         </div>
 
         <!-- RIGHT: Transdutivo (now second) -->
         <div class="panel">
-          <div class="panel-title">🔒 Transdutivo</div>
+          <div class="panel-title"> Transdutivo</div>
 
           <div class="legend-row">
             <span class="legend-item"><span class="legend-dot" style="background:#16a34a;"></span>Rotulado (treino)</span>
@@ -133,10 +133,9 @@
           </svg>
 
           <ul style="list-style:none;display:flex;flex-direction:column;gap:.35rem;font-size:.84rem;">
-            <li>📌 Modelo vê <strong>todo o grafo</strong> durante treino</li>
+            <li>📌 Dataset: um grafo</li>
             <li>📌 Nós de teste presentes, mas <em>sem rótulo</em></li>
-            <li>📌 Propaga embeddings em TODO o grafo</li>
-            <li>📦 Exemplos: <strong>Cora, Citeseer, PubMed</strong></li>
+            <li>📦 Exemplos: grafos de citação, grafos de conhecimento, ...</li>
           </ul>
         </div>
       </div>
@@ -146,25 +145,25 @@
         <thead>
           <tr>
             <th>Aspecto</th>
-            <th>Indutivo 🚀</th>
-            <th>Transdutivo 🔒</th>
+            <th>Indutivo </th>
+            <th>Transdutivo </th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td>Tipo de tarefa típico</td>
-            <td class="td-hl">Classificação de grafos<br/><span style="font-size:.8rem;font-weight:400;">(dataset contém vários grafos)</span></td>
+            <td class="td-hl">Tipo de tarefa típico</td>
+            <td >Classificação de grafos<br/><span style="font-size:.8rem;font-weight:400;">(dataset contém vários grafos)</span></td>
             <td>Node classification, link prediction<br/><span style="font-size:.8rem;">(dataset costuma ser um único grafo)</span></td>
           </tr>
           <tr>
-            <td>Visto no treino</td>
-            <td class="td-hl">Só grafos de treino</td>
-            <td>Todo o grafo (sem labels de teste)</td>
+            <td class="td-hl">Treinamento</td>
+            <td >Grafos de treino</td>
+            <td>(Quase) Todo o grafo (sem labels de teste)</td>
           </tr>
           <tr>
-            <td>Datasets típicos</td>
-            <td class="td-hl">OGB, PPI, Reddit</td>
-            <td>Cora, Citeseer, PubMed</td>
+            <td class="td-hl">Datasets típicos</td>
+            <td>OGB, PPI, Reddit</td>
+            <td>Cora, Citeseer, PubMed, MovieLens</td>
           </tr>
         </tbody>
       </table>
