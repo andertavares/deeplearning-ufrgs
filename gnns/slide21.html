@@ -16,6 +16,16 @@
       50% { opacity:1; }
     }
     .flow-anim { animation: flowPulse 1.2s ease-in-out infinite; }
+    @keyframes edgeLive {
+      0%,100% { stroke: #3b82f6; stroke-width: 1.8; opacity: 0.5; }
+      50% { stroke: #0d6e6e; stroke-width: 3.2; opacity: 1; }
+    }
+    @keyframes nodeLive {
+      0%,100% { transform: scale(1); opacity: 0.95; }
+      50% { transform: scale(1.12); opacity: 1; }
+    }
+    .edge-live { animation: edgeLive 1.1s ease-in-out infinite; }
+    .node-live { animation: nodeLive 1.1s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
   </style>
 </head>
 <body>
@@ -129,6 +139,12 @@
             <span class="icon">⚠️</span>
             <span style="font-size:0.82rem;">Cuidado: treino e teste estão no <strong>mesmo grafo</strong>. Vazar labels é fácil!</span>
           </div>
+          <div id="leakExample" class="highlight-box" style="display:none;background:#fee2e2;border:1.5px solid #fca5a5;margin-top:0.45rem;">
+            <span class="icon">🚨</span>
+            <span style="font-size:0.8rem;color:#b91c1c;">
+              <strong>Exemplo de vazamento:</strong> se o label do nó de validação (🟡) for usado durante o treino, seus vizinhos (inclusive nós de teste) já recebem essa informação via message passing.
+            </span>
+          </div>
         </div>
       </div>
     </main>
@@ -146,9 +162,21 @@
       propagating = !propagating;
       const fg = document.getElementById('flowGroup');
       fg.style.opacity = propagating ? '1' : '0';
+      const graphEdges = document.querySelectorAll('#edgesGroup line');
+      const graphNodes = document.querySelectorAll('#graphSvg circle[data-split]');
+      const leakBox = document.getElementById('leakExample');
       const btn = document.getElementById('btnProp');
       if (propagating) {
         btn.textContent = '⏹ Parar Propagação';
+        graphEdges.forEach((el, i) => {
+          el.classList.add('edge-live');
+          el.style.animationDelay = (i * 0.05) + 's';
+        });
+        graphNodes.forEach((el, i) => {
+          el.classList.add('node-live');
+          el.style.animationDelay = (i * 0.08) + 's';
+        });
+        leakBox.style.display = 'flex';
         // Show predicted labels after 1s
         setTimeout(()=>{
           if(propagating){
@@ -162,6 +190,15 @@
         }, 1200);
       } else {
         btn.textContent = '▶ Propagar Embeddings';
+        graphEdges.forEach(el => {
+          el.classList.remove('edge-live');
+          el.style.animationDelay = '';
+        });
+        graphNodes.forEach(el => {
+          el.classList.remove('node-live');
+          el.style.animationDelay = '';
+        });
+        leakBox.style.display = 'none';
         document.getElementById('tl1').textContent='?';
         document.getElementById('tl1').style.fill='#ef4444';
         document.getElementById('tl2').textContent='?';

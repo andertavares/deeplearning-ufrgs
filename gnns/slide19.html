@@ -148,6 +148,7 @@
     .btn-readout:hover  { background: #ede9fe; transform: scale(1.05); }
     .btn-readout.active { background: #7c3aed; color: #fff; }
     #readoutRow { display: none; }
+    #graphModeRow { display: none; }
 
     /* Node glow for SVG */
     .sv-node { transition: fill 0.4s, stroke 0.4s, r 0.4s; }
@@ -217,6 +218,11 @@
             <button class="btn-readout"         id="ro-mean"  onclick="setReadout('mean')">μ  mean</button>
             <button class="btn-readout"         id="ro-max"   onclick="setReadout('max')">↑  max</button>
           </div>
+          <div id="graphModeRow" class="readout-row">
+            <span class="readout-lbl">MODO:</span>
+            <button class="btn-readout active" id="gm-pooling" onclick="setGraphMode('pooling')">pooling</button>
+            <button class="btn-readout" id="gm-global" onclick="setGraphMode('global')">h_global</button>
+          </div>
         </div>
 
         <!-- RIGHT: pipeline panel -->
@@ -284,7 +290,6 @@
               <!-- ===== EDGE TASK group ===== -->
               <g id="g-edge" opacity="0" style="transition:opacity 0.4s">
                 <!-- Two nodes u and v -->
-                <line x1="60" y1="70" x2="60" y2="135" stroke="#d97706" stroke-width="3" stroke-dasharray="5,3"/>
                 <!-- Node u -->
                 <circle cx="60" cy="55"  r="18" fill="#fff7ed" stroke="#d97706" stroke-width="2.5"/>
                 <text x="60" y="51"  text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">hᵤ</text>
@@ -310,7 +315,9 @@
                 <line x1="284" y1="102" x2="308" y2="102" stroke="#d97706" stroke-width="2" marker-end="url(#arrE)"/>
                 <!-- Output box -->
                 <rect x="310" y="80" width="104" height="44" rx="8" fill="#fffbeb" stroke="#f59e0b" stroke-width="2"/>
-                <text x="362" y="99"  text-anchor="middle" font-size="9"  fill="#92400e" font-weight="700">ŷ_uv = 0.87</text>
+                <text x="362" y="99" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">
+                  ŷ<tspan baseline-shift="sub" font-size="7">uv</tspan> = 0.87
+                </text>
                 <text x="362" y="113" text-anchor="middle" font-family="Fira Code" font-size="8" fill="#92400e">P(aresta existe)</text>
               </g>
 
@@ -337,13 +344,13 @@
                 <line x1="70"  y1="97"  x2="136" y2="93"  stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrG)"/>
                 <!-- READOUT box -->
                 <rect x="138" y="72" width="72" height="36" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
-                <text x="174" y="88"  text-anchor="middle" font-size="9" fill="#5b21b6" font-weight="700">READOUT</text>
+                <text x="174" y="88"  text-anchor="middle" font-size="9" fill="#5b21b6" font-weight="700" id="ro-title">READOUT</text>
                 <text x="174" y="101" text-anchor="middle" font-family="Fira Code" font-size="8" fill="#5b21b6" id="ro-label">Σ sum</text>
                 <!-- Arrow to h_G -->
                 <line x1="210" y1="90" x2="234" y2="90" stroke="#7c3aed" stroke-width="2" marker-end="url(#arrG)"/>
                 <!-- h_G node -->
                 <circle cx="248" cy="90" r="14" fill="#ede9fe" stroke="#7c3aed" stroke-width="2.5"/>
-                <text x="248" y="87" text-anchor="middle" font-size="9"  fill="#5b21b6" font-weight="700">h_G</text>
+                <text x="248" y="87" text-anchor="middle" font-size="9"  fill="#5b21b6" font-weight="700" id="hg-label">h_G</text>
                 <text x="248" y="99" text-anchor="middle" font-family="Fira Code" font-size="7" fill="#5b21b6">[...]</text>
                 <!-- Arrow to MLP -->
                 <line x1="262" y1="90" x2="284" y2="90" stroke="#7c3aed" stroke-width="2" marker-end="url(#arrG)"/>
@@ -393,6 +400,7 @@
   <script>
     let currentTask = null;
     let currentReadout = 'sum';
+    let currentGraphMode = 'pooling';
 
     const taskColors = {
       node:  { lit: 'lit-node',  card: 'active-node',  desc: 'dn' },
@@ -414,7 +422,7 @@
       graph: {
         steps: ['{h<sub>v</sub>}', 'READOUT', 'MLP', 'ŷ<sub>G</sub>'],
         title: 'Pipeline — Nível de Grafo',
-        desc: '<strong>Nível de Grafo:</strong> um operador de readout (sum / mean / max) agrega <em>todos</em> os embeddings de nós em um único vetor h<sub>G</sub>, que então é classificado pelo MLP. Alternativamente, pode-se usar um nó global/artificial como embedding do grafo.'
+        desc: '<strong>Nível de Grafo:</strong> é possível usar <em>pooling/readout</em> (sum / mean / max) para obter h<sub>G</sub> ou usar diretamente um embedding global (nó artificial) h<sub>global</sub>; em ambos os casos, o vetor final é classificado por um MLP.'
       }
     };
 
@@ -461,8 +469,10 @@
         document.getElementById('g-' + t).style.opacity = (t === task) ? '1' : '0';
       });
 
-      // Show readout row only for graph
-      document.getElementById('readoutRow').style.display = (task === 'graph') ? 'flex' : 'none';
+      // Show graph selectors only for graph
+      document.getElementById('graphModeRow').style.display = (task === 'graph') ? 'flex' : 'none';
+      document.getElementById('readoutRow').style.display = (task === 'graph' && currentGraphMode === 'pooling') ? 'flex' : 'none';
+      if (task === 'graph') updateGraphModeVisual();
     }
 
     function setReadout(type) {
@@ -472,6 +482,21 @@
       });
       const labels = { sum: 'Σ  sum', mean: 'μ  mean', max: '↑  max' };
       document.getElementById('ro-label').textContent = labels[type];
+    }
+
+    function updateGraphModeVisual() {
+      const pooling = currentGraphMode === 'pooling';
+      document.getElementById('gm-pooling').classList.toggle('active', pooling);
+      document.getElementById('gm-global').classList.toggle('active', !pooling);
+      document.getElementById('readoutRow').style.display = pooling ? 'flex' : 'none';
+      document.getElementById('ro-title').textContent = pooling ? 'READOUT' : 'NÓ GLOBAL';
+      document.getElementById('ro-label').textContent = pooling ? ({ sum: 'Σ  sum', mean: 'μ  mean', max: '↑  max' }[currentReadout]) : 'embedding global';
+      document.getElementById('hg-label').textContent = pooling ? 'h_G' : 'h_global';
+    }
+
+    function setGraphMode(mode) {
+      currentGraphMode = mode;
+      updateGraphModeVisual();
     }
 
     (function(){
