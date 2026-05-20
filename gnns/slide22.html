@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide 22 – Resumo: Graph Neural Networks</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .summary-layout { display:grid; grid-template-columns:1fr 1fr; gap:1.2rem; flex:1; }
+    .pipeline-row { display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap; justify-content:center;
+      padding:0.75rem; background:var(--bg3); border-radius:var(--radius); border:1px solid var(--border2); }
+    .pipe-box { background:var(--bg2); border:2px solid var(--border2); border-radius:var(--radius-sm);
+      padding:0.4rem 0.8rem; font-size:0.88rem; font-weight:700; color:var(--text);
+      transition:all 0.3s; text-align:center; }
+    .pipe-box.active { border-color:var(--teal); background:var(--teal-lt); color:var(--teal); transform:scale(1.05); }
+    .pipe-arrow { color:var(--text-dim); font-size:1.1rem; }
+    .takeaway-card { display:flex; align-items:flex-start; gap:0.7rem;
+      background:var(--bg2); border:1.5px solid var(--border2); border-radius:var(--radius-sm);
+      padding:0.7rem 0.9rem;
+      transition:all 0.3s; opacity:0; transform:translateX(20px); }
+    .takeaway-card.visible { opacity:1; transform:translateX(0); }
+    .takeaway-card .ticon { font-size:1.3rem; flex-shrink:0; }
+    .takeaway-card .ttext { font-size:0.88rem; color:var(--text-muted); line-height:1.45; }
+    .task-btns { display:flex; gap:0.5rem; flex-wrap:wrap; justify-content:center; }
+    .pipe-out { background:var(--teal); color:#fff; border:2px solid var(--teal); padding:0.35rem 0.6rem;
+      border-radius:var(--radius-sm); font-size:0.78rem; font-weight:700; transition:all 0.3s; opacity:0; }
+    .pipe-out.show { opacity:1; }
+    .next-box { background:linear-gradient(135deg,var(--teal-lt),var(--blue-lt));
+      border:1.5px solid #5eead4; border-radius:var(--radius); padding:0.8rem 1.2rem;
+      display:flex; align-items:center; gap:0.8rem; font-size:0.95rem; font-weight:600; color:var(--teal); }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <span class="course-tag">GNNs</span>
+      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span class="slide-counter">Slide 22 / 23</span>
+    </header>
+
+    <main class="slide-main">
+      <div class="title-block">
+        <h1 class="slide-title">Resumo: Graph Neural Networks</h1>
+        <p class="slide-subtitle">Bloco 5 — Conclusão</p>
+      </div>
+
+      <!-- Pipeline animado -->
+      <div class="pipeline-row" id="pipelineRow">
+        <div class="pipe-box" id="pb-graph">🗺️ Grafo</div>
+        <span class="pipe-arrow">→</span>
+        <div class="pipe-box" id="pb-mp">📨 Message Passing × L</div>
+        <span class="pipe-arrow">→</span>
+        <div class="pipe-box" id="pb-emb">📐 Embeddings</div>
+        <span class="pipe-arrow">→</span>
+        <div class="pipe-box" id="pb-pred">🎯 Predição</div>
+        <div class="pipe-out" id="pb-out-node">Classe do nó</div>
+        <div class="pipe-out" id="pb-out-link">Existe aresta?</div>
+        <div class="pipe-out" id="pb-out-graph">Classe do grafo</div>
+      </div>
+
+      <!-- Seletor de tarefa + takeaways -->
+      <div class="summary-layout">
+        <!-- Takeaways -->
+        <div class="panel">
+          <div class="panel-title">✅ 5 Conceitos-Chave</div>
+          <div style="display:flex;flex-direction:column;gap:0.5rem;" id="takeawayList">
+            <div class="takeaway-card" id="tc0">
+              <span class="ticon">🗺️</span>
+              <span class="ttext">Grafos modelam <strong>relações irregulares</strong> entre entidades do mundo real.</span>
+            </div>
+            <div class="takeaway-card" id="tc1">
+              <span class="ticon">📨</span>
+              <span class="ttext"><strong>Message passing:</strong> gather → aggregate → update. O coração das GNNs.</span>
+            </div>
+            <div class="takeaway-card" id="tc2">
+              <span class="ticon">🎯</span>
+              <span class="ttext"><strong>Atenção (GAT)</strong> aprende pesos diferentes por vizinho — nem todos importam igual.</span>
+            </div>
+            <div class="takeaway-card" id="tc3">
+              <span class="ticon">📊</span>
+              <span class="ttext"><strong>3 tipos de tarefa:</strong> classificação de nós, predição de arestas e classificação de grafos.</span>
+            </div>
+            <div class="takeaway-card" id="tc4">
+              <span class="ticon">⚠️</span>
+              <span class="ttext"><strong>Split cuidadoso:</strong> message edges ≠ supervision edges em link prediction.</span>
+            </div>
+          </div>
+          <button class="btn-step" id="btnReveal" onclick="revealNext()" style="margin-top:0.5rem;align-self:flex-start;">Revelar próximo →</button>
+        </div>
+
+        <!-- Demo interativa de tarefa -->
+        <div class="panel">
+          <div class="panel-title">🎛️ Demo: Selecione a Tarefa</div>
+          <div class="task-btns">
+            <button class="btn-toggle" id="tbNode" onclick="selectTask('node')">🔵 Classificação de Nós</button>
+            <button class="btn-toggle" id="tbLink" onclick="selectTask('link')">🔗 Link Prediction</button>
+            <button class="btn-toggle" id="tbGraph" onclick="selectTask('graph')">🗺️ Classificação de Grafos</button>
+          </div>
+
+          <svg viewBox="0 0 220 160" id="taskSvg" style="width:100%;max-height:160px;display:block;margin:0.5rem auto;">
+            <!-- Grafo simples -->
+            <line x1="60" y1="80" x2="110" y2="50" stroke="#c7d0e0" stroke-width="2"/>
+            <line x1="60" y1="80" x2="110" y2="110" stroke="#c7d0e0" stroke-width="2"/>
+            <line x1="110" y1="50" x2="160" y2="80" stroke="#c7d0e0" stroke-width="2"/>
+            <line x1="110" y1="110" x2="160" y2="80" stroke="#c7d0e0" stroke-width="2"/>
+            <line x1="110" y1="50" x2="110" y2="110" stroke="#c7d0e0" stroke-width="2"/>
+
+            <!-- Nós -->
+            <circle cx="60"  cy="80"  r="16" fill="#dbeafe" stroke="#3b82f6" stroke-width="2" id="tn0"/>
+            <circle cx="110" cy="50"  r="16" fill="#dbeafe" stroke="#3b82f6" stroke-width="2" id="tn1"/>
+            <circle cx="160" cy="80"  r="16" fill="#dbeafe" stroke="#3b82f6" stroke-width="2" id="tn2"/>
+            <circle cx="110" cy="110" r="16" fill="#dbeafe" stroke="#3b82f6" stroke-width="2" id="tn3"/>
+
+            <!-- Output indicators (hidden) -->
+            <!-- Node classification: highlight one node -->
+            <circle cx="60" cy="80" r="22" fill="none" stroke="#0d6e6e" stroke-width="3" stroke-dasharray="4,3" id="nodeOut" opacity="0">
+              <animate attributeName="r" values="20;24;20" dur="1.5s" repeatCount="indefinite"/>
+            </circle>
+            <text x="60" y="84" font-size="9" fill="#0d6e6e" font-weight="700" text-anchor="middle" id="nodeOutLabel" opacity="0">A</text>
+
+            <!-- Link: highlight a pair -->
+            <line x1="60" y1="80" x2="160" y2="80" stroke="#d97706" stroke-width="3" stroke-dasharray="5,3" id="linkOut" opacity="0"/>
+            <text x="110" y="73" font-size="8" fill="#d97706" font-family="Fira Code" font-weight="700" text-anchor="middle" id="linkOutLabel" opacity="0">0.78</text>
+
+            <!-- Graph: border around whole graph -->
+            <rect x="35" y="28" width="150" height="108" rx="10" fill="none" stroke="#8b5cf6" stroke-width="2.5" stroke-dasharray="6,3" id="graphOut" opacity="0"/>
+            <text x="110" y="158" font-size="8" fill="#8b5cf6" font-family="Fira Code" font-weight="700" text-anchor="middle" id="graphOutLabel" opacity="0">Classe: Tóxico</text>
+          </svg>
+
+          <div id="taskDesc" style="font-size:0.82rem;color:var(--text-muted);text-align:center;line-height:1.4;">
+            Selecione uma tarefa acima para ver o pipeline
+          </div>
+        </div>
+      </div>
+
+      <div class="next-box">
+        <span>🚀</span>
+        <span><strong>Próxima aula:</strong> Implementação em PyTorch Geometric — colocando GNNs em prática com código real!</span>
+      </div>
+    </main>
+
+    <nav class="slide-nav">
+      <button class="btn-nav btn-prev" onclick="location.href='slide21.html'">← Anterior</button>
+      <div class="nav-dots" id="navDots"></div>
+      <button class="btn-nav btn-next" onclick="location.href='slide23.html'">Próximo →</button>
+    </nav>
+  </div>
+
+  <script>
+    // Reveal takeaways
+    let revealIdx = 0;
+    function revealNext() {
+      const cards = document.querySelectorAll('.takeaway-card');
+      if (revealIdx < cards.length) {
+        cards[revealIdx].classList.add('visible');
+        revealIdx++;
+      }
+      if (revealIdx >= cards.length) {
+        document.getElementById('btnReveal').textContent = '✓ Todos revelados';
+        document.getElementById('btnReveal').disabled = true;
+      }
+    }
+
+    // Task demo
+    function hideAllOutputs() {
+      ['nodeOut','nodeOutLabel','linkOut','linkOutLabel','graphOut','graphOutLabel'].forEach(id => {
+        document.getElementById(id).setAttribute('opacity','0');
+      });
+      ['pb-out-node','pb-out-link','pb-out-graph'].forEach(id => {
+        document.getElementById(id).classList.remove('show');
+      });
+      ['tb-graph','tb-node','tb-link','tbNode','tbLink','tbGraph'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('active');
+      });
+      // Reset pipeline
+      ['pb-graph','pb-mp','pb-emb','pb-pred'].forEach(id => {
+        document.getElementById(id).classList.remove('active');
+      });
+    }
+
+    function selectTask(task) {
+      hideAllOutputs();
+      document.getElementById('tb' + task.charAt(0).toUpperCase() + task.slice(1)).classList.add('active');
+
+      // Animate pipeline
+      const steps = ['pb-graph','pb-mp','pb-emb','pb-pred'];
+      steps.forEach((id, i) => {
+        setTimeout(() => {
+          steps.forEach(s => document.getElementById(s).classList.remove('active'));
+          document.getElementById(id).classList.add('active');
+        }, i * 400);
+      });
+
+      setTimeout(() => {
+        steps.forEach(s => document.getElementById(s).classList.add('active'));
+        if (task === 'node') {
+          document.getElementById('nodeOut').setAttribute('opacity','1');
+          document.getElementById('nodeOutLabel').setAttribute('opacity','1');
+          document.getElementById('pb-out-node').classList.add('show');
+          document.getElementById('taskDesc').textContent = 'O embedding do NÓ é usado para prever sua classe.';
+        } else if (task === 'link') {
+          document.getElementById('linkOut').setAttribute('opacity','1');
+          document.getElementById('linkOutLabel').setAttribute('opacity','1');
+          document.getElementById('pb-out-link').classList.add('show');
+          document.getElementById('taskDesc').textContent = 'O produto dos embeddings dos DOIS NÓS prevê se a aresta existe.';
+        } else {
+          document.getElementById('graphOut').setAttribute('opacity','1');
+          document.getElementById('graphOutLabel').setAttribute('opacity','1');
+          document.getElementById('pb-out-graph').classList.add('show');
+          document.getElementById('taskDesc').textContent = 'Um readout agrega TODOS os nós para representar o grafo inteiro.';
+        }
+      }, 4 * 400 + 100);
+    }
+
+    (function(){
+      const container = document.getElementById('navDots');
+      const CURRENT = 22, TOTAL = 23;
+      for (let i = 1; i <= TOTAL; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'dot' + (i === CURRENT ? ' active' : '');
+        dot.title = 'Slide ' + i;
+        dot.style.cursor = 'pointer';
+        dot.addEventListener('click', () => { location.href = 'slide' + String(i).padStart(2,'0') + '.html'; });
+        container.appendChild(dot);
+      }
+    })();
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') location.href = 'slide23.html';
+      if (e.key === 'ArrowLeft'  || e.key === 'PageUp')   location.href = 'slide21.html';
+    });
+  </script>
+</body>
+</html>

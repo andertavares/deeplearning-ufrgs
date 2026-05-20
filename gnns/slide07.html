@@ -161,7 +161,7 @@
     <header class="slide-header">
       <span class="course-tag">GNNs</span>
       <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
-      <span class="slide-counter">Slide 07 / 21</span>
+      <span class="slide-counter">Slide 7 / 23</span>
     </header>
 
     <main class="slide-main">
@@ -201,8 +201,8 @@
           <div style="font-size:2rem;">🔀</div>
           <div class="stage-desc">
             <strong>Combina as mensagens recebidas</strong><br>
-            Funções permutation-invariant: soma, média, máximo.<br>
-            <code style="font-size:0.84rem;">m<sub>v</sub> = AGG({ M<sub>u</sub> : u ∈ N(v) })</code>
+            Cada nó recebe um conjunto de mensagens e o transforma numa única representação.<br>
+            <code style="font-size:0.84rem;">m<sub>v</sub> = AGG({ h<sub>u</sub> : u ∈ N(v) })</code>
           </div>
         </div>
 
@@ -279,15 +279,15 @@
 
             <!-- Node labels -->
             <text x="90"  y="96"  text-anchor="middle" font-family="Inter" font-weight="800" font-size="11" fill="#0d6e6e">U1</text>
-            <text x="90"  y="109" text-anchor="middle" font-family="Fira Code" font-size="8" fill="#0d6e6e">[720,8]</text>
+            <text x="90"  y="109" text-anchor="middle" font-family="Fira Code" font-size="8" fill="#0d6e6e">[730,12]</text>
             <text x="90"  y="181" text-anchor="middle" font-family="Inter" font-weight="800" font-size="10" fill="#0d6e6e">U2</text>
-            <text x="90"  y="193" text-anchor="middle" font-family="Fira Code" font-size="7.5" fill="#0d6e6e">[640,5]</text>
+            <text x="90"  y="193" text-anchor="middle" font-family="Fira Code" font-size="7.5" fill="#0d6e6e">[610,4]</text>
             <text x="370" y="96"  text-anchor="middle" font-family="Inter" font-weight="800" font-size="11" fill="#b91c1c">B1</text>
-            <text x="370" y="109" text-anchor="middle" font-family="Fira Code" font-size="8" fill="#b91c1c">[700,11]</text>
+            <text x="370" y="109" text-anchor="middle" font-family="Fira Code" font-size="8" fill="#b91c1c">[620,11]</text>
             <text x="370" y="181" text-anchor="middle" font-family="Inter" font-weight="800" font-size="10" fill="#b91c1c">B2</text>
-            <text x="370" y="193" text-anchor="middle" font-family="Fira Code" font-size="7.5" fill="#b91c1c">[680,9]</text>
+            <text x="370" y="193" text-anchor="middle" font-family="Fira Code" font-size="7.5" fill="#b91c1c">[735,3]</text>
             <text x="220" y="151" text-anchor="middle" font-family="Inter" font-weight="800" font-size="11" fill="#6b7fa3">X</text>
-            <text x="220" y="164" text-anchor="middle" font-family="Fira Code" font-size="8" fill="#6b7fa3">[690,10]</text>
+            <text x="220" y="164" text-anchor="middle" font-family="Fira Code" font-size="8" fill="#6b7fa3">[675,7]</text>
 
             <!-- Update labels (shown in Update stage) -->
             <text id="upd-label-u1" x="90"  y="70"  text-anchor="middle" font-family="Fira Code" font-size="9" fill="#0d6e6e" font-weight="700" opacity="0">h' ← absorve</text>
@@ -391,7 +391,7 @@
     (function(){
       const container = document.getElementById('navDots');
       const CURRENT = 7;
-      const TOTAL = 21;
+      const TOTAL = 24;
       for (let i = 1; i <= TOTAL; i++) {
         const dot = document.createElement('div');
         dot.className = 'dot' + (i === CURRENT ? ' active' : '');

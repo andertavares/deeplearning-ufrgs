@@ -235,6 +235,20 @@
         </a>
         <a href="slide11.html" class="slide-link">
           <div class="sl-num">Slide 11</div>
+          <div class="sl-icon">⚡</div>
+          <div class="sl-title">Operações em Paralelo e Formulação Matricial</div>
+          <div class="sl-desc">Todos os nós executam gather→aggregate→update simultaneamente. A operação pode ser expressa matricialmente com H' = σ(ÃHW).</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide12.html" class="slide-link">
+          <div class="sl-num">Slide 12</div>
+          <div class="sl-icon">🔀</div>
+          <div class="sl-title">Embeddings de Arestas e do Grafo</div>
+          <div class="sl-desc">Além dos nós, arestas podem ter seus próprios embeddings e o grafo pode ter um estado global — troca de mensagens entre todos.</div>
+          <div class="sl-tag">interativo</div>
+        </a>
+        <a href="slide13.html" class="slide-link">
+          <div class="sl-num">Slide 13</div>
           <div class="sl-icon">🏗️</div>
           <div class="sl-title">Empilhando Camadas</div>
           <div class="sl-desc">Campo receptivo cresce com o número de camadas L — visualize como a informação se propaga a distâncias maiores.</div>
@@ -247,32 +261,32 @@
     <div class="block-section">
       <div class="block-title">Bloco 3 — Atenção em Grafos</div>
       <div class="slides-grid">
-        <a href="slide12.html" class="slide-link">
-          <div class="sl-num">Slide 12</div>
+        <a href="slide14.html" class="slide-link">
+          <div class="sl-num">Slide 14</div>
           <div class="sl-icon">🔗</div>
           <div class="sl-title">GNN como Convolução Generalizada</div>
           <div class="sl-desc">Comparação CNN vs GNN — kernel em grade regular vs agregação em grafo irregular. CNN é um caso especial de GNN!</div>
           <div class="sl-tag">interativo</div>
         </a>
-        <a href="slide13.html" class="slide-link">
-          <div class="sl-num">Slide 13</div>
+        <a href="slide15.html" class="slide-link">
+          <div class="sl-num">Slide 15</div>
           <div class="sl-icon">⚖️</div>
           <div class="sl-title">Limitação do Pooling Uniforme</div>
           <div class="sl-desc">Por que pesos iguais para todos os vizinhos é problemático — toggle para ver o efeito com e sem atenção.</div>
           <div class="sl-tag">interativo</div>
         </a>
-        <a href="slide14.html" class="slide-link">
-          <div class="sl-num">Slide 14</div>
+        <a href="slide16.html" class="slide-link">
+          <div class="sl-num">Slide 16</div>
           <div class="sl-icon">👁️</div>
           <div class="sl-title">Graph Attention Network (GAT)</div>
           <div class="sl-desc">Exemplo numérico de atenção no GAT com matrizes, vetores e pesos α calculados por softmax.</div>
           <div class="sl-tag">interativo</div>
         </a>
-        <a href="slide15.html" class="slide-link">
-          <div class="sl-num">Slide 15</div>
+        <a href="slide17.html" class="slide-link">
+          <div class="sl-num">Slide 17</div>
           <div class="sl-icon">👣</div>
           <div class="sl-title">GAT: Attention Passo a Passo</div>
-          <div class="sl-desc">Walkthrough de 4 passos: inicialização → scores → softmax → agregação ponderada, com animações no grafo.</div>
+          <div class="sl-desc">Walkthrough de 5 passos: inicialização → projeção → scores → softmax → agregação ponderada, com animações no grafo.</div>
           <div class="sl-tag">interativo</div>
         </a>
       </div>
@@ -282,29 +296,29 @@
     <div class="block-section">
       <div class="block-title">Bloco 4 — Conexões e Treinamento</div>
       <div class="slides-grid">
-        <a href="slide16.html" class="slide-link">
-          <div class="sl-num">Slide 16</div>
+        <a href="slide18.html" class="slide-link">
+          <div class="sl-num">Slide 18</div>
           <div class="sl-icon">🤝</div>
           <div class="sl-title">Transformers e GNNs são Primos</div>
           <div class="sl-desc">Self-attention = message passing em grafo completo. Toggle para ver Transformer como GNN esparso.</div>
           <div class="sl-tag">interativo</div>
         </a>
-        <a href="slide17.html" class="slide-link">
-          <div class="sl-num">Slide 17</div>
+        <a href="slide19.html" class="slide-link">
+          <div class="sl-num">Slide 19</div>
           <div class="sl-icon">🔵</div>
           <div class="sl-title">Classificação de Nós</div>
           <div class="sl-desc">Splits treino/val/teste em um único grafo — animação de propagação de embeddings dos nós de treino para o restante.</div>
           <div class="sl-tag">interativo</div>
         </a>
-        <a href="slide18.html" class="slide-link">
-          <div class="sl-num">Slide 18</div>
+        <a href="slide20.html" class="slide-link">
+          <div class="sl-num">Slide 20</div>
           <div class="sl-icon">🔗</div>
           <div class="sl-title">Predição de Arestas</div>
           <div class="sl-desc">score(u,v) = σ(hᵤ · hᵥ) — calcule scores para pares candidatos e veja a aresta de maior probabilidade ser prevista.</div>
           <div class="sl-tag">interativo</div>
         </a>
-        <a href="slide19.html" class="slide-link">
-          <div class="sl-num">Slide 19</div>
+        <a href="slide21.html" class="slide-link">
+          <div class="sl-num">Slide 21</div>
           <div class="sl-icon">✂️</div>
           <div class="sl-title">Split Correto em Link Prediction</div>
           <div class="sl-desc">Abordagem ingênua (data leakage) vs correta — message edges ≠ supervision edges, com SVGs comparativos.</div>
@@ -317,15 +331,15 @@
     <div class="block-section">
       <div class="block-title">Bloco 5 — Conclusão</div>
       <div class="slides-grid">
-        <a href="slide20.html" class="slide-link">
-          <div class="sl-num">Slide 20</div>
+        <a href="slide22.html" class="slide-link">
+          <div class="sl-num">Slide 22</div>
           <div class="sl-icon">🏁</div>
           <div class="sl-title">Resumo: Graph Neural Networks</div>
           <div class="sl-desc">Pipeline completo animado, 5 conceitos-chave que aparecem progressivamente, e demo interativa de seleção de tarefa.</div>
           <div class="sl-tag">interativo</div>
         </a>
-        <a href="slide21.html" class="slide-link">
-          <div class="sl-num">Slide 21</div>
+        <a href="slide23.html" class="slide-link">
+          <div class="sl-num">Slide 23</div>
           <div class="sl-icon">🎯</div>
           <div class="sl-title">Cabeça de Predição: do Embedding à Tarefa</div>
           <div class="sl-desc">Como o MLP usa os embeddings finais da GNN para tarefas de nível de nó, aresta e grafo — com readout (sum/mean/max) para grafos.</div>

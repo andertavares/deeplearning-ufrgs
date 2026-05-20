@@ -3,45 +3,64 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Slide 12 – GNN como uma forma de Convolução</title>
+  <title>Slide 12 – Embeddings de Arestas e do Grafo</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
   <style>
-    .cmp-layout { display:grid; grid-template-columns:1fr 1fr; gap:1.2rem; flex:1; }
-    .formula-row { display:flex; gap:1rem; margin-top:0.6rem; align-items:stretch; }
-    .formula-box {
-      flex:1; background:var(--bg3); border:1.5px solid var(--border2);
-      border-radius:var(--radius-sm); padding:0.75rem 1rem;
-      font-family:'Fira Code',monospace; font-size:0.88rem; line-height:1.6;
-      color:var(--text);
+    .emb-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.2rem;
+      flex: 1;
     }
-    .formula-box .label { font-size:0.72rem; font-weight:700; text-transform:uppercase;
-      letter-spacing:0.08em; color:var(--text-dim); margin-bottom:0.3rem; }
-    .formula-box .eq { color:var(--teal); font-weight:600; }
-    .formula-box .note { font-size:0.75rem; color:var(--text-muted); margin-top:0.35rem; }
-
-    /* pixel grid */
-    .pixel-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:2px; width:100%; max-width:140px; margin:0.4rem auto; }
-    .px { aspect-ratio:1; border-radius:2px; background:var(--bg3); border:1px solid var(--border2); transition:background 0.3s; }
-    .px.kernel { background:#bfdbfe; border-color:#93c5fd; }
-    .px.kernel-center { background:#3b82f6; border-color:#1d4ed8; }
-
-    /* kernel animation */
-    @keyframes kernelSlide {
-      0%   { transform:translate(0,0); }
-      33%  { transform:translate(28px,0); }
-      66%  { transform:translate(28px,28px); }
-      100% { transform:translate(0,0); }
+    .emb-panel {
+      background: var(--bg2);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+      box-shadow: var(--shadow);
     }
-    .anim-kernel { animation:kernelSlide 3s ease-in-out infinite; }
+    .entity-badge {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+    .eb-node  { background: #ccfbf1; color: #0d6e6e; border: 1px solid #0d6e6e; }
+    .eb-edge  { background: #fef3c7; color: #92400e; border: 1px solid #d97706; }
+    .eb-graph { background: #ede9fe; color: #5b21b6; border: 1px solid #7c3aed; }
+    .flow-arrow {
+      text-align: center;
+      font-size: 1.2rem;
+      color: var(--text-dim);
+      padding: 0.1rem 0;
+    }
+    .entity-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.5rem 0.7rem;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border2);
+      background: var(--bg3);
+      transition: background 0.3s, border-color 0.3s;
+      cursor: pointer;
+    }
+    .entity-row:hover { border-color: var(--teal); background: var(--teal-lt); }
+    .entity-row.selected-node  { background: #f0fdf9; border-color: #0d6e6e; }
+    .entity-row.selected-edge  { background: #fffbeb; border-color: #d97706; }
+    .entity-row.selected-graph { background: #f5f3ff; border-color: #7c3aed; }
 
-    /* graph svg */
-    .graph-panel { display:flex; flex-direction:column; align-items:center; gap:0.5rem; }
-    svg.graph-svg { width:100%; max-width:200px; height:160px; }
-
-    .bullet-list { list-style:none; display:flex; flex-direction:column; gap:0.45rem; }
-    .bullet-list li { display:flex; align-items:flex-start; gap:0.5rem; font-size:0.9rem; color:var(--text-muted); line-height:1.4; }
-    .bullet-list li::before { content:"▸"; color:var(--teal); font-weight:700; flex-shrink:0; }
+    .msg-flow-line {
+      stroke-dasharray: 6 3;
+      animation: dashAnim 0.8s linear infinite;
+    }
+    @keyframes dashAnim { to { stroke-dashoffset: -18; } }
   </style>
 </head>
 <body>
@@ -49,145 +68,132 @@
     <header class="slide-header">
       <span class="course-tag">GNNs</span>
       <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
-      <span class="slide-counter">Slide 12 / 21</span>
+      <span class="slide-counter">Slide 12 / 23</span>
     </header>
 
     <main class="slide-main">
       <div class="title-block">
-        <h1 class="slide-title">GNN como uma forma de Convolução</h1>
-        <p class="slide-subtitle">Bloco 3 — Perspectiva Unificada</p>
+        <h1 class="slide-title">Embeddings de Arestas e do Grafo</h1>
+        <p class="slide-subtitle">Bloco 2 — Message Passing</p>
       </div>
 
-      <div class="cmp-layout">
-        <!-- CNN -->
-        <div class="panel">
-          <div class="panel-title">🖼️ CNN — Grade Regular</div>
-          <div style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;">
-            <div style="font-size:0.75rem;color:var(--text-dim);font-family:'Fira Code',monospace;text-align:center;">Kernel 3×3 sobre região da imagem</div>
-            <!-- Fixed numerical 3x3 kernel example -->
-            <svg viewBox="0 0 260 120" style="width:100%;max-height:120px;">
-              <!-- Image region (5x5, showing central 3x3 highlighted) -->
-              <text x="30" y="11" font-size="8" fill="#6b7fa3" font-family="Fira Code" text-anchor="middle" font-weight="700">Imagem</text>
-              <!-- Row 0 (outside kernel) -->
-              <rect x="5"  y="14" width="18" height="18" rx="2" fill="#f0f2f6" stroke="#c7d0e0"/>  <text x="14"  y="27" text-anchor="middle" font-size="7.5" font-family="Fira Code" fill="#9ca3af">12</text>
-              <rect x="24" y="14" width="18" height="18" rx="2" fill="#f0f2f6" stroke="#c7d0e0"/>  <text x="33"  y="27" text-anchor="middle" font-size="7.5" font-family="Fira Code" fill="#9ca3af">20</text>
-              <rect x="43" y="14" width="18" height="18" rx="2" fill="#f0f2f6" stroke="#c7d0e0"/>  <text x="52"  y="27" text-anchor="middle" font-size="7.5" font-family="Fira Code" fill="#9ca3af">9</text>
-              <rect x="62" y="14" width="18" height="18" rx="2" fill="#f0f2f6" stroke="#c7d0e0"/>  <text x="71"  y="27" text-anchor="middle" font-size="7.5" font-family="Fira Code" fill="#9ca3af">5</text>
-              <rect x="81" y="14" width="18" height="18" rx="2" fill="#f0f2f6" stroke="#c7d0e0"/>  <text x="90"  y="27" text-anchor="middle" font-size="7.5" font-family="Fira Code" fill="#9ca3af">3</text>
-              <!-- Row 1 (kernel start) -->
-              <rect x="5"  y="33" width="18" height="18" rx="2" fill="#f0f2f6" stroke="#c7d0e0"/>  <text x="14"  y="46" text-anchor="middle" font-size="7.5" font-family="Fira Code" fill="#9ca3af">7</text>
-              <rect x="24" y="33" width="18" height="18" rx="2" fill="#bfdbfe" stroke="#93c5fd"/>  <text x="33"  y="46" text-anchor="middle" font-size="7.5" font-family="Fira Code" fill="#1d4ed8" font-weight="700">4</text>
-              <rect x="43" y="33" width="18" height="18" rx="2" fill="#bfdbfe" stroke="#93c5fd"/>  <text x="52"  y="46" text-anchor="middle" font-size="7.5" font-family="Fira Code" fill="#1d4ed8" font-weight="700">8</text>
-              <rect x="62" y="33" width="18" height="18" rx="2" fill="#bfdbfe" stroke="#93c5fd"/>  <text x="71"  y="46" text-anchor="middle" font-size="7.5" font-family="Fira Code" fill="#1d4ed8" font-weight="700">6</text>
-              <rect x="81" y="33" width="18" height="18" rx="2" fill="#f0f2f6" stroke="#c7d0e0"/>  <text x="90"  y="46" text-anchor="middle" font-size="7.5" font-family="Fira Code" fill="#9ca3af">2</text>
-              <!-- Row 2 (kernel middle) -->
-              <rect x="5"  y="52" width="18" height="18" rx="2" fill="#f0f2f6" stroke="#c7d0e0"/>  <text x="14"  y="65" text-anchor="middle" font-size="7.5" font-family="Fira Code" fill="#9ca3af">11</text>
-              <rect x="24" y="52" width="18" height="18" rx="2" fill="#bfdbfe" stroke="#93c5fd"/>  <text x="33"  y="65" text-anchor="middle" font-size="7.5" font-family="Fira Code" fill="#1d4ed8" font-weight="700">3</text>
-              <rect x="43" y="52" width="18" height="18" rx="2" fill="#3b82f6" stroke="#1d4ed8"/>  <text x="52"  y="65" text-anchor="middle" font-size="7.5" font-family="Fira Code" fill="#fff"       font-weight="700">5</text>
-              <rect x="62" y="52" width="18" height="18" rx="2" fill="#bfdbfe" stroke="#93c5fd"/>  <text x="71"  y="65" text-anchor="middle" font-size="7.5" font-family="Fira Code" fill="#1d4ed8" font-weight="700">9</text>
-              <rect x="81" y="52" width="18" height="18" rx="2" fill="#f0f2f6" stroke="#c7d0e0"/>  <text x="90"  y="65" text-anchor="middle" font-size="7.5" font-family="Fira Code" fill="#9ca3af">4</text>
-              <!-- Row 3 (kernel end) -->
-              <rect x="5"  y="71" width="18" height="18" rx="2" fill="#f0f2f6" stroke="#c7d0e0"/>  <text x="14"  y="84" text-anchor="middle" font-size="7.5" font-family="Fira Code" fill="#9ca3af">6</text>
-              <rect x="24" y="71" width="18" height="18" rx="2" fill="#bfdbfe" stroke="#93c5fd"/>  <text x="33"  y="84" text-anchor="middle" font-size="7.5" font-family="Fira Code" fill="#1d4ed8" font-weight="700">2</text>
-              <rect x="43" y="71" width="18" height="18" rx="2" fill="#bfdbfe" stroke="#93c5fd"/>  <text x="52"  y="84" text-anchor="middle" font-size="7.5" font-family="Fira Code" fill="#1d4ed8" font-weight="700">7</text>
-              <rect x="62" y="71" width="18" height="18" rx="2" fill="#bfdbfe" stroke="#93c5fd"/>  <text x="71"  y="84" text-anchor="middle" font-size="7.5" font-family="Fira Code" fill="#1d4ed8" font-weight="700">1</text>
-              <rect x="81" y="71" width="18" height="18" rx="2" fill="#f0f2f6" stroke="#c7d0e0"/>  <text x="90"  y="84" text-anchor="middle" font-size="7.5" font-family="Fira Code" fill="#9ca3af">8</text>
-              <!-- Row 4 (outside) -->
-              <rect x="5"  y="90" width="18" height="18" rx="2" fill="#f0f2f6" stroke="#c7d0e0"/>
-              <rect x="24" y="90" width="18" height="18" rx="2" fill="#f0f2f6" stroke="#c7d0e0"/>
-              <rect x="43" y="90" width="18" height="18" rx="2" fill="#f0f2f6" stroke="#c7d0e0"/>
-              <rect x="62" y="90" width="18" height="18" rx="2" fill="#f0f2f6" stroke="#c7d0e0"/>
-              <rect x="81" y="90" width="18" height="18" rx="2" fill="#f0f2f6" stroke="#c7d0e0"/>
-              <!-- Kernel label/border -->
-              <rect x="23" y="32" width="58" height="58" rx="3" fill="none" stroke="#1d4ed8" stroke-width="2" stroke-dasharray="4 2"/>
-              <text x="52" y="108" text-anchor="middle" font-size="7.5" fill="#1d4ed8" font-family="Fira Code" font-weight="700">kernel 3×3</text>
-
-              <!-- Arrow to result -->
-              <text x="113" y="62" font-size="14" fill="#6b7fa3" text-anchor="middle">→</text>
-
-              <!-- Kernel weights -->
-              <text x="148" y="11" font-size="8" fill="#6b7fa3" font-family="Fira Code" text-anchor="middle" font-weight="700">Kernel W</text>
-              <rect x="121" y="14" width="18" height="18" rx="2" fill="#fef3c7" stroke="#f59e0b"/> <text x="130" y="27" text-anchor="middle" font-size="7" font-family="Fira Code" fill="#92400e">1</text>
-              <rect x="140" y="14" width="18" height="18" rx="2" fill="#fef3c7" stroke="#f59e0b"/> <text x="149" y="27" text-anchor="middle" font-size="7" font-family="Fira Code" fill="#92400e">0</text>
-              <rect x="159" y="14" width="18" height="18" rx="2" fill="#fef3c7" stroke="#f59e0b"/> <text x="168" y="27" text-anchor="middle" font-size="7" font-family="Fira Code" fill="#92400e">-1</text>
-              <rect x="121" y="33" width="18" height="18" rx="2" fill="#fef3c7" stroke="#f59e0b"/> <text x="130" y="46" text-anchor="middle" font-size="7" font-family="Fira Code" fill="#92400e">2</text>
-              <rect x="140" y="33" width="18" height="18" rx="2" fill="#fef3c7" stroke="#f59e0b"/> <text x="149" y="46" text-anchor="middle" font-size="7" font-family="Fira Code" fill="#92400e">1</text>
-              <rect x="159" y="33" width="18" height="18" rx="2" fill="#fef3c7" stroke="#f59e0b"/> <text x="168" y="46" text-anchor="middle" font-size="7" font-family="Fira Code" fill="#92400e">0</text>
-              <rect x="121" y="52" width="18" height="18" rx="2" fill="#fef3c7" stroke="#f59e0b"/> <text x="130" y="65" text-anchor="middle" font-size="7" font-family="Fira Code" fill="#92400e">-1</text>
-              <rect x="140" y="52" width="18" height="18" rx="2" fill="#fef3c7" stroke="#f59e0b"/> <text x="149" y="65" text-anchor="middle" font-size="7" font-family="Fira Code" fill="#92400e">3</text>
-              <rect x="159" y="52" width="18" height="18" rx="2" fill="#fef3c7" stroke="#f59e0b"/> <text x="168" y="65" text-anchor="middle" font-size="7" font-family="Fira Code" fill="#92400e">1</text>
-
-              <!-- Arrow to result -->
-              <text x="197" y="48" font-size="14" fill="#6b7fa3" text-anchor="middle">→</text>
-
-              <!-- Result -->
-              <text x="238" y="11" font-size="8" fill="#6b7fa3" font-family="Fira Code" text-anchor="middle" font-weight="700">Resultado</text>
-              <rect x="214" y="14" width="48" height="56" rx="4" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
-              <text x="238" y="30" text-anchor="middle" font-size="7.5" font-family="Fira Code" fill="#166534">1·4+0·8+(-1)·6</text>
-              <text x="238" y="42" text-anchor="middle" font-size="7.5" font-family="Fira Code" fill="#166534">+2·3+1·5+0·9</text>
-              <text x="238" y="54" text-anchor="middle" font-size="7.5" font-family="Fira Code" fill="#166534">+(-1)·2+3·7+1·1</text>
-              <line x1="214" y1="60" x2="262" y2="60" stroke="#22c55e" stroke-width="1"/>
-              <text x="238" y="72" text-anchor="middle" font-size="9" font-family="Fira Code" fill="#166534" font-weight="800">= 37</text>
-            </svg>
-          </div>
-          <ul class="bullet-list">
-            <li>Kernel desliza por uma <strong>grade regular</strong></li>
-            <li>Vizinhança = pixels adjacentes (<em>posição fixa</em>)</li>
-            <li>Pesos aprendidos para cada posição do kernel</li>
-          </ul>
-        </div>
-
-        <!-- GNN -->
-        <div class="panel">
-          <div class="panel-title">🕸️ GNN — Grafo Irregular</div>
-          <div class="graph-panel">
-            <svg class="graph-svg" viewBox="0 0 200 160">
-              <!-- Edges -->
-              <line x1="100" y1="80" x2="40"  y2="40"  stroke="#c7d0e0" stroke-width="2"/>
-              <line x1="100" y1="80" x2="160" y2="40"  stroke="#c7d0e0" stroke-width="2"/>
-              <line x1="100" y1="80" x2="50"  y2="130" stroke="#c7d0e0" stroke-width="2"/>
-              <line x1="100" y1="80" x2="155" y2="120" stroke="#c7d0e0" stroke-width="2"/>
-              <!-- Neighbor nodes -->
-              <circle cx="40"  cy="40"  r="16" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
-              <circle cx="160" cy="40"  r="16" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
-              <circle cx="50"  cy="130" r="16" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
-              <circle cx="155" cy="120" r="16" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
-              <!-- Central node -->
-              <circle cx="100" cy="80" r="22" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="2.5">
-                <animate attributeName="r" values="20;23;20" dur="2s" repeatCount="indefinite"/>
-              </circle>
-              <text x="40"  y="44"  font-size="10" font-weight="700" fill="#1d4ed8" text-anchor="middle">u<tspan dy="3" font-size="7">1</tspan></text>
-              <text x="160" y="44"  font-size="10" font-weight="700" fill="#1d4ed8" text-anchor="middle">u<tspan dy="3" font-size="7">2</tspan></text>
-              <text x="50"  y="134" font-size="10" font-weight="700" fill="#1d4ed8" text-anchor="middle">u<tspan dy="3" font-size="7">3</tspan></text>
-              <text x="155" y="124" font-size="10" font-weight="700" fill="#1d4ed8" text-anchor="middle">u<tspan dy="3" font-size="7">4</tspan></text>
-              <text x="100" y="84"  font-size="11" font-weight="700" fill="#0d6e6e" text-anchor="middle">v</text>
-            </svg>
-          </div>
-          <ul class="bullet-list">
-            <li>Vizinhança = nós conectados por <strong>arestas</strong></li>
-            <li>Estrutura <em>irregular</em> — grau variável por nó</li>
-            <li>Usa <strong>mean-pooling</strong> como agregação (divide por |N(v)|)</li>
-          </ul>
-        </div>
+      <!-- Full-width intro panel -->
+      <div style="background:#f0fdf9;border:1.5px solid #0d6e6e;border-radius:var(--radius);padding:0.7rem 1.1rem;display:flex;align-items:center;gap:0.8rem;box-shadow:var(--shadow);">
+        <span style="font-size:1.3rem;">🌐</span>
+        <span style="font-size:0.88rem;color:var(--text);line-height:1.5;">
+          Em GNNs completas, <strong>todos os componentes do grafo</strong> podem ter seus próprios embeddings e <em>trocar mensagens entre si</em>: nós ↔ nós, nós ↔ arestas, e tudo ↔ estado global.
+        </span>
       </div>
 
-      <!-- Fórmulas comparativas -->
-      <div class="formula-row">
-        <div class="formula-box">
-          <div class="label">CNN</div>
-          <div class="eq">y[i] = Σ<sub>k∈N</sub> w<sub>k</sub> · x[i+k]</div>
-          <div class="note">Vizinhança fixa · Pesos por posição</div>
+      <div class="emb-layout">
+        <!-- LEFT: interactive diagram -->
+        <div class="emb-panel">
+          <div class="panel-title">Clique em uma entidade para ver sua troca de mensagens</div>
+
+          <!-- Graph-level embedding at top -->
+          <div class="entity-row" id="row-graph" onclick="selectEntity('graph')">
+            <span class="entity-badge eb-graph">Grafo</span>
+            <div>
+              <div style="font-weight:700;font-size:0.85rem;">Embedding Global <span style="font-family:'Fira Code',monospace;color:#7c3aed;">u</span></div>
+              <div style="font-size:0.78rem;color:var(--text-muted);">Estado global do grafo — se comunica com todos os nós e arestas</div>
+            </div>
+          </div>
+
+          <!-- Animated SVG diagram -->
+          <svg viewBox="0 0 280 200" style="width:100%;flex:1;" id="embSvg">
+            <defs>
+              <marker id="arNode" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                <path d="M0,0 L6,3 L0,6 Z" fill="#0d6e6e"/>
+              </marker>
+              <marker id="arEdge" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                <path d="M0,0 L6,3 L0,6 Z" fill="#d97706"/>
+              </marker>
+              <marker id="arGraph" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                <path d="M0,0 L6,3 L0,6 Z" fill="#7c3aed"/>
+              </marker>
+            </defs>
+
+            <!-- Global embedding (top center) -->
+            <rect x="100" y="5" width="80" height="28" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="2" id="svgGraph"/>
+            <text x="140" y="23" text-anchor="middle" font-family="Inter" font-weight="800" font-size="11" fill="#5b21b6">u (Global)</text>
+
+            <!-- Edges (middle) -->
+            <rect x="20" y="88" width="64" height="26" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="2" id="svgEdge1"/>
+            <text x="52" y="105" text-anchor="middle" font-family="Fira Code" font-weight="700" font-size="10" fill="#92400e">e(U1,X)</text>
+
+            <rect x="196" y="88" width="64" height="26" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="2" id="svgEdge2"/>
+            <text x="228" y="105" text-anchor="middle" font-family="Fira Code" font-weight="700" font-size="10" fill="#92400e">e(B1,X)</text>
+
+            <!-- Nodes (bottom): U1 left, X center, B1 right -->
+            <circle cx="55"  cy="170" r="22" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="2" id="svgU1"/>
+            <text x="55"  y="166" text-anchor="middle" font-family="Inter" font-weight="800" font-size="11" fill="#0d6e6e">U1</text>
+            <text x="55"  y="179" text-anchor="middle" font-family="Fira Code" font-size="7.5" fill="#0d6e6e">h<tspan dy="3" font-size="6">U1</tspan></text>
+
+            <circle cx="140" cy="170" r="22" fill="#e5e7eb" stroke="#9ca3af" stroke-width="2" id="svgX"/>
+            <text x="140" y="166" text-anchor="middle" font-family="Inter" font-weight="800" font-size="11" fill="#6b7fa3">X</text>
+            <text x="140" y="179" text-anchor="middle" font-family="Fira Code" font-size="7.5" fill="#6b7fa3">h<tspan dy="3" font-size="6">X</tspan></text>
+
+            <circle cx="225" cy="170" r="22" fill="#fee2e2" stroke="#b91c1c" stroke-width="2" id="svgB1"/>
+            <text x="225" y="166" text-anchor="middle" font-family="Inter" font-weight="800" font-size="11" fill="#b91c1c">B1</text>
+            <text x="225" y="179" text-anchor="middle" font-family="Fira Code" font-size="7.5" fill="#b91c1c">h<tspan dy="3" font-size="6">B1</tspan></text>
+
+            <!-- Static connecting lines (structure) -->
+            <line x1="52"  y1="114" x2="62"  y2="148" stroke="#d97706" stroke-width="1.5" opacity="0.4"/>
+            <line x1="52"  y1="114" x2="120" y2="148" stroke="#d97706" stroke-width="1.5" opacity="0.4"/>
+            <line x1="228" y1="114" x2="155" y2="148" stroke="#d97706" stroke-width="1.5" opacity="0.4"/>
+            <line x1="228" y1="114" x2="215" y2="148" stroke="#d97706" stroke-width="1.5" opacity="0.4"/>
+            <line x1="140" y1="33" x2="52"  y2="88" stroke="#7c3aed" stroke-width="1.5" opacity="0.3"/>
+            <line x1="140" y1="33" x2="228" y2="88" stroke="#7c3aed" stroke-width="1.5" opacity="0.3"/>
+            <line x1="140" y1="33" x2="55"  y2="148" stroke="#7c3aed" stroke-width="1.5" opacity="0.3"/>
+            <line x1="140" y1="33" x2="140" y2="148" stroke="#7c3aed" stroke-width="1.5" opacity="0.3"/>
+            <line x1="140" y1="33" x2="225" y2="148" stroke="#7c3aed" stroke-width="1.5" opacity="0.3"/>
+
+            <!-- Animated arrows (shown based on selected entity) -->
+            <g id="flowArrows" opacity="0"></g>
+          </svg>
+
+          <!-- Entity selector buttons -->
+          <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+            <div class="entity-row selected-node" id="row-node" onclick="selectEntity('node')" style="flex:1;">
+              <span class="entity-badge eb-node">Nó</span>
+              <div>
+                <div style="font-weight:700;font-size:0.82rem;">Embedding de Nó <span style="font-family:'Fira Code',monospace;color:#0d6e6e;">h<sub>v</sub></span></div>
+                <div style="font-size:0.75rem;color:var(--text-muted);">Agrega vizinhos, arestas incidentes e estado global</div>
+              </div>
+            </div>
+            <div class="entity-row" id="row-edge" onclick="selectEntity('edge')" style="flex:1;">
+              <span class="entity-badge eb-edge">Aresta</span>
+              <div>
+                <div style="font-weight:700;font-size:0.82rem;">Embedding de Aresta <span style="font-family:'Fira Code',monospace;color:#92400e;">e<sub>ij</sub></span></div>
+                <div style="font-size:0.75rem;color:var(--text-muted);">Agrega nós endpoints e estado global</div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="formula-box">
-          <div class="label">GNN (mean-pooling)</div>
-          <div class="eq">h<sub>v</sub><sup>(l+1)</sup> = σ( W · <span style="color:#c2410c;">( 1/|N(v)| · Σ<sub>u∈N(v)</sub> h<sub>u</sub><sup>(l)</sup> )</span> )</div>
-          <div class="note">Vizinhança variável · Mean-pooling sobre vizinhos · Pesos compartilhados W</div>
+
+        <!-- RIGHT: explanation per entity -->
+        <div class="emb-panel">
+          <div class="panel-title" id="rightTitle">Mensagem para Nós</div>
+
+          <div id="entityDesc" style="font-size:0.85rem;color:var(--text-muted);line-height:1.6;"></div>
+
+          <div id="updateEq" class="matrix-eq" style="font-family:'Fira Code',monospace;font-size:0.82rem;background:var(--bg3);border:1.5px solid var(--border2);border-radius:var(--radius-sm);padding:0.6rem 0.9rem;line-height:2;display:none;"></div>
+
+          <div id="exampleBox" style="display:none;background:var(--bg3);border:1.5px solid var(--border2);border-radius:var(--radius-sm);padding:0.6rem 0.9rem;font-size:0.8rem;color:var(--text-muted);line-height:1.6;"></div>
+
+          <div class="insight-box" id="insightBox" style="display:none;">
+            <span class="i-icon" id="insightIcon"></span>
+            <span class="i-text" id="insightText"></span>
+          </div>
         </div>
       </div>
 
       <div class="insight-box">
-        <span class="i-icon">💡</span>
-        <span class="i-text"><strong>CNN é um caso especial de GNN</strong> em grafos do tipo <em>grade</em>! A convolução clássica nada mais é que message passing em um grafo regular 2D com pesos posicionais fixos.</span>
+        <span class="i-icon">🌐</span>
+        <span class="i-text">
+          Este framework — nós, arestas e grafo global se comunicando — é chamado de
+          <strong>Graph Network</strong> (Battaglia et al., 2018). A maioria das GNNs são casos especiais dele.
+        </span>
       </div>
     </main>
 
@@ -199,11 +205,119 @@
   </div>
 
   <script>
-    // nav dots
+    const entityData = {
+      node: {
+        title: 'Mensagem para Nós',
+        desc: `Num modelo com todas as entidades, o embedding de um nó <strong>X</strong> é atualizado usando:
+          <ul style="margin:0.4rem 0 0 1rem;list-style:disc;line-height:2;">
+            <li>Seus <strong>vizinhos</strong> (nós U1, B1…)</li>
+            <li>As <strong>arestas incidentes</strong> a X</li>
+            <li>O embedding <strong>global</strong> do grafo <span style="font-family:'Fira Code',monospace;color:#7c3aed;">u</span></li>
+          </ul>`,
+        eq: `h<sub>v</sub>' = f<sub>nó</sub>( h<sub>v</sub>, AGG({h<sub>u</sub>}), AGG({e<sub>vu</sub>}), u )`,
+        example: `<strong>Exemplo — bot detection:</strong><br>Aresta U1→X poderia conter a frequência de interações entre U1 e X. O nó X usaria esse atributo para ponderar a mensagem de U1.`,
+        insight: '🔵', insightText: 'Se as arestas não têm atributos, o modelo se reduz ao message passing padrão com apenas vizinhos e, opcionalmente, o estado global.',
+        selectedClass: 'selected-node'
+      },
+      edge: {
+        title: 'Mensagem para Arestas',
+        desc: `O embedding de uma aresta <strong>e(U1,X)</strong> é atualizado usando:
+          <ul style="margin:0.4rem 0 0 1rem;list-style:disc;line-height:2;">
+            <li>Os <strong>nós nos extremos</strong> (U1 e X)</li>
+            <li>O embedding <strong>global</strong> do grafo <span style="font-family:'Fira Code',monospace;color:#7c3aed;">u</span></li>
+          </ul>`,
+        eq: `e<sub>ij</sub>' = f<sub>aresta</sub>( e<sub>ij</sub>, h<sub>i</sub>, h<sub>j</sub>, u )`,
+        example: `<strong>Exemplo — bot detection:</strong><br>A aresta U1→X pode aprender o tipo de interação: é uma resposta, curtida ou repost? Isso enriquece a mensagem que X recebe de U1.`,
+        insight: '🔗', insightText: 'Atributos de arestas são comuns em grafos de conhecimento (tipo de relação), moléculas (tipo de ligação) e redes sociais (intensidade de interação).',
+        selectedClass: 'selected-edge'
+      },
+      graph: {
+        title: 'Mensagem para o Grafo Global',
+        desc: `O embedding global <strong>u</strong> agrega informação de <em>todos</em> os nós e arestas:
+          <ul style="margin:0.4rem 0 0 1rem;list-style:disc;line-height:2;">
+            <li><strong>Todos os nós</strong> do grafo</li>
+            <li><strong>Todas as arestas</strong> do grafo</li>
+          </ul>`,
+        eq: `u' = f<sub>global</sub>( u, AGG({h<sub>v</sub>}), AGG({e<sub>ij</sub>}) )`,
+        example: `<strong>Exemplo — bot detection:</strong><br>O embedding global poderia capturar características da rede inteira: densidade de arestas, proporção de contas verificadas, padrão geral de atividade.`,
+        insight: '🌍', insightText: 'O embedding global é essencial para tarefas de classificação de grafos — representa o grafo inteiro com um único vetor.',
+        selectedClass: 'selected-graph'
+      }
+    };
+
+    let currentEntity = 'node';
+
+    function selectEntity(type) {
+      currentEntity = type;
+      ['node','edge','graph'].forEach(t => {
+        const row = document.getElementById('row-'+t);
+        if (row) {
+          row.classList.remove('selected-node','selected-edge','selected-graph');
+          if (t === type) row.classList.add(entityData[t].selectedClass);
+        }
+      });
+      const d = entityData[type];
+      document.getElementById('rightTitle').textContent = d.title;
+      document.getElementById('entityDesc').innerHTML = d.desc;
+      const eq = document.getElementById('updateEq');
+      eq.style.display = 'block';
+      eq.innerHTML = d.eq;
+      const ex = document.getElementById('exampleBox');
+      ex.style.display = 'block';
+      ex.innerHTML = d.example;
+      const ib = document.getElementById('insightBox');
+      ib.style.display = 'flex';
+      document.getElementById('insightIcon').textContent = d.insight;
+      document.getElementById('insightText').innerHTML = d.insightText;
+      updateSvgHighlight(type);
+    }
+
+    function updateSvgHighlight(type) {
+      const fa = document.getElementById('flowArrows');
+      fa.innerHTML = '';
+      if (type === 'node') {
+        // Show arrows from neighbors (U1, B1) → X and from edges → X and from global → X
+        fa.setAttribute('opacity','1');
+        addArrow(fa, 55,  148, 122, 157, '#0d6e6e', 'arNode');   // U1 → X
+        addArrow(fa, 225, 148, 158, 157, '#0d6e6e', 'arNode');   // B1 → X
+        addArrow(fa, 52,  107, 122, 158, '#d97706', 'arEdge');   // e(U1,X) → X
+        addArrow(fa, 228, 107, 158, 158, '#d97706', 'arEdge');   // e(B1,X) → X
+        addArrow(fa, 140, 33,  140, 148, '#7c3aed', 'arGraph');  // global → X
+      } else if (type === 'edge') {
+        // Show arrows from nodes → edge e(U1,X)
+        fa.setAttribute('opacity','1');
+        addArrow(fa, 68,  148, 60,  114, '#0d6e6e', 'arNode');   // U1 → e(U1,X)
+        addArrow(fa, 125, 148, 70,  112, '#0d6e6e', 'arNode');   // X → e(U1,X)
+        addArrow(fa, 140, 33,  60,  88,  '#7c3aed', 'arGraph');  // global → e(U1,X)
+      } else {
+        // global: arrows from all nodes and edges → u
+        fa.setAttribute('opacity','1');
+        addArrow(fa, 55,  148, 120, 33, '#0d6e6e', 'arNode');
+        addArrow(fa, 140, 148, 140, 33, '#0d6e6e', 'arNode');
+        addArrow(fa, 225, 148, 155, 33, '#0d6e6e', 'arNode');
+        addArrow(fa, 52,  100, 115, 33, '#d97706', 'arEdge');
+        addArrow(fa, 228, 100, 162, 33, '#d97706', 'arEdge');
+      }
+    }
+
+    function addArrow(parent, x1, y1, x2, y2, color, marker) {
+      const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+      line.setAttribute('x1', x1); line.setAttribute('y1', y1);
+      line.setAttribute('x2', x2); line.setAttribute('y2', y2);
+      line.setAttribute('stroke', color); line.setAttribute('stroke-width', '2');
+      line.setAttribute('stroke-dasharray', '6 3');
+      line.setAttribute('marker-end', 'url(#'+marker+')');
+      line.setAttribute('class', 'msg-flow-line');
+      parent.appendChild(line);
+    }
+
+    // Init
+    selectEntity('node');
+
     (function(){
       const container = document.getElementById('navDots');
       const CURRENT = 12;
-      const TOTAL = 21;
+      const TOTAL = 24;
       for (let i = 1; i <= TOTAL; i++) {
         const dot = document.createElement('div');
         dot.className = 'dot' + (i === CURRENT ? ' active' : '');
@@ -214,7 +328,6 @@
       }
     })();
 
-    // keyboard nav
     document.addEventListener('keydown', e => {
       if (e.key === 'ArrowRight' || e.key === 'PageDown') location.href = 'slide13.html';
       if (e.key === 'ArrowLeft'  || e.key === 'PageUp')   location.href = 'slide11.html';
