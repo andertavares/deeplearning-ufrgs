@@ -8,33 +8,43 @@
   <link rel="stylesheet" href="style.css" />
   <style>
     .step-layout { display:grid; grid-template-columns:1.2fr 0.8fr; gap:1.2rem; flex:1; }
-    .step-indicator { display:flex; gap:0.5rem; align-items:center; justify-content:center; margin-bottom:0.6rem; }
+    .step-indicator { display:flex; gap:.5rem; align-items:center; justify-content:center; margin-bottom:.6rem; }
     .step-pip { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center;
-      font-size:0.78rem; font-weight:700; border:2px solid var(--border2);
-      background:var(--bg3); color:var(--text-dim); transition:all 0.3s; cursor:pointer; }
+      font-size:.78rem; font-weight:700; border:2px solid var(--border2);
+      background:var(--bg3); color:var(--text-dim); transition:all .3s; cursor:pointer; }
     .step-pip.active { background:var(--teal); border-color:var(--teal); color:#fff; transform:scale(1.15); }
-    .step-pip.done { background:var(--teal-lt); border-color:var(--teal); color:var(--teal); }
-    .step-connector { flex:1; height:2px; background:var(--border2); max-width:32px; }
-    .step-title { font-size:1rem; font-weight:700; color:var(--teal); margin-bottom:0.5rem; }
-    .step-content { display:none; flex-direction:column; gap:0.7rem; }
+    .step-pip.done   { background:var(--teal-lt); border-color:var(--teal); color:var(--teal); }
+    .step-connector  { flex:1; height:2px; background:var(--border2); max-width:32px; }
+    .step-title  { font-size:1rem; font-weight:700; color:var(--teal); margin-bottom:.5rem; }
+    .step-content { display:none; flex-direction:column; gap:.5rem; }
     .step-content.active { display:flex; }
-    .formula-block { font-family:'Fira Code',monospace; font-size:0.9rem; color:var(--text);
+    .formula-block { font-family:'Fira Code',monospace; font-size:.88rem; color:var(--text);
       background:var(--bg3); border:1px solid var(--border2); border-radius:var(--radius-sm);
-      padding:0.6rem 0.8rem; line-height:1.6; }
-    .alpha-bar { display:flex; align-items:center; gap:0.5rem; }
-    .alpha-bar .lbl { width:32px; font-family:'Fira Code',monospace; font-size:0.82rem; color:var(--text-muted); }
+      padding:.5rem .7rem; line-height:1.65; }
+    .alpha-bar { display:flex; align-items:center; gap:.5rem; }
+    .alpha-bar .lbl { width:32px; font-family:'Fira Code',monospace; font-size:.82rem; color:var(--text-muted); }
     .alpha-bar .track { flex:1; height:18px; background:var(--bg3); border-radius:4px; overflow:hidden; border:1px solid var(--border2); }
-    .alpha-bar .fill { height:100%; border-radius:4px; transition:width 0.7s ease; display:flex; align-items:center; padding-left:5px; font-size:0.7rem; font-weight:700; color:#fff; }
-    .alpha-bar .pct { width:44px; font-family:'Fira Code',monospace; font-size:0.8rem; color:var(--text-dim); }
-    .ctrl-row { display:flex; gap:0.6rem; align-items:center; margin-top:0.3rem; }
-    .node-info { font-size:0.8rem; color:var(--text-muted); }
+    .alpha-bar .fill  { height:100%; border-radius:4px; transition:width .7s ease; display:flex; align-items:center; padding-left:5px; font-size:.7rem; font-weight:700; color:#fff; }
+    .alpha-bar .pct   { width:44px; font-family:'Fira Code',monospace; font-size:.8rem; color:var(--text-dim); }
+    .ctrl-row { display:flex; gap:.6rem; align-items:center; margin-top:.3rem; }
+    /* block calculation (step 5) */
+    .bc-row { display:flex; align-items:center; gap:.3rem; flex-wrap:wrap; margin:.15rem 0; }
+    .bc-alpha { font-family:'Fira Code',monospace; font-size:.78rem; font-weight:700; }
+    .mc { padding:3px 7px; text-align:center; font-size:.72rem; font-family:'Fira Code',monospace;
+      background:var(--bg3); color:var(--text); border:1.5px solid transparent; border-radius:3px; min-width:26px; }
+    .mc.mwh { background:#ede9fe; color:#5b21b6; font-weight:700; }
+    .mc.mca { background:#ccfbf1; color:#0d6e6e; }
+    .mc.mcb { background:#dbeafe; color:#1d4ed8; }
+    .mc.mcc { background:#fce7f3; color:#9d174d; }
+    .mc.mres{ background:#dcfce7; color:#166534; font-weight:700; border-color:#16a34a; }
+    table.mmat { border-collapse:separate; border-spacing:2px; }
   </style>
 </head>
 <body>
   <div class="slide-container">
     <header class="slide-header">
       <span class="course-tag">GNNs</span>
-      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span style="font-family:'Fira Code',monospace;font-size:.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
       <span class="slide-counter">Slide 17 / 24</span>
     </header>
 
@@ -44,138 +54,146 @@
         <p class="slide-subtitle">Bloco 3 — Atenção em Grafos</p>
       </div>
 
-      <!-- Indicador de passos -->
+      <!-- Step indicator -->
       <div class="step-indicator">
-        <div class="step-pip done" id="pip1" onclick="goToStep(1)" title="Ver Slide 16">1</div>
+        <div class="step-pip done"   id="pip1" onclick="goToStep(1)" title="Ver Slide 16">1</div>
         <div class="step-connector"></div>
-        <div class="step-pip done" id="pip2" onclick="goToStep(2)" title="Ver Slide 16">2</div>
+        <div class="step-pip done"   id="pip2" onclick="goToStep(2)" title="Ver Slide 16">2</div>
         <div class="step-connector"></div>
-        <div class="step-pip done" id="pip3" onclick="goToStep(3)" title="Ver Slide 16">3</div>
+        <div class="step-pip done"   id="pip3" onclick="goToStep(3)" title="Ver Slide 16">3</div>
         <div class="step-connector"></div>
         <div class="step-pip active" id="pip4" onclick="goToStep(4)">4</div>
         <div class="step-connector"></div>
-        <div class="step-pip" id="pip5" onclick="goToStep(5)">5</div>
+        <div class="step-pip"        id="pip5" onclick="goToStep(5)">5</div>
       </div>
 
       <div class="step-layout">
-        <!-- SVG central -->
+        <!-- SVG -->
         <div class="panel" style="align-items:center;">
           <svg viewBox="0 0 260 200" style="width:100%;max-height:200px;display:block;" id="mainSvg">
-            <!-- Arestas -->
+            <!-- Edges -->
             <line x1="130" y1="105" x2="45"  y2="45"  stroke="#c7d0e0" stroke-width="2" id="svgE1"/>
             <line x1="130" y1="105" x2="215" y2="45"  stroke="#c7d0e0" stroke-width="2" id="svgE2"/>
             <line x1="130" y1="105" x2="130" y2="185" stroke="#c7d0e0" stroke-width="2" id="svgE3"/>
-            <!-- Nós vizinhos -->
+            <!-- Neighbor nodes -->
             <circle cx="45"  cy="45"  r="20" fill="#dbeafe" stroke="#3b82f6" stroke-width="2" id="svgU1"/>
             <circle cx="215" cy="45"  r="20" fill="#dbeafe" stroke="#3b82f6" stroke-width="2" id="svgU2"/>
             <circle cx="130" cy="185" r="20" fill="#dbeafe" stroke="#3b82f6" stroke-width="2" id="svgU3"/>
-            <!-- Nó central -->
+            <!-- Central node -->
             <circle cx="130" cy="105" r="26" fill="#ccfbf1" stroke="#0d6e6e" stroke-width="2.5"/>
-            <!-- Labels nós -->
+            <!-- Node labels -->
             <text x="45"  y="49"  font-size="13" font-weight="700" fill="#1d4ed8" text-anchor="middle">A</text>
             <text x="215" y="49"  font-size="13" font-weight="700" fill="#1d4ed8" text-anchor="middle">B</text>
             <text x="130" y="189" font-size="13" font-weight="700" fill="#1d4ed8" text-anchor="middle">C</text>
             <text x="130" y="110" font-size="14" font-weight="700" fill="#0d6e6e" text-anchor="middle">v</text>
-            <!-- Embeddings (mostrar em passo 1) -->
-            <text x="45"  y="74"  font-size="12" fill="#6b7fa3" font-family="Fira Code" text-anchor="middle" id="emb1" opacity="0">hA=[1,0]</text>
-            <text x="215" y="74"  font-size="12" fill="#6b7fa3" font-family="Fira Code" text-anchor="middle" id="emb2" opacity="0">hB=[0,1]</text>
-            <text x="130" y="166" font-size="12" fill="#6b7fa3" font-family="Fira Code" text-anchor="middle" id="emb3" opacity="0">hC=[1,1]</text>
-            <text x="130" y="134" font-size="12" fill="#0d6e6e" font-family="Fira Code" text-anchor="middle" id="embv" opacity="0">hv=[0.8,0.3]</text>
-            <!-- Scores (passo 2) -->
-            <text x="58"  y="88"  font-size="11" fill="#d97706" font-family="Fira Code" font-weight="700" text-anchor="middle" id="sc1" opacity="0">e=2.1</text>
-            <text x="200" y="88"  font-size="11" fill="#d97706" font-family="Fira Code" font-weight="700" text-anchor="middle" id="sc2" opacity="0">e=0.5</text>
-            <text x="152" y="155" font-size="11" fill="#d97706" font-family="Fira Code" font-weight="700" text-anchor="middle" id="sc3" opacity="0">e=1.3</text>
-            <!-- Alphas (passo 4) -->
-            <text x="58"  y="88"  font-size="11" fill="#0d6e6e" font-family="Fira Code" font-weight="700" text-anchor="middle" id="al1" opacity="0">α=0.62</text>
-            <text x="200" y="88"  font-size="11" fill="#0d6e6e" font-family="Fira Code" font-weight="700" text-anchor="middle" id="al2" opacity="0">α=0.12</text>
-            <text x="152" y="155" font-size="11" fill="#0d6e6e" font-family="Fira Code" font-weight="700" text-anchor="middle" id="al3" opacity="0">α=0.26</text>
-            <!-- Projeções Wh (passo 2) -->
-            <text x="130" y="76"  font-size="9" fill="#7c3aed" font-family="Fira Code" font-weight="700" text-anchor="middle" id="whv" opacity="0">Whᵥ</text>
-            <text x="45"  y="72"  font-size="9" fill="#7c3aed" font-family="Fira Code" font-weight="700" text-anchor="middle" id="wh1" opacity="0">Wh₁</text>
-            <text x="215" y="72"  font-size="9" fill="#7c3aed" font-family="Fira Code" font-weight="700" text-anchor="middle" id="wh2" opacity="0">Wh₂</text>
-            <text x="100" y="192" font-size="9" fill="#7c3aed" font-family="Fira Code" font-weight="700" text-anchor="middle" id="wh3" opacity="0">Wh₃</text>
+            <!-- Embeddings (step >=1) -->
+            <text x="45"  y="74"  font-size="12" fill="#6b7fa3" font-family="Fira Code" text-anchor="middle" id="emb1" opacity="0">hA=[2,2]</text>
+            <text x="215" y="74"  font-size="12" fill="#6b7fa3" font-family="Fira Code" text-anchor="middle" id="emb2" opacity="0">hB=[1,0]</text>
+            <text x="130" y="166" font-size="12" fill="#6b7fa3" font-family="Fira Code" text-anchor="middle" id="emb3" opacity="0">hC=[0,2]</text>
+            <text x="130" y="134" font-size="12" fill="#0d6e6e" font-family="Fira Code" text-anchor="middle" id="embv" opacity="0">hv=[1,1]</text>
+            <!-- Scores (step 3) -->
+            <text x="58"  y="88"  font-size="11" fill="#d97706" font-family="Fira Code" font-weight="700" text-anchor="middle" id="sc1" opacity="0">e=5</text>
+            <text x="200" y="88"  font-size="11" fill="#d97706" font-family="Fira Code" font-weight="700" text-anchor="middle" id="sc2" opacity="0">e=4</text>
+            <text x="152" y="155" font-size="11" fill="#d97706" font-family="Fira Code" font-weight="700" text-anchor="middle" id="sc3" opacity="0">e=3</text>
+            <!-- Alphas (step 4) -->
+            <text x="58"  y="88"  font-size="11" fill="#0d6e6e" font-family="Fira Code" font-weight="700" text-anchor="middle" id="al1" opacity="0">α=0.67</text>
+            <text x="200" y="88"  font-size="11" fill="#0d6e6e" font-family="Fira Code" font-weight="700" text-anchor="middle" id="al2" opacity="0">α=0.24</text>
+            <text x="152" y="155" font-size="11" fill="#0d6e6e" font-family="Fira Code" font-weight="700" text-anchor="middle" id="al3" opacity="0">α=0.09</text>
           </svg>
           <div class="ctrl-row">
             <button class="btn-step" id="btnNext" onclick="nextStep()">Próximo passo →</button>
             <button class="btn-toggle" onclick="resetSteps()">Reiniciar</button>
           </div>
-          <div style="font-size:0.8rem;color:var(--text-dim);font-family:'Fira Code',monospace;" id="stepLabel">Passo 4 de 5</div>
+          <div style="font-size:.8rem;color:var(--text-dim);font-family:'Fira Code',monospace;" id="stepLabel">Passo 4 de 5</div>
         </div>
 
-        <!-- Painel lateral com fórmulas -->
+        <!-- Right panel with formulas -->
         <div class="panel">
-          <!-- Passo 1 (ref slide16) -->
+          <!-- Step 1 ref -->
           <div class="step-content" id="sc1c">
-            <div class="step-title" style="color:#94a3b8;">1. Inicialização <span style="font-size:0.7rem;font-weight:400;">← Slide 16</span></div>
-            <div class="formula-block" style="font-size:0.78rem;opacity:0.75;">h<sub>v</sub>=[0.8,0.3] &nbsp; h<sub>A</sub>=[1,0] &nbsp; h<sub>B</sub>=[0,1] &nbsp; h<sub>C</sub>=[1,1]</div>
-            <a href="slide16.html" style="font-size:0.78rem;color:var(--teal);">← Ver exemplo numérico completo no Slide 16</a>
+            <div class="step-title" style="color:#94a3b8;">1. Embeddings <span style="font-size:.7rem;font-weight:400;">← Slide 16</span></div>
+            <div class="formula-block" style="font-size:.78rem;opacity:.75;">
+              h<sub>v</sub>=[1,1] &nbsp; h<sub>A</sub>=[2,2]<br/>h<sub>B</sub>=[1,0] &nbsp; h<sub>C</sub>=[0,2]
+            </div>
+            <a href="slide16.html" style="font-size:.78rem;color:var(--teal);">← Ver exemplo numérico completo no Slide 16</a>
           </div>
-
-          <!-- Passo 2 (ref slide16) -->
+          <!-- Step 2 ref -->
           <div class="step-content" id="sc2c">
-            <div class="step-title" style="color:#94a3b8;">2. Projeção Linear (W) <span style="font-size:0.7rem;font-weight:400;">← Slide 16</span></div>
-            <div class="formula-block" style="font-size:0.78rem;opacity:0.75;">
-              W=[[0.5,0.3],[0.2,0.8]]: &nbsp; Wh<sub>v</sub>=[0.49,0.40]<br/>
-              Wh<sub>A</sub>=[0.50,0.20] &nbsp; Wh<sub>B</sub>=[0.30,0.80] &nbsp; Wh<sub>C</sub>=[0.80,1.00]
+            <div class="step-title" style="color:#94a3b8;">2. Projeção W <span style="font-size:.7rem;font-weight:400;">← Slide 16</span></div>
+            <div class="formula-block" style="font-size:.78rem;opacity:.75;">
+              W=[[1,0],[0,2]]<br/>
+              Wh<sub>v</sub>=[1,2] &nbsp; Wh<sub>A</sub>=[2,4]<br/>
+              Wh<sub>B</sub>=[1,0] &nbsp; Wh<sub>C</sub>=[0,4]
             </div>
-            <a href="slide16.html" style="font-size:0.78rem;color:var(--teal);">← Ver cálculo matricial no Slide 16</a>
+            <a href="slide16.html" style="font-size:.78rem;color:var(--teal);">← Ver cálculo matricial no Slide 16</a>
           </div>
-
-          <!-- Passo 3 (ref slide16) -->
+          <!-- Step 3 ref -->
           <div class="step-content" id="sc3c">
-            <div class="step-title" style="color:#94a3b8;">3. Score com vetor a <span style="font-size:0.7rem;font-weight:400;">← Slide 16</span></div>
-            <div class="formula-block" style="font-size:0.78rem;opacity:0.75;">
-              a=[0.9,0.4,0.7,0.2]<br/>
-              e(v,A)=<strong>2.1</strong> &nbsp; e(v,B)=<strong>0.5</strong> &nbsp; e(v,C)=<strong>1.3</strong>
+            <div class="step-title" style="color:#94a3b8;">3. Score com vetor a <span style="font-size:.7rem;font-weight:400;">← Slide 16</span></div>
+            <div class="formula-block" style="font-size:.78rem;opacity:.75;">
+              a=[1,1,1,0]<br/>
+              e(v,A)=<strong>5</strong> &nbsp; e(v,B)=<strong>4</strong> &nbsp; e(v,C)=<strong>3</strong>
             </div>
-            <a href="slide16.html" style="font-size:0.78rem;color:var(--teal);">← Ver tabela de scores no Slide 16</a>
+            <a href="slide16.html" style="font-size:.78rem;color:var(--teal);">← Ver tabela de scores no Slide 16</a>
           </div>
-
-          <!-- Passo 4 -->
+          <!-- Step 4 -->
           <div class="step-content" id="sc4c">
-            <div style="font-size:0.72rem;color:var(--text-dim);margin-bottom:0.3rem;padding:0.2rem 0.5rem;background:var(--bg3);border-radius:3px;border-left:2px solid var(--teal);">
+            <div style="font-size:.72rem;color:var(--text-dim);padding:.2rem .5rem;background:var(--bg3);border-radius:3px;border-left:2px solid var(--teal);margin-bottom:.3rem;">
               Passos 1–3 calculados no <a href="slide16.html" style="color:var(--teal);">Slide 16</a>. Aqui usamos os α resultantes.
             </div>
             <div class="step-title">4. Softmax → α</div>
-            <div class="formula-block">
-              α<sub>vu</sub> = exp(e<sub>vu</sub>) / Σ<sub>k</sub> exp(e<sub>vk</sub>)
-            </div>
-            <div style="display:flex;flex-direction:column;gap:0.3rem;margin-top:0.2rem;">
+            <div class="formula-block">α<sub>vu</sub> = exp(e<sub>vu</sub>) / Σ<sub>k</sub> exp(e<sub>vk</sub>)</div>
+            <div style="display:flex;flex-direction:column;gap:.3rem;margin-top:.2rem;">
               <div class="alpha-bar">
-                <span class="lbl">αA</span>
-                <div class="alpha-bar track"><div class="alpha-bar fill" id="ab1s3" style="background:#0d6e6e;width:0%;">62%</div></div>
-                <span class="alpha-bar pct">0.62</span>
+                <span class="lbl" style="color:#0d6e6e;font-weight:700;">αA</span>
+                <div class="alpha-bar track"><div class="alpha-bar fill" id="bar1" style="background:#0d6e6e;width:0%;">67%</div></div>
+                <span class="alpha-bar pct" style="color:#0d6e6e;font-weight:700;">0.67</span>
               </div>
               <div class="alpha-bar">
-                <span class="lbl">αB</span>
-                <div class="alpha-bar track"><div class="alpha-bar fill" id="ab2s3" style="background:#3b82f6;width:0%;">12%</div></div>
-                <span class="alpha-bar pct">0.12</span>
+                <span class="lbl" style="color:#3b82f6;font-weight:700;">αB</span>
+                <div class="alpha-bar track"><div class="alpha-bar fill" id="bar2" style="background:#3b82f6;width:0%;">24%</div></div>
+                <span class="alpha-bar pct" style="color:#3b82f6;font-weight:700;">0.24</span>
               </div>
               <div class="alpha-bar">
-                <span class="lbl">αC</span>
-                <div class="alpha-bar track"><div class="alpha-bar fill" id="ab3s3" style="background:#8b5cf6;width:0%;">26%</div></div>
-                <span class="alpha-bar pct">0.26</span>
+                <span class="lbl" style="color:#8b5cf6;font-weight:700;">αC</span>
+                <div class="alpha-bar track"><div class="alpha-bar fill" id="bar3" style="background:#8b5cf6;width:0%;">9%</div></div>
+                <span class="alpha-bar pct" style="color:#8b5cf6;font-weight:700;">0.09</span>
               </div>
             </div>
           </div>
-
-          <!-- Passo 5 -->
+          <!-- Step 5 -->
           <div class="step-content" id="sc5c">
             <div class="step-title">5. Agregação Ponderada</div>
-            <div class="formula-block" style="font-size:0.78rem;line-height:1.7;">
-              h<sub>v</sub>' = σ(α<sub>A</sub>·Wh<sub>A</sub> + α<sub>B</sub>·Wh<sub>B</sub> + α<sub>C</sub>·Wh<sub>C</sub>)<br/>
-              = σ(0.62·[0.50,0.20] + 0.12·[0.30,0.80] + 0.26·[0.80,1.00])<br/>
-              = σ([0.31,0.12] + [0.04,0.10] + [0.21,0.26])<br/>
-              = σ([<strong>0.55</strong>, <strong>0.48</strong>])<br/>
-              ≈ [<strong style="color:var(--teal);">0.64</strong>, <strong style="color:var(--teal);">0.62</strong>]
+            <div style="font-size:.75rem;color:var(--text-muted);margin-bottom:.3rem;">
+              h'<sub>v</sub> = σ( α<sub>A</sub>·Wh<sub>A</sub> + α<sub>B</sub>·Wh<sub>B</sub> + α<sub>C</sub>·Wh<sub>C</sub> )
             </div>
-            <div style="font-size:0.73rem;background:#fef9c3;border:1px solid #ca8a04;border-radius:3px;padding:0.35rem 0.5rem;color:#78350f;margin-top:0.3rem;">
-              🔑 <strong>W aqui é a mesma</strong> usada no Slide 16 para calcular Wh<br/>
-              W = [[0.5, 0.3], [0.2, 0.8]]
+            <!-- Block calculation -->
+            <div class="bc-row">
+              <span class="bc-alpha" style="color:#0d6e6e;">0.67 ×</span>
+              <table class="mmat"><tr><td class="mc mca">2</td><td class="mc mca">4</td></tr></table>
+              <span style="font-weight:700;color:var(--text-dim);">+</span>
+              <span class="bc-alpha" style="color:#3b82f6;">0.24 ×</span>
+              <table class="mmat"><tr><td class="mc mcb">1</td><td class="mc mcb">0</td></tr></table>
+              <span style="font-weight:700;color:var(--text-dim);">+</span>
+              <span class="bc-alpha" style="color:#8b5cf6;">0.09 ×</span>
+              <table class="mmat"><tr><td class="mc mcc">0</td><td class="mc mcc">4</td></tr></table>
             </div>
-            <div class="highlight-box teal">
-              <span class="icon">✅</span>
-              <span>A intensidade de cada vizinho é proporcional ao α aprendido!</span>
+            <div class="bc-row" style="margin-top:.1rem;">
+              <span style="font-size:.75rem;color:var(--text-dim);">=</span>
+              <table class="mmat"><tr><td class="mc mca">1.34</td><td class="mc mca">2.68</td></tr></table>
+              <span style="font-weight:700;color:var(--text-dim);">+</span>
+              <table class="mmat"><tr><td class="mc mcb">0.24</td><td class="mc mcb">0.00</td></tr></table>
+              <span style="font-weight:700;color:var(--text-dim);">+</span>
+              <table class="mmat"><tr><td class="mc mcc">0.00</td><td class="mc mcc">0.36</td></tr></table>
+            </div>
+            <div class="bc-row" style="margin-top:.1rem;">
+              <span style="font-size:.75rem;color:var(--text-dim);">= σ(</span>
+              <table class="mmat"><tr><td class="mc mwh">1.58</td><td class="mc mwh">3.04</td></tr></table>
+              <span style="font-size:.75rem;color:var(--text-dim);">) ≈</span>
+              <table class="mmat"><tr><td class="mc mres">0.83</td><td class="mc mres">0.95</td></tr></table>
+            </div>
+            <div style="font-size:.72rem;background:#fef9c3;border:1px solid #ca8a04;border-radius:3px;padding:.3rem .5rem;color:#78350f;margin-top:.3rem;">
+              🔑 <strong>W aqui é a mesma</strong> do Slide 16: W=[[1,0],[0,2]]
             </div>
           </div>
         </div>
@@ -190,135 +208,74 @@
   </div>
 
   <script>
-    let currentStep = 1;
+    let currentStep = 4;
     const TOTAL_STEPS = 5;
 
-    function setOpacity(id, val) {
-      const el = document.getElementById(id);
-      if (el) el.setAttribute('opacity', val);
-    }
-    function setStyle(id, prop, val) {
-      const el = document.getElementById(id);
-      if (el) el.style[prop] = val;
-    }
+    function setOp(id, val) { const e=document.getElementById(id); if(e) e.setAttribute('opacity',val); }
+    function setAttr(id, attr, val) { const e=document.getElementById(id); if(e) e.setAttribute(attr,val); }
 
     function applyStep(step) {
       // Reset SVG
-      ['svgE1','svgE2','svgE3'].forEach(id => {
-        document.getElementById(id).setAttribute('stroke','#c7d0e0');
-        document.getElementById(id).setAttribute('stroke-width','2');
-      });
-      ['svgU1','svgU2','svgU3'].forEach((id,i) => {
-        document.getElementById(id).setAttribute('fill','#dbeafe');
-        document.getElementById(id).setAttribute('stroke','#3b82f6');
-        document.getElementById(id).setAttribute('stroke-width','2');
-        document.getElementById(id).setAttribute('r','20');
-      });
-      // Hide all SVG annotations
-      ['emb1','emb2','emb3','embv','wh1','wh2','wh3','whv','sc1','sc2','sc3','al1','al2','al3'].forEach(id => setOpacity(id,0));
+      ['svgE1','svgE2','svgE3'].forEach(id => { setAttr(id,'stroke','#c7d0e0'); setAttr(id,'stroke-width','2'); });
+      ['svgU1','svgU2','svgU3'].forEach(id => { setAttr(id,'fill','#dbeafe'); setAttr(id,'stroke','#3b82f6'); setAttr(id,'stroke-width','2'); setAttr(id,'r','20'); });
+      ['emb1','emb2','emb3','embv','sc1','sc2','sc3','al1','al2','al3'].forEach(id=>setOp(id,0));
 
       if (step >= 1) {
-        setOpacity('emb1',1); setOpacity('emb2',1); setOpacity('emb3',1); setOpacity('embv',1);
+        setOp('emb1',1); setOp('emb2',1); setOp('emb3',1); setOp('embv',1);
       }
       if (step >= 2) {
-        // Show Wh projections, highlight edges in purple
-        setOpacity('wh1',1); setOpacity('wh2',1); setOpacity('wh3',1); setOpacity('whv',1);
-        ['svgE1','svgE2','svgE3'].forEach(id => {
-          document.getElementById(id).setAttribute('stroke','#7c3aed');
-          document.getElementById(id).setAttribute('stroke-width','2.5');
-        });
+        // highlight edges purple (projection step)
+        ['svgE1','svgE2','svgE3'].forEach(id => { setAttr(id,'stroke','#7c3aed'); setAttr(id,'stroke-width','2.5'); });
       }
       if (step >= 3) {
-        // Show scores on edges
-        setOpacity('sc1',1); setOpacity('sc2',1); setOpacity('sc3',1);
-        document.getElementById('svgE1').setAttribute('stroke','#d97706');
-        document.getElementById('svgE1').setAttribute('stroke-width','4');
-        document.getElementById('svgE2').setAttribute('stroke','#d97706');
-        document.getElementById('svgE2').setAttribute('stroke-width','2.5');
-        document.getElementById('svgE3').setAttribute('stroke','#d97706');
-        document.getElementById('svgE3').setAttribute('stroke-width','2');
+        setOp('sc1',1); setOp('sc2',1); setOp('sc3',1);
+        setAttr('svgE1','stroke','#d97706'); setAttr('svgE1','stroke-width','4');
+        setAttr('svgE2','stroke','#d97706'); setAttr('svgE2','stroke-width','3');
+        setAttr('svgE3','stroke','#d97706'); setAttr('svgE3','stroke-width','2');
       }
       if (step >= 4) {
-        setOpacity('sc1',0); setOpacity('sc2',0); setOpacity('sc3',0);
-        setOpacity('al1',1); setOpacity('al2',1); setOpacity('al3',1);
-        document.getElementById('svgE1').setAttribute('stroke','#0d6e6e');
-        document.getElementById('svgE1').setAttribute('stroke-width','5');
-        document.getElementById('svgE2').setAttribute('stroke','#3b82f6');
-        document.getElementById('svgE2').setAttribute('stroke-width','2');
-        document.getElementById('svgE3').setAttribute('stroke','#8b5cf6');
-        document.getElementById('svgE3').setAttribute('stroke-width','3');
-        // Animate bars
-        setTimeout(()=>{
-          document.getElementById('ab1s3').style.width='62%';
-          document.getElementById('ab2s3').style.width='12%';
-          document.getElementById('ab3s3').style.width='26%';
-        },100);
+        setOp('sc1',0); setOp('sc2',0); setOp('sc3',0);
+        setOp('al1',1); setOp('al2',1); setOp('al3',1);
+        setAttr('svgE1','stroke','#0d6e6e'); setAttr('svgE1','stroke-width','5');
+        setAttr('svgE2','stroke','#3b82f6'); setAttr('svgE2','stroke-width','3');
+        setAttr('svgE3','stroke','#8b5cf6'); setAttr('svgE3','stroke-width','1.5');
+        setTimeout(()=>{ document.getElementById('bar1').style.width='67%'; document.getElementById('bar2').style.width='24%'; document.getElementById('bar3').style.width='9%'; }, 100);
       }
       if (step >= 5) {
-        // Node sizes proportional to alpha
-        document.getElementById('svgU1').setAttribute('r','28');
-        document.getElementById('svgU1').setAttribute('fill','#ccfbf1');
-        document.getElementById('svgU1').setAttribute('stroke','#0d6e6e');
-        document.getElementById('svgU2').setAttribute('r','16');
-        document.getElementById('svgU3').setAttribute('r','20');
-        document.getElementById('svgE1').setAttribute('stroke-width','6');
-        document.getElementById('svgE2').setAttribute('stroke-width','1.5');
-        document.getElementById('svgE3').setAttribute('stroke-width','2.5');
+        setAttr('svgU1','r','28'); setAttr('svgU1','fill','#ccfbf1'); setAttr('svgU1','stroke','#0d6e6e');
+        setAttr('svgU2','r','20'); setAttr('svgU3','r','14');
+        setAttr('svgE1','stroke-width','6'); setAttr('svgE2','stroke-width','2.5'); setAttr('svgE3','stroke-width','1');
       }
 
-      // Step contents
+      // Step content
       for (let i = 1; i <= TOTAL_STEPS; i++) {
-        document.getElementById('sc'+i+'c').classList.toggle('active', i === step);
+        document.getElementById('sc'+i+'c').classList.toggle('active', i===step);
         const pip = document.getElementById('pip'+i);
-        pip.classList.toggle('active', i === step);
-        pip.classList.toggle('done', i < step);
+        pip.classList.toggle('active', i===step);
+        pip.classList.toggle('done',   i<step);
+        pip.classList.remove('done'); pip.classList.remove('active');
+        if (i < step)  pip.classList.add('done');
+        if (i === step) pip.classList.add('active');
       }
-
       document.getElementById('stepLabel').textContent = `Passo ${step} de ${TOTAL_STEPS}`;
       document.getElementById('btnNext').disabled = step >= TOTAL_STEPS;
     }
 
-    function nextStep() {
-      if (currentStep < TOTAL_STEPS) { currentStep++; applyStep(currentStep); }
-    }
+    function nextStep() { if (currentStep < TOTAL_STEPS) { currentStep++; applyStep(currentStep); } }
     function resetSteps() {
-      currentStep = 1;
-      // Reset bars
-      document.getElementById('ab1s3').style.width='0%';
-      document.getElementById('ab2s3').style.width='0%';
-      document.getElementById('ab3s3').style.width='0%';
-      function goToStep(n) {
-      if (n >= 1 && n <= TOTAL_STEPS) {
-        currentStep = n;
-        // Reset bars when going back before step 4
-        if (n < 4) {
-          document.getElementById('ab1s3').style.width='0%';
-          document.getElementById('ab2s3').style.width='0%';
-          document.getElementById('ab3s3').style.width='0%';
-        }
-        applyStep(n);
-      }
+      currentStep = 4;
+      ['bar1','bar2','bar3'].forEach(id => { document.getElementById(id).style.width='0%'; });
+      applyStep(4);
     }
-
-    applyStep(4);
-    currentStep = 4;
-    }
-
     function goToStep(n) {
       if (n >= 1 && n <= TOTAL_STEPS) {
+        if (n < 4) { ['bar1','bar2','bar3'].forEach(id => { document.getElementById(id).style.width='0%'; }); }
         currentStep = n;
-        // Reset bars when going back before step 4
-        if (n < 4) {
-          document.getElementById('ab1s3').style.width='0%';
-          document.getElementById('ab2s3').style.width='0%';
-          document.getElementById('ab3s3').style.width='0%';
-        }
         applyStep(n);
       }
     }
 
     applyStep(4);
-    currentStep = 4;
 
     (function(){
       const container = document.getElementById('navDots');

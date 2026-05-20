@@ -8,15 +8,15 @@
   <link rel="stylesheet" href="style.css" />
   <style>
     .cmp-layout { display:grid; grid-template-columns:1fr 1fr; gap:1.2rem; flex:1; }
-    .compare-table { width:100%; border-collapse:collapse; font-size:0.85rem; }
+    .compare-table { width:100%; border-collapse:collapse; font-size:.84rem; }
     .compare-table th { background:var(--bg3); color:var(--text-muted); font-weight:700;
-      text-transform:uppercase; letter-spacing:0.06em; font-size:0.72rem; padding:0.45rem 0.6rem;
+      text-transform:uppercase; letter-spacing:.06em; font-size:.7rem; padding:.45rem .6rem;
       border:1px solid var(--border2); text-align:left; }
-    .compare-table td { padding:0.45rem 0.6rem; border:1px solid var(--border2); color:var(--text-muted); vertical-align:top; }
+    .compare-table td { padding:.45rem .6rem; border:1px solid var(--border2); color:var(--text-muted); vertical-align:top; }
     .compare-table tr:nth-child(even) td { background:var(--bg3); }
     .td-hl { color:var(--teal); font-weight:600; }
-    .legend-row { display:flex; gap:1rem; flex-wrap:wrap; font-size:0.82rem; }
-    .legend-item { display:flex; align-items:center; gap:0.35rem; }
+    .legend-row { display:flex; gap:1rem; flex-wrap:wrap; font-size:.82rem; }
+    .legend-item { display:flex; align-items:center; gap:.35rem; }
     .legend-dot { width:12px; height:12px; border-radius:50%; flex-shrink:0; }
   </style>
 </head>
@@ -24,7 +24,7 @@
   <div class="slide-container">
     <header class="slide-header">
       <span class="course-tag">GNNs</span>
-      <span style="font-family:'Fira Code',monospace;font-size:0.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
+      <span style="font-family:'Fira Code',monospace;font-size:.85rem;color:var(--text-dim);font-weight:600;flex:1;text-align:center;">Prof. Anderson Rocha Tavares</span>
       <span class="slide-counter">Slide 19 / 24</span>
     </header>
 
@@ -35,55 +35,7 @@
       </div>
 
       <div class="cmp-layout">
-        <!-- Transdutivo -->
-        <div class="panel">
-          <div class="panel-title">🔒 Transdutivo</div>
-
-          <div class="legend-row">
-            <span class="legend-item"><span class="legend-dot" style="background:#16a34a;"></span>Rotulado (treino)</span>
-            <span class="legend-item"><span class="legend-dot" style="background:#d97706;"></span>Rotulado (val)</span>
-            <span class="legend-item"><span class="legend-dot" style="background:#94a3b8;"></span>Sem rótulo (?)</span>
-          </div>
-
-          <svg viewBox="0 0 240 170" style="width:100%;max-height:170px;display:block;margin:0 auto;">
-            <!-- Arestas -->
-            <line x1="60"  y1="60"  x2="120" y2="60"  stroke="#c7d0e0" stroke-width="1.5"/>
-            <line x1="120" y1="60"  x2="180" y2="60"  stroke="#c7d0e0" stroke-width="1.5"/>
-            <line x1="60"  y1="60"  x2="60"  y2="120" stroke="#c7d0e0" stroke-width="1.5"/>
-            <line x1="120" y1="60"  x2="120" y2="120" stroke="#c7d0e0" stroke-width="1.5"/>
-            <line x1="180" y1="60"  x2="180" y2="120" stroke="#c7d0e0" stroke-width="1.5"/>
-            <line x1="60"  y1="120" x2="120" y2="120" stroke="#c7d0e0" stroke-width="1.5"/>
-            <line x1="120" y1="120" x2="180" y2="120" stroke="#c7d0e0" stroke-width="1.5"/>
-            <line x1="60"  y1="120" x2="120" y2="60"  stroke="#c7d0e0" stroke-width="1" stroke-dasharray="3,2"/>
-            <line x1="180" y1="60"  x2="120" y2="120" stroke="#c7d0e0" stroke-width="1" stroke-dasharray="3,2"/>
-            <!-- Nós rotulados treino (verde) -->
-            <circle cx="60"  cy="60"  r="16" fill="#dcfce7" stroke="#16a34a" stroke-width="2.5"/>
-            <circle cx="180" cy="120" r="16" fill="#dcfce7" stroke="#16a34a" stroke-width="2.5"/>
-            <circle cx="60"  cy="120" r="16" fill="#dcfce7" stroke="#16a34a" stroke-width="2.5"/>
-            <!-- Nó validação (amarelo) -->
-            <circle cx="180" cy="60"  r="16" fill="#fef9c3" stroke="#d97706" stroke-width="2.5"/>
-            <!-- Nós sem rótulo (cinza) -->
-            <circle cx="120" cy="60"  r="16" fill="#f1f5f9" stroke="#94a3b8" stroke-width="2"/>
-            <circle cx="120" cy="120" r="16" fill="#f1f5f9" stroke="#94a3b8" stroke-width="2"/>
-            <!-- Labels -->
-            <text x="60"  y="64"  font-size="10" font-weight="700" fill="#16a34a" text-anchor="middle">A</text>
-            <text x="120" y="64"  font-size="10" fill="#64748b" text-anchor="middle">?</text>
-            <text x="180" y="64"  font-size="10" font-weight="700" fill="#d97706" text-anchor="middle">B</text>
-            <text x="60"  y="124" font-size="10" font-weight="700" fill="#16a34a" text-anchor="middle">A</text>
-            <text x="120" y="124" font-size="10" fill="#64748b" text-anchor="middle">?</text>
-            <text x="180" y="124" font-size="10" font-weight="700" fill="#16a34a" text-anchor="middle">B</text>
-            <text x="120" y="158" font-size="8" fill="#6b7fa3" font-family="Fira Code" text-anchor="middle">UM único grafo — treino e teste juntos</text>
-          </svg>
-
-          <ul style="list-style:none;display:flex;flex-direction:column;gap:0.35rem;font-size:0.85rem;">
-            <li>📌 Modelo vê <strong>todo o grafo</strong> durante treino</li>
-            <li>📌 Nós de teste presentes, mas <em>sem rótulo</em></li>
-            <li>📌 Propaga embeddings em TODO o grafo</li>
-            <li>📦 Exemplos: <strong>Cora, Citeseer, PubMed</strong></li>
-          </ul>
-        </div>
-
-        <!-- Indutivo -->
+        <!-- LEFT: Indutivo (now first) -->
         <div class="panel">
           <div class="panel-title">🚀 Indutivo</div>
 
@@ -93,8 +45,8 @@
           </div>
 
           <svg viewBox="0 0 240 170" style="width:100%;max-height:170px;display:block;margin:0 auto;">
-            <!-- Grafos de treino (2 pequenos à esquerda) -->
-            <!-- Grafo 1 -->
+            <!-- Training graphs (2 small, left side) -->
+            <!-- Graph 1 -->
             <line x1="30" y1="50" x2="70" y2="50" stroke="#93c5fd" stroke-width="2"/>
             <line x1="30" y1="50" x2="50" y2="85" stroke="#93c5fd" stroke-width="2"/>
             <line x1="70" y1="50" x2="50" y2="85" stroke="#93c5fd" stroke-width="2"/>
@@ -104,7 +56,7 @@
             <text x="30" y="54" font-size="9" font-weight="700" fill="#1d4ed8" text-anchor="middle">A</text>
             <text x="70" y="54" font-size="9" font-weight="700" fill="#1d4ed8" text-anchor="middle">B</text>
             <text x="50" y="89" font-size="9" font-weight="700" fill="#1d4ed8" text-anchor="middle">A</text>
-            <!-- Grafo 2 -->
+            <!-- Graph 2 -->
             <line x1="30" y1="115" x2="70" y2="130" stroke="#93c5fd" stroke-width="2"/>
             <line x1="70" y1="130" x2="50" y2="155" stroke="#93c5fd" stroke-width="2"/>
             <circle cx="30" cy="115" r="13" fill="#dbeafe" stroke="#1d4ed8" stroke-width="2"/>
@@ -113,12 +65,10 @@
             <text x="30" y="119" font-size="9" font-weight="700" fill="#1d4ed8" text-anchor="middle">B</text>
             <text x="70" y="134" font-size="9" font-weight="700" fill="#1d4ed8" text-anchor="middle">A</text>
             <text x="50" y="159" font-size="9" font-weight="700" fill="#1d4ed8" text-anchor="middle">B</text>
-            <text x="50"  y="22" font-size="8" fill="#1d4ed8" font-family="Fira Code" text-anchor="middle" font-weight="700">TREINO</text>
-
-            <!-- Divisor -->
+            <text x="50" y="22" font-size="8" fill="#1d4ed8" font-family="Fira Code" text-anchor="middle" font-weight="700">TREINO</text>
+            <!-- Divider -->
             <line x1="115" y1="15" x2="115" y2="165" stroke="#c7d0e0" stroke-width="1" stroke-dasharray="5,4"/>
-
-            <!-- Grafo de teste (novo) -->
+            <!-- Test graph (new, right side) -->
             <line x1="155" y1="50" x2="210" y2="50"  stroke="#c4b5fd" stroke-width="2"/>
             <line x1="155" y1="50" x2="175" y2="95"  stroke="#c4b5fd" stroke-width="2"/>
             <line x1="210" y1="50" x2="175" y2="95"  stroke="#c4b5fd" stroke-width="2"/>
@@ -134,39 +84,92 @@
             <text x="182" y="22" font-size="8" fill="#8b5cf6" font-family="Fira Code" text-anchor="middle" font-weight="700">TESTE (novo)</text>
           </svg>
 
-          <ul style="list-style:none;display:flex;flex-direction:column;gap:0.35rem;font-size:0.85rem;">
+          <ul style="list-style:none;display:flex;flex-direction:column;gap:.35rem;font-size:.84rem;">
             <li>📌 Modelo aprende em grafos de <strong>treinamento</strong></li>
             <li>📌 Infere em grafos <em>nunca vistos</em></li>
             <li>📌 Generaliza a estrutura aprendida</li>
-            <li>📦 Exemplos: <strong>GraphSAGE</strong>, moléculas, proteínas</li>
+            <li>�� Exemplos: <strong>GraphSAGE</strong>, moléculas, proteínas</li>
+          </ul>
+        </div>
+
+        <!-- RIGHT: Transdutivo (now second) -->
+        <div class="panel">
+          <div class="panel-title">🔒 Transdutivo</div>
+
+          <div class="legend-row">
+            <span class="legend-item"><span class="legend-dot" style="background:#16a34a;"></span>Rotulado (treino)</span>
+            <span class="legend-item"><span class="legend-dot" style="background:#d97706;"></span>Rotulado (val)</span>
+            <span class="legend-item"><span class="legend-dot" style="background:#94a3b8;"></span>Sem rótulo (?)</span>
+          </div>
+
+          <svg viewBox="0 0 240 170" style="width:100%;max-height:170px;display:block;margin:0 auto;">
+            <!-- Edges -->
+            <line x1="60"  y1="60"  x2="120" y2="60"  stroke="#c7d0e0" stroke-width="1.5"/>
+            <line x1="120" y1="60"  x2="180" y2="60"  stroke="#c7d0e0" stroke-width="1.5"/>
+            <line x1="60"  y1="60"  x2="60"  y2="120" stroke="#c7d0e0" stroke-width="1.5"/>
+            <line x1="120" y1="60"  x2="120" y2="120" stroke="#c7d0e0" stroke-width="1.5"/>
+            <line x1="180" y1="60"  x2="180" y2="120" stroke="#c7d0e0" stroke-width="1.5"/>
+            <line x1="60"  y1="120" x2="120" y2="120" stroke="#c7d0e0" stroke-width="1.5"/>
+            <line x1="120" y1="120" x2="180" y2="120" stroke="#c7d0e0" stroke-width="1.5"/>
+            <line x1="60"  y1="120" x2="120" y2="60"  stroke="#c7d0e0" stroke-width="1" stroke-dasharray="3,2"/>
+            <line x1="180" y1="60"  x2="120" y2="120" stroke="#c7d0e0" stroke-width="1" stroke-dasharray="3,2"/>
+            <!-- Training nodes (green) -->
+            <circle cx="60"  cy="60"  r="16" fill="#dcfce7" stroke="#16a34a" stroke-width="2.5"/>
+            <circle cx="180" cy="120" r="16" fill="#dcfce7" stroke="#16a34a" stroke-width="2.5"/>
+            <circle cx="60"  cy="120" r="16" fill="#dcfce7" stroke="#16a34a" stroke-width="2.5"/>
+            <!-- Val node (yellow) -->
+            <circle cx="180" cy="60"  r="16" fill="#fef9c3" stroke="#d97706" stroke-width="2.5"/>
+            <!-- Unlabeled nodes (gray) -->
+            <circle cx="120" cy="60"  r="16" fill="#f1f5f9" stroke="#94a3b8" stroke-width="2"/>
+            <circle cx="120" cy="120" r="16" fill="#f1f5f9" stroke="#94a3b8" stroke-width="2"/>
+            <!-- Labels -->
+            <text x="60"  y="64"  font-size="10" font-weight="700" fill="#16a34a" text-anchor="middle">A</text>
+            <text x="120" y="64"  font-size="10" fill="#64748b" text-anchor="middle">?</text>
+            <text x="180" y="64"  font-size="10" font-weight="700" fill="#d97706" text-anchor="middle">B</text>
+            <text x="60"  y="124" font-size="10" font-weight="700" fill="#16a34a" text-anchor="middle">A</text>
+            <text x="120" y="124" font-size="10" fill="#64748b" text-anchor="middle">?</text>
+            <text x="180" y="124" font-size="10" font-weight="700" fill="#16a34a" text-anchor="middle">B</text>
+            <text x="120" y="158" font-size="8" fill="#6b7fa3" font-family="Fira Code" text-anchor="middle">UM único grafo — treino e teste juntos</text>
+          </svg>
+
+          <ul style="list-style:none;display:flex;flex-direction:column;gap:.35rem;font-size:.84rem;">
+            <li>📌 Modelo vê <strong>todo o grafo</strong> durante treino</li>
+            <li>📌 Nós de teste presentes, mas <em>sem rótulo</em></li>
+            <li>📌 Propaga embeddings em TODO o grafo</li>
+            <li>📦 Exemplos: <strong>Cora, Citeseer, PubMed</strong></li>
           </ul>
         </div>
       </div>
 
-      <!-- Tabela comparativa -->
+      <!-- Comparison table -->
       <table class="compare-table">
         <thead>
           <tr>
             <th>Aspecto</th>
-            <th>Transdutivo</th>
-            <th>Indutivo</th>
+            <th>Indutivo 🚀</th>
+            <th>Transdutivo 🔒</th>
           </tr>
         </thead>
         <tbody>
           <tr>
+            <td>Tipo de tarefa típico</td>
+            <td class="td-hl">Classificação de grafos<br/><span style="font-size:.8rem;font-weight:400;">(dataset contém vários grafos)</span></td>
+            <td>Node classification, link prediction<br/><span style="font-size:.8rem;">(dataset costuma ser um único grafo)</span></td>
+          </tr>
+          <tr>
             <td>Visto no treino</td>
-            <td>Todo o grafo (sem labels de teste)</td>
             <td class="td-hl">Só grafos de treino</td>
+            <td>Todo o grafo (sem labels de teste)</td>
           </tr>
           <tr>
             <td>Generalização</td>
-            <td>Nós novos = difícil</td>
             <td class="td-hl">Novos grafos = OK</td>
+            <td>Nós novos = difícil</td>
           </tr>
           <tr>
             <td>Datasets típicos</td>
-            <td>Cora, Citeseer, PubMed</td>
             <td class="td-hl">OGB, PPI, Reddit</td>
+            <td>Cora, Citeseer, PubMed</td>
           </tr>
         </tbody>
       </table>
