@@ -340,22 +340,22 @@
                 <circle cx="70"  cy="110" r="13" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
                 <text x="70"  y="114" text-anchor="middle" font-family="Fira Code" font-size="7" fill="#5b21b6">h₄</text>
                 <!-- Arrows to READOUT -->
-                <line x1="43"  y1="80"  x2="136" y2="90"  stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrG)"/>
-                <line x1="70"  y1="63"  x2="136" y2="84"  stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrG)"/>
-                <line x1="123" y1="80"  x2="136" y2="87"  stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrG)"/>
-                <line x1="70"  y1="97"  x2="136" y2="93"  stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrG)"/>
+                <line id="g2ro1" x1="43"  y1="80"  x2="136" y2="90"  stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrG)"/>
+                <line id="g2ro2" x1="70"  y1="63"  x2="136" y2="84"  stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrG)"/>
+                <line id="g2ro3" x1="123" y1="80"  x2="136" y2="87"  stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrG)"/>
+                <line id="g2ro4" x1="70"  y1="97"  x2="136" y2="93"  stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrG)"/>
                 <!-- READOUT box -->
-                <rect x="138" y="72" width="72" height="36" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+                <rect id="ro-box" x="138" y="72" width="72" height="36" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
                 <text x="174" y="88"  text-anchor="middle" font-size="9" fill="#5b21b6" font-weight="700" id="ro-title">READOUT</text>
                 <text x="174" y="101" text-anchor="middle" font-family="Fira Code" font-size="8" fill="#5b21b6" id="ro-label">Σ sum</text>
                 <!-- Arrow to h_G -->
-                <line x1="174" y1="108" x2="174" y2="128" stroke="#7c3aed" stroke-width="2" marker-end="url(#arrG)"/>
+                <line id="ro-to-hg" x1="210" y1="90" x2="234" y2="90" stroke="#7c3aed" stroke-width="2" marker-end="url(#arrG)"/>
                 <!-- h_G node (below graph nodes/readout) -->
-                <circle cx="174" cy="146" r="14" fill="#ede9fe" stroke="#7c3aed" stroke-width="2.5"/>
-                <text x="174" y="143" text-anchor="middle" font-size="9" fill="#5b21b6" font-weight="700" id="hg-label">h_G</text>
-                <text x="174" y="155" text-anchor="middle" font-family="Fira Code" font-size="7" fill="#5b21b6">[...]</text>
+                <circle id="hg-node" cx="248" cy="90" r="14" fill="#ede9fe" stroke="#7c3aed" stroke-width="2.5"/>
+                <text id="hg-label" x="248" y="87" text-anchor="middle" font-size="9" fill="#5b21b6" font-weight="700">h_G</text>
+                <text id="hg-vec" x="248" y="99" text-anchor="middle" font-family="Fira Code" font-size="7" fill="#5b21b6">[...]</text>
                 <!-- Arrow to MLP -->
-                <line x1="188" y1="146" x2="284" y2="90" stroke="#7c3aed" stroke-width="2" marker-end="url(#arrG)"/>
+                <line id="hg-to-mlp" x1="262" y1="90" x2="284" y2="90" stroke="#7c3aed" stroke-width="2" marker-end="url(#arrG)"/>
                 <!-- MLP box -->
                 <rect x="286" y="71" width="54" height="38" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
                 <text x="313" y="88"  text-anchor="middle" font-size="10" fill="#5b21b6" font-weight="700">MLP</text>
@@ -496,6 +496,44 @@
       document.getElementById('ro-title').textContent = pooling ? 'READOUT' : 'NÓ GLOBAL';
       document.getElementById('ro-label').textContent = pooling ? ({ sum: 'Σ  sum', mean: 'μ  mean', max: '↑  max' }[currentReadout]) : 'embedding global';
       document.getElementById('hg-label').textContent = pooling ? 'h_G' : 'h_global';
+      document.getElementById('ro-box').style.display = pooling ? 'block' : 'none';
+      document.getElementById('ro-title').style.display = pooling ? 'block' : 'none';
+      document.getElementById('ro-label').style.display = pooling ? 'block' : 'none';
+
+      const hgNode = document.getElementById('hg-node');
+      const hgLabel = document.getElementById('hg-label');
+      const hgVec = document.getElementById('hg-vec');
+      const roToHg = document.getElementById('ro-to-hg');
+      const hgToMlp = document.getElementById('hg-to-mlp');
+      const g2ro1 = document.getElementById('g2ro1');
+      const g2ro2 = document.getElementById('g2ro2');
+      const g2ro3 = document.getElementById('g2ro3');
+      const g2ro4 = document.getElementById('g2ro4');
+
+      if (pooling) {
+        hgNode.setAttribute('cx', '248'); hgNode.setAttribute('cy', '90');
+        hgLabel.setAttribute('x', '248'); hgLabel.setAttribute('y', '87');
+        hgVec.setAttribute('x', '248'); hgVec.setAttribute('y', '99');
+        roToHg.style.display = 'block';
+        hgToMlp.setAttribute('x1', '262'); hgToMlp.setAttribute('y1', '90');
+      } else {
+        hgNode.setAttribute('cx', '174'); hgNode.setAttribute('cy', '90');
+        hgLabel.setAttribute('x', '174'); hgLabel.setAttribute('y', '87');
+        hgVec.setAttribute('x', '174'); hgVec.setAttribute('y', '99');
+        roToHg.style.display = 'none';
+        hgToMlp.setAttribute('x1', '188'); hgToMlp.setAttribute('y1', '90');
+        g2ro1.setAttribute('x2', '160'); g2ro1.setAttribute('y2', '90');
+        g2ro2.setAttribute('x2', '160'); g2ro2.setAttribute('y2', '84');
+        g2ro3.setAttribute('x2', '160'); g2ro3.setAttribute('y2', '87');
+        g2ro4.setAttribute('x2', '160'); g2ro4.setAttribute('y2', '93');
+      }
+
+      if (pooling) {
+        g2ro1.setAttribute('x2', '136'); g2ro1.setAttribute('y2', '90');
+        g2ro2.setAttribute('x2', '136'); g2ro2.setAttribute('y2', '84');
+        g2ro3.setAttribute('x2', '136'); g2ro3.setAttribute('y2', '87');
+        g2ro4.setAttribute('x2', '136'); g2ro4.setAttribute('y2', '93');
+      }
     }
 
     function setGraphMode(mode) {
